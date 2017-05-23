@@ -1,4 +1,4 @@
-<project basedir="." default="main" name="jenkins-results-parser">
+<project basedir="." default="compile" name="jenkins-results-parser">
 
 	<property name="build.dir"   value="build" />
 	<property name="classes.dir" value="${build.dir}/classes" />
@@ -37,8 +37,4 @@
 				<path location="${jar.dir}/${ant.project.name}.jar" />
 			</classpath>
 	</target>
-
-	<target depends="clean,jar" name="clean-build" />
-	
-	<target depends="clean,jar" name="main" />
 </project>
