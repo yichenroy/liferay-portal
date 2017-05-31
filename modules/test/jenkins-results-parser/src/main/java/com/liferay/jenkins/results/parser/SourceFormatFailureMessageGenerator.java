@@ -32,10 +32,14 @@ public class SourceFormatFailureMessageGenerator
 			return null;
 		}
 
-		consoleOutput = consoleOutput.substring(
-			consoleOutput.lastIndexOf("format-source:"));
+		int start = consoleOutput.lastIndexOf(
+			_UTIL_SYSTEM_EXT_PROPERTIES_STRING);
 
-		int end = consoleOutput.indexOf("merge-test-results:");
+		start += _UTIL_SYSTEM_EXT_PROPERTIES_STRING.length();
+
+		consoleOutput = consoleOutput.substring(start);
+
+		int end = consoleOutput.indexOf(_SOURCE_FORMAT_STRING);
 
 		return getConsoleOutputSnippet(consoleOutput, true, end);
 	}
@@ -48,15 +52,23 @@ public class SourceFormatFailureMessageGenerator
 			return null;
 		}
 
-		consoleText = consoleText.substring(
-			consoleText.lastIndexOf("format-source:"));
+		int start = consoleText.lastIndexOf(_UTIL_SYSTEM_EXT_PROPERTIES_STRING);
 
-		int end = consoleText.indexOf("merge-test-results:");
+		start = consoleText.indexOf("\n", start);
+
+		consoleText = consoleText.substring(start);
+
+		int end = consoleText.indexOf(_SOURCE_FORMAT_STRING);
+
+		end = consoleText.lastIndexOf("\n", end);
 
 		return getConsoleOutputSnippetElement(consoleText, true, end);
 	}
 
 	private static final String _SOURCE_FORMAT_STRING =
-		"at com.liferay.source.formatter.SourceFormatter.format";
+		"at com.liferay.source.formatter";
+
+	private static final String _UTIL_SYSTEM_EXT_PROPERTIES_STRING =
+		"util-java/test-classes/unit/system-ext.properties";
 
 }
