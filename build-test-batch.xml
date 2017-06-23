@@ -2212,7 +2212,7 @@ ${output.content}</echo>
 	<target name="portal-startup-space-in-path-jdk8">
 		<run-batch-test>
 			<test-action>
-				<sequential>			
+				<sequential>
 					<execute dir="${project.dir}/bundles/tomcat-${app.server.version}/webapps/ROOT/WEB-INF/classes">
 						<![CDATA[
 							sed -i 's/bundles/bun\ dles/g' portal-ext.properties
@@ -2221,7 +2221,7 @@ ${output.content}</echo>
 
 					<execute>
 						<![CDATA[
-							mv bundles bun\ dles 
+							mv bundles bun\ dles
 						]]>
 					</execute>
 
@@ -2229,7 +2229,7 @@ ${output.content}</echo>
 
 					<antcall inheritAll="false" target="start-app-server" />
 
-					<antcall inheritAll="false" target="stop-app-server" />	
+					<antcall inheritAll="false" target="stop-app-server" />
 				</sequential>
 			</test-action>
 
@@ -2244,8 +2244,8 @@ ${output.content}</echo>
 					</else>
 				</if>
 			</test-set-up>
-		</run-batch-test>		
-	</target>	
+		</run-batch-test>
+	</target>
 
 	<target name="portal-web-jdk8">
 		<run-batch-test>
