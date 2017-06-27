@@ -231,9 +231,9 @@ mariadb.executable=${mariadb.executable}]]></echo>
 
 			<database-test-action database.type="@{database.type}">
 				<action>
-					<exec executable="${database.service.executable}">
+					<!-- <exec executable="${database.service.executable}">
 						<arg line="${database.service.cmd.stop}" />
-					</exec>
+					</exec> -->
 				</action>
 			</database-test-action>
 
@@ -243,9 +243,9 @@ mariadb.executable=${mariadb.executable}]]></echo>
 
 					<set-portal-impl-system-ext-properties />
 
-					<exec executable="${database.service.executable}" failonerror="true">
+					<!-- <exec executable="${database.service.executable}" failonerror="true">
 						<arg line="${database.service.cmd.start}" />
-					</exec>
+					</exec> -->
 
 					<antcall inheritall="false" target="copy-optional-jars">
 						<param name="database.type" value="@{database.type}" />
@@ -272,9 +272,9 @@ mariadb.executable=${mariadb.executable}]]></echo>
 						</then>
 					</if>
 
-					<exec executable="${database.service.executable}" failonerror="true">
+<!-- 					<exec executable="${database.service.executable}" failonerror="true">
 						<arg line="${database.service.cmd.stop}" />
-					</exec>
+					</exec> -->
 				</action>
 			</database-test-action>
 		</sequential>
@@ -2217,20 +2217,6 @@ ${output.content}</echo>
 						<trycatch>
 							<try>
 								<sequential>
-<!-- 									<execute dir="${project.dir}/bundles/tomcat-${app.server.version}/webapps/ROOT/WEB-INF/classes">
-										<![CDATA[
-											sed -i 's/bundles/bun\ dles/g' portal-ext.properties
-										]]>
-									</execute>
-
-									<execute>
-										<![CDATA[
-											mv bundles bun\ dles
-										]]>
-									</execute>
-
-									<echo file="app.server.${env.HOSTNAME}.properties">app.server.parent.dir=${project.dir}/bun\ dles</echo> -->
-
 									<antcall inheritAll="false" target="prepare-log4j-ext-xml">
 										<param name="database.type" value="@{database.type}" />
 									</antcall>
@@ -2242,6 +2228,9 @@ ${output.content}</echo>
 									<antcall inheritAll="false" target="prepare-system-ext-properties" />
 
 									<antcall inheritAll="false" target="start-app-server" />
+
+									<antcall inheritall="false" target="stop-app-server" />
+
 								</sequential>
 							</try>
 
@@ -2257,7 +2246,7 @@ ${output.content}</echo>
 			</test-action>
 
 			<test-set-up>
-				<if>
+<!-- 				<if>
 					<isset property="env.DIST_PATH" />
 					<then>
 						<prepare-test-environment />
@@ -2265,7 +2254,35 @@ ${output.content}</echo>
 					<else>
 						<prepare-test-build />
 					</else>
-				</if>
+				</if> -->
+				<sequential>
+					<echo file="/opt/dev/projects/github/liferay-portal/sql/sql.${env.HOSTNAME}.properties">db2.executable=${db2.executable}
+mariadb.executable=/opt/mariadb/bin/mysql
+mysql.arg.line=-u root
+oracle.admin.password=liferay123
+sqlserver.executable=sqlcmd
+sybase.executable=${sybase.executable}</echo>
+
+					<echo file="app.server.${env.HOSTNAME}.properties">app.server.parent.dir=${project.dir}/bun\ dles</echo>
+
+					<prepare-test-environment />
+
+					<echo append="true" file="/opt/dev/projects/github/liferay-portal/sql/sql.${env.HOSTNAME}.properties">
+database.types=db2,hypersonic,mysql,oracle,postgresql,sqlserver,sybase</echo>
+
+					<execute dir="${project.dir}/bundles/tomcat-${app.server.version}/webapps/ROOT/WEB-INF/classes">
+						<![CDATA[
+							sed -i 's/bundles/bun\ dles/g' portal-ext.properties
+						]]>
+					</execute>
+
+					<execute>
+						<![CDATA[
+							mv bundles bun\ dles
+						]]>
+					</execute>
+
+				</sequential>
 			</test-set-up>
 		</run-batch-test>
 	</target>
