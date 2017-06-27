@@ -2264,11 +2264,11 @@ sqlserver.executable=sqlcmd
 sybase.executable=${sybase.executable}
 database.types=db2,hypersonic,mysql,oracle,postgresql,sqlserver,sybase</echo> -->
 
-					<echo file="app.server.${env.HOSTNAME}.properties">app.server.parent.dir=${project.dir}/bun\ dles</echo>
+					<echo file="app.server.${env.HOSTNAME}.properties">app.server.parent.dir=${project.dir}/bundles</echo>
 
 					<prepare-test-environment />
 
-					<execute dir="${project.dir}/bundles/tomcat-${app.server.version}/webapps/ROOT/WEB-INF/classes">
+<!-- 					<execute dir="${project.dir}/bundles/tomcat-${app.server.version}/webapps/ROOT/WEB-INF/classes">
 						<![CDATA[
 							sed -i 's/bundles/bun\ dles/g' portal-ext.properties
 						]]>
@@ -2278,7 +2278,7 @@ database.types=db2,hypersonic,mysql,oracle,postgresql,sqlserver,sybase</echo> --
 						<![CDATA[
 							mv bundles bun\ dles
 						]]>
-					</execute>
+					</execute> -->
 
 				</sequential>
 			</test-set-up>
