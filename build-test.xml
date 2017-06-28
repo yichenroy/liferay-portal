@@ -6338,6 +6338,13 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 		<get-database-property property.name="database.username" />
 		<get-database-property property.name="database.version" />
 
+		<echo>********************liferay home in portal impl: ${liferay.home}*********************************</echo>
+		<echo>*************************************************************************************************</echo>
+		<echo>*************************************************************************************************</echo>
+		<echo>*************************************************************************************************</echo>
+		<echo>*************************************************************************************************</echo>
+		<echo>*************************************************************************************************</echo>
+
 		<echo append="true" file="portal-impl/src/portal-ext.properties">
 
 liferay.home=${liferay.home}
