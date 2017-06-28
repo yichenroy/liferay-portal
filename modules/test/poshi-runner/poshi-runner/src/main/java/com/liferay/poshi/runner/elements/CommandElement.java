@@ -14,9 +14,6 @@
 
 package com.liferay.poshi.runner.elements;
 
-import java.io.BufferedReader;
-import java.io.StringReader;
-
 import org.dom4j.Element;
 
 /**
@@ -42,65 +39,58 @@ public class CommandElement extends PoshiElement {
 
 	@Override
 	public void parseReadableSyntax(String readableSyntax) {
-		try (BufferedReader bufferedReader = new BufferedReader(
-				new StringReader(readableSyntax))) {
+		StringBuilder sb = new StringBuilder();
 
-			StringBuilder sb = new StringBuilder();
+		for (String line : readableSyntax.split("\n")) {
+			line = line.trim();
 
-			String line = null;
+			String endKey = " {";
 
-			while ((line = bufferedReader.readLine()) != null) {
-				String endKey = " {";
+			if (line.endsWith(endKey)) {
+				String startKey = "test";
 
-				if (line.endsWith(endKey)) {
-					String startKey = "test";
+				if (line.startsWith(startKey)) {
+					int start = startKey.length();
+					int end = line.length() - endKey.length();
 
-					if (line.startsWith(startKey)) {
-						int start = startKey.length();
-						int end = line.length() - endKey.length();
+					String name = line.substring(start, end);
 
-						String name = line.substring(start, end);
-
-						addAttribute("name", name);
-					}
-
-					continue;
+					addAttribute("name", name);
 				}
 
-				if (line.equals(");")) {
-					sb.append(line);
-
-					addElementFromReadableSyntax(sb.toString());
-
-					sb.setLength(0);
-
-					continue;
-				}
-
-				if (line.endsWith(";")) {
-					addElementFromReadableSyntax(line);
-
-					continue;
-				}
-
-				if (line.equals("}")) {
-					continue;
-				}
-
-				if (line.startsWith("@")) {
-					String name = getNameFromAssignment(line);
-					String value = getValueFromAssignment(line);
-
-					addAttribute(name, value);
-
-					continue;
-				}
-
-				sb.append(line);
+				continue;
 			}
-		}
-		catch (Exception e) {
-			System.out.println("Unable to generate the 'command' element");
+
+			if (line.equals(");")) {
+				sb.append(line);
+
+				addElementFromReadableSyntax(sb.toString());
+
+				sb.setLength(0);
+
+				continue;
+			}
+
+			if (line.endsWith(";")) {
+				addElementFromReadableSyntax(line);
+
+				continue;
+			}
+
+			if (line.equals("}")) {
+				continue;
+			}
+
+			if (line.startsWith("@")) {
+				String name = getNameFromAssignment(line);
+				String value = getValueFromAssignment(line);
+
+				addAttribute(name, value);
+
+				continue;
+			}
+
+			sb.append(line);
 		}
 	}
 
