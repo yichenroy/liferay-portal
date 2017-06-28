@@ -231,9 +231,9 @@ mariadb.executable=${mariadb.executable}]]></echo>
 
 			<database-test-action database.type="@{database.type}">
 				<action>
-<!-- 					<exec executable="${database.service.executable}">
+					<exec executable="${database.service.executable}">
 						<arg line="${database.service.cmd.stop}" />
-					</exec> -->
+					</exec>
 				</action>
 			</database-test-action>
 
@@ -243,9 +243,9 @@ mariadb.executable=${mariadb.executable}]]></echo>
 
 					<set-portal-impl-system-ext-properties />
 
-<!-- 					<exec executable="${database.service.executable}" failonerror="true">
+					<exec executable="${database.service.executable}" failonerror="true">
 						<arg line="${database.service.cmd.start}" />
-					</exec> -->
+					</exec>
 
 					<antcall inheritall="false" target="copy-optional-jars">
 						<param name="database.type" value="@{database.type}" />
@@ -272,9 +272,9 @@ mariadb.executable=${mariadb.executable}]]></echo>
 						</then>
 					</if>
 
-<!-- 					<exec executable="${database.service.executable}" failonerror="true">
+					<exec executable="${database.service.executable}" failonerror="true">
 						<arg line="${database.service.cmd.stop}" />
-					</exec> -->
+					</exec>
 				</action>
 			</database-test-action>
 		</sequential>
