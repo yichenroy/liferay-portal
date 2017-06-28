@@ -125,12 +125,16 @@ public class CommandElement extends PoshiElement {
 			sb.append(getAssignment(name, value));
 		}
 
-		String readableCommandTitle = getReadableCommandTitle();
 		String readableSyntax = super.toReadableSyntax();
 
-		sb.append(createReadableBlock(readableCommandTitle, readableSyntax));
+		sb.append(createReadableBlock(readableSyntax));
 
 		return sb.toString();
+	}
+
+	@Override
+	protected String getBlockName() {
+		return getReadableCommandTitle();
 	}
 
 	protected String getReadableCommandTitle() {

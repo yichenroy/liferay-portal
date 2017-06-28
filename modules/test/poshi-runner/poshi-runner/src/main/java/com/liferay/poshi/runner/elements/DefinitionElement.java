@@ -136,11 +136,16 @@ public class DefinitionElement extends PoshiElement {
 			content.append(poshiElement.toReadableSyntax());
 		}
 
-		sb.append(createReadableBlock("definition", content.toString()));
+		sb.append(createReadableBlock(content.toString()));
 
 		String sbString = sb.toString();
 
 		return sbString.trim();
+	}
+
+	@Override
+	protected String getBlockName() {
+		return "definition";
 	}
 
 	@Override

@@ -91,14 +91,14 @@ public abstract class PoshiElement extends DefaultElement {
 		add(poshiElement);
 	}
 
-	protected String createReadableBlock(String blockName, String content) {
+	protected String createReadableBlock(String content) {
 		StringBuilder sb = new StringBuilder();
 
 		String pad = getPad();
 
 		sb.append("\n");
 		sb.append(pad);
-		sb.append(blockName);
+		sb.append(getBlockName());
 		sb.append(" {");
 
 		if (content.startsWith("\n\n")) {
@@ -115,6 +115,8 @@ public abstract class PoshiElement extends DefaultElement {
 
 		return sb.toString();
 	}
+
+	protected abstract String getBlockName();
 
 	protected String getPad() {
 		return "\t";

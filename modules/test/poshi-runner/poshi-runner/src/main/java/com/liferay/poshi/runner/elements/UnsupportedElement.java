@@ -33,4 +33,9 @@ public class UnsupportedElement extends PoshiElement {
 	public void parseReadableSyntax(String readableSyntax) {
 	}
 
+	@Override
+	protected String getBlockName() {
+		return null;
+	}
+
 }

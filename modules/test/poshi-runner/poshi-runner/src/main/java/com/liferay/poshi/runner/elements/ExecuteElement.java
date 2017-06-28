@@ -105,27 +105,24 @@ public class ExecuteElement extends PoshiElement {
 				sb.setLength(sb.length() - 2);
 			}
 
-			String function = attributeValue("function");
-
-			return _createReadableExecuteBlock(function, sb.toString());
+			return createReadableBlock(sb.toString());
 		}
 
-		String macro = attributeValue("macro");
 		String readableSyntax = super.toReadableSyntax();
 
-		return _createReadableExecuteBlock(macro, readableSyntax);
+		return createReadableBlock(readableSyntax);
 	}
 
-	private static String _createReadableExecuteBlock(
-		String commandName, String content) {
-
+	@Override
+	protected String createReadableBlock(String content) {
 		StringBuilder sb = new StringBuilder();
 
-		String pad = "\t";
+		String blockName = getBlockName();
+		String pad = getPad();
 
 		sb.append("\n\n");
 		sb.append(pad);
-		sb.append(commandName.replace("#", "."));
+		sb.append(blockName.replace("#", "."));
 		sb.append("(");
 
 		String trimmedContent = content.trim();
@@ -143,6 +140,15 @@ public class ExecuteElement extends PoshiElement {
 		sb.append(");");
 
 		return sb.toString();
+	}
+
+	@Override
+	protected String getBlockName() {
+		if (attributeValue("function") != null) {
+			return attributeValue("function");
+		}
+
+		return attributeValue("macro");
 	}
 
 }

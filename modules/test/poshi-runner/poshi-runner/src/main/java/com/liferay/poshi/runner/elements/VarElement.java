@@ -97,6 +97,11 @@ public class VarElement extends PoshiElement {
 		return sb.toString();
 	}
 
+	@Override
+	protected String getBlockName() {
+		return null;
+	}
+
 	protected void initValueAttributeName(Element element) {
 		if (element.attribute("method") != null) {
 			valueAttributeName = "method";
