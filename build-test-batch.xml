@@ -2229,8 +2229,6 @@ ${output.content}</echo>
 
 									<antcall inheritAll="false" target="start-app-server" />
 
-									<antcall inheritall="false" target="stop-app-server" />
-
 								</sequential>
 							</try>
 
@@ -2256,19 +2254,12 @@ ${output.content}</echo>
 					</else>
 				</if> -->
 				<sequential>
-<!-- 					<echo file="/opt/dev/projects/github/liferay-portal/sql/sql.${env.HOSTNAME}.properties">db2.executable=${db2.executable}
-mariadb.executable=/opt/mariadb/bin/mysql
-mysql.arg.line=-u root
-oracle.admin.password=liferay123
-sqlserver.executable=sqlcmd
-sybase.executable=${sybase.executable}
-database.types=db2,hypersonic,mysql,oracle,postgresql,sqlserver,sybase</echo> -->
 
-					<echo file="app.server.${env.HOSTNAME}.properties">app.server.parent.dir=${project.dir}/bundles</echo>
+					<echo file="app.server.${env.HOSTNAME}.properties">app.server.parent.dir=${project.dir}/bun\ dles</echo>
 
 					<prepare-test-environment />
 
-<!-- 					<execute dir="${project.dir}/bundles/tomcat-${app.server.version}/webapps/ROOT/WEB-INF/classes">
+					<execute dir="${project.dir}/bundles/tomcat-${app.server.version}/webapps/ROOT/WEB-INF/classes">
 						<![CDATA[
 							sed -i 's/bundles/bun\ dles/g' portal-ext.properties
 						]]>
@@ -2278,7 +2269,7 @@ database.types=db2,hypersonic,mysql,oracle,postgresql,sqlserver,sybase</echo> --
 						<![CDATA[
 							mv bundles bun\ dles
 						]]>
-					</execute> -->
+					</execute>
 
 				</sequential>
 			</test-set-up>
