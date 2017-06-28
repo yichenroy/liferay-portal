@@ -2265,15 +2265,15 @@ ${output.content}</echo>
 						]]>
 					</execute> -->
 
+					<propertyfile file="${app.server.tomcat.classes.portal.dir}/portal-ext.properties">
+						<entry key="liferay.home" value="/opt/dev/projects/github/liferay-portal/bun\ dles" />
+					</propertyfile>
+
 					<execute>
 						<![CDATA[
 							mv bundles bun\ dles
 						]]>
 					</execute>
-
-					<propertyfile file="${app.server.tomcat.classes.portal.dir}/portal-ext.properties">
-						<entry key="liferay.home" value="/opt/dev/projects/github/liferay-portal/bun\ dles" />
-					</propertyfile>
 
 				</sequential>
 			</test-set-up>
