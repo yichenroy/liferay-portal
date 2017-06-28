@@ -6320,7 +6320,7 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 	</target>
 
 	<target name="prepare-portal-ext-properties">
-		<delete file="portal-impl/src/portal-ext.properties" />
+		<!-- <delete file="portal-impl/src/portal-ext.properties" /> -->
 
 		<if>
 			<and>
@@ -6339,6 +6339,7 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 		<get-database-property property.name="database.version" />
 
 		<echo>********************liferay home in portal impl: ${liferay.home}*********************************</echo>
+		<echo>********************test base dir: ${test.base.dir.name}*****************************************</echo>
 		<echo>*************************************************************************************************</echo>
 		<echo>*************************************************************************************************</echo>
 		<echo>*************************************************************************************************</echo>
@@ -6347,7 +6348,7 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 
 		<echo append="true" file="portal-impl/src/portal-ext.properties">
 
-liferay.home=${liferay.home}
+#liferay.home=${liferay.home}
 
 plugin.notifications.enabled=false
 
