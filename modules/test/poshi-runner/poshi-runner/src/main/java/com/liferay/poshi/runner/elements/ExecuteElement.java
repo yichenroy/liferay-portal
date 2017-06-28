@@ -14,9 +14,6 @@
 
 package com.liferay.poshi.runner.elements;
 
-import com.liferay.poshi.runner.util.Dom4JUtil;
-
-import org.dom4j.Attribute;
 import org.dom4j.Element;
 
 /**
@@ -85,18 +82,16 @@ public class ExecuteElement extends PoshiElement {
 		if (attributeValue("function") != null) {
 			StringBuilder sb = new StringBuilder();
 
-			for (Attribute attribute :
-					Dom4JUtil.toAttributeList(attributeList())) {
+			for (PoshiElementAttribute poshiElementAttribute :
+					toPoshiElementAttributes(attributeList())) {
 
-				String name = attribute.getName();
+				String name = poshiElementAttribute.getName();
 
 				if (name.equals("function")) {
 					continue;
 				}
 
-				String value = attribute.getValue();
-
-				sb.append(getAssignment(name, value));
+				sb.append(poshiElementAttribute.toReadableSyntax());
 
 				sb.append(", ");
 			}

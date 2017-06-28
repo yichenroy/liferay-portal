@@ -84,11 +84,18 @@ public class VarElement extends PoshiElement {
 		}
 
 		String name = attributeValue("name");
+
+		sb.append(name);
+
+		sb.append(" = \"");
+
 		String value = getVarValue();
 
 		value = value.replace("Util#", "Util.");
 
-		sb.append(getAssignment(name, value));
+		sb.append(value);
+
+		sb.append("\"");
 
 		if (!parentElementName.equals("execute")) {
 			sb.append(";");

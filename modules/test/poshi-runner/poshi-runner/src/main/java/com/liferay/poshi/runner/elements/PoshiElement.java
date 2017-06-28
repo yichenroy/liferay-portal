@@ -41,7 +41,35 @@ public abstract class PoshiElement extends DefaultElement {
 		parseReadableSyntax(readableSyntax);
 	}
 
+	@Override
+	public void add(Attribute attribute) {
+		if (attribute instanceof PoshiElementAttribute) {
+			super.add(attribute);
+
+			return;
+		}
+
+		super.add(new PoshiElementAttribute(attribute));
+	}
+
 	public abstract void parseReadableSyntax(String readableSyntax);
+
+	@Override
+	public boolean remove(Attribute attribute) {
+		if (attribute instanceof PoshiElementAttribute) {
+			return super.remove(attribute);
+		}
+
+		for (PoshiElementAttribute poshiElementAttribute :
+				toPoshiElementAttributes(attributes())) {
+
+			if (poshiElementAttribute.getAttribute() == attribute) {
+				return super.remove(poshiElementAttribute);
+			}
+		}
+
+		return false;
+	}
 
 	public String toReadableSyntax() {
 		StringBuilder sb = new StringBuilder();
@@ -49,17 +77,6 @@ public abstract class PoshiElement extends DefaultElement {
 		for (PoshiElement poshiElement : toPoshiElements(elements())) {
 			sb.append(poshiElement.toReadableSyntax());
 		}
-
-		return sb.toString();
-	}
-
-	protected static String getAssignment(String name, String value) {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append(name);
-		sb.append(" = \"");
-		sb.append(value);
-		sb.append("\"");
 
 		return sb.toString();
 	}
@@ -122,6 +139,23 @@ public abstract class PoshiElement extends DefaultElement {
 		return "\t";
 	}
 
+	protected List<PoshiElementAttribute> toPoshiElementAttributes(
+		List<?> list) {
+
+		if (list == null) {
+			return null;
+		}
+
+		List<PoshiElementAttribute> poshiElementAttributes = new ArrayList<>(
+			list.size());
+
+		for (Object object : list) {
+			poshiElementAttributes.add((PoshiElementAttribute)object);
+		}
+
+		return poshiElementAttributes;
+	}
+
 	protected List<PoshiElement> toPoshiElements(List<?> list) {
 		if (list == null) {
 			return null;
@@ -140,7 +174,7 @@ public abstract class PoshiElement extends DefaultElement {
 		for (Attribute attribute :
 				Dom4JUtil.toAttributeList(element.attributes())) {
 
-			add((Attribute)attribute.clone());
+			add(new PoshiElementAttribute((Attribute)attribute.clone()));
 		}
 	}
 

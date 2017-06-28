@@ -14,12 +14,9 @@
 
 package com.liferay.poshi.runner.elements;
 
-import com.liferay.poshi.runner.util.Dom4JUtil;
-
 import java.io.BufferedReader;
 import java.io.StringReader;
 
-import org.dom4j.Attribute;
 import org.dom4j.Element;
 
 /**
@@ -100,13 +97,12 @@ public class DefinitionElement extends PoshiElement {
 	public String toReadableSyntax() {
 		StringBuilder sb = new StringBuilder();
 
-		for (Attribute attribute : Dom4JUtil.toAttributeList(attributeList())) {
+		for (PoshiElementAttribute poshiElementAttribute :
+				toPoshiElementAttributes(attributeList())) {
+
 			sb.append("\n@");
 
-			String name = attribute.getName();
-			String value = attribute.getValue();
-
-			sb.append(getAssignment(name, value));
+			sb.append(poshiElementAttribute.toReadableSyntax());
 		}
 
 		StringBuilder content = new StringBuilder();

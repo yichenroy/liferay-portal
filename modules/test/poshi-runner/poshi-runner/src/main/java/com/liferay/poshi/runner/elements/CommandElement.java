@@ -14,12 +14,9 @@
 
 package com.liferay.poshi.runner.elements;
 
-import com.liferay.poshi.runner.util.Dom4JUtil;
-
 import java.io.BufferedReader;
 import java.io.StringReader;
 
-import org.dom4j.Attribute;
 import org.dom4j.Element;
 
 /**
@@ -111,18 +108,17 @@ public class CommandElement extends PoshiElement {
 	public String toReadableSyntax() {
 		StringBuilder sb = new StringBuilder();
 
-		for (Attribute attribute : Dom4JUtil.toAttributeList(attributeList())) {
-			String name = attribute.getName();
+		for (PoshiElementAttribute poshiElementAttribute :
+				toPoshiElementAttributes(attributeList())) {
+
+			String name = poshiElementAttribute.getName();
 
 			if (name.equals("name")) {
 				continue;
 			}
 
 			sb.append("\n\t@");
-
-			String value = attribute.getValue();
-
-			sb.append(getAssignment(name, value));
+			sb.append(poshiElementAttribute.toReadableSyntax());
 		}
 
 		String readableSyntax = super.toReadableSyntax();
