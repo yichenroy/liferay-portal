@@ -53,37 +53,6 @@ public abstract class PoshiElement extends DefaultElement {
 		return sb.toString();
 	}
 
-	protected static String createReadableBlock(
-		String blockName, String content) {
-
-		StringBuilder sb = new StringBuilder();
-
-		String pad = "\t";
-
-		if (blockName.equals("definition")) {
-			pad = "";
-		}
-
-		sb.append("\n");
-		sb.append(pad);
-		sb.append(blockName);
-		sb.append(" {");
-
-		if (content.startsWith("\n\n")) {
-			content = content.replaceFirst("\n\n", "\n");
-		}
-
-		content = content.replaceAll("\n", "\n" + pad);
-
-		sb.append(content.replaceAll("\n\t\n", "\n\n"));
-
-		sb.append("\n");
-		sb.append(pad);
-		sb.append("}");
-
-		return sb.toString();
-	}
-
 	protected static String getAssignment(String name, String value) {
 		StringBuilder sb = new StringBuilder();
 
@@ -120,6 +89,35 @@ public abstract class PoshiElement extends DefaultElement {
 			readableSyntax);
 
 		add(poshiElement);
+	}
+
+	protected String createReadableBlock(String blockName, String content) {
+		StringBuilder sb = new StringBuilder();
+
+		String pad = getPad();
+
+		sb.append("\n");
+		sb.append(pad);
+		sb.append(blockName);
+		sb.append(" {");
+
+		if (content.startsWith("\n\n")) {
+			content = content.replaceFirst("\n\n", "\n");
+		}
+
+		content = content.replaceAll("\n", "\n" + pad);
+
+		sb.append(content.replaceAll("\n\t\n", "\n\n"));
+
+		sb.append("\n");
+		sb.append(pad);
+		sb.append("}");
+
+		return sb.toString();
+	}
+
+	protected String getPad() {
+		return "\t";
 	}
 
 	protected List<PoshiElement> toPoshiElements(List<?> list) {

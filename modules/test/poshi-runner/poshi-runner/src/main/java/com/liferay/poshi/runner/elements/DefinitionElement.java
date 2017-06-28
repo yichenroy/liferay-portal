@@ -143,4 +143,9 @@ public class DefinitionElement extends PoshiElement {
 		return sbString.trim();
 	}
 
+	@Override
+	protected String getPad() {
+		return "";
+	}
+
 }
