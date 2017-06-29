@@ -2229,6 +2229,10 @@ ${output.content}</echo>
 										<entry key="liferay.home" value="/opt/dev/projects/github/liferay-portal/bun\ dles" />
 									</propertyfile>
 
+									<propertyfile file="${app.server.tomcat.classes.portal.dir}/portal-ext.properties">
+										<entry key="liferay.home" value="/opt/dev/projects/github/liferay-portal/bun\ dles" />
+									</propertyfile>
+
 									<antcall inheritAll="false" target="prepare-system-ext-properties" />
 
 									<antcall inheritAll="false" target="start-app-server" />
