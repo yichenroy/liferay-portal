@@ -2218,16 +2218,31 @@ ${output.content}</echo>
 							<trycatch>
 								<try>
 									<sequential>
+										<propertyfile file="app.server.${env.HOSTNAME}.properties">
+											<entry key="app.server.parent.dir" value="/opt/dev/projects/github/liferay-portal/bundles2" />
+										</propertyfile>
 
 										<antcall inheritAll="false" target="prepare-log4j-ext-xml">
 											<param name="database.type" value="@{database.type}" />
 										</antcall>
 
+										<propertyfile file="app.server.${env.HOSTNAME}.properties">
+											<entry key="app.server.parent.dir" value="/opt/dev/projects/github/liferay-portal/bundles2" />
+										</propertyfile>
+
 										<antcall inheritAll="false" target="prepare-portal-ext-properties">
 											<param name="database.type" value="@{database.type}" />
 										</antcall>
 
+										<propertyfile file="app.server.${env.HOSTNAME}.properties">
+											<entry key="app.server.parent.dir" value="/opt/dev/projects/github/liferay-portal/bundles2" />
+										</propertyfile>
+
 										<antcall inheritAll="false" target="prepare-system-ext-properties" />
+
+										<propertyfile file="app.server.${env.HOSTNAME}.properties">
+											<entry key="app.server.parent.dir" value="/opt/dev/projects/github/liferay-portal/bundles2" />
+										</propertyfile>
 
 										<antcall inheritAll="false" target="start-app-server" />
 									</sequential>
