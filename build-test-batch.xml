@@ -2257,14 +2257,14 @@ ${output.content}</echo>
 <!-- 					<echo file="app.server.${env.HOSTNAME}.properties">app.server.parent.dir=${project.dir}/bun\ dles</echo> -->
 					<sequential>
 						<propertyfile file="app.server.${env.HOSTNAME}.properties">
-							<entry key="app.server.parent.dir" value="/opt/dev/projects/github/liferay-portal/bun dles" />
+							<entry key="app.server.parent.dir" value="/opt/dev/projects/github/liferay-portal/bun\\ dles" />
 						</propertyfile>
 
 						<prepare-test-environment />
 
 						<execute>
 							<![CDATA[
-								mv 'bundles' 'bun dles'
+								mv 'bundles' 'bun\\ dles'
 							]]>
 						</execute>
 
