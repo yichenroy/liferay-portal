@@ -6328,7 +6328,6 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 				<available file="${test.base.dir.name}/portal.properties" />
 			</and>
 			<then>
-				<echo>********************test base dir: ${test.base.dir.name}*****************************************</echo>
 				<copy file="${test.base.dir.name}/portal.properties" tofile="portal-impl/src/portal-ext.properties" />
 			</then>
 		</if>
@@ -6339,18 +6338,9 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 		<get-database-property property.name="database.username" />
 		<get-database-property property.name="database.version" />
 
-		<echo>********************liferay home in portal impl: ${liferay.home}*********************************</echo>
-		<echo>********************test base dir: ${test.base.dir.name}*****************************************</echo>
-		<echo>*************************************************************************************************</echo>
-		<echo>*************************************************************************************************</echo>
-		<echo>*************************************************************************************************</echo>
-		<echo>*************************************************************************************************</echo>
-		<echo>*************************************************************************************************</echo>
-
 		<echo append="true" file="portal-impl/src/portal-ext.properties">
 
-liferay.home=/opt/dev/projects/github/liferay-portal/bun dles
-#liferay.home=${liferay.home}
+liferay.home=${liferay.home}
 
 plugin.notifications.enabled=false
 

@@ -2225,6 +2225,10 @@ ${output.content}</echo>
 										<param name="database.type" value="@{database.type}" />
 									</antcall>
 
+									<propertyfile file="portal-impl/src/portal-ext-properties">
+										<entry key="liferay.home" value="/opt/dev/projects/github/liferay-portal/bun\ dles" />
+									</propertyfile>
+
 									<antcall inheritAll="false" target="prepare-system-ext-properties" />
 
 									<antcall inheritAll="false" target="start-app-server" />
@@ -2258,12 +2262,6 @@ ${output.content}</echo>
 					<echo file="app.server.${env.HOSTNAME}.properties">app.server.parent.dir=${project.dir}/bun\ dles</echo>
 
 					<prepare-test-environment />
-
-<!-- 					<execute dir="${project.dir}/bundles/tomcat-${app.server.version}/webapps/ROOT/WEB-INF/classes">
-						<![CDATA[
-							sed -i 's/bundles/bun\ dles/g' portal-ext.properties
-						]]>
-					</execute> -->
 
 					<propertyfile file="${app.server.tomcat.classes.portal.dir}/portal-ext.properties">
 						<entry key="liferay.home" value="/opt/dev/projects/github/liferay-portal/bun\ dles" />
