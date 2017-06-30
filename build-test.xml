@@ -6374,6 +6374,16 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 		<get-database-property property.name="database.username" />
 		<get-database-property property.name="database.version" />
 
+
+		<echo>*********************************************************************************</echo>
+		<echo>*********************************************************************************</echo>
+		<echo>*********************************************************************************</echo>
+		<echo>************************liferay.home: ${liferay.home}****************************</echo>
+		<echo>*********************************************************************************</echo>
+		<echo>*********************************************************************************</echo>
+		<echo>*********************************************************************************</echo>
+		<echo>*********************************************************************************</echo>
+
 		<echo append="true" file="portal-impl/src/portal-ext.properties">
 
 liferay.home=${liferay.home}
@@ -6730,8 +6740,9 @@ mail.session.mail.smtp.port=25000</echo>
 auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-deploy</echo>
 			</then>
 		</if>
-
+			<echo>******************before apply portal-ext properties*********************************</echo>
 		<apply-portal-ext-properties />
+			<echo>******************after apply portal-ext properties**********************************</echo>
 	</target>
 
 	<target name="prepare-portal-properties">
