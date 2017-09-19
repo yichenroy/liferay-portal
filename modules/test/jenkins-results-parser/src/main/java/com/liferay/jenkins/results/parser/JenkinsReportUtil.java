@@ -52,6 +52,7 @@ public class JenkinsReportUtil {
 						axisBuilds.put(axisKey, axisBuild);
 					}
 					catch (Exception e) {
+						e.printStackTrace();
 					}
 
 					for (TestResult testResult :
@@ -61,13 +62,16 @@ public class JenkinsReportUtil {
 							testResults.put(
 								testResult.getDisplayName(), testResult);
 						}
-						catch (Exception e) {
+						catch (NullPointerException npe) {
+							npe.printStackTrace();
 						}
 					}
 				}
 			}
 		}
-		catch (Exception e) {
+		catch (NullPointerException npe) {
+			npe.printStackTrace();
+
 			return null;
 		}
 
