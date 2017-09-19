@@ -94,6 +94,7 @@ public class JenkinsReportUtil {
 			getSummaryElement(
 				topLevelBuild, axisBuilds, batchBuilds, testResults),
 			getTimelineElement(topLevelBuild, axisBuilds),
+			getTopLevelTableElement(topLevelBuild),
 			getBatchReportElement(batchBuilds));
 
 		return bodyElement;
@@ -639,6 +640,31 @@ public class JenkinsReportUtil {
 			divElement, canvasElement, scriptElement, chartJSScriptElement);
 
 		return divElement;
+	}
+
+	protected static Element getTopLevelTableElement(Build topLevelBuild) {
+		List<Build> topLevelBuildList = new ArrayList();
+
+		topLevelBuildList.add(topLevelBuild);
+
+		String status = topLevelBuild.getStatus();
+
+		String result = topLevelBuild.getResult();
+
+		Element topLevelTableElement;
+
+		if (result != null) {
+			topLevelTableElement = getBatchInfoTableElement(
+				topLevelBuildList,
+				"Top Level Job - <strong>" + result + "</strong>");
+		}
+		else {
+			topLevelTableElement = getBatchInfoTableElement(
+				topLevelBuildList,
+				"Top Level Job - <strong>" + status + "</strong>");
+		}
+
+		return topLevelTableElement;
 	}
 
 	protected static Element getTotalCIUsageElement(
