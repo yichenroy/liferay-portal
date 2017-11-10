@@ -69,16 +69,34 @@ public class PoshiRunner {
 				classCommandNames.add(testName);
 			}
 			else {
-				String className = testName;
+				String className =
+					PoshiRunnerGetterUtil.getClassNameFromClassCommandName(
+						testName);
 
-				Element rootElement = PoshiRunnerContext.getTestCaseRootElement(
-					className);
+				String namespaceClassName =
+					PoshiRunnerGetterUtil.
+						getNamespaceClassNameFromClassCommandName(testName);
+
+				String namespace =
+					PoshiRunnerGetterUtil.getNamespaceFromClassCommandName(
+						testName);
+
+				Element rootElement;
+
+				if (testName.contains(".")) {
+					rootElement = PoshiRunnerContext.getTestCaseRootElement(
+						className, namespace);
+				}
+				else {
+					rootElement = PoshiRunnerContext.getTestCaseRootElement(
+						className);
+				}
 
 				List<Element> commandElements = rootElement.elements("command");
 
 				for (Element commandElement : commandElements) {
 					classCommandNames.add(
-						className + "#" +
+						namespaceClassName + "#" +
 							commandElement.attributeValue("name"));
 				}
 			}
@@ -90,8 +108,9 @@ public class PoshiRunner {
 	public PoshiRunner(String classCommandName) throws Exception {
 		_testClassCommandName = classCommandName;
 
-		_testClassName = PoshiRunnerGetterUtil.getClassNameFromClassCommandName(
-			_testClassCommandName);
+		_testClassName =
+			PoshiRunnerGetterUtil.getNamespaceClassNameFromClassCommandName(
+				_testClassCommandName);
 	}
 
 	@Before
