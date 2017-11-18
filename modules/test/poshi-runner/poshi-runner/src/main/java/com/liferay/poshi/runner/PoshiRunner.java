@@ -21,6 +21,7 @@ import com.liferay.poshi.runner.logger.XMLLoggerHandler;
 import com.liferay.poshi.runner.selenium.LiferaySeleniumHelper;
 import com.liferay.poshi.runner.selenium.SeleniumUtil;
 import com.liferay.poshi.runner.util.PropsValues;
+import com.liferay.poshi.runner.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -233,8 +234,18 @@ public class PoshiRunner {
 			rootElement = PoshiRunnerContext.getTestCaseRootElement(
 				className, namespace);
 
+			if (Validator.isNull(rootElement)) {
+				rootElement = PoshiRunnerContext.getTestCaseRootElement(
+					className);
+			}
+
 			commandElement = PoshiRunnerContext.getTestCaseCommandElement(
 				simpleClassCommandName, namespace);
+
+			if (Validator.isNull(commandElement)) {
+				commandElement = PoshiRunnerContext.getTestCaseCommandElement(
+					simpleClassCommandName);
+			}
 		}
 		else {
 			rootElement = PoshiRunnerContext.getTestCaseRootElement(className);
