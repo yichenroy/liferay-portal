@@ -826,7 +826,7 @@ public abstract class BaseBuild implements Build {
 		JSONObject buildJSONObject = getBuildJSONObject("timestamp");
 
 		if (buildJSONObject == null) {
-			return null;
+			return System.currentTimeMillis();
 		}
 
 		long timestamp = buildJSONObject.getLong("timestamp");
