@@ -48,6 +48,7 @@
 					</not>
 				</and>
 				<then>
+					<echo>This is a test</echo>
 					<property name="test.build.liferay.portal.zip.file.name" value="${app.server.portal.dir}" />
 				</then>
 				<elseif>
