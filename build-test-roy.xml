@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+
+<project basedir="." default="one" name="portal-test-roy" xmlns:antelope="antlib:ise.antelope.tasks">
+	<import file="build-test.xml" />
+
+	<path id="jenkins.classpath">
+		<fileset dir="/opt/dev/projects/github/liferay-jenkins-ee/lib/jenkins" includes="*.jar" />
+	</path>
+	<taskdef classpathref="jenkins.classpath" resource="ise/antelope/tasks/antlib.xml" uri="antlib:ise.antelope.tasks" />
+	<taskdef classpathref="jenkins.classpath" resource="net/sf/antcontrib/antlib.xml" />
+	<taskdef classname="com.liferay.ant.beanshell.BeanShellTask" classpathref="jenkins.classpath" name="beanshell" />
+	<taskdef classname="com.liferay.ant.build.logger.LiferayBuildLoggerInstallerTask" classpathref="jenkins.classpath" name="liferay-build-logger-installer" />
+
+	<target name="one">
+		<beanshell mapId="job">
+			<![CDATA[
+				import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+				import com.liferay.jenkins.results.parser.JobFactory;
+				import com.liferay.jenkins.results.parser.PortalRepositoryJob;
+				import com.liferay.jenkins.results.parser.TestBatchGroup;
+				import com.liferay.jenkins.results.parser.TestBatchGroupFactory;
+				import com.liferay.jenkins.results.parser.GitWorkingDirectory;
+
+				import org.apache.commons.lang.StringUtils;
+
+				PortalRepositoryJob portalRepositoryJob = JobFactory.newPortalRepositoryJob("test-portal-acceptance-upstream(master)");
+
+				GitWorkingDirectory gitWorkingDirectory = portalRepositoryJob.getGitWorkingDirectory();
+
+				File workingDir = gitWorkingDirectory.getWorkingDirectory();
+
+				String workingDirPath = workingDir.getCanonicalPath();
+
+				String testClassNamesIncludes = project.getProperty("test.class.names.includes");
+
+				List globs = new ArrayList();
+
+				for (File moduleGroupDir : gitWorkingDirectory.getCurrentBranchModuleGroupDirs()) {
+					String moduleGroupDirPath = moduleGroupDir.getCanonicalPath();
+
+					moduleGroupDirPath = moduleGroupDirPath.replace(workingDirPath + "/", "");
+
+					for (String testClassNames : testClassNamesIncludes.split(",")) {
+						globs.add(moduleGroupDirPath + "/" + testClassNames);
+					}
+				}
+
+				System.out.println(StringUtils.join(globs, ","));
+			]]>
+		</beanshell>
+	</target>
+
+	<target name="two">
+		<beanshell mapId="job">
+			<![CDATA[
+				import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+				import com.liferay.jenkins.results.parser.JobFactory;
+				import com.liferay.jenkins.results.parser.PortalRepositoryJob;
+				import com.liferay.jenkins.results.parser.TestBatchGroup;
+				import com.liferay.jenkins.results.parser.TestBatchGroupFactory;
+				import com.liferay.jenkins.results.parser.GitWorkingDirectory;
+				import com.liferay.jenkins.results.parser.PropertiesUtil;
+				import java.util.Properties;
+				import org.apache.commons.lang.StringUtils;
+
+				PortalRepositoryJob portalRepositoryJob = JobFactory.newPortalRepositoryJob("test-portal-acceptance-upstream(master)");
+
+				GitWorkingDirectory gitWorkingDirectory = portalRepositoryJob.getGitWorkingDirectory();
+
+				Properties portalTestProperties = PropertiesUtil.getGitWorkingDirectoryProperties(gitWorkingDirectory, "test.properties");
+
+				for (String propertyName : portalTestProperties.stringPropertyNames()) {
+					if (propertyName.startsWith("test.batch.class.names.includes")) {
+						System.out.println(propertyName + "=" + portalTestProperties.get(propertyName));
+					}
+				}
+			]]>
+		</beanshell>
+	</target>
+</project>
