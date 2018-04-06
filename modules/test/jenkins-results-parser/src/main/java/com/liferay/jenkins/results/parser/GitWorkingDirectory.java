@@ -472,7 +472,7 @@ public class GitWorkingDirectory {
 
 		String remoteBranchName = remoteBranch.getName();
 
-		sb.append(remoteBranchName);
+		sb.append(remote.getName());
 
 		if ((remoteBranchName != null) && !remoteBranchName.isEmpty()) {
 			sb.append(" ");
