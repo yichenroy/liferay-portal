@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+
+<project basedir="." default="test1" name="roy-test" xmlns:antelope="antlib:ise.antelope.tasks" xmlns:if="ant:if" xmlns:unless="ant:unless">
+	<import file="build-test.xml" />
+
+	<target name="test1">
+		<property name="env.CI_TEST_SUITE" value="relevant" />
+		<property name="test.batch.name" value="modules-unit-jdk8" />
+
+		<beanshell>
+			<![CDATA[
+				import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
+				import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
+				import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
+				import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
+
+				PortalGitWorkingDirectory portalGitWorkingDirectory = new PortalGitWorkingDirectory(project.getProperty("git.working.branch.name"), project.getProperty("project.dir"));
+
+				BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), portalGitWorkingDirectory, project.getProperty("env.CI_TEST_SUITE"));
+
+				int axisCount = batchTestClassGroup.getAxisCount();
+
+				StringBuilder sb = new StringBuilder();
+
+				for (i = 0; i < axisCount; i++) {
+					AxisTestClassGroup axisTestClassGroup = batchTestClassGroup.getAxisTestClassGroup(i);
+
+					List testClassGroup = axisTestClassGroup.getTestClassFiles();
+
+					sb.append("TEST_CLASS_GROUP_");
+					sb.append(i);
+					sb.append("=");
+
+					for (File testClass : testClassGroup) {
+						sb.append(testClass.toPath());
+						sb.append(",");
+					}
+
+					if (!testClassGroup.isEmpty()) {
+						sb.setLength(sb.length() - 1);
+					}
+
+					sb.append("\n\n");
+				}
+
+				sb.append("TEST_CLASS_GROUPS=");
+
+				for (int i = 0; i < axisCount; i++) {
+					sb.append(i);
+					sb.append(" ");
+				}
+
+				if (axisCount > 0) {
+					sb.setLength(sb.length() - 1);
+				}
+
+				System.out.println(sb.toString());
+
+				project.setProperty("test.class.file.names.properties.content", sb.toString());
+			]]>
+		</beanshell>
+
+		<echo file="test.class.file.names.properties">${test.class.file.names.properties.content}</echo>
+	</target>
+</project>
