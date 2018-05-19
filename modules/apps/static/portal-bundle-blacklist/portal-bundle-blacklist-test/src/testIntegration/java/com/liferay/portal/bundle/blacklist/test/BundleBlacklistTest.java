@@ -61,6 +61,7 @@ import org.osgi.util.tracker.BundleTracker;
 @RunWith(Arquillian.class)
 public class BundleBlacklistTest {
 
+
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
