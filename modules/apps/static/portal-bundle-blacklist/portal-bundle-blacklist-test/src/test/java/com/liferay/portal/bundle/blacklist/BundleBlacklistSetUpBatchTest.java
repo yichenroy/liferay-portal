@@ -12,6 +12,7 @@
  * details.
  */
 
+
 package com.liferay.portal.bundle.blacklist;
 
 import com.liferay.petra.string.StringPool;
