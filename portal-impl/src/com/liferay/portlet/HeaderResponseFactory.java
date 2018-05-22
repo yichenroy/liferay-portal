@@ -12,31 +12,26 @@
  * details.
  */
 
-package com.liferay.sync.engine.util;
+package com.liferay.portlet;
+
+import aQute.bnd.annotation.ProviderType;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * @author Shinn Lok
+ * @author Neil Griffin
  */
-public class ReleaseInfo {
+@ProviderType
+public class HeaderResponseFactory {
 
-	public static final int getBuildNumber() {
-		return _BUILD_NUMBER;
+	public static HeaderResponseImpl create(
+		RenderRequestImpl renderRequestImpl, HttpServletResponse response) {
+
+		HeaderResponseImpl headerResponseImpl = new HeaderResponseImpl();
+
+		headerResponseImpl.init(renderRequestImpl, response);
+
+		return headerResponseImpl;
 	}
-
-	public static final int getFeatureSet() {
-		return _FEATURE_SET;
-	}
-
-	public static final String getVersion() {
-		return _VERSION;
-	}
-
-	private static final String _BUILD = "3405";
-
-	private static final int _BUILD_NUMBER = Integer.parseInt(_BUILD);
-
-	private static final int _FEATURE_SET = 1;
-
-	private static final String _VERSION = "3.4.5";
 
 }

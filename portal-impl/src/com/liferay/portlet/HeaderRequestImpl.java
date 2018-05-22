@@ -12,31 +12,23 @@
  * details.
  */
 
-package com.liferay.sync.engine.util;
+package com.liferay.portlet;
+
+import aQute.bnd.annotation.ProviderType;
+
+import javax.portlet.HeaderRequest;
+import javax.portlet.PortletRequest;
 
 /**
- * @author Shinn Lok
+ * @author Neil Griffin
  */
-public class ReleaseInfo {
+@ProviderType
+public class HeaderRequestImpl
+	extends RenderRequestImpl implements HeaderRequest {
 
-	public static final int getBuildNumber() {
-		return _BUILD_NUMBER;
+	@Override
+	public String getLifecycle() {
+		return PortletRequest.HEADER_PHASE;
 	}
-
-	public static final int getFeatureSet() {
-		return _FEATURE_SET;
-	}
-
-	public static final String getVersion() {
-		return _VERSION;
-	}
-
-	private static final String _BUILD = "3405";
-
-	private static final int _BUILD_NUMBER = Integer.parseInt(_BUILD);
-
-	private static final int _FEATURE_SET = 1;
-
-	private static final String _VERSION = "3.4.5";
 
 }
