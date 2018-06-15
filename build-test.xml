@@ -444,6 +444,16 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 						replace="\2"
 					/>
 
+					<echo>PRINTING JSTACK</echo>
+
+					<execute>
+						<![CDATA[
+							jstack -l ${bootstrap.pid}
+						]]>
+					</execute>
+
+					<echo>DONE PRINTING JSTACK</echo>
+
 					<execute>
 						<![CDATA[
 							jstack -l ${bootstrap.pid} > jstack_output
@@ -456,6 +466,9 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 					/>
 				</then>
 			</if>
+
+			<echo>Before deleting jps output and jstack output: </echo>
+			<echo>${jstack_output}</echo>
 
 			<delete file="jps_output" />
 			<delete file="jstack_output" />
