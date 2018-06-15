@@ -3397,119 +3397,128 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 		<attribute default="" name="testable.portal.started.marker.file" />
 
 		<sequential>
-			<set-app-server-properties
-				app.server.bin.dir="@{app.server.bin.dir}"
-				app.server.bundle.index="@{app.server.bundle.index}"
-			/>
+			<trycatch property="failure.message">
 
-			<local name="portal.not.started" />
+				<set-app-server-properties
+					app.server.bin.dir="@{app.server.bin.dir}"
+					app.server.bundle.index="@{app.server.bundle.index}"
+				/>
 
-			<if>
-				<equals arg1="@{app.server.bin.dir}" arg2="${app.server.tcat.admin.bin.dir}" />
-				<then>
-					<waitfor maxwait="1" maxwaitunit="second" timeoutproperty="portal.not.started">
-						<socket port="${test.app.server.leading.port.number}180" server="localhost" />
-					</waitfor>
-				</then>
-				<elseif>
-					<equals arg1="@{app.server.bin.dir}" arg2="${app.server.tcat.agent.bin.dir}" />
+				<local name="portal.not.started" />
+
+				<if>
+					<equals arg1="@{app.server.bin.dir}" arg2="${app.server.tcat.admin.bin.dir}" />
 					<then>
+						<waitfor maxwait="1" maxwaitunit="second" timeoutproperty="portal.not.started">
+							<socket port="${test.app.server.leading.port.number}180" server="localhost" />
+						</waitfor>
+					</then>
+					<elseif>
+						<equals arg1="@{app.server.bin.dir}" arg2="${app.server.tcat.agent.bin.dir}" />
+						<then>
+							<waitfor maxwait="1" maxwaitunit="second" timeoutproperty="portal.not.started">
+								<socket port="${test.app.server.leading.port.number}080" server="localhost" />
+							</waitfor>
+						</then>
+					</elseif>
+					<else>
 						<waitfor maxwait="1" maxwaitunit="second" timeoutproperty="portal.not.started">
 							<socket port="${test.app.server.leading.port.number}080" server="localhost" />
 						</waitfor>
-					</then>
-				</elseif>
-				<else>
-					<waitfor maxwait="1" maxwaitunit="second" timeoutproperty="portal.not.started">
-						<socket port="${test.app.server.leading.port.number}080" server="localhost" />
-					</waitfor>
-				</else>
-			</if>
+					</else>
+				</if>
 
-			<if>
-				<isset property="portal.not.started" />
-				<then>
-					<if>
-						<not>
-							<equals arg1="@{testable.portal.started.marker.file}" arg2="" />
-						</not>
-						<then>
-							<echo file="@{testable.portal.started.marker.file}" message="1" />
-						</then>
-					</if>
-
-					<if>
-						<or>
-							<equals arg1="${app.server.type}" arg2="jboss" />
-							<equals arg1="${app.server.type}" arg2="wildfly" />
-						</or>
-						<then>
-							<echo file="${test.app.server.deploy.dir}/ROOT.war.dodeploy"></echo>
-						</then>
-					</if>
-
-					<get-testcase-property property.name="portal.version" />
-
-					<if>
-						<and>
+				<if>
+					<isset property="portal.not.started" />
+					<then>
+						<if>
 							<not>
-								<isset property="portal.version" />
+								<equals arg1="@{testable.portal.started.marker.file}" arg2="" />
 							</not>
-							<equals arg1="@{delete.liferay.home}" arg2="true" />
-						</and>
-						<then>
-							<antcall target="delete-liferay-home">
-								<param name="keep.hypersonicdb" value="true" />
-							</antcall>
-						</then>
-					</if>
+							<then>
+								<echo file="@{testable.portal.started.marker.file}" message="1" />
+							</then>
+						</if>
 
-					<delete failonerror="false" includeemptydirs="true">
-						<fileset
-							dir="${test.app.server.dir}/logs"
-							excludes="catalina.*.log"
-						/>
-					</delete>
+						<if>
+							<or>
+								<equals arg1="${app.server.type}" arg2="jboss" />
+								<equals arg1="${app.server.type}" arg2="wildfly" />
+							</or>
+							<then>
+								<echo file="${test.app.server.deploy.dir}/ROOT.war.dodeploy"></echo>
+							</then>
+						</if>
 
-					<if>
-						<equals arg1="${test.ant.launched.by.selenium}" arg2="true" />
-						<then>
-							<local name="java.jdk.home" />
+						<get-testcase-property property.name="portal.version" />
 
-							<get-java-jdk-home />
+						<if>
+							<and>
+								<not>
+									<isset property="portal.version" />
+								</not>
+								<equals arg1="@{delete.liferay.home}" arg2="true" />
+							</and>
+							<then>
+								<antcall target="delete-liferay-home">
+									<param name="keep.hypersonicdb" value="true" />
+								</antcall>
+							</then>
+						</if>
 
-							<exec dir="${test.app.server.bin.dir}" executable="${app.server.start.executable}" resolveexecutable="true">
-								<arg line="${app.server.start.executable.arg.line}" />
-								<env key="JAVA_HOME" path="${java.jdk.home}" />
-							</exec>
+						<delete failonerror="false" includeemptydirs="true">
+							<fileset
+								dir="${test.app.server.dir}/logs"
+								excludes="catalina.*.log"
+							/>
+						</delete>
 
-							<wait-for-app-server app.server.bin.dir="@{app.server.bin.dir}" app.server.bundle.index="@{app.server.bundle.index}" />
-						</then>
-						<else>
-							<get-testcase-property property.name="ext.plugins.includes" />
+						<if>
+							<equals arg1="${test.ant.launched.by.selenium}" arg2="true" />
+							<then>
+								<local name="java.jdk.home" />
 
-							<parallel>
-								<if>
-									<not>
-										<isset property="ext.plugins.includes" />
-									</not>
-									<then>
-										<sequential>
-											<wait-for-app-server app.server.bin.dir="@{app.server.bin.dir}" app.server.bundle.index="@{app.server.bundle.index}" />
-										</sequential>
-									</then>
-								</if>
+								<get-java-jdk-home />
 
-								<daemons>
-									<exec dir="${test.app.server.bin.dir}" executable="${app.server.start.executable}" failonerror="true" resolveexecutable="true">
-										<arg line="${app.server.start.executable.arg.line}" />
-									</exec>
-								</daemons>
-							</parallel>
-						</else>
-					</if>
-				</then>
-			</if>
+								<exec dir="${test.app.server.bin.dir}" executable="${app.server.start.executable}" resolveexecutable="true">
+									<arg line="${app.server.start.executable.arg.line}" />
+									<env key="JAVA_HOME" path="${java.jdk.home}" />
+								</exec>
+
+								<wait-for-app-server app.server.bin.dir="@{app.server.bin.dir}" app.server.bundle.index="@{app.server.bundle.index}" />
+							</then>
+							<else>
+								<get-testcase-property property.name="ext.plugins.includes" />
+
+								<parallel>
+									<if>
+										<not>
+											<isset property="ext.plugins.includes" />
+										</not>
+										<then>
+											<sequential>
+												<wait-for-app-server app.server.bin.dir="@{app.server.bin.dir}" app.server.bundle.index="@{app.server.bundle.index}" />
+											</sequential>
+										</then>
+									</if>
+
+									<daemons>
+										<exec dir="${test.app.server.bin.dir}" executable="${app.server.start.executable}" failonerror="true" resolveexecutable="true">
+											<arg line="${app.server.start.executable.arg.line}" />
+										</exec>
+									</daemons>
+								</parallel>
+							</else>
+						</if>
+					</then>
+				</if>
+			</trycatch>
+
+			<catch>
+				<get-jstack-output process.name="Bootstrap" />
+
+				<fail message="${failure.message}${line.separator}${jstack.output}"/>
+			</catch>
 		</sequential>
 	</macrodef>
 
