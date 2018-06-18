@@ -1483,6 +1483,8 @@ app.server.type=@{app.server.type}]]></echo>
 
 							<trycatch>
 								<try>
+									<get-jstack-output process.name="Bootstrap" />
+
 									<antcall inheritall="false" target="start-app-server-preserve-liferay-home" />
 
 									<gradle-execute dir="modules/apps/static/portal-lpkg-deployer/portal-lpkg-deployer-test" task="testIntegration">
@@ -1505,6 +1507,8 @@ app.server.type=@{app.server.type}]]></echo>
 
 							<trycatch>
 								<try>
+									<get-jstack-output process.name="Bootstrap" />
+									
 									<antcall inheritall="false" target="start-app-server" />
 
 									<gradle-execute dir="modules/apps/static/portal-lpkg-deployer/portal-lpkg-deployer-test" task="testIntegration">
@@ -1607,6 +1611,8 @@ app.server.type=@{app.server.type}]]></echo>
 
 							<trycatch>
 								<try>
+									<get-jstack-output process.name="Bootstrap" />
+
 									<antcall inheritall="false" target="start-app-server-preserve-liferay-home" />
 
 									<gradle-execute dir="modules/apps/static/portal-lpkg-deployer/portal-lpkg-deployer-test" task="testIntegration">
