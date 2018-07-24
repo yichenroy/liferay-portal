@@ -8257,8 +8257,10 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 			</then>
 		</if>
 
+		<echo>$${test.build.bundle.zip.url}=${test.build.bundle.zip.url}</echo>
+
 		<if>
-			<matches pattern="https?://" string="${test.build.bundle.zip.url}" />
+			<matches pattern="(file|https?)://" string="${test.build.bundle.zip.url}" />
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
@@ -8298,47 +8300,38 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 				</chmod>
 			</then>
 			<else>
+				<echo>DEBUG: 2</echo>
+
 				<if>
-					<equals arg1="${app.server.type}" arg2="jboss" />
+					<equals arg1="${app.server.type}" arg2="weblogic" />
 					<then>
-						<ant antfile="build-dist.xml" inheritAll="false" target="unzip-jboss" />
+						<ant antfile="build-dist.xml" inheritAll="false" target="unzip-weblogic-custom" />
+
+						<chmod
+							perm="a+x"
+						>
+							<fileset
+								dir="${app.server.weblogic.bin.dir}"
+							>
+								<include name="**/*.sh" />
+							</fileset>
+						</chmod>
+
+						<chmod
+							perm="a+x"
+						>
+							<fileset
+								dir="${app.server.weblogic.instance.dir}"
+							>
+								<include name="**/*.sh" />
+							</fileset>
+						</chmod>
+					</then>
+					<else>
+						<ant antfile="build-dist.xml" inheritAll="false" target="unzip-${app.server.type}" />
 
 						<ant antfile="build.xml" inheritAll="false" target="deploy-additional-jars" />
-					</then>
-					<elseif>
-						<equals arg1="${app.server.type}" arg2="tcserver" />
-						<then>
-							<ant antfile="build-dist.xml" inheritAll="false" target="unzip-tcserver" />
-
-							<ant antfile="build.xml" inheritAll="false" target="deploy-additional-jars" />
-						</then>
-					</elseif>
-					<elseif>
-						<equals arg1="${app.server.type}" arg2="weblogic" />
-						<then>
-							<ant antfile="build-dist.xml" inheritAll="false" target="unzip-weblogic-custom" />
-
-							<chmod
-								perm="a+x"
-							>
-								<fileset
-									dir="${app.server.weblogic.bin.dir}"
-								>
-									<include name="**/*.sh" />
-								</fileset>
-							</chmod>
-
-							<chmod
-								perm="a+x"
-							>
-								<fileset
-									dir="${app.server.weblogic.instance.dir}"
-								>
-									<include name="**/*.sh" />
-								</fileset>
-							</chmod>
-						</then>
-					</elseif>
+					</else>
 				</if>
 
 				<mkdir dir="dist" />
@@ -8417,19 +8410,19 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 
 		<if>
 			<or>
-				<matches pattern="https?://" string="${test.build.bundle.zip.url}" />
-				<matches pattern="https?://" string="${test.build.portal.osgi.zip.url}" />
+				<matches pattern="(file|https?)://" string="${test.build.bundle.zip.url}" />
+				<matches pattern="(file|https?)://" string="${test.build.portal.osgi.zip.url}" />
 			</or>
 			<then>
 				<local name="bundle.zip.url" />
 
 				<if>
-					<matches pattern="https?://" string="${test.build.bundle.zip.url}" />
+					<matches pattern="(file|https?)://" string="${test.build.bundle.zip.url}" />
 					<then>
 						<property name="bundle.zip.url" value="${test.build.bundle.zip.url}" />
 					</then>
 					<elseif>
-						<matches pattern="https?://" string="${test.build.portal.osgi.zip.url}" />
+						<matches pattern="(file|https?)://" string="${test.build.portal.osgi.zip.url}" />
 						<then>
 							<propertyregex
 								input="${test.build.portal.osgi.zip.url}"
