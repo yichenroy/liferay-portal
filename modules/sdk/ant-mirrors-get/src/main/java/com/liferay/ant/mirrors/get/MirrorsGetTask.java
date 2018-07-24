@@ -181,7 +181,7 @@ public class MirrorsGetTask extends Task {
 		if (!localCacheFile.exists()) {
 			URL sourceURL = null;
 
-			if (_tryLocalNetwork) {
+			if (_tryLocalNetwork && !_protocol.equals("file")) {
 				sb = new StringBuilder();
 
 				sb.append("http://");
@@ -212,6 +212,9 @@ public class MirrorsGetTask extends Task {
 
 					downloadFile(defaultURL, localCacheFile);
 				}
+			}
+			else if (_protocol.equals("file")) {
+				copyFile(new File(_path, _fileName), localCacheFile);
 			}
 			else {
 				sb = new StringBuilder();
