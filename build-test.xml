@@ -8336,7 +8336,7 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 
 				<mkdir dir="dist" />
 
-				<mirrors-get
+				<get
 					dest="dist/liferay-portal-${lp.version}.war"
 					src="${test.build.portal.war.url}"
 				/>
@@ -8350,7 +8350,7 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 
 				<ant antfile="build.xml" inheritAll="false" target="update-app-server-scripts" />
 
-				<mirrors-get
+				<get
 					dest="liferay-portal-dependencies.zip"
 					src="${test.build.portal.dependencies.zip.url}"
 				/>
@@ -8368,7 +8368,7 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 
 				<delete file="liferay-portal-dependencies.zip" />
 
-				<mirrors-get
+				<get
 					dest="liferay-portal-osgi.zip"
 					src="${test.build.portal.osgi.zip.url}"
 				/>
@@ -8386,7 +8386,7 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 
 				<delete file="liferay-portal-osgi.zip" />
 
-				<mirrors-get
+				<get
 					dest="liferay-portal-tools.zip"
 					src="${test.build.portal.tools.zip.url}"
 				/>
