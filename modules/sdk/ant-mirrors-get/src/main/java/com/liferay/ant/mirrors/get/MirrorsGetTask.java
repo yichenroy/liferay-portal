@@ -323,7 +323,7 @@ public class MirrorsGetTask extends Task {
 		return path;
 	}
 
-	protected boolean isValidMD5(File file, URL url) throws IOException {
+	protected boolean isValidMD5(File file, URL url) {
 		if (_skipChecksum) {
 			return true;
 		}
