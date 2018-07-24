@@ -3927,6 +3927,8 @@ log.sanitizer.enabled=false</echo>
 			<test-set-up>
 				<fail message="Please set the property ${modules.test.class.group}" unless="modules.test.class.group" />
 
+				<echo>semantic-versioning test-set-up: modules.test.class.group: ${modules.test.class.group}</echo>
+
 				<if>
 					<isset property="env.DIST_PATH" />
 					<then>
