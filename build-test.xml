@@ -8408,7 +8408,7 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 			</else>
 		</if>
 
-		<if>
+		<!-- <if>
 			<or>
 				<matches pattern="(file|https?)://" string="${test.build.bundle.zip.url}" />
 				<matches pattern="(file|https?)://" string="${test.build.portal.osgi.zip.url}" />
@@ -8460,7 +8460,7 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 
 				<delete file="liferay-portal-bundle.zip" />
 			</then>
-		</if>
+		</if> -->
 
 		<if>
 			<matches pattern="https?://" string="${test.build.fix.pack.zip.url}" />
