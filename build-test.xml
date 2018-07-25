@@ -8420,6 +8420,8 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 					<matches pattern="(file|https?)://" string="${test.build.bundle.zip.url}" />
 					<then>
 						<property name="bundle.zip.url" value="${test.build.bundle.zip.url}" />
+
+						<echo>Using $${test.build.bundle.zip.url}=${test.build.bundle.zip.url}</echo>
 					</then>
 					<elseif>
 						<matches pattern="(file|https?)://" string="${test.build.portal.osgi.zip.url}" />
@@ -8431,6 +8433,8 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 								regexp="osgi"
 								replace="tomcat"
 							/>
+
+						<echo>Using $${test.build.portal.osgi.zip.url}=${test.build.portal.osgi.zip.url}</echo>
 						</then>
 					</elseif>
 				</if>
