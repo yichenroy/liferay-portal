@@ -8472,6 +8472,16 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 			</then>
 		</if> -->
 
+		<condition property="portal.source.zip.available">
+			<available file="liferay-portal-source.zip" />
+		</condition>
+
+		<unzip
+			dest="."
+			if:true="portal.source.zip.available"
+			src="liferay-portal-source.zip"
+		/>
+
 		<if>
 			<matches pattern="https?://" string="${test.build.fix.pack.zip.url}" />
 			<then>
