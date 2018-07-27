@@ -8302,15 +8302,15 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 			<else>
 				<echo>DEBUG: 2</echo>
 
-				<condition property="portal.source.zip.available">
+				<if>
 					<available file="liferay-portal-source.zip" />
-				</condition>
-
-				<unzip
-					dest="."
-					if:true="portal.source.zip.available"
-					src="liferay-portal-source.zip"
-				/>
+					<then>
+						<unzip
+							dest="."
+							src="liferay-portal-source.zip"
+						/>
+					</then>
+				</if>
 
 				<if>
 					<equals arg1="${app.server.type}" arg2="weblogic" />
