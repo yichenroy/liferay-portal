@@ -435,8 +435,11 @@ public abstract class AMImageEntryLocalServiceBaseImpl
 	}
 
 	public void destroy() {
+		String adaptiveMediaImageModelAMImageEntry =
+			"com.liferay.adaptive.media.image.model.AMImageEntry";
+
 		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.adaptive.media.image.model.AMImageEntry");
+			adaptiveMediaImageModelAMImageEntry);
 	}
 
 	/**
