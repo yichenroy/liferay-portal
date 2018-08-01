@@ -1059,4 +1059,8 @@ This target does not format .es.js files. Please run the following command from 
 			<jvmarg value="-Duser.timezone=GMT" />
 		</java>
 	</target>
+
+	<target name="zero-test" >
+		<echo>This is a test target</echo>
+	</target>
 </project>
