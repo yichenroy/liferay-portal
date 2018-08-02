@@ -4628,6 +4628,10 @@ ${output.content}</echo>
 						<equals arg1="${skip.service.builder.full}" arg2="true" />
 					</not>
 					<then>
+						<echo>===============================================</echo>
+						<echo>Running full build service</echo>
+						<echo>===============================================</echo>
+
 						<ant dir="portal-impl" target="build-services" />
 					</then>
 					<else>
@@ -4636,6 +4640,10 @@ ${output.content}</echo>
 								<equals arg1="${skip.service.builder.core}" arg2="true" />
 							</not>
 							<then>
+								<echo>===============================================</echo>
+								<echo>Running core build service</echo>
+								<echo>===============================================</echo>
+
 								<ant dir="portal-impl" target="build-service-counter" />
 								<ant dir="portal-impl" target="build-service-portal" />
 								<ant dir="portal-impl" target="build-service-portlets" />
@@ -4645,6 +4653,10 @@ ${output.content}</echo>
 						<if>
 							<isset property="modules.test.class.group" />
 							<then>
+								<echo>===============================================</echo>
+								<echo>Running modules build service</echo>
+								<echo>===============================================</echo>
+
 								<loadresource property="modules.build.service.task.groups">
 									<filterchain>
 										<tokenfilter>
