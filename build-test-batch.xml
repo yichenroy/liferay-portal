@@ -4668,9 +4668,17 @@ ${output.content}</echo>
 
 								<for list="${modules.build.service.task.groups}" param="modules.build.service.task.group" trim="true">
 									<sequential>
-										<echo>Executing Gradle tasks: @{modules.build.service.task.group}.</echo>
+										<var name="module.dir" unset="true" />
 
-										<gradle-execute dir="modules" forcedcacheenabled="false" task="@{modules.build.service.task.group}">
+										<propertyregex property="module.dir" input="@{modules.build.service.task.group}" regexp="(\S*):(\S+)" select="\1" />
+
+										<var name="task.name" unset="true" />
+
+										<propertyregex property="task.name" input="@{modules.build.service.task.group}" regexp="(\S*):(\S+)" select="\2" />
+
+										<echo>Executing Gradle tasks: modules/${module.dir} ${task.name}</echo>
+
+										<gradle-execute dir="modules/${module.dir}" forcedcacheenabled="false" task="${task.name}">
 											<arg value="-DbuildService.skipReadOnly=${build.services.skip.read.only}" />
 											<arg value="-Pcom.liferay.portal.tools.service.builder.ignore.local=false" />
 										</gradle-execute>
