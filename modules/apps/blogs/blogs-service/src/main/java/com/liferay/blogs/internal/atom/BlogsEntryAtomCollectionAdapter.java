@@ -74,7 +74,10 @@ public class BlogsEntryAtomCollectionAdapter
 
 	@Override
 	public String getEntryId(BlogsEntry blogsEntry) {
-		return String.valueOf(blogsEntry.getEntryId());
+
+		String entryId = String.valueOf(blogsEntry.getEntryId());
+
+		return entryId;
 	}
 
 	@Override
