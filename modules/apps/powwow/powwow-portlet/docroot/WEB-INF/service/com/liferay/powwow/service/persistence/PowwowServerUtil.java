@@ -118,7 +118,10 @@ public class PowwowServerUtil {
 	*/
 	public static List<PowwowServer> findByPT_A(String providerType,
 		boolean active) {
-		return getPersistence().findByPT_A(providerType, active);
+
+		PowwowServerPersistence persistence = getPersistence();
+
+		return persistence.findByPT_A(providerType, active);
 	}
 
 	/**
