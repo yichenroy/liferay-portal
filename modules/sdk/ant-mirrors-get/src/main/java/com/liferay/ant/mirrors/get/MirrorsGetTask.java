@@ -86,8 +86,9 @@ public class MirrorsGetTask extends Task {
 			throw new RuntimeException("Invalid src attribute: " + src);
 		}
 
-		_fileName = matcher.group(2);
-		_path = matcher.group(1);
+		_fileName = matcher.group("fileName");
+		_path = matcher.group("path");
+		_protocol = matcher.group("protocol");
 
 		if (_path.startsWith("mirrors/")) {
 			_path = _path.replaceFirst("mirrors", getMirrorsHostname());
@@ -180,7 +181,7 @@ public class MirrorsGetTask extends Task {
 		if (!localCacheFile.exists()) {
 			URL sourceURL = null;
 
-			if (_tryLocalNetwork) {
+			if (_tryLocalNetwork && !_protocol.equals("file")) {
 				sb = new StringBuilder();
 
 				sb.append("http://");
@@ -211,6 +212,9 @@ public class MirrorsGetTask extends Task {
 
 					downloadFile(defaultURL, localCacheFile);
 				}
+			}
+			else if (_protocol.equals("file")) {
+				copyFile(new File(_path, _fileName), localCacheFile);
 			}
 			else {
 				sb = new StringBuilder();
@@ -319,7 +323,7 @@ public class MirrorsGetTask extends Task {
 		return path;
 	}
 
-	protected boolean isValidMD5(File file, URL url) throws IOException {
+	protected boolean isValidMD5(File file, URL url) {
 		if (_skipChecksum) {
 			return true;
 		}
@@ -524,7 +528,7 @@ public class MirrorsGetTask extends Task {
 	private static final Pattern _mirrorsHostNamePattern = Pattern.compile(
 		"^mirrors\\.[^\\.]+\\.liferay.com/");
 	private static final Pattern _srcPattern = Pattern.compile(
-		"https?://(.+/)(.+)");
+		"(?<protocol>https?|file)://(?<path>.+/)(?<fileName>.+)");
 
 	private File _dest;
 	private String _fileName;
@@ -532,6 +536,7 @@ public class MirrorsGetTask extends Task {
 	private boolean _ignoreErrors;
 	private String _mirrorsHostname;
 	private String _path;
+	private String _protocol;
 	private boolean _skipChecksum;
 	private boolean _tryLocalNetwork = true;
 	private boolean _verbose;
