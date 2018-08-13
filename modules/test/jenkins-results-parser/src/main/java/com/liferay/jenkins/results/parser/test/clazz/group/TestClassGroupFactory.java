@@ -25,8 +25,18 @@ public class TestClassGroupFactory {
 	public static BatchTestClassGroup newBatchTestClassGroup(
 		String batchName, Job job) {
 
+		System.out.println("=========================");
+		System.out.println("TEST CLASS GROUP FACTORY");
+		System.out.println("batchName: " + batchName);
+		System.out.println("Job: " + job.getJobName());
+		System.out.println("=========================");
+
 		if (job instanceof PortalTestClassJob) {
 			PortalTestClassJob portalTestClassJob = (PortalTestClassJob)job;
+
+			System.out.println("=====================================");
+			System.out.println("Before if conditions on batchNames");
+			System.out.println("=====================================");
 
 			if (batchName.contains("functional-")) {
 				return new FunctionalBatchTestClassGroup(
@@ -77,9 +87,17 @@ public class TestClassGroupFactory {
 					batchName, portalTestClassJob);
 			}
 
+			System.out.println("=====================================");
+			System.out.println("After if conditions on batchNames");
+			System.out.println("=====================================");
+
 			return new DefaultBatchTestClassGroup(
 				batchName, portalTestClassJob);
 		}
+
+		System.out.println("=====================================");
+		System.out.println("throwing exception");
+		System.out.println("=====================================");
 
 		throw new IllegalArgumentException("Unknown test class group");
 	}
