@@ -154,6 +154,23 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 			}
 		}
 
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+		System.out.println(
+			"relevantTestClassNameRelativeGlobs for batch: " + batchName);
+
+		if (moduleName != null) {
+			System.out.println("module name detected: " + moduleName);
+		}
+
+		for (String relevantTestClassNameRelativeGlob :
+				relevantTestClassNameRelativeGlobs) {
+
+			System.out.println(relevantTestClassNameRelativeGlob);
+		}
+
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
 		return relevantTestClassNameRelativeGlobs;
 	}
 
