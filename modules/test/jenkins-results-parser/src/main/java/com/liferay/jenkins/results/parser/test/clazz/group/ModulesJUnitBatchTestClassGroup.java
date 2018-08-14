@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Yi-Chen Tsai
@@ -113,6 +115,14 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 			}
 		}
 
+		Matcher matcher = _singleModuleBatchNamePattern.matcher(batchName);
+
+		String moduleName = null;
+
+		if (matcher.find()) {
+			moduleName = matcher.group("moduleName");
+		}
+
 		for (File modifiedModuleDir : modifiedModuleDirsList) {
 			String modifiedModuleAbsolutePath =
 				modifiedModuleDir.getAbsolutePath();
@@ -120,6 +130,12 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 			String modifiedModuleRelativePath =
 				modifiedModuleAbsolutePath.substring(
 					modifiedModuleAbsolutePath.indexOf("modules/"));
+
+			if ((moduleName != null) &&
+				!modifiedModuleRelativePath.contains(moduleName)) {
+
+				continue;
+			}
 
 			for (String testClassNamesRelativeGlob :
 					testClassNamesRelativeGlobs) {
@@ -137,6 +153,23 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 				}
 			}
 		}
+
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+		System.out.println(
+			"relevantTestClassNameRelativeGlobs for batch: " + batchName);
+
+		if (moduleName != null) {
+			System.out.println("module name detected: " + moduleName);
+		}
+
+		for (String relevantTestClassNameRelativeGlob :
+				relevantTestClassNameRelativeGlobs) {
+
+			System.out.println(relevantTestClassNameRelativeGlob);
+		}
+
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
 		return relevantTestClassNameRelativeGlobs;
 	}
@@ -264,5 +297,8 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 			throw new RuntimeException(ioe);
 		}
 	}
+
+	private static final Pattern _singleModuleBatchNamePattern =
+		Pattern.compile("modules-unit-(?<moduleName>\\S+)-jdk*");
 
 }

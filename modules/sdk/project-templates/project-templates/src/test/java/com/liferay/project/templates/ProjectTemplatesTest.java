@@ -297,7 +297,9 @@ public class ProjectTemplatesTest {
 		File gradleProjectDir = _buildTemplateWithGradle(
 			"content-targeting-report", "foo-bar");
 
-		_testExists(gradleProjectDir, "bnd.bnd");
+		String bndBnd = "bnd.bnd";
+
+		_testExists(gradleProjectDir, bndBnd);
 
 		_testContains(
 			gradleProjectDir,

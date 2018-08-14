@@ -55,9 +55,10 @@ public class AMAttributeTest {
 
 		long value = RandomUtil.nextInt(Integer.MAX_VALUE);
 
-		Assert.assertEquals(
-			value,
-			(long)contentLengthAMAttribute.convert(String.valueOf(value)));
+		long expected =
+			(long)contentLengthAMAttribute.convert(String.valueOf(value));
+
+		Assert.assertEquals(value, expected);
 	}
 
 	@Test
