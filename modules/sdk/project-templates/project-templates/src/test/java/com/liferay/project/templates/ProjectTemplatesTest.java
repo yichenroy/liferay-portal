@@ -87,6 +87,7 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -3671,6 +3672,12 @@ public class ProjectTemplatesTest {
 			File gradleProjectDir, File mavenProjectDir, File gradleOutputDir,
 			File mavenOutputDir, String... gradleTaskPath)
 		throws Exception {
+
+		String buildProjects = System.getProperty(
+			"project.templates.test.builds");
+
+		Assume.assumeTrue(
+			Validator.isNotNull(buildProjects) && buildProjects.equals("true"));
 
 		_executeGradle(gradleProjectDir, gradleTaskPath);
 
