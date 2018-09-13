@@ -123,7 +123,7 @@ public class AutoCloseUtil {
 			sb.append("no longer automatically close if this comment is ");
 			sb.append("available. If you believe this is a mistake please ");
 			sb.append("reopen this pull by entering the following command ");
-			sb.append("as a comment.</em></strong></p><pre>ci&#58;reopen");
+			sb.append("as a comment.</em></strong></p><pre>ci&#58;reopen ssssssssssss");
 			sb.append("</pre><hr /><h3>Critical Failure Details:</h3>");
 
 			for (Build failedDownstreamBuild : failedDownstreamBuilds) {
