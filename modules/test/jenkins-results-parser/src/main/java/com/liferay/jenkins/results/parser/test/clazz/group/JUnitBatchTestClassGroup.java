@@ -153,20 +153,6 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 		protected static JunitBatchTestClass getInstance(
 			String fullClassName, GitWorkingDirectory gitWorkingDirectory) {
 
-			String filePath = fullClassName.substring(
-				0, fullClassName.lastIndexOf("."));
-
-			filePath = filePath.replace(".", "/");
-
-			String simpleClassName = fullClassName.substring(
-				fullClassName.lastIndexOf(".") + 1);
-
-			File file = new File(filePath, simpleClassName + ".class");
-
-			if (_junitTestClasses.containsKey(file)) {
-				return _junitTestClasses.get(file);
-			}
-
 			File javaFile = gitWorkingDirectory.getJavaFileFromFullClassName(
 				fullClassName);
 
@@ -177,9 +163,33 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 				return null;
 			}
 
-			File parentFile = javaFile.getParentFile();
+			String javaFileAbsolutePath = javaFile.getAbsolutePath();
 
-			return getInstance(file, gitWorkingDirectory, parentFile, javaFile);
+			Matcher matcher = _packagePathPattern.matcher(javaFileAbsolutePath);
+
+			if (matcher.find()) {
+				File workingDirectory =
+					gitWorkingDirectory.getWorkingDirectory();
+
+				String packagePath = matcher.group("packagePath");
+
+				packagePath = packagePath.replace(".java", ".class");
+
+				String parentPath = matcher.group("parentPath");
+
+				parentPath = parentPath.replace(
+					workingDirectory.getAbsolutePath(), "");
+
+				return getInstance(
+					new File(packagePath), gitWorkingDirectory,
+					new File(parentPath), javaFile);
+			}
+
+			File file = new File(
+				javaFileAbsolutePath.replace(".java", ".class"));
+
+			return getInstance(
+				file, gitWorkingDirectory, file.getParentFile(), javaFile);
 		}
 
 		protected static Map<File, JunitBatchTestClass> getJunitTestClasses() {
