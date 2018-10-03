@@ -74,9 +74,18 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 
 			File testFile = junitBatchTestClass.getFile();
 
-			String testFileAbsolutePath = testFile.getAbsolutePath();
+			String testFileRelativePath = testFile.getPath();
 
-			testFileAbsolutePath = testFileAbsolutePath.replace(
+			File testParentFile = junitBatchTestClass.getParentFile();
+
+			if (testParentFile != null) {
+				String testParentPath = testParentFile.getPath();
+
+				testFileRelativePath = JenkinsResultsParserUtil.combine(
+					testParentPath, "/", testFileRelativePath);
+			}
+
+			testFileRelativePath = testFileRelativePath.replace(
 				".class", ".java");
 
 			String className = testFile.getName();
@@ -99,7 +108,7 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 					csvReportRow.add("");
 				}
 
-				csvReportRow.add(testFileAbsolutePath);
+				csvReportRow.add(testFileRelativePath);
 
 				csvReport.addRow(csvReportRow);
 			}
