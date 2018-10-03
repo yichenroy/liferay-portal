@@ -149,7 +149,7 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 			return junitTestClass;
 		}
 
-		protected static JunitBatchTestClass getInstance(
+		protected static JunitBatchTestClass getInstanceFromFullClassName(
 			String fullClassName, GitWorkingDirectory gitWorkingDirectory) {
 
 			File javaFile = gitWorkingDirectory.getJavaFileFromFullClassName(
@@ -381,8 +381,9 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 				return;
 			}
 
-			JunitBatchTestClass parentJunitBatchTestClass = getInstance(
-				parentFullClassName, _gitWorkingDirectory);
+			JunitBatchTestClass parentJunitBatchTestClass =
+				getInstanceFromFullClassName(
+					parentFullClassName, _gitWorkingDirectory);
 
 			if (parentJunitBatchTestClass == null) {
 				return;
