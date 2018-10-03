@@ -167,13 +167,31 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 			Matcher matcher = _packagePathSlashPattern.matcher(
 				javaFileAbsolutePath);
 
-			if (matcher.find()) {
-				File workingDirectory =
-					gitWorkingDirectory.getWorkingDirectory();
+			File workingDirectory = gitWorkingDirectory.getWorkingDirectory();
 
+			if (matcher.find()) {
 				String packagePath = matcher.group("packagePath");
 
-				packagePath = packagePath.replace(".java", ".class");
+				packagePath = packagePath + ".class";
+
+				String parentPath = matcher.group("parentPath");
+
+				parentPath = parentPath.replace(
+					workingDirectory.getAbsolutePath(), "");
+
+				return getInstance(
+					new File(packagePath), gitWorkingDirectory,
+					new File(parentPath), javaFile);
+			}
+
+			matcher = _packagePathDotPattern.matcher(javaFileAbsolutePath);
+
+			if (matcher.find()) {
+				String packagePath = matcher.group("packagePath");
+
+				packagePath = packagePath.replaceAll("\\.", "/");
+
+				packagePath = packagePath + ".class";
 
 				String parentPath = matcher.group("parentPath");
 
@@ -580,8 +598,7 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 						if (matcher.find()) {
 							String packagePath = matcher.group("packagePath");
 
-							packagePath = packagePath.replace(
-								".java", ".class");
+							packagePath = packagePath + ".class";
 
 							String parentPath = matcher.group("parentPath");
 
@@ -809,7 +826,7 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 	private static final Pattern _packagePathDotPattern = Pattern.compile(
 		"(?<parentPath>.*/)(?<packagePath>com\\..*)\\.java");
 	private static final Pattern _packagePathSlashPattern = Pattern.compile(
-		"(?<parentPath>.*/)(?<packagePath>com/.*)");
+		"(?<parentPath>.*/)(?<packagePath>com/.*)\\.java");
 
 	private final List<File> _autoBalanceTestFiles = new ArrayList<>();
 	private boolean _includeAutoBalanceTests;
