@@ -121,15 +121,20 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 
 	public static class JunitBatchTestClass extends BaseTestClass {
 
+		public File getParentFile() {
+			return _parentFile;
+		}
+
 		protected static JunitBatchTestClass getInstance(
-			File file, GitWorkingDirectory gitWorkingDirectory, File srcFile) {
+			File file, GitWorkingDirectory gitWorkingDirectory, File parentFile,
+			File srcFile) {
 
 			if (_junitTestClasses.containsKey(file)) {
 				return _junitTestClasses.get(file);
 			}
 
 			JunitBatchTestClass junitTestClass = new JunitBatchTestClass(
-				file, gitWorkingDirectory, srcFile);
+				file, gitWorkingDirectory, parentFile, srcFile);
 
 			_junitTestClasses.put(file, junitTestClass);
 
@@ -163,7 +168,9 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 				return null;
 			}
 
-			return getInstance(file, gitWorkingDirectory, javaFile);
+			File parentFile = javaFile.getParentFile();
+
+			return getInstance(file, gitWorkingDirectory, parentFile, javaFile);
 		}
 
 		protected static Map<File, JunitBatchTestClass> getJunitTestClasses() {
@@ -171,13 +178,15 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 		}
 
 		protected JunitBatchTestClass(
-			File file, GitWorkingDirectory gitWorkingDirectory, File srcFile) {
+			File file, GitWorkingDirectory gitWorkingDirectory, File parentFile,
+			File srcFile) {
 
 			super(file);
 
 			String srcFileName = srcFile.getName();
 
 			_gitWorkingDirectory = gitWorkingDirectory;
+			_parentFile = parentFile;
 			_srcFile = srcFile;
 
 			_className = _getClassName();
@@ -363,6 +372,7 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 		private final String _className;
 		private final GitWorkingDirectory _gitWorkingDirectory;
 		private final String _packageName;
+		private final File _parentFile;
 		private final File _srcFile;
 		private final String _srcFileContent;
 
@@ -497,16 +507,19 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 
 				filePath = filePath.replace(".java", ".class");
 
+				File file = new File(filePath);
+
 				axisTestClassGroup.addTestClass(
 					JunitBatchTestClass.getInstance(
-						new File(filePath), portalGitWorkingDirectory,
+						file, portalGitWorkingDirectory, file.getParentFile(),
 						autoBalanceTestFile));
 			}
 		}
 	}
 
 	protected void setTestClasses() {
-		File workingDirectory = portalGitWorkingDirectory.getWorkingDirectory();
+		final File workingDirectory =
+			portalGitWorkingDirectory.getWorkingDirectory();
 
 		try {
 			Files.walkFileTree(
@@ -555,14 +568,23 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 							packagePath = packagePath.replace(
 								".java", ".class");
 
+							String parentPath = matcher.group("parentPath");
+
+							parentPath = parentPath.replace(
+								workingDirectory.getAbsolutePath(), "");
+
 							return JunitBatchTestClass.getInstance(
 								new File(packagePath),
-								portalGitWorkingDirectory, path.toFile());
+								portalGitWorkingDirectory, new File(parentPath),
+								path.toFile());
 						}
 
+						File file = new File(
+							filePath.replace(".java", ".class"));
+
 						return JunitBatchTestClass.getInstance(
-							new File(filePath.replace(".java", ".class")),
-							portalGitWorkingDirectory, path.toFile());
+							file, portalGitWorkingDirectory,
+							file.getParentFile(), path.toFile());
 					}
 
 				});
@@ -702,7 +724,7 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 	private static final boolean _DEFAULT_INCLUDE_AUTO_BALANCE_TESTS = false;
 
 	private static final Pattern _packagePathPattern = Pattern.compile(
-		".*/(?<packagePath>com/.*)");
+		"(?<parentPath>.*/)(?<packagePath>com/.*)");
 
 	private final List<File> _autoBalanceTestFiles = new ArrayList<>();
 	private boolean _includeAutoBalanceTests;
