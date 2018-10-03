@@ -164,7 +164,8 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 
 			String javaFileAbsolutePath = javaFile.getAbsolutePath();
 
-			Matcher matcher = _packagePathPattern.matcher(javaFileAbsolutePath);
+			Matcher matcher = _packagePathSlashPattern.matcher(
+				javaFileAbsolutePath);
 
 			if (matcher.find()) {
 				File workingDirectory =
@@ -573,13 +574,34 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 					private BaseTestClass _getPackagePathClassFile(Path path) {
 						String filePath = path.toString();
 
-						Matcher matcher = _packagePathPattern.matcher(filePath);
+						Matcher matcher = _packagePathSlashPattern.matcher(
+							filePath);
 
 						if (matcher.find()) {
 							String packagePath = matcher.group("packagePath");
 
 							packagePath = packagePath.replace(
 								".java", ".class");
+
+							String parentPath = matcher.group("parentPath");
+
+							parentPath = parentPath.replace(
+								workingDirectory.getAbsolutePath(), "");
+
+							return JunitBatchTestClass.getInstance(
+								new File(packagePath),
+								portalGitWorkingDirectory, new File(parentPath),
+								path.toFile());
+						}
+
+						matcher = _packagePathDotPattern.matcher(filePath);
+
+						if (matcher.find()) {
+							String packagePath = matcher.group("packagePath");
+
+							packagePath = packagePath.replaceAll("\\.", "/");
+
+							packagePath = packagePath + ".class";
 
 							String parentPath = matcher.group("parentPath");
 
@@ -784,7 +806,9 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 
 	private static final boolean _DEFAULT_INCLUDE_AUTO_BALANCE_TESTS = false;
 
-	private static final Pattern _packagePathPattern = Pattern.compile(
+	private static final Pattern _packagePathDotPattern = Pattern.compile(
+		"(?<parentPath>.*/)(?<packagePath>com\\..*)\\.java");
+	private static final Pattern _packagePathSlashPattern = Pattern.compile(
 		"(?<parentPath>.*/)(?<packagePath>com/.*)");
 
 	private final List<File> _autoBalanceTestFiles = new ArrayList<>();
