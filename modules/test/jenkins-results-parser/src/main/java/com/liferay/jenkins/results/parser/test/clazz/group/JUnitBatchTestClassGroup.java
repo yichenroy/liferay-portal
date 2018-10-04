@@ -178,8 +178,6 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 			if (matcher.find()) {
 				String packagePath = matcher.group("packagePath");
 
-				packagePath = packagePath.replaceAll("\\.", "/");
-
 				packagePath = packagePath + ".class";
 
 				String parentPath = matcher.group("parentPath");
