@@ -150,6 +150,52 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 			return junitTestClass;
 		}
 
+		protected static JunitBatchTestClass getInstance(
+			String filePath, GitWorkingDirectory gitWorkingDirectory) {
+
+			File srcFile = new File(filePath);
+
+			File workingDirectory = gitWorkingDirectory.getWorkingDirectory();
+
+			Matcher matcher = _packagePathSlashPattern.matcher(filePath);
+
+			if (matcher.find()) {
+				String packagePath = matcher.group("packagePath");
+
+				packagePath = packagePath.replace(".java", ".class");
+
+				String parentPath = matcher.group("parentPath");
+
+				parentPath = parentPath.replace(
+					workingDirectory.getAbsolutePath(), "");
+
+				return getInstance(
+					new File(packagePath), gitWorkingDirectory,
+					new File(parentPath), srcFile);
+			}
+
+			matcher = _packagePathDotPattern.matcher(filePath);
+
+			if (matcher.find()) {
+				String packagePath = matcher.group("packagePath");
+
+				packagePath = packagePath.replace(".java", ".class");
+
+				String parentPath = matcher.group("parentPath");
+
+				parentPath = parentPath.replace(
+					workingDirectory.getAbsolutePath(), "");
+
+				return getInstance(
+					new File(packagePath), gitWorkingDirectory,
+					new File(parentPath), srcFile);
+			}
+
+			File file = new File(filePath.replace(".java", ".class"));
+
+			return getInstance(file, gitWorkingDirectory, null, srcFile);
+		}
+
 		protected static JunitBatchTestClass getInstanceFromFullClassName(
 			String fullClassName, GitWorkingDirectory gitWorkingDirectory) {
 
@@ -163,34 +209,7 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 				return null;
 			}
 
-			String javaFileAbsolutePath = javaFile.getAbsolutePath();
-
-			Matcher matcher = _packagePathSlashPattern.matcher(
-				javaFileAbsolutePath);
-
-			if (matcher.find()) {
-				File workingDirectory =
-					gitWorkingDirectory.getWorkingDirectory();
-
-				String packagePath = matcher.group("packagePath");
-
-				packagePath = packagePath.replace(".java", ".class");
-
-				String parentPath = matcher.group("parentPath");
-
-				parentPath = parentPath.replace(
-					workingDirectory.getAbsolutePath(), "");
-
-				return getInstance(
-					new File(packagePath), gitWorkingDirectory,
-					new File(parentPath), javaFile);
-			}
-
-			File file = new File(
-				javaFileAbsolutePath.replace(".java", ".class"));
-
-			return getInstance(
-				file, gitWorkingDirectory, file.getParentFile(), javaFile);
+			return getInstance(javaFile.getAbsolutePath(), gitWorkingDirectory);
 		}
 
 		protected static Map<File, JunitBatchTestClass> getJunitTestClasses() {
@@ -581,51 +600,8 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 					private BaseTestClass _getPackagePathClassFile(Path path) {
 						String filePath = path.toString();
 
-						Matcher matcher = _packagePathSlashPattern.matcher(
-							filePath);
-
-						if (matcher.find()) {
-							String packagePath = matcher.group("packagePath");
-
-							packagePath = packagePath.replace(
-								".java", ".class");
-
-							String parentPath = matcher.group("parentPath");
-
-							parentPath = parentPath.replace(
-								workingDirectory.getAbsolutePath(), "");
-
-							return JunitBatchTestClass.getInstance(
-								new File(packagePath),
-								portalGitWorkingDirectory, new File(parentPath),
-								path.toFile());
-						}
-
-						matcher = _packagePathDotPattern.matcher(filePath);
-
-						if (matcher.find()) {
-							String packagePath = matcher.group("packagePath");
-
-							packagePath = packagePath.replace(
-								".java", ".class");
-
-							String parentPath = matcher.group("parentPath");
-
-							parentPath = parentPath.replace(
-								workingDirectory.getAbsolutePath(), "");
-
-							return JunitBatchTestClass.getInstance(
-								new File(packagePath),
-								portalGitWorkingDirectory, new File(parentPath),
-								path.toFile());
-						}
-
-						File file = new File(
-							filePath.replace(".java", ".class"));
-
 						return JunitBatchTestClass.getInstance(
-							file, portalGitWorkingDirectory,
-							file.getParentFile(), path.toFile());
+							filePath, portalGitWorkingDirectory);
 					}
 
 				});
