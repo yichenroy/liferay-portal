@@ -6,6 +6,7 @@ AUI.add(
 		var Do = A.Do;
 		var Lang = A.Lang;
 
+
 		var KEY_ENTER = 13;
 
 		var UA = A.UA;
