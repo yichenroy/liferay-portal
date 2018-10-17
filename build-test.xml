@@ -2458,6 +2458,8 @@ ${tomcat-gc-log}
 
 					int axisCount = batchTestClassGroup.getAxisCount();
 
+					System.out.println("axisCount: " + axisCount);
+
 					StringBuilder sb = new StringBuilder();
 
 					for (i = 0; i < axisCount; i++) {
