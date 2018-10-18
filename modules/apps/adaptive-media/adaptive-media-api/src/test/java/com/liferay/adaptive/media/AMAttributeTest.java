@@ -35,6 +35,7 @@ public class AMAttributeTest {
 		AMAttribute<?, String> configurationUuidAMAttribute =
 			AMAttribute.getConfigurationUuidAMAttribute();
 
+
 		String value = RandomTestUtil.randomString();
 
 		Assert.assertEquals(value, configurationUuidAMAttribute.convert(value));
