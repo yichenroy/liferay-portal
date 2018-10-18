@@ -382,8 +382,9 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 
 		_setAutoBalanceTestFiles();
 
-		_setTestClassNamesExcludesRelativeGlobs();
 		_setTestClassNamesIncludesRelativeGlobs();
+
+		_setTestClassNamesExcludesRelativeGlobs();
 
 		setTestClasses();
 
@@ -650,9 +651,16 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	private void _setTestClassNamesExcludesRelativeGlobs() {
+		String excludesPropertyValue =
+			_getTestClassNamesExcludesPropertyValue();
+
+		if (testClassNamesIncludesPathMatchers.isEmpty()) {
+			excludesPropertyValue = "**";
+		}
+
 		testClassNamesExcludesPathMatchers.addAll(
 			getPathMatchers(
-				_getTestClassNamesExcludesPropertyValue(),
+				excludesPropertyValue,
 				portalGitWorkingDirectory.getWorkingDirectory()));
 	}
 
