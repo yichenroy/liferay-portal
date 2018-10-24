@@ -35,7 +35,9 @@ public class SourceFormatFailureMessageGenerator
 
 		int start = consoleText.lastIndexOf(_TOKEN_SOURCE_FORMAT);
 
-		start = consoleText.lastIndexOf(_TOKEN_FORMATTING_ISSUES, start);
+		start = consoleText.lastIndexOf(_TOKEN_FORMAT_SOURCE_ALL, start);
+
+		start = consoleText.indexOf(_TOKEN_FORMATTING_ISSUES, start);
 
 		start = consoleText.lastIndexOf("\n", start);
 
@@ -47,6 +49,8 @@ public class SourceFormatFailureMessageGenerator
 	}
 
 	private static final int _CHARACTER_LIMIT = 2500;
+
+	private static final String _TOKEN_FORMAT_SOURCE_ALL = "format-source-all:";
 
 	private static final String _TOKEN_FORMATTING_ISSUES = "formatting issues:";
 
