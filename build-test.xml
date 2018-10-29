@@ -555,7 +555,7 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 		</sequential>
 	</macrodef>
 
-	<macrodef name="get-master-hostname">
+	<macrodef name="get-master-hostname" >
 		<attribute default="${env.JENKINS_URL}" name="jenkins.url" />
 
 		<sequential>
