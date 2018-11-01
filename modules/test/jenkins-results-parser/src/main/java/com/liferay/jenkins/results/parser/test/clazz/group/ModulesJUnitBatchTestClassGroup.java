@@ -123,9 +123,13 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 			moduleName = matcher.group("moduleName");
 		}
 
+		System.out.println("######## Modified Module Dirs: #################");
+
 		for (File modifiedModuleDir : modifiedModuleDirsList) {
 			String modifiedModuleAbsolutePath =
 				modifiedModuleDir.getAbsolutePath();
+
+			System.out.println(modifiedModuleAbsolutePath);
 
 			String modifiedModuleRelativePath =
 				modifiedModuleAbsolutePath.substring(
@@ -153,6 +157,18 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 				}
 			}
 		}
+
+		System.out.println("######## End Modified Modules #################");
+
+		System.out.println("## Relevant test class names relative globs: ##");
+
+		for (String relevantTestClassNameRelativeGlob:
+			relevantTestClassNameRelativeGlobs) {
+
+			System.out.println(relevantTestClassNameRelativeGlob);
+		}
+
+		System.out.println("###### End of relevant test class names ######");
 
 		return relevantTestClassNameRelativeGlobs;
 	}

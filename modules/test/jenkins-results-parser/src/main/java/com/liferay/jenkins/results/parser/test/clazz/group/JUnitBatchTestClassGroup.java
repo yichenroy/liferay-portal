@@ -641,6 +641,15 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 					JenkinsResultsParserUtil.combine(
 						"**", File.separator, "*.java")));
 
+		System.out.println("####### modifiedJavaFilesList: ######");
+
+		for (File modifiedJavaFile : modifiedJavaFilesList) {
+
+			System.out.println(modifiedJavaFile.getAbsolutePath());
+		}
+
+		System.out.println("#####################################");
+
 		if (!_autoBalanceTestFiles.isEmpty() &&
 			!modifiedJavaFilesList.isEmpty()) {
 
