@@ -1130,6 +1130,11 @@ public class GitWorkingDirectory {
 
 		String gitDiffOutput = executionResult.getStandardOut();
 
+		System.out.println("##############################");
+		System.out.println("git diff output: ");
+		System.out.println(gitDiffOutput);
+		System.out.println("##############################");
+
 		for (String line : gitDiffOutput.split("\n")) {
 			modifiedFiles.add(new File(_workingDirectory, line));
 		}
