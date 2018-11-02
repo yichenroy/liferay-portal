@@ -4111,10 +4111,10 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 							<waitfor maxwait="5" maxwaitunit="minute" timeoutproperty="app.server.stopping.timeout">
 								<and>
 									<not>
-										<socket port="${test.app.server.leading.port.number}080" server="localhost" />
+										<http url="http://localhost:${test.app.server.leading.port.number}080" />
 									</not>
 									<not>
-										<socket port="${test.app.server.leading.port.number}099" server="${server.host}" />
+										<http url="http://localhost:${test.app.server.leading.port.number}099" />
 									</not>
 								</and>
 							</waitfor>
