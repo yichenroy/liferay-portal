@@ -3004,6 +3004,8 @@ log.sanitizer.enabled=false</echo>
 	</target>
 
 	<target name="dist-jdk7">
+		<fail message="FAIL in DIST-JDK8" />
+
 		<prepare-test-build-dist app.server.type="${axis.variable}" />
 	</target>
 
