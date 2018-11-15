@@ -14,6 +14,7 @@
 
 package com.liferay.adaptive.media;
 
+
 import aQute.bnd.annotation.ProviderType;
 
 import java.io.InputStream;
