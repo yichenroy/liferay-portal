@@ -15,6 +15,7 @@
 
 package com.ctc.wstx.sw;
 
+
 import java.io.*;
 
 import javax.xml.stream.XMLStreamConstants;
