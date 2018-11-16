@@ -1811,7 +1811,7 @@ public class JenkinsResultsParserUtil {
 		FileSystem fileSystem = FileSystems.getDefault();
 
 		List<PathMatcher> pathMatchers = new ArrayList<>(globPatterns.length);
-
+		
 		for (String globPattern : globPatterns) {
 			pathMatchers.add(
 				fileSystem.getPathMatcher(
