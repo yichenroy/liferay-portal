@@ -21,6 +21,9 @@ import com.liferay.jenkins.results.parser.test.clazz.group.ModulesJUnitBatchTest
 import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.util.List;
 
 /**
@@ -33,8 +36,10 @@ public class JUnitTestListGenerator {
 		System.out.println("GET ALL JUNIT TEST CLASSES");
 		System.out.println("######################################");
 
-		printModulesCompile();
-
+		comparePaths();
+//
+//		printModulesCompile();
+//
 //		printModulesIntegration();
 //
 //		printModulesUnit();
@@ -44,6 +49,26 @@ public class JUnitTestListGenerator {
 //		printIntegration();
 //
 //		printFunctional();
+	}
+
+	public static void comparePaths() {
+		File file = new File("/opt/dev/projects/github/liferay-portal/modules/apps/adaptive-media");
+
+		Path path = file.toPath();
+
+		List<PathMatcher> pathMatchers =
+			JenkinsResultsParserUtil.toPathMatchers(
+				"/opt/dev/projects/github/liferay-portal/modules/",
+				"apps/adaptive-media/**/*.*");
+
+		for (PathMatcher pathMatcher : pathMatchers) {
+			if (pathMatcher.matches(path)) {
+				System.out.println(path + " MATCHES!!");
+			}
+			else {
+				System.out.println(path + " DOES NOT MATCH!!");
+			}
+		}
 	}
 
 	public static void printModulesCompile() {
