@@ -1811,8 +1811,27 @@ public class JenkinsResultsParserUtil {
 		FileSystem fileSystem = FileSystems.getDefault();
 
 		List<PathMatcher> pathMatchers = new ArrayList<>(globPatterns.length);
-		
-		for (String globPattern : globPatterns) {
+
+		for (int i = 0; i < globPatterns.length; i++) {
+			String globPattern = globPatterns[i];
+
+			if (globPattern.contains("{") && !globPattern.contains("}")) {
+				StringBuilder sb = new StringBuilder();
+
+				while (globPatterns[i].contains("{") ||
+					   !globPatterns[i].contains("}")) {
+
+					sb.append(globPatterns[i]);
+					sb.append(",");
+
+					i++;
+				}
+
+				sb.append(globPatterns[i]);
+
+				globPattern = sb.toString();
+			}
+
 			pathMatchers.add(
 				fileSystem.getPathMatcher(
 					combine("glob:", prefix, globPattern)));
