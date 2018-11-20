@@ -38,6 +38,7 @@ public class AMOptimizeImagesBackgroundTaskConstants {
 
 	public static final String SINGLE_START = "singleStart";
 
+
 	public static final String TOTAL = "total";
 
 }
