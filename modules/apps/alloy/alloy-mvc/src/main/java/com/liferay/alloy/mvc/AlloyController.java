@@ -57,6 +57,7 @@ public interface AlloyController {
 	public void updateModel(BaseModel<?> baseModel, Object... properties)
 		throws Exception;
 
+
 	public void updateModelIgnoreRequest(
 			BaseModel<?> baseModel, Object... properties)
 		throws Exception;
