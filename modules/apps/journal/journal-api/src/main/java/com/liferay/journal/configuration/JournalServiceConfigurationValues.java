@@ -116,4 +116,7 @@ public class JournalServiceConfigurationValues {
 		JournalServiceConfigurationUtil.get(
 			JournalServiceConfigurationKeys.TERMS_OF_USE_JOURNAL_ARTICLE_ID);
 
+	public static final String TEST_STRING =
+		JournalServiceConfigurationUtil.get(
+			JournalServiceConfigurationKeys.TERMS_OF_USE_JOURNAL_ARTICLE_ID);
 }
