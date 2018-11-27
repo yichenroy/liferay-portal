@@ -833,6 +833,8 @@ public class JenkinsResultsParserUtil {
 				value, combine("${", String.valueOf(index), "}"));
 		}
 
+		System.out.println("glob property: " + globProperty);
+
 		List<String> globs = new ArrayList<>();
 
 		for (String tempGlob : globProperty.split(",")) {
@@ -846,6 +848,8 @@ public class JenkinsResultsParserUtil {
 				glob = glob.replace(
 					matcher.group(), curlyBraceExpansionList.get(index));
 			}
+
+			System.out.println("glob: " + glob);
 
 			globs.add(glob);
 		}
