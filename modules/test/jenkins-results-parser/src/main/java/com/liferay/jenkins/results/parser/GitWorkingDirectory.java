@@ -1120,7 +1120,7 @@ public class GitWorkingDirectory {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("git diff --diff-filter=AMR --name-only ");
+		sb.append("git diff --diff-filter=ADMR --name-only ");
 
 		sb.append(
 			_getMergeBaseCommitSHA(
