@@ -28,27 +28,19 @@ public class RebaseFailureMessageGenerator extends BaseFailureMessageGenerator {
 	public Element getMessageElement(Build build) {
 		String consoleText = build.getConsoleText();
 
-		if (!consoleText.contains(_TOKEN_REBASE_END) ||
-			!consoleText.contains(_TOKEN_REBASE_START)) {
+		if (!consoleText.contains(_TOKEN_FAILED_TO_MERGE) ||
+			!consoleText.contains(_TOKEN_UNABLE_TO_REBASE)) {
 
 			return null;
 		}
 
-		int start = consoleText.lastIndexOf(_TOKEN_REBASE_START);
+		int start = consoleText.lastIndexOf(_TOKEN_UNABLE_TO_REBASE);
 
 		start = consoleText.lastIndexOf("\n", start);
 
-		int end = consoleText.indexOf(_TOKEN_REBASE_END, start);
+		int end = consoleText.indexOf(_TOKEN_FAILED_TO_MERGE, start);
 
-		if (end == -1) {
-			end = consoleText.length();
-		}
-
-		int newlineEnd = consoleText.lastIndexOf("\n", end);
-
-		if (newlineEnd != -1) {
-			end = newlineEnd;
-		}
+		end = consoleText.indexOf("\n", end);
 
 		return Dom4JUtil.getNewElement(
 			"div", null,
@@ -62,8 +54,9 @@ public class RebaseFailureMessageGenerator extends BaseFailureMessageGenerator {
 				getConsoleTextSnippetElement(consoleText, false, start, end)));
 	}
 
-	private static final String _TOKEN_REBASE_END = "git rebase --abort";
+	private static final String _TOKEN_FAILED_TO_MERGE =
+		"Failed to merge in the changes";
 
-	private static final String _TOKEN_REBASE_START = "Unable to rebase";
+	private static final String _TOKEN_UNABLE_TO_REBASE = "Unable to rebase";
 
 }
