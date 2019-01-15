@@ -74,6 +74,8 @@ public class LayoutListUtilTest {
 	public void setUp() throws Exception {
 		addLayouts(0, 0);
 
+		System.out.println("Before");
+
 		ReflectionTestUtil.setFieldValue(
 			LayoutLocalServiceUtil.class, "_service",
 			new LayoutLocalServiceWrapper(null) {
