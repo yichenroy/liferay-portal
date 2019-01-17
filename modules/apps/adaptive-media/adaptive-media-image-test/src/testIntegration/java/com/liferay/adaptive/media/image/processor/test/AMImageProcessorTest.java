@@ -80,6 +80,8 @@ public class AMImageProcessorTest {
 				amImageConfigurationEntry.getUUID());
 		}
 
+		System.out.println("This is a test module integration change");
+
 		_addTestVariant();
 	}
 
