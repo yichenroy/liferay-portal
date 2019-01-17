@@ -60,6 +60,8 @@ public class DestinationStatisticsManagerTest {
 		_mBeanServer.registerMBean(
 			new DestinationStatisticsManager(_destination), objectName);
 
+		System.out.println("This is a test change");
+
 		Assert.assertTrue(_mBeanServer.isRegistered(objectName));
 	}
 
