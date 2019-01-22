@@ -3050,6 +3050,12 @@ log.sanitizer.enabled=false</echo>
 
 						<get-junit-failure-message-element />
 
+						<echo>########### junit.failure.message.element #######</echo>
+
+						<echo>${junit.failure.message.element}</echo>
+
+						<echo>#################################################</echo>
+
 						<generate-backend-batch-junit-report
 							junit.failure.count="${junit.failure.count}"
 							junit.failure.message.element="${junit.failure.message.element}"
