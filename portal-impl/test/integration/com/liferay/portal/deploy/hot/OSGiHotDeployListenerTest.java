@@ -59,6 +59,8 @@ public class OSGiHotDeployListenerTest {
 
 	@Before
 	public void setUp() {
+		System.out.println("setUp");
+
 		_dependencyManagerEnabled = DependencyManagementThreadLocal.isEnabled();
 
 		DependencyManagementThreadLocal.setEnabled(false);
