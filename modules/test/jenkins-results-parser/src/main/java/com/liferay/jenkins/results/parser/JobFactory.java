@@ -56,7 +56,7 @@ public class JobFactory {
 		return job;
 	}
 
-	private static boolean _isCentralMergePullRequest(
+	protected static boolean isCentralMergePullRequest(
 		GitWorkingDirectory gitWorkingDirectory) {
 
 		List<File> currentBranchModifiedFiles =
@@ -137,7 +137,7 @@ public class JobFactory {
 			GitWorkingDirectory gitWorkingDirectory =
 				portalAcceptancePullRequestJob.getGitWorkingDirectory();
 
-			if (_isCentralMergePullRequest(gitWorkingDirectory)) {
+			if (isCentralMergePullRequest(gitWorkingDirectory)) {
 				portalAcceptancePullRequestJob = new CentralMergePullRequestJob(
 					jobName);
 			}
