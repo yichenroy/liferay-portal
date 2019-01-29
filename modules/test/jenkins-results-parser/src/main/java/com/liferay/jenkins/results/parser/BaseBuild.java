@@ -1419,6 +1419,8 @@ public abstract class BaseBuild implements Build {
 			setBuildURL(url);
 		}
 
+		job = JobFactory.newJob(getJobName());
+
 		update();
 	}
 
@@ -2430,6 +2432,7 @@ public abstract class BaseBuild implements Build {
 	protected boolean fromArchive;
 	protected String gitRepositoryName;
 	protected Long invokedTime;
+	protected Job job;
 	protected String jobName;
 	protected List<ReinvokeRule> reinvokeRules =
 		ReinvokeRule.getReinvokeRules();
