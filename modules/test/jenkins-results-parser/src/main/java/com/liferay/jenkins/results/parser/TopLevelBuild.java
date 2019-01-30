@@ -637,6 +637,31 @@ public class TopLevelBuild extends BaseBuild {
 				".");
 
 			buildFailureElements.add(upstreamResultElement);
+
+			if (job instanceof CentralMergePullRequestJob) {
+				CentralMergePullRequestJob centralMergePullRequestJob =
+					(CentralMergePullRequestJob)job;
+
+				List<String> centralMergeMentionUserNames =
+					centralMergePullRequestJob.
+						getCentralMergeMentionUserNames();
+
+				if (!centralMergeMentionUserNames.isEmpty()) {
+					StringBuilder sb = new StringBuilder();
+
+					sb.append("cc");
+
+					for (String centralMergeMentionUserName :
+							centralMergeMentionUserNames) {
+
+						sb.append(" @");
+						sb.append(centralMergeMentionUserName);
+					}
+
+					buildFailureElements.add(
+						Dom4JUtil.getNewElement("div", null, sb.toString()));
+				}
+			}
 		}
 
 		return buildFailureElements.toArray(
@@ -720,11 +745,6 @@ public class TopLevelBuild extends BaseBuild {
 			if (failureMessageElement != null) {
 				messageElement.add(failureMessageElement);
 			}
-		}
-
-		if (job instanceof CentralMergePullRequestJob) {
-			CentralMergePullRequestJob centralMergePullRequestJob =
-				(CentralMergePullRequestJob)job;
 		}
 
 		return messageElement;
