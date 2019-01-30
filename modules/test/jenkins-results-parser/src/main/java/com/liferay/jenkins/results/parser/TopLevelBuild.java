@@ -722,6 +722,11 @@ public class TopLevelBuild extends BaseBuild {
 			}
 		}
 
+		if (job instanceof CentralMergePullRequestJob) {
+			CentralMergePullRequestJob centralMergePullRequestJob =
+				(CentralMergePullRequestJob)job;
+		}
+
 		return messageElement;
 	}
 

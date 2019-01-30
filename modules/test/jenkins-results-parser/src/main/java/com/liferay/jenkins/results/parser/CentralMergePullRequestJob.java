@@ -14,6 +14,14 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.io.File;
+import java.io.IOException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
 /**
  * @author Leslie Wong
  */
@@ -21,6 +29,41 @@ public class CentralMergePullRequestJob extends PortalAcceptancePullRequestJob {
 
 	public CentralMergePullRequestJob(String url) {
 		super(url, "relevant");
+	}
+
+	public List<String> getCentralMergeMentionUserNames() {
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			getPortalGitWorkingDirectory();
+
+		List<File> modifiedModuleDirsList = new ArrayList<>();
+
+		try {
+			modifiedModuleDirsList =
+				portalGitWorkingDirectory.getModifiedModuleDirsList();
+		}
+		catch (IOException ioe) {
+			ioe.printStackTrace();
+
+			System.out.println("Unable to get modified module directory lists");
+		}
+
+		List<String> centralMergeMentionUserNames = new ArrayList<>();
+
+		for (File modifiedModuleDir : modifiedModuleDirsList) {
+			Properties ciProperties = JenkinsResultsParserUtil.getProperties(
+				new File(modifiedModuleDir.getAbsolutePath(), "ci.properties"));
+
+			String subrepoMergePullMentionUsers = ciProperties.getProperty(
+				"subrepo.merge.pull.mention.users");
+
+			if (subrepoMergePullMentionUsers != null) {
+				Collections.addAll(
+					centralMergeMentionUserNames,
+					subrepoMergePullMentionUsers.split(","));
+			}
+		}
+
+		return centralMergeMentionUserNames;
 	}
 
 }
