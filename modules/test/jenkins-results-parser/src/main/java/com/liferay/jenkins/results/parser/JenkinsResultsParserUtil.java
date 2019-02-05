@@ -1107,6 +1107,70 @@ public class JenkinsResultsParserUtil {
 		return getProperties(localLiferayJenkinsEEBuildPropertiesFile);
 	}
 
+	public static Properties getLocalLiferayPortalCIProperties(String branch) {
+		Properties buildProperties = null;
+
+		try {
+			buildProperties = getBuildProperties();
+		}
+		catch (IOException ioe) {
+			throw new RuntimeException("Unable to get build properties", ioe);
+		}
+
+		String repository = "liferay-portal";
+
+		if (!branch.equals("master")) {
+			repository += "-ee";
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("repository.dir[");
+		sb.append(repository);
+		sb.append("][");
+		sb.append(branch);
+		sb.append("]");
+
+		File localLiferayPortalCIProperties = new File(
+			buildProperties.getProperty(sb.toString()),
+			combine("ci.properties"));
+
+		return getProperties(localLiferayPortalCIProperties);
+	}
+
+	public static Properties getLocalLiferayPortalTestProperties(
+		String branch) {
+
+		Properties buildProperties = null;
+
+		try {
+			buildProperties = getBuildProperties();
+		}
+		catch (IOException ioe) {
+			throw new RuntimeException("Unable to get build properties", ioe);
+		}
+
+		String repository = "liferay-portal";
+
+		if (!branch.equals("master")) {
+			repository += "-ee";
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("repository.dir[");
+		sb.append(repository);
+		sb.append("][");
+		sb.append(branch);
+		sb.append("]");
+
+		File localLiferayPortalTestProperties = new File(
+			buildProperties.getProperty(sb.toString()),
+			combine("test.properties"));
+
+		return getProperties(localLiferayPortalTestProperties);
+	}
+
 	public static String getLocalURL(String remoteURL) {
 		if (remoteURL.contains("${dependencies.url}")) {
 			remoteURL = fixFileName(remoteURL);
