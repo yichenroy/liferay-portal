@@ -389,6 +389,23 @@ public class TopLevelBuild extends BaseBuild {
 			throw new RuntimeException("Unable to get build.properties", ioe);
 		}
 
+		_localLiferayPortalCIProperties =
+			JenkinsResultsParserUtil.getLocalLiferayPortalCIProperties(
+				branchName);
+
+		String availableSuiteNames =
+			_localLiferayPortalCIProperties.getProperty(
+				"ci.test.available.suites");
+
+		if (availableSuiteNames != null) {
+			Collections.addAll(
+				_availableSuiteNames, availableSuiteNames.split(","));
+		}
+
+		_localLiferayPortalTestProperties =
+			JenkinsResultsParserUtil.getLocalLiferayPortalTestProperties(
+				branchName);
+
 		_sendBuildMetrics = Boolean.valueOf(
 			buildProperties.getProperty("build.metrics.send"));
 
@@ -1551,11 +1568,16 @@ public class TopLevelBuild extends BaseBuild {
 	private static ExecutorService _executorService =
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(20, true);
 
+	private List<String> _availableSuiteNames = new ArrayList<>();
 	private boolean _compareToUpstream = true;
 	private long _lastDownstreamBuildsListingTimestamp = -1L;
+	private Properties _localLiferayPortalCIProperties;
+	private Properties _localLiferayPortalTestProperties;
 	private String _metricsHostName;
 	private int _metricsHostPort;
 	private final boolean _sendBuildMetrics;
+	private HashMap<String, HashMap<String, List<String>>>
+		_suiteBatchTestFailures = new HashMap<>();
 	private long _updateDuration;
 
 }
