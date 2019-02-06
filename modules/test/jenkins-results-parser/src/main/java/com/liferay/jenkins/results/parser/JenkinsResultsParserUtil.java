@@ -749,7 +749,7 @@ public class JenkinsResultsParserUtil {
 	public static List<String> getBuildPropertyAsList(
 			boolean checkCache, String key)
 		throws IOException {
-
+		
 		Properties buildProperties = getBuildProperties(checkCache);
 
 		String propertyContent = buildProperties.getProperty(key);
@@ -1373,6 +1373,18 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return null;
+	}
+
+	public static List<String> getPropertyAsList(
+		Properties properties, String key) {
+
+		String propertyContent = properties.getProperty(key);
+
+		if (propertyContent == null) {
+			return Collections.emptyList();
+		}
+
+		return Arrays.asList(propertyContent.split(","));
 	}
 
 	public static String getRandomGitHubCacheHostname() {
