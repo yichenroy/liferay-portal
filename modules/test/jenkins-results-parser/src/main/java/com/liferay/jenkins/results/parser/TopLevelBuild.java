@@ -25,6 +25,8 @@ import com.liferay.jenkins.results.parser.failure.message.generator.JenkinsRegen
 import com.liferay.jenkins.results.parser.failure.message.generator.PoshiTestFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PoshiValidationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.RebaseFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroup;
+import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -393,14 +395,8 @@ public class TopLevelBuild extends BaseBuild {
 			JenkinsResultsParserUtil.getLocalLiferayPortalCIProperties(
 				branchName);
 
-		String availableSuiteNames =
-			_localLiferayPortalCIProperties.getProperty(
-				"ci.test.available.suites");
-
-		if (availableSuiteNames != null) {
-			Collections.addAll(
-				_availableSuiteNames, availableSuiteNames.split(","));
-		}
+		_availableSuiteNames = JenkinsResultsParserUtil.getPropertyAsList(
+			_localLiferayPortalCIProperties, "ci.test.available.suites");
 
 		_localLiferayPortalTestProperties =
 			JenkinsResultsParserUtil.getLocalLiferayPortalTestProperties(
@@ -1516,6 +1512,107 @@ public class TopLevelBuild extends BaseBuild {
 
 	protected static final Pattern gitRepositoryTempMapNamePattern =
 		Pattern.compile("git\\.(?<gitRepositoryType>.*)\\.properties");
+
+	private void _findSuiteBatchTestFailures() {
+		_suiteBatchTestFailures.clear();
+
+		List<Build> failedDownstreamBuilds = getDownstreamBuilds(
+			"FAILURE", "completed");
+
+		failedDownstreamBuilds.addAll(
+			getDownstreamBuilds("UNSTABLE", "completed"));
+
+		HashMap<String, List<String>> failedDownstreamBatchTestNames =
+			new HashMap<>();
+
+		for (Build failedDownstreamBuild : failedDownstreamBuilds) {
+			if (failedDownstreamBuild instanceof BatchBuild) {
+				BatchBuild failedBatchBuild = (BatchBuild)failedDownstreamBuild;
+
+				String batchName = failedBatchBuild.getBatchName();
+
+				List<String> failedTestNames = new ArrayList<>();
+
+				for (TestResult testResult :
+						failedBatchBuild.getFailedTestResults()) {
+
+					failedTestNames.add(testResult.getSimpleClassName());
+				}
+
+				failedDownstreamBatchTestNames.put(batchName, failedTestNames);
+			}
+		}
+
+		for (String suiteName : _availableSuiteNames) {
+			List<String> suiteBatchNames =
+				JenkinsResultsParserUtil.getPropertyAsList(
+					_localLiferayPortalTestProperties,
+					"test.batch.names[" + suiteName + "]");
+
+			if (suiteBatchNames.isEmpty()) {
+				continue;
+			}
+
+			HashMap suiteBatchTestFailure = new HashMap<>();
+
+			for (String suiteBatchName : suiteBatchNames) {
+				if (failedDownstreamBatchTestNames.containsKey(
+						suiteBatchName)) {
+
+					if (suiteBatchName.contains("functional") ||
+						suiteBatchName.contains("integration") ||
+						suiteBatchName.contains("unit")) {
+
+						TestClassGroup testClassGroup =
+							TestClassGroupFactory.newBatchTestClassGroup(
+								suiteBatchName,
+								JobFactory.newJob(getJobName(), suiteName));
+
+						List<String> failedTestNames =
+							failedDownstreamBatchTestNames.get(suiteBatchName);
+
+						for (TestClassGroup.TestClass testClass :
+								testClassGroup.getTestClasses()) {
+
+							List<String> commonFailedTestNames =
+								new ArrayList<>();
+
+							TestClassGroup.TestClass.TestClassFile
+								testClassFile = testClass.getTestClassFile();
+
+							String testClassFileName = testClassFile.getName();
+
+							for (String failedTestName : failedTestNames) {
+								if (testClassFileName.contains(
+										failedTestName)) {
+
+									if (!commonFailedTestNames.contains(
+											failedTestName)) {
+
+										commonFailedTestNames.add(
+											failedTestName);
+									}
+								}
+							}
+
+							if (!commonFailedTestNames.isEmpty()) {
+								suiteBatchTestFailure.put(
+									suiteBatchName, commonFailedTestNames);
+							}
+						}
+					}
+					else {
+						suiteBatchTestFailure.put(
+							suiteBatchName, new ArrayList<>());
+					}
+				}
+			}
+
+			if (!suiteBatchTestFailure.isEmpty()) {
+				_suiteBatchTestFailures.put(suiteName, suiteBatchTestFailure);
+			}
+		}
+	}
 
 	private Map<Map<String, String>, Integer> _getSlaveUsageByLabels() {
 		Map<Map<String, String>, Integer> slaveUsages = new HashMap<>();
