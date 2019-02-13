@@ -31,28 +31,35 @@ public class LegacyDataArchiveUtil {
 
 	public LegacyDataArchiveUtil(
 		File generatedArchiveDirectory,
-		GitWorkingDirectory legacyGitWorkingDirectory) {
+		GitWorkingDirectory legacyGitWorkingDirectory) throws Exception {
 
-		_generatedArchiveDirectory = generatedArchiveDirectory;
-		_legacyGitWorkingDirectory = legacyGitWorkingDirectory;
+		try {
+			_generatedArchiveDirectory = generatedArchiveDirectory;
+			_legacyGitWorkingDirectory = legacyGitWorkingDirectory;
 
-		LocalGitBranch upstreamLocalGitBranch =
-			_legacyGitWorkingDirectory.getLocalGitBranch(
-				_legacyGitWorkingDirectory.getUpstreamBranchName());
+			LocalGitBranch upstreamLocalGitBranch =
+				_legacyGitWorkingDirectory.getLocalGitBranch(
+					_legacyGitWorkingDirectory.getUpstreamBranchName());
 
-		_legacyGitWorkingDirectory.checkoutLocalGitBranch(
-			upstreamLocalGitBranch);
+			_legacyGitWorkingDirectory.checkoutLocalGitBranch(
+				upstreamLocalGitBranch);
 
-		_legacyGitWorkingDirectory.reset("--hard");
+			_legacyGitWorkingDirectory.reset("--hard");
 
-		_legacyGitWorkingDirectory.clean();
+			_legacyGitWorkingDirectory.clean();
 
-		_buildProperties = _getBuildProperties();
+			_buildProperties = _getBuildProperties();
 
-		_portalVersions = _getPortalVersions();
+			_portalVersions = _getPortalVersions();
 
-		_legacyDataArchivePortalVersions =
-			_getLegacyDataArchivePortalVersions();
+			_legacyDataArchivePortalVersions =
+				_getLegacyDataArchivePortalVersions();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+
+			throw e;
+		}
 	}
 
 	public LocalGitBranch createDataArchiveLocalGitBranch() throws IOException {
