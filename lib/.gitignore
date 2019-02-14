@@ -5,6 +5,7 @@
 /development/appium.jar
 /development/biz.aQute.bnd.jar
 /development/catalina.jar
+/development/com.google.guava.jar
 /development/com.liferay.ant.bnd.jar
 /development/com.liferay.jenkins.results.parser.jar
 /development/db2jcc.jar
