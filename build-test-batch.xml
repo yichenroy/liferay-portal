@@ -2978,6 +2978,7 @@ log.sanitizer.enabled=false</echo>
 
 	<target name="central-requirements-jdk8">
 		<fail message="Please set the property ${central.requirements.tests}." unless="central.requirements.tests" />
+		<fail message="Failing on purpose to test toplevel false positive" />
 
 		<run-batch-test>
 			<test-action>
