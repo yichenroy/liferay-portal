@@ -349,6 +349,46 @@ public class TopLevelBuild extends BaseBuild {
 		return validationBuild.getGitHubMessageElement();
 	}
 
+	public void printSuiteBatchTestFailures() {
+		_findSuiteBatchTestFailures();
+
+		for (Map.Entry<String, HashMap<String, List<String>>> suiteBatchEntry :
+				_suiteBatchTestFailures.entrySet()) {
+
+			String key = suiteBatchEntry.getKey();
+
+			HashMap<String, List<String>> suiteBatchTestFailure =
+				_suiteBatchTestFailures.get(key);
+
+			System.out.println("Failed Batches for '" + key + "'");
+
+			System.out.println("--------------------------------");
+
+			for (Map.Entry<String, List<String>> suiteBatchFailureEntry :
+					suiteBatchTestFailure.entrySet()) {
+
+				String failedBatchName = suiteBatchFailureEntry.getKey();
+
+				System.out.println(failedBatchName);
+
+				if (failedBatchName.contains("functional") ||
+					failedBatchName.contains("integration") ||
+					failedBatchName.contains("unit")) {
+
+					List<String> commonFailedTestNames =
+						suiteBatchTestFailure.get(failedBatchName);
+
+					for (String testName : commonFailedTestNames) {
+						System.out.println(testName);
+					}
+				}
+			}
+
+			System.out.println("-------------- -----------------");
+			System.out.println();
+		}
+	}
+
 	@Override
 	public void setCompareToUpstream(boolean compareToUpstream) {
 		_compareToUpstream = compareToUpstream;
