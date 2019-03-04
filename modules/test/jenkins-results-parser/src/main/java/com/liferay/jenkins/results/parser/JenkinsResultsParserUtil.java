@@ -111,6 +111,10 @@ public class JenkinsResultsParserUtil {
 			"/liferay-jenkins-ee/jenkins.properties"
 	};
 
+	public static final String DEFAULT_REPOSITORY_PROPERTIES_URL =
+		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
+			"/liferay-jenkins-ee/commands/repository.properties";
+
 	public static boolean debug;
 
 	public static void clearCache() {
@@ -1519,8 +1523,7 @@ public class JenkinsResultsParserUtil {
 
 			remoteURL = remoteURL.replaceAll(
 				localURLAuthority, remoteURLAuthority);
-		}
-		else if (localURLAuthorityMatcher2.find()) {
+		} else if (localURLAuthorityMatcher2.find()) {
 			String localURLAuthority = localURLAuthorityMatcher2.group(0);
 			String remoteURLAuthority = combine(
 				"https://", localURLAuthorityMatcher2.group(1),
@@ -1531,6 +1534,41 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return remoteURL + remoteURLQueryString;
+	}
+
+	public static Properties getRepositoryProperties() throws IOException {
+		Properties properties = new Properties();
+
+		if ((_repositoryProperties != null) &&
+			!_repositoryProperties.isEmpty()) {
+
+			properties.putAll(_repositoryProperties);
+
+			return properties;
+		}
+
+		properties.load(
+			new StringReader(
+				toString(
+					getLocalURL(DEFAULT_REPOSITORY_PROPERTIES_URL), false)));
+
+		LocalGitRepository localGitRepository =
+			GitRepositoryFactory.getLocalGitRepository(
+				"liferay-jenkins-ee", "master");
+
+		File repositoryPropertiesFile = new File(
+			localGitRepository.getDirectory(),
+			combine(
+				"liferay-jenkins-ee", File.separator, "commands",
+				File.separator, "repository.properties"));
+
+		if (repositoryPropertiesFile.exists()) {
+			properties.putAll(getProperties(repositoryPropertiesFile));
+		}
+
+		_repositoryProperties = properties;
+
+		return properties;
 	}
 
 	public static String getResourceFileContent(String resourceName)
@@ -3037,6 +3075,7 @@ public class JenkinsResultsParserUtil {
 		"https://test.liferay.com/([0-9]+)/");
 	private static final Pattern _remoteURLAuthorityPattern2 = Pattern.compile(
 		"https://(test-[0-9]+-[0-9]+).liferay.com/");
+	private static Hashtable<?, ?> _repositoryProperties;
 	private static final File _sshDir = new File(getUserHomeDir(), ".ssh") {
 		{
 			if (!exists()) {
