@@ -1112,13 +1112,14 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static Properties getLocalLiferayPortalCIProperties(String branch) {
-		Properties buildProperties = null;
+		Properties repositoryProperties = null;
 
 		try {
-			buildProperties = getBuildProperties();
+			repositoryProperties = getRepositoryProperties();
 		}
 		catch (IOException ioe) {
-			throw new RuntimeException("Unable to get build properties", ioe);
+			throw new RuntimeException(
+				"Unable to get repository properties", ioe);
 		}
 
 		String repository = "liferay-portal";
@@ -1136,8 +1137,8 @@ public class JenkinsResultsParserUtil {
 		sb.append("]");
 
 		File localLiferayPortalCIProperties = new File(
-			buildProperties.getProperty(sb.toString()),
-			combine("ci.properties"));
+			getProperty(repositoryProperties, sb.toString()),
+			combine(File.separator, "ci.properties"));
 
 		return getProperties(localLiferayPortalCIProperties);
 	}
@@ -1145,13 +1146,14 @@ public class JenkinsResultsParserUtil {
 	public static Properties getLocalLiferayPortalTestProperties(
 		String branch) {
 
-		Properties buildProperties = null;
+		Properties repositoryProperties = null;
 
 		try {
-			buildProperties = getBuildProperties();
+			repositoryProperties = getRepositoryProperties();
 		}
 		catch (IOException ioe) {
-			throw new RuntimeException("Unable to get build properties", ioe);
+			throw new RuntimeException(
+				"Unable to get repository properties", ioe);
 		}
 
 		String repository = "liferay-portal";
@@ -1169,8 +1171,8 @@ public class JenkinsResultsParserUtil {
 		sb.append("]");
 
 		File localLiferayPortalTestProperties = new File(
-			buildProperties.getProperty(sb.toString()),
-			combine("test.properties"));
+			getProperty(repositoryProperties, sb.toString()),
+			combine(File.separator, "test.properties"));
 
 		return getProperties(localLiferayPortalTestProperties);
 	}
