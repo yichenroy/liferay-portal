@@ -74,6 +74,8 @@ public interface Build {
 
 	public long getDuration();
 
+	public List<TestResult> getFailedTestResults();
+
 	public Element getGitHubMessageBuildAnchorElement();
 
 	public Element getGitHubMessageElement();

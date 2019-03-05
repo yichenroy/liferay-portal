@@ -507,6 +507,19 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
+	public List<TestResult> getFailedTestResults() {
+		List<TestResult> failedTestResults = new ArrayList();
+
+		for (TestResult testResult : getTestResults(null)) {
+			if (testResult.isFailing()) {
+				failedTestResults.add(testResult);
+			}
+		}
+
+		return failedTestResults;
+	}
+
+	@Override
 	public Element getGitHubMessageBuildAnchorElement() {
 		getResult();
 
