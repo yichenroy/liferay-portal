@@ -39,6 +39,7 @@ definition {
 	@priority = "5"
 	test ChangeEditableImage {
 		property testray.component.names = "Training";
+		property portal.acceptance = "roy";
 
 		task ("Add a content page template") {
 			PageTemplatesAdmin.addCollection(collectionName = "Page Template Collection");
@@ -76,6 +77,8 @@ definition {
 	@description = "Change a fragment's editable text field."
 	@priority = "5"
 	test ChangeEditableText {
+		property portal.acceptance = "roy";
+
 		task ("Add a content page template") {
 			PageTemplatesAdmin.addCollection(collectionName = "Page Template Collection");
 
@@ -111,7 +114,7 @@ definition {
 	@description = "Delete a page template collection."
 	@priority = "5"
 	test DeleteCollection {
-		property portal.acceptance = "true";
+		property portal.acceptance = "roy";
 
 		task ("Delete the page template collection") {
 			PageTemplatesAdmin.addCollection(collectionName = "Collection Name");
@@ -127,7 +130,7 @@ definition {
 	@description = "Delete a page template."
 	@priority = "5"
 	test DeletePageTemplate {
-		property portal.acceptance = "true";
+		property portal.acceptance = "roy";
 
 		task ("Add a content page template") {
 			PageTemplatesAdmin.addCollection(collectionName = "Page Template Collection");
