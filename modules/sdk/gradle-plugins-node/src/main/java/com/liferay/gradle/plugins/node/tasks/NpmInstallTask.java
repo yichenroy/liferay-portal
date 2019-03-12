@@ -56,6 +56,10 @@ import org.gradle.api.tasks.OutputDirectory;
 public class NpmInstallTask extends ExecuteNpmTask {
 
 	public NpmInstallTask() {
+		Project project = getProject();
+
+		_nodeModulesDir = project.file("node_modules");
+
 		_removeShrinkwrappedUrls = new Callable<Boolean>() {
 
 			@Override
@@ -114,9 +118,7 @@ public class NpmInstallTask extends ExecuteNpmTask {
 
 	@OutputDirectory
 	public File getNodeModulesDir() {
-		Project project = getProject();
-
-		return project.file("node_modules");
+		return GradleUtil.toFile(getProject(), _nodeModulesDir);
 	}
 
 	@Input
@@ -192,6 +194,10 @@ public class NpmInstallTask extends ExecuteNpmTask {
 
 	public void setNodeModulesDigestFile(Object nodeModulesDigestFile) {
 		_nodeModulesDigestFile = nodeModulesDigestFile;
+	}
+
+	public void setNodeModulesDir(Object nodeModulesDir) {
+		_nodeModulesDir = nodeModulesDir;
 	}
 
 	public void setNodeVersion(Object nodeVersion) {
@@ -604,6 +610,7 @@ public class NpmInstallTask extends ExecuteNpmTask {
 	private Object _nodeModulesCacheDir;
 	private boolean _nodeModulesCacheNativeSync = true;
 	private Object _nodeModulesDigestFile;
+	private Object _nodeModulesDir;
 	private Object _nodeVersion;
 	private boolean _npmCacheVerify;
 	private Object _npmVersion;
