@@ -30,15 +30,11 @@ public class NpmRunTask extends BaseNpmCommandTask {
 	public NpmRunTask() {
 		exclude(_EXCLUDE_DIR_NAMES);
 		include(_INCLUDES);
+		setNpmCommand(_NPM_COMMAND);
 
 		Project project = getProject();
 
 		setSourceDir(project.getProjectDir());
-	}
-
-	@Override
-	public String getNpmCommand() {
-		return "run-script";
 	}
 
 	@Input
@@ -67,6 +63,8 @@ public class NpmRunTask extends BaseNpmCommandTask {
 	private static final String[] _INCLUDES = {
 		"**/*.*rc", "**/*.css", "**/*.js", "**/*.json", "**/*.jsx", "**/*.soy"
 	};
+
+	private static final String _NPM_COMMAND = "run-script";
 
 	private Object _scriptName;
 
