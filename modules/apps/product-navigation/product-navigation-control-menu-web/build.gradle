@@ -17,6 +17,4 @@ dependencies {
 	compileOnly project(":apps:product-navigation:product-navigation-taglib")
 	compileOnly project(":core:petra:petra-lang")
 	compileOnly project(":core:petra:petra-string")
-
-	jsCompile project(":apps:frontend-js:frontend-js-web")
 }

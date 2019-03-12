@@ -15,8 +15,4 @@ dependencies {
 	compileOnly project(":apps:site-navigation:site-navigation-item-selector-api")
 	compileOnly project(":core:petra:petra-lang")
 	compileOnly project(":core:petra:petra-string")
-
-	jsCompile project(":apps:frontend-js:frontend-js-metal-web")
-	jsCompile project(":apps:frontend-js:frontend-js-web")
-	jsCompile project(":apps:frontend-taglib:frontend-taglib")
 }
