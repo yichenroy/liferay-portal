@@ -4,12 +4,12 @@
 		"clay-button": "^2.8.3",
 		"clay-multi-select": "^2.8.3",
 		"clay-select": "^2.8.3",
-		"clay-sticker": "^2.8.3",
+		"clay-sticker": "^2.9.0",
 		"metal-component": "^2.16.7",
 		"metal-soy": "^2.16.7"
 	},
 	"devDependencies": {
-		"liferay-npm-scripts": "1.4.2"
+		"liferay-npm-scripts": "1.4.3"
 	},
 	"name": "sharing-web",
 	"scripts": {

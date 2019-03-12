@@ -66,7 +66,7 @@
 		"babel-plugin-transform-object-rest-spread": "^6.26.0",
 		"babel-preset-env": "^1.7.0",
 		"browser-sync": "^2.24.7",
-		"check-source-formatting": "^2.0.4",
+		"check-source-formatting": "^2.0.14",
 		"cross-env": "^5.2.0",
 		"eslint": "^4.10.0",
 		"eslint-config-liferay": "^2.0.8",
@@ -119,7 +119,7 @@
 	"scripts": {
 		"build": "npm run build-soy && npm run build-js && npm run bundler && npm run clean",
 		"build-js": "babel --source-maps -d classes/META-INF/resources src/main/resources/META-INF/resources",
-		"build-soy": "metalsoy --soyDeps \"./node_modules/com.liferay.frontend.taglib.clay/META-INF/resources/node_modules/*/src/*.soy\"",
+		"build-soy": "metalsoy --soyDeps \"../../../node_modules/+(clay-*|frontend-js-web)/src/**/*.soy\"",
 		"build-soy-tests": "npm run build-soy && metalsoy -s \"test/**/*.soy\" -d \"test\"",
 		"bundler": "liferay-npm-bundler",
 		"checkFormat": "npm run csf",
