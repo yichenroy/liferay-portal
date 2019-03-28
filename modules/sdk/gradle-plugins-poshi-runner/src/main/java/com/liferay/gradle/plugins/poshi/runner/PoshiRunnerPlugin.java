@@ -373,8 +373,8 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 		PoshiRunnerExtension poshiRunnerExtension) {
 
 		_populateSystemProperties(
-			javaExec.getSystemProperties(), poshiProperties,
-			javaExec.getProject(), poshiRunnerExtension);
+			javaExec, javaExec.getSystemProperties(), poshiProperties,
+			poshiRunnerExtension);
 	}
 
 	private void _configureTaskExecutePQLQuery(
@@ -382,8 +382,8 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 		PoshiRunnerExtension poshiRunnerExtension) {
 
 		_populateSystemProperties(
-			javaExec.getSystemProperties(), poshiProperties,
-			javaExec.getProject(), poshiRunnerExtension);
+			javaExec, javaExec.getSystemProperties(), poshiProperties,
+			poshiRunnerExtension);
 	}
 
 	private void _configureTaskRunPoshi(
@@ -393,7 +393,7 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 		_configureTaskRunPoshiBinResultsDir(test);
 		_configureTaskRunPoshiReports(test);
 		_populateSystemProperties(
-			test.getSystemProperties(), poshiProperties, test.getProject(),
+			test, test.getSystemProperties(), poshiProperties,
 			poshiRunnerExtension);
 	}
 
@@ -431,8 +431,8 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 		PoshiRunnerExtension poshiRunnerExtension) {
 
 		_populateSystemProperties(
-			javaExec.getSystemProperties(), poshiProperties,
-			javaExec.getProject(), poshiRunnerExtension);
+			javaExec, javaExec.getSystemProperties(), poshiProperties,
+			poshiRunnerExtension);
 	}
 
 	private void _configureTaskWritePoshiProperties(
@@ -440,8 +440,8 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 		PoshiRunnerExtension poshiRunnerExtension) {
 
 		_populateSystemProperties(
-			javaExec.getSystemProperties(), poshiProperties,
-			javaExec.getProject(), poshiRunnerExtension);
+			javaExec, javaExec.getSystemProperties(), poshiProperties,
+			poshiRunnerExtension);
 	}
 
 	private File _getExpandedPoshiRunnerDir(Project project) {
@@ -465,8 +465,8 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 	}
 
 	private void _populateSystemProperties(
-		Map<String, Object> systemProperties, Properties poshiProperties,
-		Project project, PoshiRunnerExtension poshiRunnerExtension) {
+		Task task, Map<String, Object> systemProperties,
+		Properties poshiProperties, PoshiRunnerExtension poshiRunnerExtension) {
 
 		if (poshiProperties != null) {
 			Enumeration<String> enumeration =
@@ -484,6 +484,7 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 		systemProperties.putAll(poshiRunnerExtension.getPoshiProperties());
 
 		File baseDir = poshiRunnerExtension.getBaseDir();
+		Project project = task.getProject();
 
 		if ((baseDir != null) && baseDir.exists()) {
 			systemProperties.put(
@@ -502,6 +503,14 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 
 		if (Validator.isNotNull(testName)) {
 			systemProperties.put("test.name", testName);
+		}
+
+		for (String key : systemProperties.keySet()) {
+			String value = GradleUtil.getTaskPrefixedProperty(task, key);
+
+			if (Validator.isNotNull(value)) {
+				systemProperties.put(key, value);
+			}
 		}
 	}
 
