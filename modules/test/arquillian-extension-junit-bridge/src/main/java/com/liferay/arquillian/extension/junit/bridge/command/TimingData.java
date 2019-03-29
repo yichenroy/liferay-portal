@@ -65,7 +65,7 @@ public class TimingData implements Serializable {
 			sb.append(" (with rules)");
 		}
 
-		sb.append(" took ");
+		sb.append(" ################################ took ");
 		sb.append(_time);
 		sb.append("ms");
 

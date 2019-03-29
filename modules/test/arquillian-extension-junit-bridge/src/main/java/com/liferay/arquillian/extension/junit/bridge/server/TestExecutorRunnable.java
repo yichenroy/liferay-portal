@@ -134,8 +134,8 @@ public class TestExecutorRunnable implements Runnable {
 
 		};
 
-		statement = new TestTimingStatement(
-			statement, null, className, objectOutputStream, false);
+//		statement = new TestTimingStatement(
+//			statement, null, className, objectOutputStream, false);
 		statement = _withBefores(
 			statement, BeforeClass.class, testClass, statement);
 		statement = _withAfters(
@@ -210,8 +210,8 @@ public class TestExecutorRunnable implements Runnable {
 
 		String className = testClass.getName();
 
-		statement = new TestTimingStatement(
-			statement, methodName, className, objectOutputStream, false);
+//		statement = new TestTimingStatement(
+//			statement, methodName, className, objectOutputStream, false);
 
 		statement = _withTimeout(method, statement);
 
@@ -224,8 +224,8 @@ public class TestExecutorRunnable implements Runnable {
 			Description.createTestDescription(
 				clazz, method.getName(), method.getAnnotations()));
 
-		statement = new TestTimingStatement(
-			statement, methodName, className, objectOutputStream, true);
+//		statement = new TestTimingStatement(
+//			statement, methodName, className, objectOutputStream, true);
 
 		return statement;
 	}
