@@ -17,6 +17,7 @@ package com.liferay.arquillian.extension.junit.bridge.junit;
 import com.liferay.arquillian.extension.junit.bridge.client.BndBundleUtil;
 import com.liferay.arquillian.extension.junit.bridge.client.MBeans;
 import com.liferay.arquillian.extension.junit.bridge.command.RunNotifierCommand;
+import com.liferay.arquillian.extension.junit.bridge.command.TimingData;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -136,6 +137,8 @@ public class Arquillian extends Runner implements Filterable {
 			try {
 				frameworkMBean.startBundle(bundleId);
 
+				List<Object> timingDatas = new ArrayList<>();
+
 				while (true) {
 					try (Socket socket = serverSocket.accept();
 						InputStream inputStream = socket.getInputStream();
@@ -152,14 +155,23 @@ public class Arquillian extends Runner implements Filterable {
 						}
 
 						while (true) {
+							Object object = objectInputStream.readObject();
+
+							if (object instanceof TimingData) {
+								timingDatas.add(object);
+
+								continue;
+							}
+
 							RunNotifierCommand runNotifierCommand =
-								(RunNotifierCommand)
-									objectInputStream.readObject();
+								(RunNotifierCommand)object;
 
 							runNotifierCommand.execute(runNotifier);
 						}
 					}
 					catch (EOFException eofe) {
+						timingDatas.forEach(System.out::println);
+
 						break;
 					}
 				}

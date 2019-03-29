@@ -96,6 +96,8 @@ public class TestExecutorRunnable implements Runnable {
 		TestClass testClass, Description description,
 		ObjectOutputStream objectOutputStream) {
 
+		String className = testClass.getName();
+
 		Statement statement = new Statement() {
 
 			@Override
@@ -113,7 +115,8 @@ public class TestExecutorRunnable implements Runnable {
 						objectOutputStream.flush();
 
 						Statement statement = _methodBlock(
-							testClass, frameworkMethod.getMethod());
+							testClass, frameworkMethod.getMethod(),
+							objectOutputStream);
 
 						statement.evaluate();
 					}
@@ -131,12 +134,16 @@ public class TestExecutorRunnable implements Runnable {
 
 		};
 
+		statement = new TestTimingStatement(
+			statement, null, className, objectOutputStream, false);
 		statement = _withBefores(
 			statement, BeforeClass.class, testClass, statement);
 		statement = _withAfters(
 			statement, AfterClass.class, testClass, statement);
 		statement = _withRules(
 			statement, ClassRule.class, testClass, null, description);
+		statement = new TestTimingStatement(
+			statement, null, className, objectOutputStream, true);
 
 		return statement;
 	}
@@ -159,7 +166,9 @@ public class TestExecutorRunnable implements Runnable {
 		}
 	}
 
-	private static Statement _methodBlock(TestClass testClass, Method method)
+	private static Statement _methodBlock(
+			TestClass testClass, Method method,
+			ObjectOutputStream objectOutputStream)
 		throws Throwable {
 
 		Class<?> clazz = testClass.getJavaClass();
@@ -197,6 +206,13 @@ public class TestExecutorRunnable implements Runnable {
 
 		};
 
+		String methodName = method.getName();
+
+		String className = testClass.getName();
+
+		statement = new TestTimingStatement(
+			statement, methodName, className, objectOutputStream, false);
+
 		statement = _withTimeout(method, statement);
 
 		statement = _withBefores(statement, Before.class, testClass, target);
@@ -207,6 +223,9 @@ public class TestExecutorRunnable implements Runnable {
 			statement, Rule.class, testClass, target,
 			Description.createTestDescription(
 				clazz, method.getName(), method.getAnnotations()));
+
+		statement = new TestTimingStatement(
+			statement, methodName, className, objectOutputStream, true);
 
 		return statement;
 	}
