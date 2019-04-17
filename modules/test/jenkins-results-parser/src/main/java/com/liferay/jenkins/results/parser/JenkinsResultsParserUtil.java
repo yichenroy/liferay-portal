@@ -93,6 +93,10 @@ import org.json.JSONObject;
  */
 public class JenkinsResultsParserUtil {
 
+	public static final String DEFAULT_REPOSITORY_PROPERTIES_URL =
+		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
+			"/liferay-jenkins-ee/commands/repository.properties";
+
 	public static final String[] URLS_BUILD_PROPERTIES_DEFAULT = {
 		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
 			"/liferay-jenkins-ee/build.properties",
@@ -110,10 +114,6 @@ public class JenkinsResultsParserUtil {
 		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
 			"/liferay-jenkins-ee/jenkins.properties"
 	};
-
-	public static final String DEFAULT_REPOSITORY_PROPERTIES_URL =
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
-			"/liferay-jenkins-ee/commands/repository.properties";
 
 	public static boolean debug;
 
@@ -753,7 +753,7 @@ public class JenkinsResultsParserUtil {
 	public static List<String> getBuildPropertyAsList(
 			boolean checkCache, String key)
 		throws IOException {
-		
+
 		Properties buildProperties = getBuildProperties(checkCache);
 
 		String propertyContent = buildProperties.getProperty(key);
@@ -1525,7 +1525,8 @@ public class JenkinsResultsParserUtil {
 
 			remoteURL = remoteURL.replaceAll(
 				localURLAuthority, remoteURLAuthority);
-		} else if (localURLAuthorityMatcher2.find()) {
+		}
+		else if (localURLAuthorityMatcher2.find()) {
 			String localURLAuthority = localURLAuthorityMatcher2.group(0);
 			String remoteURLAuthority = combine(
 				"https://", localURLAuthorityMatcher2.group(1),
