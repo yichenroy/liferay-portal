@@ -25,9 +25,11 @@ import com.liferay.jenkins.results.parser.failure.message.generator.JenkinsRegen
 import com.liferay.jenkins.results.parser.failure.message.generator.PoshiTestFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PoshiValidationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.RebaseFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.test.clazz.group.FunctionalBatchTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 
@@ -43,6 +45,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1559,8 +1562,7 @@ public class TopLevelBuild extends BaseBuild {
 				if (failedDownstreamBatchTestNames.containsKey(
 						suiteBatchName)) {
 
-					if (suiteBatchName.contains("functional") ||
-						suiteBatchName.contains("integration") ||
+					if (suiteBatchName.contains("integration") ||
 						suiteBatchName.contains("unit")) {
 
 						TestClassGroup testClassGroup =
@@ -1599,6 +1601,52 @@ public class TopLevelBuild extends BaseBuild {
 								suiteBatchTestFailure.put(
 									suiteBatchName, commonFailedTestNames);
 							}
+						}
+					}
+					else if (suiteBatchName.contains("functional")) {
+						FunctionalBatchTestClassGroup
+							functionalBatchTestClassGroup =
+								(FunctionalBatchTestClassGroup)
+									TestClassGroupFactory.
+										newBatchTestClassGroup(
+											suiteBatchName,
+											JobFactory.newJob(
+												getJobName(), suiteName));
+
+						String testBatchRunPropertyQuery =
+							functionalBatchTestClassGroup.
+								getRelevantTestBatchRunPropertyQuery();
+
+						String testBaseDirName =
+							"/opt/dev/projects/github/liferay-portal" +
+								"/portal-web/test/functional";
+
+						String[] pqlQueryCommands = {
+							JenkinsResultsParserUtil.combine(
+								"../gradlew -b build-test.gradle",
+								" \"-PposhiTestBatchPropertyQuery=",
+								testBatchRunPropertyQuery,
+								"\" \"-PposhiTestBaseDirName=", testBaseDirName,
+								"\" executePQLQuery")
+						};
+
+						try {
+							JenkinsResultsParserUtil.executeBashCommands(
+								true,
+								new File(
+									"/opt/dev/projects/github/liferay-portal",
+									"portal-web"),
+								1000 * 60 * 60, pqlQueryCommands);
+						}
+						catch (IOException ioe) {
+							ioe.printStackTrace();
+
+							throw new RuntimeException(ioe.getMessage());
+						}
+						catch (TimeoutException te) {
+							te.printStackTrace();
+
+							throw new RuntimeException(te.getMessage());
 						}
 					}
 					else {
