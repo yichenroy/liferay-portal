@@ -106,16 +106,24 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		this.batchName = batchName;
 
-		portalGitWorkingDirectory =
-			portalTestClassJob.getPortalGitWorkingDirectory();
 
-		String portalBranchName =
-			portalGitWorkingDirectory.getUpstreamBranchName();
+		try {
+			portalGitWorkingDirectory =
+				portalTestClassJob.getPortalGitWorkingDirectory();
 
-		if (portalBranchName.endsWith("-private")) {
-			testPrivatePortalBranch = true;
+			String portalBranchName =
+				portalGitWorkingDirectory.getUpstreamBranchName();
+
+			if (portalBranchName.endsWith("-private")) {
+				testPrivatePortalBranch = true;
+			}
 		}
+		catch (Exception e) {
+			e.printStackTrace();
 
+			throw e;
+		}
+		
 		if (portalTestClassJob instanceof TestSuiteJob) {
 			TestSuiteJob testSuiteJob = (TestSuiteJob)portalTestClassJob;
 
