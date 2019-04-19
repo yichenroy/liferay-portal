@@ -104,10 +104,9 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	protected BatchTestClassGroup(
 		String batchName, PortalTestClassJob portalTestClassJob) {
 
-		this.batchName = batchName;
-
-
 		try {
+			this.batchName = batchName;
+
 			portalGitWorkingDirectory =
 				portalTestClassJob.getPortalGitWorkingDirectory();
 
@@ -117,27 +116,27 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			if (portalBranchName.endsWith("-private")) {
 				testPrivatePortalBranch = true;
 			}
+
+
+			if (portalTestClassJob instanceof TestSuiteJob) {
+				TestSuiteJob testSuiteJob = (TestSuiteJob) portalTestClassJob;
+
+				testSuiteName = testSuiteJob.getTestSuiteName();
+			} else {
+				testSuiteName = null;
+			}
+
+			jobProperties = portalTestClassJob.getJobProperties();
+
+			_setTestReleaseBundle();
+			_setTestRelevantChanges();
+			_setTestRelevantIntegrationUnitOnly();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 
 			throw e;
 		}
-		
-		if (portalTestClassJob instanceof TestSuiteJob) {
-			TestSuiteJob testSuiteJob = (TestSuiteJob)portalTestClassJob;
-
-			testSuiteName = testSuiteJob.getTestSuiteName();
-		}
-		else {
-			testSuiteName = null;
-		}
-
-		jobProperties = portalTestClassJob.getJobProperties();
-
-		_setTestReleaseBundle();
-		_setTestRelevantChanges();
-		_setTestRelevantIntegrationUnitOnly();
 	}
 
 	protected int getAxisMaxSize() {
