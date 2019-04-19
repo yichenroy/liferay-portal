@@ -17,6 +17,7 @@ package com.liferay.gradle.plugins.poshi.runner;
 import com.liferay.gradle.util.GradleUtil;
 import com.liferay.gradle.util.OSDetector;
 import com.liferay.gradle.util.StringUtil;
+import com.liferay.gradle.util.Validator;
 
 import groovy.lang.Closure;
 
@@ -207,9 +208,13 @@ public class PoshiRunnerPlugin implements Plugin<Project> {
 	private void _addDependenciesPoshiRunner(
 		Project project, PoshiRunnerExtension poshiRunnerExtension) {
 
-		GradleUtil.addDependency(
-			project, POSHI_RUNNER_CONFIGURATION_NAME, "com.liferay",
-			"com.liferay.poshi.runner", poshiRunnerExtension.getVersion());
+		String version = poshiRunnerExtension.getVersion();
+
+		if (Validator.isNotNull(version)) {
+			GradleUtil.addDependency(
+				project, POSHI_RUNNER_CONFIGURATION_NAME, "com.liferay",
+				"com.liferay.poshi.runner", version);
+		}
 	}
 
 	private void _addDependenciesSikuli(
