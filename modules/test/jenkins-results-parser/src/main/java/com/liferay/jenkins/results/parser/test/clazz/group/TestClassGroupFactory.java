@@ -25,70 +25,78 @@ public class TestClassGroupFactory {
 	public static BatchTestClassGroup newBatchTestClassGroup(
 		String batchName, Job job) {
 
-		if (job instanceof PortalTestClassJob) {
-			PortalTestClassJob portalTestClassJob = (PortalTestClassJob)job;
+		try {
+			if (job instanceof PortalTestClassJob) {
+				PortalTestClassJob portalTestClassJob = (PortalTestClassJob) job;
 
-			if (batchName.contains("functional-") ||
-				batchName.contains("subrepository-functional-")) {
+				if (batchName.contains("functional-") ||
+					batchName.contains("subrepository-functional-")) {
 
-				return new FunctionalBatchTestClassGroup(
+					return new FunctionalBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				if (batchName.startsWith("integration-") ||
+					batchName.startsWith("junit-test-") ||
+					batchName.startsWith("subrepository-integration-") ||
+					batchName.startsWith("subrepository-unit-") ||
+					batchName.startsWith("unit-")) {
+
+					return new JUnitBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				if (batchName.startsWith("modules-compile-")) {
+					return new ModulesCompileBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				if (batchName.startsWith("modules-integration-") ||
+					batchName.startsWith("modules-unit-")) {
+
+					return new ModulesJUnitBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				if (batchName.startsWith("modules-semantic-versioning-")) {
+					return new ModulesSemVerBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				if (batchName.startsWith("plugins-compile-")) {
+					return new PluginsBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				if (batchName.startsWith("js-test-") ||
+					batchName.startsWith("portal-frontend-js-")) {
+
+					return new NPMTestBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				if (batchName.startsWith("service-builder-")) {
+					return new ServiceBuilderBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				if (batchName.startsWith("tck-")) {
+					return new TCKJunitBatchTestClassGroup(
+						batchName, portalTestClassJob);
+				}
+
+				return new DefaultBatchTestClassGroup(
 					batchName, portalTestClassJob);
 			}
 
-			if (batchName.startsWith("integration-") ||
-				batchName.startsWith("junit-test-") ||
-				batchName.startsWith("subrepository-integration-") ||
-				batchName.startsWith("subrepository-unit-") ||
-				batchName.startsWith("unit-")) {
+			throw new IllegalArgumentException("Unknown test class group");
 
-				return new JUnitBatchTestClassGroup(
-					batchName, portalTestClassJob);
-			}
-
-			if (batchName.startsWith("modules-compile-")) {
-				return new ModulesCompileBatchTestClassGroup(
-					batchName, portalTestClassJob);
-			}
-
-			if (batchName.startsWith("modules-integration-") ||
-				batchName.startsWith("modules-unit-")) {
-
-				return new ModulesJUnitBatchTestClassGroup(
-					batchName, portalTestClassJob);
-			}
-
-			if (batchName.startsWith("modules-semantic-versioning-")) {
-				return new ModulesSemVerBatchTestClassGroup(
-					batchName, portalTestClassJob);
-			}
-
-			if (batchName.startsWith("plugins-compile-")) {
-				return new PluginsBatchTestClassGroup(
-					batchName, portalTestClassJob);
-			}
-
-			if (batchName.startsWith("js-test-") ||
-				batchName.startsWith("portal-frontend-js-")) {
-
-				return new NPMTestBatchTestClassGroup(
-					batchName, portalTestClassJob);
-			}
-
-			if (batchName.startsWith("service-builder-")) {
-				return new ServiceBuilderBatchTestClassGroup(
-					batchName, portalTestClassJob);
-			}
-
-			if (batchName.startsWith("tck-")) {
-				return new TCKJunitBatchTestClassGroup(
-					batchName, portalTestClassJob);
-			}
-
-			return new DefaultBatchTestClassGroup(
-				batchName, portalTestClassJob);
 		}
+		catch (Exception e) {
+			e.printStackTrace();
 
-		throw new IllegalArgumentException("Unknown test class group");
+			throw e;
+		}
 	}
 
 }
