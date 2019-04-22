@@ -105,6 +105,24 @@ public class GitUtil {
 		}
 	}
 
+	public static String getCommitIdFromTag(
+		String tagId, File workingDirectory) {
+
+		ExecutionResult executionResult = executeBashCommands(
+			RETRIES_SIZE_MAX, MILLIS_RETRY_DELAY, MILLIS_TIMEOUT,
+			workingDirectory,
+			JenkinsResultsParserUtil.combine("git show-ref -s ", tagId));
+
+		if (executionResult.getExitValue() != 0) {
+			throw new RuntimeException(
+				JenkinsResultsParserUtil.combine(
+					"Unable to get commit ID from tag ID '", tagId, "'\n",
+					executionResult.getStandardError()));
+		}
+
+		return executionResult.getStandardOut();
+	}
+
 	public static String getDefaultBranchName(File workingDirectory) {
 		ExecutionResult executionResult = executeBashCommands(
 			RETRIES_SIZE_MAX, MILLIS_RETRY_DELAY, MILLIS_TIMEOUT,
