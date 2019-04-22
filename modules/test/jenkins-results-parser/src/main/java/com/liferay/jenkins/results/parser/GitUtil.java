@@ -35,6 +35,45 @@ public class GitUtil {
 
 	public static final int RETRIES_SIZE_MAX = 1;
 
+	public static void addCommitTag(
+		String commitId, boolean force, String remoteURL, String tagId,
+		File workingDirectory) {
+
+		String gitTagCommand = "git tag";
+
+		if (force) {
+			gitTagCommand += " -f";
+		}
+
+		ExecutionResult executionResult = executeBashCommands(
+			RETRIES_SIZE_MAX, MILLIS_RETRY_DELAY, MILLIS_TIMEOUT,
+			workingDirectory,
+			JenkinsResultsParserUtil.combine(
+				gitTagCommand, " ", tagId, " ", commitId));
+
+		if (executionResult.getExitValue() != 0) {
+			System.out.println(executionResult.getStandardError());
+
+			return;
+		}
+
+		String gitPushCommand = "git push";
+
+		if (force) {
+			gitPushCommand += " -f";
+		}
+
+		executionResult = executeBashCommands(
+			RETRIES_SIZE_MAX, MILLIS_RETRY_DELAY, MILLIS_TIMEOUT,
+			workingDirectory,
+			JenkinsResultsParserUtil.combine(
+				gitPushCommand, " ", remoteURL, " ", tagId));
+
+		if (executionResult.getExitValue() != 0) {
+			System.out.println(executionResult.getStandardError());
+		}
+	}
+
 	public static void clone(String remoteURL, File workingDirectory) {
 		String command = JenkinsResultsParserUtil.combine(
 			"git clone ", remoteURL, " ",
