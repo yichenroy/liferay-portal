@@ -19,6 +19,11 @@ package com.liferay.jenkins.results.parser.testray.model;
  */
 public class Case {
 
+    public Case(CaseType caseType, String name) {
+        _caseType = caseType;
+        _name = name;
+    }
+
     public CaseType getCaseType() {
         return _caseType;
     }
@@ -39,8 +44,8 @@ public class Case {
         return _priority;
     }
 
-    public Team getTeam() {
-        return _team;
+    public Component getMainComponent() {
+        return _mainComponent;
     }
 
     public void setCaseType(CaseType caseType) {
@@ -63,8 +68,8 @@ public class Case {
         _priority = priority;
     }
 
-    public void setTeam(Team team) {
-        _team = team;
+    public void setMainComponent(Component mainComponent) {
+        _mainComponent = mainComponent;
     }
 
     private CaseType _caseType;
@@ -72,6 +77,6 @@ public class Case {
     private Integer _id;
     private String _name;
     private Integer _priority;
-    private Team _team;
+    private Component _mainComponent;
 
 }

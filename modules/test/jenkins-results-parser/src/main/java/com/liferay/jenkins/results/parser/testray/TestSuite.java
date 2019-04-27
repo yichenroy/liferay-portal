@@ -41,108 +41,108 @@ public class TestSuite {
         return _attachments;
     }
 
-    public void setAttachments(List<Attachment> attachments) {
-        _attachments = new ArrayList<>(attachments);
-    }
-
     public List<Build> getBuilds() {
         return _builds;
-    }
-
-    public void setBuilds(List<Build> builds) {
-        _builds = new ArrayList<>(builds);
     }
 
     public List<Case> getCase() {
         return _case;
     }
 
-    public void setCase(List<Case> aCase) {
-        _case = new ArrayList<>(aCase);
-    }
-
     public List<CaseResult> getCaseResults() {
         return _caseResults;
-    }
-
-    public void setCaseResults(List<CaseResult> caseResults) {
-        _caseResults = new ArrayList<>(caseResults);
     }
 
     public List<CaseType> getCaseTypes() {
         return _caseTypes;
     }
 
-    public void setCaseTypes(List<CaseType> caseTypes) {
-        _caseTypes = new ArrayList<>(caseTypes);
-    }
-
     public List<Component> getComponents() {
         return _components;
-    }
-
-    public void setComponents(List<Component> components) {
-        _components = new ArrayList<>(components);
     }
 
     public List<Factor> getFactors() {
         return _factors;
     }
 
-    public void setFactors(List<Factor> factors) {
-        _factors = new ArrayList<>(factors);
-    }
-
     public List<FactorCategory> getFactorCategories() {
         return _factorCategories;
-    }
-
-    public void setFactorCategories(List<FactorCategory> factorCategories) {
-        _factorCategories = new ArrayList<>(factorCategories);
     }
 
     public List<FactorOption> getFactorOptions() {
         return _factorOptions;
     }
 
-    public void setFactorOptions(List<FactorOption> factorOptions) {
-        _factorOptions = new ArrayList<>(factorOptions);
-    }
-
     public List<ProductVersion> getProductVersions() {
         return _productVersions;
-    }
-
-    public void setProductVersions(List<ProductVersion> productVersions) {
-        _productVersions = new ArrayList<>(productVersions);
     }
 
     public List<Project> getProjects() {
         return _projects;
     }
 
-    public void setProjects(List<Project> projects) {
-        _projects = new ArrayList<>(projects);
-    }
-
     public List<Routine> getRoutines() {
         return _routines;
-    }
-
-    public void setRoutines(List<Routine> routines) {
-        _routines = new ArrayList<>(routines);
     }
 
     public List<Run> getRuns() {
         return _runs;
     }
 
-    public void setRuns(List<Run> runs) {
-        _runs = new ArrayList<>(runs);
-    }
-
     public List<Team> getTeams() {
         return _teams;
+    }
+
+    public void setAttachments(List<Attachment> attachments) {
+        _attachments = new ArrayList<>(attachments);
+    }
+
+    public void setBuilds(List<Build> builds) {
+        _builds = new ArrayList<>(builds);
+    }
+
+    public void setCase(List<Case> aCase) {
+        _case = new ArrayList<>(aCase);
+    }
+
+    public void setCaseResults(List<CaseResult> caseResults) {
+        _caseResults = new ArrayList<>(caseResults);
+    }
+
+    public void setCaseTypes(List<CaseType> caseTypes) {
+        _caseTypes = new ArrayList<>(caseTypes);
+    }
+
+    public void setComponents(List<Component> components) {
+        _components = new ArrayList<>(components);
+    }
+
+    public void setFactors(List<Factor> factors) {
+        _factors = new ArrayList<>(factors);
+    }
+
+    public void setFactorCategories(List<FactorCategory> factorCategories) {
+        _factorCategories = new ArrayList<>(factorCategories);
+    }
+
+    public void setFactorOptions(List<FactorOption> factorOptions) {
+        _factorOptions = new ArrayList<>(factorOptions);
+    }
+
+    public void setProductVersions(List<ProductVersion> productVersions) {
+        _productVersions = new ArrayList<>(productVersions);
+    }
+
+    public void setProjects(List<Project> projects) {
+        _projects = new ArrayList<>(projects);
+    }
+
+    public void setRoutines(List<Routine> routines) {
+        _routines = new ArrayList<>(routines);
+    }
+
+    public void setRuns(List<Run> runs) {
+        _runs = new ArrayList<>(runs);
     }
 
     public void setTeams(List<Team> teams) {
