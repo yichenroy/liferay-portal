@@ -4608,7 +4608,7 @@ ${output.content}</echo>
 
 					<execute dir="${release.tool.dir}">
 						<![CDATA[
-							ant dist
+							ant dist -Dbuild.portal.artifacts.enabled=true
 						]]>
 					</execute>
 				</sequential>
