@@ -1475,9 +1475,21 @@ public abstract class BaseBuild implements Build {
 
 					String result = getResult();
 
+					if ((result != null) && result.equals("SUCCESS")) {
+						System.out.println("################################");
+						System.out.println("Attempting to set result SUCCESS");
+						System.out.println("################################");
+					}
+
 					if ((downstreamBuilds.size() == getDownstreamBuildCount(
 							"completed")) &&
 						(result != null)) {
+
+						if ((result != null) && result.equals("SUCCESS")) {
+							System.out.println("#############################");
+							System.out.println("Setting result SUCCESS");
+							System.out.println("#############################");
+						}
 
 						setResult(result);
 					}

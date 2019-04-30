@@ -1242,9 +1242,27 @@ public class TopLevelBuild extends BaseBuild {
 		if ((result != null) && result.equals("SUCCESS")) {
 			successCount++;
 
+			System.out.println("#################");
+			System.out.println("Successcount: " + successCount);
+			System.out.println("Setting heavy check mark!");
+			System.out.println("#################");
+
 			sb.append(":heavy_check_mark: ");
 		}
 		else {
+			if (result == null) {
+				System.out.println("#################");
+				System.out.println("Successcount: " + successCount);
+				System.out.println("Result is NULL");
+				System.out.println("#################");
+			}
+			else {
+				System.out.println("#################");
+				System.out.println("Successcount: " + successCount);
+				System.out.println("Result is " + result);
+				System.out.println("#################");
+			}
+
 			sb.append(":x: ");
 		}
 
