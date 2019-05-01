@@ -1450,6 +1450,12 @@ public abstract class BaseBuild implements Build {
 					}
 				}
 
+				if (downstreamBuilds == null) {
+					System.out.println("downstreamBuilds is null");
+
+					downstreamBuilds = new ArrayList();
+				}
+
 				if (downstreamBuilds != null) {
 					List<Callable<Object>> callables = new ArrayList<>();
 
