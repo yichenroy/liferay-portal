@@ -1481,6 +1481,15 @@ public abstract class BaseBuild implements Build {
 
 					String result = getResult();
 
+					System.out.println("################################");
+					if (result == null) {
+						System.out.println("Result is NULL");
+					}
+					else {
+						System.out.println("Result is " + result);
+					}
+					System.out.println("################################");
+
 					if ((result != null) && result.equals("SUCCESS")) {
 						System.out.println("################################");
 						System.out.println("Attempting to set result SUCCESS");
