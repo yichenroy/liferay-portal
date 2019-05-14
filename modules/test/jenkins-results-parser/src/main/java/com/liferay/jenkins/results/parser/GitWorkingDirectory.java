@@ -1659,25 +1659,7 @@ public class GitWorkingDirectory {
 	}
 
 	public RemoteGitBranch pushToRemoteGitRepository(
-		boolean force, LocalGitBranch localGitBranch,
-		String remoteGitBranchName, GitRemote gitRemote) {
-
-		return pushToRemoteGitRepository(
-			force, localGitBranch, remoteGitBranchName,
-			gitRemote.getRemoteURL());
-	}
-
-	public RemoteGitBranch pushToRemoteGitRepository(
-		boolean force, LocalGitBranch localGitBranch,
-		String remoteGitBranchName, RemoteGitRepository remoteGitRepository) {
-
-		return pushToRemoteGitRepository(
-			force, localGitBranch, remoteGitBranchName,
-			remoteGitRepository.getRemoteURL());
-	}
-
-	public RemoteGitBranch pushToRemoteGitRepository(
-		boolean force, LocalGitBranch localGitBranch,
+		boolean failOnError, boolean force, LocalGitBranch localGitBranch,
 		String remoteGitBranchName, String remoteURL) {
 
 		if (localGitBranch == null) {
@@ -1711,11 +1693,19 @@ public class GitWorkingDirectory {
 		}
 
 		try {
-			executeBashCommands(
+			GitUtil.ExecutionResult executionResult = executeBashCommands(
 				GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
 				1000 * 60 * 10, sb.toString());
+
+			if ((executionResult.getExitValue() != 0) && failOnError) {
+				throw new RuntimeException(executionResult.getStandardError());
+			}
 		}
 		catch (RuntimeException re) {
+			if (failOnError) {
+				throw re;
+			}
+
 			return null;
 		}
 
@@ -1724,6 +1714,24 @@ public class GitWorkingDirectory {
 		}
 
 		return null;
+	}
+
+	public RemoteGitBranch pushToRemoteGitRepository(
+		boolean force, LocalGitBranch localGitBranch,
+		String remoteGitBranchName, GitRemote gitRemote) {
+
+		return pushToRemoteGitRepository(
+			false, force, localGitBranch, remoteGitBranchName,
+			gitRemote.getRemoteURL());
+	}
+
+	public RemoteGitBranch pushToRemoteGitRepository(
+		boolean force, LocalGitBranch localGitBranch,
+		String remoteGitBranchName, RemoteGitRepository remoteGitRepository) {
+
+		return pushToRemoteGitRepository(
+			false, force, localGitBranch, remoteGitBranchName,
+			remoteGitRepository.getRemoteURL());
 	}
 
 	public LocalGitBranch rebase(
