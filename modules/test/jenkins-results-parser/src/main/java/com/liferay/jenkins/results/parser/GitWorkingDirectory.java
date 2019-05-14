@@ -1725,15 +1725,6 @@ public class GitWorkingDirectory {
 			gitRemote.getRemoteURL());
 	}
 
-	public RemoteGitBranch pushToRemoteGitRepository(
-		boolean force, LocalGitBranch localGitBranch,
-		String remoteGitBranchName, RemoteGitRepository remoteGitRepository) {
-
-		return pushToRemoteGitRepository(
-			false, force, localGitBranch, remoteGitBranchName,
-			remoteGitRepository.getRemoteURL());
-	}
-
 	public LocalGitBranch rebase(
 		boolean abortOnFail, LocalGitBranch baseLocalGitBranch,
 		LocalGitBranch localGitBranch) {
