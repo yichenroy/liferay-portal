@@ -1711,9 +1711,13 @@ public class GitWorkingDirectory {
 		}
 
 		try {
-			executeBashCommands(
+			GitUtil.ExecutionResult executionResult = executeBashCommands(
 				GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
 				1000 * 60 * 10, sb.toString());
+
+			if (executionResult.getExitValue() != 0) {
+				return null;
+			}
 		}
 		catch (RuntimeException re) {
 			return null;
