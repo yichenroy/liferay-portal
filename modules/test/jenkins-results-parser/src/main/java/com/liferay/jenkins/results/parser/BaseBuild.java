@@ -1235,6 +1235,22 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
+	public boolean hasGenericCIFailure() {
+		for (FailureMessageGenerator failureMessageGenerator :
+				getFailureMessageGenerators()) {
+
+			Element failureMessage = failureMessageGenerator.getMessageElement(
+				this);
+
+			if (failureMessage != null) {
+				return failureMessageGenerator.isGenericCIFailure();
+			}
+		}
+
+		return false;
+	}
+
+	@Override
 	public int hashCode() {
 		String key = getBuildURL();
 
