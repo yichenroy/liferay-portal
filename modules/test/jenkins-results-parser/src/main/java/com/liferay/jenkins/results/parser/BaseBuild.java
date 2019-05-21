@@ -1354,13 +1354,19 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public void takeSlaveOffline(SlaveOfflineRule slaveOfflineRule) {
+		System.out.println("## takeSlaveOffline ##");
+
 		if ((slaveOfflineRule == null) || fromArchive) {
+			System.out.println("## slaveOfflineRule is Null ##");
+
 			return;
 		}
 
 		JenkinsSlave jenkinsSlave = getJenkinsSlave();
 
 		if (jenkinsSlave == null) {
+			System.out.println("## jenkinsSlave is Null ##");
+
 			return;
 		}
 
@@ -1374,8 +1380,12 @@ public abstract class BaseBuild implements Build {
 		}
 
 		if (slaveOffline) {
+			System.out.println("## slave is already offline ##");
+
 			return;
 		}
+
+		System.out.println("## Putting slave to offline now ##");
 
 		String message = JenkinsResultsParserUtil.combine(
 			slaveOfflineRule.getName(), " failure detected at ", getBuildURL(),
@@ -1492,9 +1502,13 @@ public abstract class BaseBuild implements Build {
 						for (SlaveOfflineRule slaveOfflineRule :
 								slaveOfflineRules) {
 
+							System.out.println("## Checking offline rule ##");
+
 							if (!slaveOfflineRule.matches(this)) {
 								continue;
 							}
+
+							System.out.println("## Taking slave offline ##");
 
 							takeSlaveOffline(slaveOfflineRule);
 

@@ -45,6 +45,8 @@ public class SlaveOfflineRule {
 
 		_slaveOfflineRules = new ArrayList<>();
 
+		System.out.println("###############################################");
+
 		for (Object propertyNameObject : buildProperties.keySet()) {
 			String propertyName = propertyNameObject.toString();
 
@@ -53,11 +55,15 @@ public class SlaveOfflineRule {
 					"slave.offline.rule[".length(),
 					propertyName.lastIndexOf("]"));
 
+				System.out.println("ruleName: " + ruleName);
+
 				_slaveOfflineRules.add(
 					new SlaveOfflineRule(
 						buildProperties.getProperty(propertyName), ruleName));
 			}
 		}
+
+		System.out.println("###############################################");
 
 		return _slaveOfflineRules;
 	}
