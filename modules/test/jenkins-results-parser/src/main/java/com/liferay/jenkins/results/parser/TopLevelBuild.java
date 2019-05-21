@@ -351,9 +351,9 @@ public class TopLevelBuild extends BaseBuild {
 		_compareToUpstream = compareToUpstream;
 	}
 
-	@Override
-	public void takeSlaveOffline(SlaveOfflineRule slaveOfflineRule) {
-	}
+//	@Override
+//	public void takeSlaveOffline(SlaveOfflineRule slaveOfflineRule) {
+//	}
 
 	@Override
 	public void update() {
