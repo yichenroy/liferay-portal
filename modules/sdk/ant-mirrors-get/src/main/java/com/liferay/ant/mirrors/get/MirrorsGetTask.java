@@ -76,6 +76,10 @@ public class MirrorsGetTask extends Task {
 		_skipChecksum = skipChecksum;
 	}
 
+	public void setSkipValidZip(boolean skipValidZip) {
+		_skipValidZip = skipValidZip;
+	}
+
 	public void setSrc(String src) {
 		Project project = getProject();
 
@@ -377,6 +381,10 @@ public class MirrorsGetTask extends Task {
 	}
 
 	protected boolean isValidZip(File file) throws IOException {
+		if (_skipValidZip) {
+			return true;
+		}
+
 		if (!file.exists()) {
 			return false;
 		}
@@ -550,6 +558,7 @@ public class MirrorsGetTask extends Task {
 	private String _mirrorsHostname;
 	private String _path;
 	private boolean _skipChecksum;
+	private boolean _skipValidZip;
 	private String _src;
 	private boolean _tryLocalNetwork = true;
 	private boolean _verbose;
