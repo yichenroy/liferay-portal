@@ -88,8 +88,9 @@ public class LiferayInputReader extends LiferayBaseReader<IndexedRecord> {
 		URI endpointURI =
 			liferayConnectionResourceBaseProperties.resource.getEndpointURI();
 
-		_endpointJsonNode = _getEndpointJsonNode(endpointURI, ++actual, 1);
-		_inputRecordsJsonNode = _getItemsJsonNode(endpointURI, ++actual, -1);
+		_endpointJsonNode = _getEndpointJsonNode(endpointURI, ++actual, -1);
+
+		_inputRecordsJsonNode = _endpointJsonNode.path("items");
 
 		_inputRecordsIndex = 0;
 
@@ -135,8 +136,9 @@ public class LiferayInputReader extends LiferayBaseReader<IndexedRecord> {
 		URI endpointURI =
 			liferayConnectionResourceBaseProperties.resource.getEndpointURI();
 
-		_endpointJsonNode = _getEndpointJsonNode(endpointURI, 1, 1);
-		_inputRecordsJsonNode = _getItemsJsonNode(endpointURI, 1, -1);
+		_endpointJsonNode = _getEndpointJsonNode(endpointURI, 1, -1);
+
+		_inputRecordsJsonNode = _endpointJsonNode.path("items");
 
 		boolean start = false;
 
@@ -207,15 +209,6 @@ public class LiferayInputReader extends LiferayBaseReader<IndexedRecord> {
 		}
 
 		return liferaySource.doGetRequest(decoratedResourceURI.toString());
-	}
-
-	private JsonNode _getItemsJsonNode(
-		URI endpointURI, int page, int pageSize) {
-
-		JsonNode responseJsonNode = _getEndpointJsonNode(
-			endpointURI, page, pageSize);
-
-		return responseJsonNode.path("items");
 	}
 
 	private static final Logger _log = LoggerFactory.getLogger(
