@@ -174,11 +174,9 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 	}
 
 	private List<String> _getSelectedTestSuiteNames() {
-		if (_selectedTestSuiteNames != null) {
+		if (!_selectedTestSuiteNames.isEmpty()) {
 			return _selectedTestSuiteNames;
 		}
-
-		_selectedTestSuiteNames = new ArrayList<>();
 
 		Map<String, Long> candidateTestSuiteStaleDurations =
 			_getCandidateTestSuiteStaleDurations();
@@ -248,7 +246,7 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 	private void _invokeJob() {
 		List<String> testSuiteNames = _getSelectedTestSuiteNames();
 
-		if ((testSuiteNames == null) || testSuiteNames.isEmpty()) {
+		if (testSuiteNames.isEmpty()) {
 			System.out.println(
 				"There are no test suites to be run at this time.");
 
@@ -324,8 +322,8 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 			catch (IOException ioe) {
 				System.out.println(
 					JenkinsResultsParserUtil.combine(
-					"Unable to invoke a new build for test suite, '",
-					testSuiteName, "'"));
+						"Unable to invoke a new build for test suite, '",
+						testSuiteName, "'"));
 
 				ioe.printStackTrace();
 			}
@@ -334,7 +332,7 @@ public class PortalTestSuiteUpstreamControllerBuildRunner
 		updateBuildDescription();
 	}
 
-	private List<String> _invokedTestSuiteNames = new ArrayList<>();
-	private List<String> _selectedTestSuiteNames;
+	private final List<String> _invokedTestSuiteNames = new ArrayList<>();
+	private final List<String> _selectedTestSuiteNames = new ArrayList<>();
 
 }
