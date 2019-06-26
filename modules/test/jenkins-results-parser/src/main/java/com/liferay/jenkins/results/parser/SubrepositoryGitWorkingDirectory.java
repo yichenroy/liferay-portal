@@ -22,6 +22,32 @@ import java.io.IOException;
  */
 public class SubrepositoryGitWorkingDirectory extends GitWorkingDirectory {
 
+	@Override
+	public void setUpstreamGitRemoteToPrivateGitRepository() {
+		GitRemote upstreamGitRemote = getUpstreamGitRemote();
+
+		String remoteURL = upstreamGitRemote.getRemoteURL();
+
+		if (!remoteURL.contains("-private")) {
+			remoteURL = remoteURL.replace(".git", "-private.git");
+		}
+
+		addGitRemote(true, "upstream-temp", remoteURL);
+	}
+
+	@Override
+	public void setUpstreamGitRemoteToPublicGitRepository() {
+		GitRemote upstreamGitRemote = getUpstreamGitRemote();
+
+		String remoteURL = upstreamGitRemote.getRemoteURL();
+
+		if (remoteURL.contains("-private")) {
+			remoteURL = remoteURL.replace("-private", "");
+		}
+
+		addGitRemote(true, "upstream-temp", remoteURL);
+	}
+
 	protected SubrepositoryGitWorkingDirectory(
 			String upstreamBranchName, String workingDirectoryPath)
 		throws IOException {
@@ -35,32 +61,6 @@ public class SubrepositoryGitWorkingDirectory extends GitWorkingDirectory {
 		throws IOException {
 
 		super(upstreamBranchName, workingDirectoryPath, gitRepositoryName);
-	}
-
-	@Override
-	protected void setUpstreamGitRemoteToPrivateGitRepository() {
-		GitRemote upstreamGitRemote = getUpstreamGitRemote();
-
-		String remoteURL = upstreamGitRemote.getRemoteURL();
-
-		if (!remoteURL.contains("-private")) {
-			remoteURL = remoteURL.replace(".git", "-private.git");
-		}
-
-		addGitRemote(true, "upstream-temp", remoteURL);
-	}
-
-	@Override
-	protected void setUpstreamGitRemoteToPublicGitRepository() {
-		GitRemote upstreamGitRemote = getUpstreamGitRemote();
-
-		String remoteURL = upstreamGitRemote.getRemoteURL();
-
-		if (remoteURL.contains("-private")) {
-			remoteURL = remoteURL.replace("-private", "");
-		}
-
-		addGitRemote(true, "upstream-temp", remoteURL);
 	}
 
 }

@@ -1864,6 +1864,18 @@ public class GitWorkingDirectory {
 		}
 	}
 
+	public void setUpstreamGitRemoteToPrivateGitRepository() {
+		GitRemote upstreamGitRemote = getUpstreamGitRemote();
+
+		addGitRemote(true, "upstream-temp", upstreamGitRemote.getRemoteURL());
+	}
+
+	public void setUpstreamGitRemoteToPublicGitRepository() {
+		GitRemote upstreamGitRemote = getUpstreamGitRemote();
+
+		addGitRemote(true, "upstream-temp", upstreamGitRemote.getRemoteURL());
+	}
+
 	public void stageFileInCurrentLocalGitBranch(String fileName) {
 		String command = "git stage " + fileName;
 
@@ -2107,18 +2119,6 @@ public class GitWorkingDirectory {
 		int y = remoteURL.indexOf("/");
 
 		return remoteURL.substring(x, y);
-	}
-
-	protected void setUpstreamGitRemoteToPrivateGitRepository() {
-		GitRemote upstreamGitRemote = getUpstreamGitRemote();
-
-		addGitRemote(true, "upstream-temp", upstreamGitRemote.getRemoteURL());
-	}
-
-	protected void setUpstreamGitRemoteToPublicGitRepository() {
-		GitRemote upstreamGitRemote = getUpstreamGitRemote();
-
-		addGitRemote(true, "upstream-temp", upstreamGitRemote.getRemoteURL());
 	}
 
 	protected void setWorkingDirectory(String workingDirectoryPath)
