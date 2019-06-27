@@ -4602,6 +4602,10 @@ ${output.content}</echo>
 		<run-batch-test>
 			<test-action>
 				<sequential>
+					<setup-libs />
+
+					<setup-sdk />
+
 					<antcall inheritAll="false" target="prepare-portal-ext-properties">
 						<param name="database.type" value="mysql" />
 					</antcall>
