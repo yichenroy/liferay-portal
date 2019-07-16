@@ -929,6 +929,34 @@ public class GitWorkingDirectory {
 		return getLocalGitBranch(currentBranchName);
 	}
 
+	public String getFileContentAtSHA(String filePath, String sha) {
+		String command = JenkinsResultsParserUtil.combine(
+			"git show ", sha, ":", filePath);
+
+		GitUtil.ExecutionResult executionResult = executeBashCommands(
+			GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
+			GitUtil.MILLIS_TIMEOUT, command);
+
+		if (executionResult.getExitValue() != 0) {
+			throw new RuntimeException(
+				JenkinsResultsParserUtil.combine(
+					"Unable to get file content of ", filePath, "\n",
+					executionResult.getStandardError()));
+		}
+
+		String fileContent = executionResult.getStandardOut();
+
+		if (fileContent != null) {
+			fileContent = fileContent.trim();
+		}
+
+		if ((fileContent == null) || fileContent.isEmpty()) {
+			return null;
+		}
+
+		return fileContent;
+	}
+
 	public String getGitConfigProperty(String gitConfigPropertyName) {
 		GitUtil.ExecutionResult executionResult = executeBashCommands(
 			GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
