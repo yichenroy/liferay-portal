@@ -65,6 +65,8 @@ public class GitWorkingDirectoryFactory {
 					gitRepositoryName);
 			}
 			else {
+				System.out.println("## Getting gitworkingdirectory ##");
+
 				gitWorkingDirectory = new GitWorkingDirectory(
 					upstreamBranchName, gitRepositoryDirPath,
 					gitRepositoryName);

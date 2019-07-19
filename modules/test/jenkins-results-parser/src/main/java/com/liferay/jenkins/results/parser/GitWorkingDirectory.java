@@ -1905,42 +1905,84 @@ public class GitWorkingDirectory {
 			String gitRepositoryName)
 		throws IOException {
 
+		System.out.println("### 1 ###");
+
 		setWorkingDirectory(workingDirectoryPath);
+
+		System.out.println("### 2 ###");
 
 		_upstreamBranchName = upstreamBranchName;
 
-		GitRemote upstreamTempGitRemote = getGitRemote("upstream-temp");
+		System.out.println("### 3 ###");
+
+		GitRemote upstreamTempGitRemote = null;
+
+		try {
+			upstreamTempGitRemote = getGitRemote("upstream-temp");
+
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+
+			throw e;
+		}
+
+		System.out.println("### 3.5 ###");
 
 		if (upstreamTempGitRemote != null) {
+			System.out.println("### 3.8 ###");
+
 			removeGitRemote(upstreamTempGitRemote);
 		}
 
+		System.out.println("### 4 ###");
+
 		waitForIndexLock();
+
+		System.out.println("### 5 ###");
 
 		if ((gitRepositoryName == null) || gitRepositoryName.equals("")) {
 			gitRepositoryName = loadGitRepositoryName();
 		}
 
+		System.out.println("### 6 ###");
+
 		_gitRepositoryName = gitRepositoryName;
 
+		System.out.println("### 7 ###");
+
 		if (_publicOnlyGitRepositoryNames.contains(_gitRepositoryName)) {
+			System.out.println("### 8 ###");
+
 			setUpstreamGitRemoteToPublicGitRepository();
 		}
 		else {
 			if (_privateOnlyGitRepositoryNames.contains(_gitRepositoryName)) {
+				System.out.println("### 9 ###");
+
 				setUpstreamGitRemoteToPrivateGitRepository();
 			}
 			else {
+				System.out.println("### 10 ###");
+
 				if (upstreamBranchName.equals("master")) {
+					System.out.println("### 11 ###");
+
 					setUpstreamGitRemoteToPublicGitRepository();
 				}
 				else {
+					System.out.println("### 12 ###");
+
 					setUpstreamGitRemoteToPrivateGitRepository();
 				}
 			}
 		}
 
+		System.out.println("### 13 ###");
+
 		_gitRepositoryUsername = loadGitRepositoryUsername();
+
+		System.out.println("### 14 ###");
 	}
 
 	protected GitUtil.ExecutionResult executeBashCommands(
