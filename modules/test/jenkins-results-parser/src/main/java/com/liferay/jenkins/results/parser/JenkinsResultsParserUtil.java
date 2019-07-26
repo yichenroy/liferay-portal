@@ -794,11 +794,7 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static String getCohortName(String masterHostname) {
-		Matcher matcher = _jenkinsMasterPattern.matcher(masterHostname);
-
-		matcher.find();
-
-		return matcher.group("cohortName");
+		return "test-1-1";
 	}
 
 	public static List<File> getDirectoriesContainingFiles(
