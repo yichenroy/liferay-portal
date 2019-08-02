@@ -436,8 +436,8 @@ public class AxisBuild extends BaseBuild {
 	}
 
 	@Override
-	protected Pattern getBuildURLPattern() {
-		return buildURLPattern;
+	protected MultiPattern getBuildURLMultiPattern() {
+		return buildURLMultiPattern;
 	}
 
 	@Override
@@ -477,11 +477,15 @@ public class AxisBuild extends BaseBuild {
 			")/*(?<archiveName>.*)/(?<master>[^/]+)/+(?<jobName>[^/]+)/",
 			"(?<axisVariable>AXIS_VARIABLE=[^,]+,[^/]+)/",
 			"(?<buildNumber>\\d+)/?"));
-	protected static final Pattern buildURLPattern = Pattern.compile(
+	protected static final MultiPattern buildURLMultiPattern = new MultiPattern(
 		JenkinsResultsParserUtil.combine(
 			"\\w+://(?<master>[^/]+)/+job/+(?<jobName>[^/]+)/",
 			"(?<buildNumber>\\d+)/",
-			"(?<axisVariable>AXIS_VARIABLE=[^,]+,[^/]+)/?"));
+			"(?<axisVariable>AXIS_VARIABLE=[^,]+,[^/]+)/?"),
+		JenkinsResultsParserUtil.combine(
+			"\\w+://(?<master>[^/]+)/+job/+(?<jobName>[^/]+)/",
+			"(?<axisVariable>AXIS_VARIABLE=[^,]+,[^/]+)/",
+			"(?<buildNumber>\\d+)/?"));
 	protected static final String defaultLogBaseURL =
 		"https://testray.liferay.com/reports/production/logs";
 
