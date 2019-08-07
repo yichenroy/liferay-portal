@@ -8840,7 +8840,7 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 					input="${theme.file.name}"
 					override="true"
 					property="theme.file.name.prefix"
-					regexp="(.*?)(\.[^\s]*)"
+					regexp="([^\.]+)(\.[^\s]+)"
 					replace="\1"
 				/>
 
@@ -8848,7 +8848,7 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 					input="${theme.file.name}"
 					override="true"
 					property="theme.file.name.suffix"
-					regexp="(.*?)(\.[^\s]*)"
+					regexp="([^\.]+)(\.[^\s]+)"
 					replace="\2"
 				/>
 
