@@ -8855,7 +8855,7 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 				<if>
 					<resourcecount count="0" when="greater">
 						<zipfileset
-							dir="${liferay.home1}/osgi/war"
+							dir="${liferay.home}/osgi/war"
 							includes="${theme.file.name.prefix}*${theme.file.name.suffix}"
 						>
 							<patternset>
