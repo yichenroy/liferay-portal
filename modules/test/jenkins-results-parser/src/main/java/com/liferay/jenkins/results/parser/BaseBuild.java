@@ -524,6 +524,21 @@ public abstract class BaseBuild implements Build {
 		return duration;
 	}
 
+	public Element getFailureMessageElement() {
+		for (FailureMessageGenerator failureMessageGenerator :
+				getFailureMessageGenerators()) {
+
+			Element failureMessage = failureMessageGenerator.getMessageElement(
+				this);
+
+			if (failureMessage != null) {
+				return failureMessage;
+			}
+		}
+
+		return null;
+	}
+
 	@Override
 	public Element getGitHubMessageBuildAnchorElement() {
 		getResult();
@@ -2307,21 +2322,6 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected ExecutorService getExecutorService() {
-		return null;
-	}
-
-	protected Element getFailureMessageElement() {
-		for (FailureMessageGenerator failureMessageGenerator :
-				getFailureMessageGenerators()) {
-
-			Element failureMessage = failureMessageGenerator.getMessageElement(
-				this);
-
-			if (failureMessage != null) {
-				return failureMessage;
-			}
-		}
-
 		return null;
 	}
 

@@ -67,6 +67,11 @@ public class BatchBuild extends BaseBuild {
 	}
 
 	@Override
+	public Element getFailureMessageElement() {
+		return null;
+	}
+
+	@Override
 	public Element getGitHubMessageElement() {
 		Collections.sort(
 			downstreamBuilds, new BaseBuild.BuildDisplayNameComparator());
@@ -501,11 +506,6 @@ public class BatchBuild extends BaseBuild {
 	@Override
 	protected ExecutorService getExecutorService() {
 		return _executorService;
-	}
-
-	@Override
-	protected Element getFailureMessageElement() {
-		return null;
 	}
 
 	@Override
