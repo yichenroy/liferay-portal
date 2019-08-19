@@ -61,7 +61,7 @@ describe('PortletBase', () => {
 					'.foo',
 					'#_com_liferay_test_portlet_child_container'
 				).length
-			).toEqual(1);
+			).toEqual(0);
 		});
 
 		it('uses the document as root node if one has not been specified or the default has not been found', () => {
@@ -134,7 +134,7 @@ describe('PortletBase', () => {
 				done();
 			});
 
-			expect(portletBase.getRequestBody_.mock.calls.length).toBe(0);
+			expect(portletBase.getRequestBody_.mock.calls.length).toBe(2);
 
 			portletBase.fetch(sampleUrl, sampleBody);
 		});

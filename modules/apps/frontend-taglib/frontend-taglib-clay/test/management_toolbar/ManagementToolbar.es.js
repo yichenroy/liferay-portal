@@ -65,7 +65,7 @@ describe('ManagementToolbar', () => {
 
 		expect(searchContainer.select.toggleAllRows).toHaveBeenCalledWith(
 			false,
-			true
+			false
 		);
 	});
 

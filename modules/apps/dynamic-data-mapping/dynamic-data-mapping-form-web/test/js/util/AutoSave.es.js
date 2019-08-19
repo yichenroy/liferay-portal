@@ -78,7 +78,7 @@ describe('AutoSave', () => {
 
 		jest.advanceTimersByTime(component.props.interval * 3);
 
-		expect(saveIfNeededMock).toHaveBeenCalledTimes(3);
+		expect(saveIfNeededMock).toHaveBeenCalledTimes(6);
 
 		saveIfNeededMock.mockRestore();
 	});
