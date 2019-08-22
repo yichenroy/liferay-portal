@@ -93,7 +93,7 @@ public class MergeCentralGitSubrepositoryUtil {
 				if (centralGitSubrepository.isCentralPullRequestCandidate()) {
 					GitRemote upstreamGitRemote =
 						centralGitWorkingDirectory.getGitRemote("upstream");
-
+					
 					if (!centralGitWorkingDirectory.remoteGitBranchExists(
 							mergeBranchName, upstreamGitRemote)) {
 
@@ -242,7 +242,8 @@ public class MergeCentralGitSubrepositoryUtil {
 		String title = gitSubrepositoryName + " - Central Merge Pull Request";
 
 		String pullRequestURL = centralGitWorkingDirectory.createPullRequest(
-			sb.toString(), mergeBranchName, receiverUserName, title);
+			sb.toString(), mergeBranchName, receiverUserName, senderUserName,
+			title);
 
 		requestJSONObject.put("target_url", pullRequestURL);
 

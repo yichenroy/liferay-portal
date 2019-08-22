@@ -403,7 +403,7 @@ public class GitWorkingDirectory {
 
 	public String createPullRequest(
 			String body, String pullRequestBranchName, String receiverUserName,
-			String title)
+			String senderUserName, String title)
 		throws IOException {
 
 		JSONObject requestJSONObject = new JSONObject();
@@ -411,7 +411,7 @@ public class GitWorkingDirectory {
 		requestJSONObject.put("base", _upstreamBranchName);
 		requestJSONObject.put("body", body);
 		requestJSONObject.put(
-			"head", receiverUserName + ":" + pullRequestBranchName);
+			"head", senderUserName + ":" + pullRequestBranchName);
 		requestJSONObject.put("title", title);
 
 		String url = JenkinsResultsParserUtil.getGitHubApiUrl(
