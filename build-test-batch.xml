@@ -3910,7 +3910,6 @@ log.sanitizer.enabled=false</echo>
 	<target name="js-unit-jdk8">
 		<run-batch-test>
 			<test-action>
-<<<<<<< HEAD
 				<for keepgoing="true" param="js.test.dir">
 					<path>
 						<dirset

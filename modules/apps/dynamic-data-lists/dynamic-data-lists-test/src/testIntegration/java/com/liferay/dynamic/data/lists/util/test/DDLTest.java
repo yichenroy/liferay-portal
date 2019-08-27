@@ -92,7 +92,7 @@ public class DDLTest {
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm();
 
 		DDMFormField ddmFormField = DDMFormTestUtil.createTextDDMFormField(
-			"TextField1", false, true, false);
+			"TextField1", true, true, false);
 
 		ddmForm.addDDMFormField(ddmFormField);
 
@@ -101,7 +101,7 @@ public class DDLTest {
 
 		DDMFormFieldValue ddmFormFieldValue0 =
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"TextField1", "Text0");
+				"TextFiel2d1", "Text0");
 
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue0);
 

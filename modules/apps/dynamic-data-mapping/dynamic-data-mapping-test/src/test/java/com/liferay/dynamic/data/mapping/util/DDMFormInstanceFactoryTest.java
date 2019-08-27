@@ -72,7 +72,7 @@ public class DDMFormInstanceFactoryTest {
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
 				"float", String.valueOf(expectedFloatValue)));
 
-		int expectedIntegerValue = 2015;
+		int expectedIntegerValue = 2018;
 
 		primitiveTypesDDMFormFieldValue.addNestedDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(

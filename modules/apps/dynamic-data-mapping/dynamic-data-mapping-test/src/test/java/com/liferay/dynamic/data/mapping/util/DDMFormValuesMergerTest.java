@@ -109,7 +109,7 @@ public class DDMFormValuesMergerTest {
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm();
 
 		ddmForm.addDDMFormField(
-			DDMFormTestUtil.createTextDDMFormField("text", false, false, true));
+			DDMFormTestUtil.createTextDDMFormField("text", true, false, true));
 
 		// Existing dynamic data mapping form values
 
