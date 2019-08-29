@@ -59,6 +59,8 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import java.io.File;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
