@@ -1504,7 +1504,6 @@ app.server.type=@{app.server.type}]]></echo>
 				database.type="@{database.type}"
 				database.version="@{database.version}"
 				setup.testable.jboss="false"
-				setup.testable.tomcat="false"
 				test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
 				test.fix.pack.base.url="${test.fix.pack.base.url}"
 				test.legacy.database.dump="true"
