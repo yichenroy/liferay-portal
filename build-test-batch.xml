@@ -3984,13 +3984,16 @@ log.sanitizer.enabled=false</echo>
 	<target name="js-unit-private-jdk8">
 		<run-batch-test>
 			<test-action>
-				<trycatch>
+				<trycatch property="failure.message">
 					<try>
 						<gradle-execute dir="modules" task="packageRunTest">
 							<arg value="--continue" />
 							<arg value="--parallel" />
 						</gradle-execute>
 					</try>
+					<catch>
+						<echo>${failure.message}</echo>
+					</catch>
 					<finally>
 						<replace
 							dir="modules"
