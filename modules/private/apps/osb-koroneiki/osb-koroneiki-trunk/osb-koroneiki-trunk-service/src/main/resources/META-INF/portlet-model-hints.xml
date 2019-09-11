@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+
+<model-hints>
+	<model name="com.liferay.osb.koroneiki.trunk.model.ProductConsumption">
+		<field name="uuid" type="String" />
+		<field name="productConsumptionId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="productConsumptionKey" type="String" />
+		<field name="accountId" type="long" />
+		<field name="productEntryId" type="long" />
+	</model>
+	<model name="com.liferay.osb.koroneiki.trunk.model.ProductEntry">
+		<field name="uuid" type="String" />
+		<field name="productEntryId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="productEntryKey" type="String" />
+		<field name="name" type="String" />
+	</model>
+	<model name="com.liferay.osb.koroneiki.trunk.model.ProductField">
+		<field name="productFieldId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="classNameId" type="long" />
+		<field name="classPK" type="long" />
+		<field name="name" type="String" />
+		<field name="value" type="String" />
+	</model>
+	<model name="com.liferay.osb.koroneiki.trunk.model.ProductPurchase">
+		<field name="uuid" type="String" />
+		<field name="productPurchaseId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="productPurchaseKey" type="String" />
+		<field name="accountId" type="long" />
+		<field name="productEntryId" type="long" />
+		<field name="startDate" type="Date">
+			<hint name="show-time">false</hint>
+		</field>
+		<field name="endDate" type="Date">
+			<hint name="show-time">false</hint>
+		</field>
+		<field name="quantity" type="int" />
+	</model>
+</model-hints>

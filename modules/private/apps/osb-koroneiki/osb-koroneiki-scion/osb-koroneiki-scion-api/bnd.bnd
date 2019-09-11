@@ -1,0 +1,10 @@
+Bundle-Name: Liferay OSB Koroneiki Scion API
+Bundle-SymbolicName: com.liferay.osb.koroneiki.scion.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.osb.koroneiki.scion.constants,\
+	com.liferay.osb.koroneiki.scion.exception,\
+	com.liferay.osb.koroneiki.scion.model,\
+	com.liferay.osb.koroneiki.scion.permission,\
+	com.liferay.osb.koroneiki.scion.service,\
+	com.liferay.osb.koroneiki.scion.service.persistence

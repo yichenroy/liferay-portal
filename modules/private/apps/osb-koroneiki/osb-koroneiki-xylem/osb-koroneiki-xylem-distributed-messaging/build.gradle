@@ -1,0 +1,19 @@
+dependencies {
+	compileOnly group: "biz.aQute.bnd", name: "biz.aQute.bndlib", version: "3.1.0"
+	compileOnly group: "com.liferay", name: "com.liferay.petra.lang", version: "3.0.0"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "4.0.0"
+	compileOnly group: "com.rabbitmq", name: "amqp-client", version: "3.6.1"
+	compileOnly project(":private:apps:osb-distributed-messaging:osb-distributed-messaging-api")
+	compileOnly project(":private:apps:osb-distributed-messaging:osb-distributed-messaging-publishing-api")
+	compileOnly project(":private:apps:osb-distributed-messaging:osb-distributed-messaging-rabbitmq-connector")
+	compileOnly project(":private:apps:osb-distributed-messaging:osb-distributed-messaging-subscribing-api")
+	compileOnly project(":private:apps:osb-koroneiki:osb-koroneiki-phloem:osb-koroneiki-phloem-rest-api")
+	compileOnly project(":private:apps:osb-koroneiki:osb-koroneiki-root:osb-koroneiki-root-api")
+	compileOnly project(":private:apps:osb-koroneiki:osb-koroneiki-taproot:osb-koroneiki-taproot-api")
+	compileOnly project(":private:apps:osb-koroneiki:osb-koroneiki-trunk:osb-koroneiki-trunk-api")
+}
+
+deployDependencies {
+	from configurations.compileOnly
+	include "amqp-client-*.jar"
+}

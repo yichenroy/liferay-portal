@@ -1,0 +1,10 @@
+Bundle-Name: Liferay OSB Koroneiki Trunk API
+Bundle-SymbolicName: com.liferay.osb.koroneiki.trunk.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.osb.koroneiki.trunk.constants,\
+	com.liferay.osb.koroneiki.trunk.exception,\
+	com.liferay.osb.koroneiki.trunk.model,\
+	com.liferay.osb.koroneiki.trunk.permission,\
+	com.liferay.osb.koroneiki.trunk.service,\
+	com.liferay.osb.koroneiki.trunk.service.persistence

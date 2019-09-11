@@ -1,0 +1,4 @@
+Bundle-Name: Liferay OSB Koroneiki Root Audit
+Bundle-SymbolicName: com.liferay.osb.koroneiki.root.audit
+Bundle-Version: 1.0.0
+-dsannotations-options: inherit

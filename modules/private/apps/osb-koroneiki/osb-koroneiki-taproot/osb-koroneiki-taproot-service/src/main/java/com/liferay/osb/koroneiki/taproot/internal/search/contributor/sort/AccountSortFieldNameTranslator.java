@@ -1,0 +1,45 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of the Liferay Enterprise
+ * Subscription License ("License"). You may not use this file except in
+ * compliance with the License. You can obtain a copy of the License by
+ * contacting Liferay, Inc. See the License for the specific language governing
+ * permissions and limitations under the License, including but not limited to
+ * distribution rights of the Software.
+ *
+ *
+ *
+ */
+
+package com.liferay.osb.koroneiki.taproot.internal.search.contributor.sort;
+
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.search.contributor.ContributorConstants;
+import com.liferay.portal.search.contributor.sort.SortFieldNameTranslator;
+
+import org.osgi.service.component.annotations.Component;
+
+/**
+ * @author Amos Fong
+ */
+@Component(
+	immediate = true,
+	property = ContributorConstants.ENTRY_CLASS_NAME_PROPERTY_KEY + "=com.liferay.osb.koroneiki.taproot.model.Account",
+	service = SortFieldNameTranslator.class
+)
+public class AccountSortFieldNameTranslator implements SortFieldNameTranslator {
+
+	@Override
+	public String getSortFieldName(String orderByCol) {
+		if (orderByCol.equals("code")) {
+			return Field.getSortableFieldName("code_String");
+		}
+		else if (orderByCol.equals("name")) {
+			return "name";
+		}
+
+		return orderByCol;
+	}
+
+}

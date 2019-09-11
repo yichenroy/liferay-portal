@@ -1,0 +1,9 @@
+apiDir: "../osb-koroneiki-phloem-rest-api/src/main/java"
+apiPackagePath: "com.liferay.osb.koroneiki.phloem.rest"
+application:
+    baseURI: "/koroneiki-rest"
+    className: "KoroneikiRESTApplication"
+    name: "Liferay.Koroneiki.REST"
+author: "Amos Fong"
+clientDir: "../osb-koroneiki-phloem-rest-client/src/main/java"
+testDir: "../osb-koroneiki-phloem-rest-test/src/testIntegration/java"

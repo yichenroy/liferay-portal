@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.2.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_2_0.dtd">
+
+<service-builder package-path="com.liferay.osb.koroneiki.trunk">
+	<namespace>Koroneiki</namespace>
+	<entity local-service="true" name="ProductConsumption" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="productConsumptionId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="productConsumptionKey" type="String" />
+		<column name="accountId" type="long" />
+		<column name="productEntryId" type="long" />
+
+		<!-- Finder methods -->
+
+		<finder name="ProductConsumptionKey" return-type="ProductConsumption" unique="true">
+			<finder-column name="productConsumptionKey" />
+		</finder>
+		<finder name="AccountId" return-type="Collection">
+			<finder-column name="accountId" />
+		</finder>
+		<finder name="U_AI_PEI" return-type="Collection">
+			<finder-column name="userId" />
+			<finder-column name="accountId" />
+			<finder-column name="productEntryId" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ProductEntry" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="productEntryId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="productEntryKey" type="String" />
+		<column name="name" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="ProductEntryKey" return-type="ProductEntry" unique="true">
+			<finder-column name="productEntryKey" />
+		</finder>
+		<finder name="Name" return-type="ProductEntry">
+			<finder-column name="name" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ProductField" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="productFieldId" primary="true" type="long" />
+
+		<!-- Audit Fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+
+		<!-- Other fields -->
+
+		<column name="classNameId" type="long" />
+		<column name="classPK" type="long" />
+		<column name="name" type="String" />
+		<column name="value" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="ClassNameId" return-type="Collection">
+			<finder-column name="classNameId" />
+		</finder>
+		<finder name="C_C" return-type="Collection">
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ProductPurchase" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="productPurchaseId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="productPurchaseKey" type="String" />
+		<column name="accountId" type="long" />
+		<column name="productEntryId" type="long" />
+		<column name="startDate" type="Date" />
+		<column name="endDate" type="Date" />
+		<column name="quantity" type="int" />
+
+		<!-- Finder methods -->
+
+		<finder name="ProductPurchaseKey" return-type="ProductPurchase" unique="true">
+			<finder-column name="productPurchaseKey" />
+		</finder>
+		<finder name="AccountId" return-type="Collection">
+			<finder-column name="accountId" />
+		</finder>
+	</entity>
+	<exceptions>
+		<exception>ProductEntryName</exception>
+		<exception>ProductPurchaseEndDate</exception>
+		<exception>ProductPurchaseQuantity</exception>
+	</exceptions>
+</service-builder>

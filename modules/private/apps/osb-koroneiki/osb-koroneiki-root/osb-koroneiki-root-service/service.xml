@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.2.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_2_0.dtd">
+
+<service-builder package-path="com.liferay.osb.koroneiki.root">
+	<namespace>Koroneiki</namespace>
+	<entity local-service="true" name="AuditEntry" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="auditEntryId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="auditEntryKey" type="String" />
+		<column name="classNameId" type="long" />
+		<column name="classPK" type="long" />
+		<column name="auditSetId" type="long" />
+		<column name="fieldClassNameId" type="long" />
+		<column name="fieldClassPK" type="long" />
+		<column name="action" type="String" />
+		<column name="field" type="String" />
+		<column name="oldLabel" type="String" />
+		<column name="oldValue" type="String" />
+		<column name="newLabel" type="String" />
+		<column name="newValue" type="String" />
+		<column name="description" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="AuditEntryKey" return-type="AuditEntry" unique="true">
+			<finder-column name="auditEntryKey" />
+		</finder>
+		<finder name="C_C" return-type="Collection">
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ExternalLink" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="externalLinkId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="externalLinkKey" type="String" />
+		<column name="classNameId" type="long" />
+		<column name="classPK" type="long" />
+		<column name="domain" type="String" />
+		<column name="entityName" type="String" />
+		<column name="entityId" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="ExternalLinkKey" return-type="ExternalLink" unique="true">
+			<finder-column name="externalLinkKey" />
+		</finder>
+		<finder name="C_C" return-type="Collection">
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
+		</finder>
+		<finder name="C_D_EN_EI" return-type="Collection">
+			<finder-column name="classNameId" />
+			<finder-column name="domain" />
+			<finder-column name="entityName" />
+			<finder-column name="entityId" />
+		</finder>
+	</entity>
+	<exceptions>
+		<exception>ExternalLinkDomain</exception>
+		<exception>ExternalLinkEntityId</exception>
+		<exception>ExternalLinkEntityName</exception>
+	</exceptions>
+</service-builder>

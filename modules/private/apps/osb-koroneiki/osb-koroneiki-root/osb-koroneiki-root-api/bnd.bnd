@@ -1,0 +1,11 @@
+Bundle-Name: Liferay OSB Koroneiki Root API
+Bundle-SymbolicName: com.liferay.osb.koroneiki.root.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.osb.koroneiki.root.constants,\
+	com.liferay.osb.koroneiki.root.exception,\
+	com.liferay.osb.koroneiki.root.model,\
+	com.liferay.osb.koroneiki.root.permission,\
+	com.liferay.osb.koroneiki.root.service,\
+	com.liferay.osb.koroneiki.root.service.persistence,\
+	com.liferay.osb.koroneiki.root.util

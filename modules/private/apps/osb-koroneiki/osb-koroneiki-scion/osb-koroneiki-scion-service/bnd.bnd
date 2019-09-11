@@ -1,0 +1,6 @@
+Bundle-Name: Liferay OSB Koroneiki Scion Service
+Bundle-SymbolicName: com.liferay.osb.koroneiki.scion.service
+Bundle-Version: 1.0.0
+Liferay-Require-SchemaVersion: 1.0.0
+Liferay-Service: true
+-dsannotations-options: inherit

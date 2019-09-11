@@ -1,0 +1,2870 @@
+components:
+    schemas:
+        Account:
+            description: Represents an account.
+            properties:
+                addresses:
+                    description: The account's postal addresses.
+                    items:
+                        $ref: "#/components/schemas/PostalAddress"
+                    readOnly: true
+                    type: array
+                code:
+                    description: The code of the account.
+                    type: string
+                contactEmailAddress:
+                    description: The account's contact email address.
+                    type: string
+                dateCreated:
+                    description: The account's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description: The most recent time that any of the account's fields changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                description:
+                    description: The description of the account.
+                    type: string
+                externalLinks:
+                    description: The account's links to entities in external domains.
+                    items:
+                        $ref: "#/components/schemas/ExternalLink"
+                    readOnly: true
+                    type: array
+                faxNumber:
+                    description: The account's fax number.
+                    type: string
+                industry:
+                    description: The industry of the account.
+                    enum: ["aerospace-and-defense", "agriculture", "automotive", "consulting-market-research", "education", "energy", "engineering", "financial-services", "food-services", "government-federal", "government-state-local", "healthcare", "hospitality-leisure", "insurance", "manufacturing", "media-entertainment", "not-for-profit-ngo", "other", "pharmaceuticals", "professional-services-agency-business", "professional-services-technical-web-it", "retail-consumer-products", "technology", "telecommunication", "transportation", "utilities"]
+                    type: string
+                key:
+                    description: The account's key.
+                    readOnly: true
+                    type: string
+                logoId:
+                    deprecated: true
+                    description: The assetAttachmentId of the account's logo.
+                    format: int64
+                    type: integer
+                name:
+                    description: The name of the account.
+                    type: string
+                notes:
+                    description: The notes of the account.
+                    type: string
+                parentAccountKey:
+                    description: The account's parent account key.
+                    readOnly: true
+                    type: string
+                phoneNumber:
+                    description: The account's phone number.
+                    type: string
+                productPurchases:
+                    description: The products that the account has purchased.
+                    items:
+                        $ref: "#/components/schemas/ProductPurchase"
+                    readOnly: true
+                    type: array
+                profileEmailAddress:
+                    description: The account's profile email address.
+                    type: string
+                soldBy:
+                    description: The region which sold the salesforce opportunity.
+                    type: string
+                status:
+                    description: The status of the account.
+                    enum: ["approved", "closed", "expired", "inactive", "pending", "pending-validation", "rejected"]
+                    type: string
+                tier:
+                    description: The tier of the account.
+                    enum: ["oem", "premier", "regular", "strategic"]
+                    type: string
+                website:
+                    description: The account's website.
+                    type: string
+            required:
+                - name
+            type: object
+        AuditEntry:
+            description: An audit log that records changes to objects.
+            properties:
+                action:
+                    description: The action performed on the object.
+                    enum: ["add", "delete", "update"]
+                    readOnly: true
+                    type: string
+                auditSetId:
+                    description: The id of related audit entries.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                className:
+                    description: The name of the audited object.
+                    readOnly: true
+                    type: string
+                classPK:
+                    description: The primary key of the audited object.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                dateCreated:
+                    description: The audit entry's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                description:
+                    description: The description of the audit entry.
+                    readOnly: true
+                    type: string
+                field:
+                    description: The field of the audited object.
+                    readOnly: true
+                    type: string
+                fieldClassName:
+                    description: If the field is on a child object of the audited object, the name of the child object. Otherwise the name of the audited object.
+                    readOnly: true
+                    type: string
+                fieldClassPK:
+                    description: If the field is on a child object of the audited object, the primary key of the child object. Otherwise the primary key of the audited object.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                key:
+                    description: The audit entry's key.
+                    readOnly: true
+                    type: string
+                newValue:
+                    description: The new value of the field on the audited object.
+                    readOnly: true
+                    type: string
+                oldValue:
+                    description: The old value of the field on the audited object.
+                    readOnly: true
+                    type: string
+                userId:
+                    description: The ID of the user performing the audited action.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                userName:
+                    description: The full name of the user performing the audited action.
+                    readOnly: true
+                    type: string
+            type: object
+        Contact:
+            description: Represents a contact.
+            properties:
+                contactRoles:
+                    description: The contact's roles.
+                    items:
+                        $ref: "#/components/schemas/ContactRole"
+                    readOnly: true
+                    type: array
+                dateCreated:
+                    description: The contact's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description: The most recent time that any of the contact's fields changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                emailAddress:
+                    description: The email address of the contact.
+                    type: string
+                externalLinks:
+                    description: The account's links to entities in external domains.
+                    items:
+                        $ref: "#/components/schemas/ExternalLink"
+                    readOnly: true
+                    type: array
+                firstName:
+                    description: The first name of the contact.
+                    type: string
+                key:
+                    description: The contact's key.
+                    readOnly: true
+                    type: string
+                languageId:
+                    description: The language ID of the contact.
+                    type: string
+                lastName:
+                    description: The last name of the contact.
+                    type: string
+                middleName:
+                    description: The middle name of the contact.
+                    type: string
+                oktaId:
+                    description: The ID provisioned from Okta.
+                    type: string
+                uuid:
+                    description: A universal identifier to reference this contact.
+                    type: string
+            required:
+                - emailAddress
+                - firstName
+                - lastName
+            type: object
+        ContactRole:
+            description: Represents a contact role.
+            properties:
+                dateCreated:
+                    description: The contact role's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description: The most recent time that any of the contact role's fields changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                description:
+                    description: The description of the contact role.
+                    type: string
+                key:
+                    description: The contact role's key.
+                    readOnly: true
+                    type: string
+                name:
+                    description: The name of the contact role.
+                    type: string
+                system:
+                    description: A flag that identifies whether this is a system role.
+                    readOnly: true
+                    type: boolean
+                type:
+                    description: The contact role's type.
+                    enum: ["account", "team"]
+                    type: string
+            required:
+                - name
+                - type
+            type: object
+        ExternalLink:
+            description: Represents a link to an entity in a different domain.
+            properties:
+                dateCreated:
+                    description: The external link's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                domain:
+                    description: The external domain.
+                    type: string
+                entityId:
+                    description: The unique ID for the entity.
+                    type: string
+                entityName:
+                    description: The unique classification for the entity.
+                    type: string
+                key:
+                    description: The external link's key.
+                    readOnly: true
+                    type: string
+            required:
+                - domain
+                - entityId
+                - entityName
+            type: object
+        PostalAddress:
+            description: Represents a mailing address. This follows the [`PostalAddress`](https://www.schema.org/PostalAddress) specification.
+            properties:
+                addressCountry:
+                    description: The address's country (e.g., USA).
+                    type: string
+                addressLocality:
+                    description: The address's locality (e.g., city).
+                    type: string
+                addressRegion:
+                    description: The address's region (e.g., state).
+                    type: string
+                addressType:
+                    description: The address's type.
+                    type: string
+                id:
+                    description: The address's ID.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                mailing:
+                    default: false
+                    description: A flag that identifies whether this is a mailing addrress.
+                    type: boolean
+                postalCode:
+                    description: The address's postal code (e.g., zip code).
+                    type: string
+                primary:
+                    default: false
+                    description: A flag that identifies whether this is the main address of the user/organization.
+                    type: boolean
+                streetAddressLine1:
+                    description: The street address's first line (e.g., 1600 Amphitheatre Pkwy.).
+                    type: string
+                streetAddressLine2:
+                    description: The street address's second line.
+                    type: string
+                streetAddressLine3:
+                    description: The street address's third line.
+                    type: string
+            type: object
+        Product:
+            description: Represents a product.
+            properties:
+                dateCreated:
+                    description: The product's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description: The most recent time that any of the product's fields changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                externalLinks:
+                    description: The product's links to entities in external domains.
+                    items:
+                        $ref: "#/components/schemas/ExternalLink"
+                    readOnly: true
+                    type: array
+                key:
+                    description: The product's key.
+                    readOnly: true
+                    type: string
+                name:
+                    description: The name of the product.
+                    type: string
+            required:
+                - name
+            type: object
+        ProductConsumption:
+            description: Represents a product consumption.
+            properties:
+                accountKey:
+                    description: The key of the account consuming the product.
+                    readOnly: true
+                    type: string
+                dateCreated:
+                    description: The product consumption's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                externalLinks:
+                    description: The product consumption's links to entities in external domains.
+                    items:
+                        $ref: "#/components/schemas/ExternalLink"
+                    readOnly: true
+                    type: array
+                key:
+                    description: The product consumption's key.
+                    readOnly: true
+                    type: string
+                productKey:
+                    description: The key of the product being consumed.
+                    type: string
+                properties:
+                    additionalProperties:
+                        type: string
+                    type: object
+            required:
+                - productKey
+            type: object
+        ProductPurchase:
+            description: Represents a product purchase.
+            properties:
+                accountKey:
+                    description: The key of the account purchasing the product.
+                    readOnly: true
+                    type: string
+                dateCreated:
+                    description: The product purchase's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                endDate:
+                    description: The product purchase's end date.
+                    format: date-time
+                    type: string
+                externalLinks:
+                    description: The product purchase's links to entities in external domains.
+                    items:
+                        $ref: "#/components/schemas/ExternalLink"
+                    readOnly: true
+                    type: array
+                key:
+                    description: The product purchase's key.
+                    readOnly: true
+                    type: string
+                perpetual:
+                    description: A flag that identifies if the product purchase has a start and end date.
+                    type: boolean
+                product:
+                    description: The product that is being purchased.
+                    items:
+                        $ref: "#/components/schemas/Product"
+                    readOnly: true
+                    type: object
+                productKey:
+                    description: The key of the product being purchased.
+                    type: string
+                properties:
+                    additionalProperties:
+                        type: string
+                    type: object
+                quantity:
+                    default: 1
+                    description: The quantity of the product purchased.
+                    type: integer
+                startDate:
+                    description: The product purchase's start date.
+                    format: date-time
+                    type: string
+            required:
+                - productKey
+            type: object
+        Team:
+            description: Represents a team.
+            properties:
+                accountKey:
+                    description: The team's account's key.
+                    readOnly: true
+                    type: string
+                dateCreated:
+                    description: The team's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description: The most recent time that any of the team's fields changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                externalLinks:
+                    description: The team's links to entities in external domains.
+                    items:
+                        $ref: "#/components/schemas/ExternalLink"
+                    readOnly: true
+                    type: array
+                key:
+                    description: The team's key.
+                    readOnly: true
+                    type: string
+                name:
+                    description: The name of the team.
+                    type: string
+            required:
+                - name
+            type: object
+        TeamRole:
+            description: Represents a team role.
+            properties:
+                dateCreated:
+                    description: The team role's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description: The most recent time that any of the team role's fields changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                description:
+                    description: The description of the team role.
+                    type: string
+                key:
+                    description: The team role's key.
+                    readOnly: true
+                    type: string
+                name:
+                    description: The name of the team role.
+                    type: string
+                type:
+                    description: The team role's type.
+                    enum: ["account", "regular"]
+                    type: string
+            required:
+                - name
+                - type
+            type: object
+info:
+    description: ""
+    title: "Koroneiki"
+    version: v1.0
+openapi: 3.0.1
+paths:
+    "/accounts":
+        get:
+            description: Retrieves the accounts. Results can be paginated, filtered, searched, and sorted.
+            operationId: getAccountsPage
+            parameters:
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+                    description: ""
+            tags: ["Account"]
+        post:
+            operationId: postAccount
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Account"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Account"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Account"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Account"
+                    description: ""
+            tags: ["Account"]
+    "/accounts/by-external-link/{domain}/{entityName}/{entityId}":
+        get:
+            description: Retrieves the account by the external link.
+            operationId: getAccountByExternalLinkDomainEntityNameEntity
+            parameters:
+                - in: path
+                  name: domain
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: entityName
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: entityId
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+                    description: ""
+            tags: ["Account"]
+    "/accounts/{accountKey}":
+        delete:
+            operationId: deleteAccount
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Account"]
+        get:
+            description: Retrieves the account.
+            operationId: getAccount
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: includes
+                  schema:
+                      items:
+                          type: string
+                      type: array
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Account"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Account"
+                    description: ""
+            tags: ["Account"]
+        put:
+            operationId: putAccount
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Account"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Account"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Account"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Account"
+                    description: ""
+            tags: ["Account"]
+    "/accounts/{accountKey}/audit-entries":
+        get:
+            description: Retrieves the account's audit history.
+            operationId: getAccountAccountKeyAuditEntriesPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                    description: ""
+            tags: ["AuditEntry"]
+    "/accounts/{accountKey}/child-accounts":
+        get:
+            description: Retrieves the account's child accounts.
+            operationId: getAccountChildAccountsPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: includes
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+                    description: ""
+            tags: ["Account"]
+        post:
+            operationId: postAccountChildAccount
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Account"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Account"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Account"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Account"
+                    description: ""
+            tags: ["Account"]
+    "/accounts/{accountKey}/contacts":
+        delete:
+            description: Unassigns contacts from the account.
+            operationId: deleteAccountContact
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: contactUuids
+                  required: true
+                  schema:
+                      items:
+                          type: string
+                      type: array
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Account"]
+        get:
+            description: Retrieves the account's contacts.
+            operationId: getAccountAccountKeyContactsPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: includes
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Contact"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Contact"
+                                type: array
+                    description: ""
+            tags: ["Contact"]
+        put:
+            description: Assigns contacts to the account.
+            operationId: putAccountContact
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: contactUuids
+                  required: true
+                  schema:
+                      items:
+                          type: string
+                      type: array
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Account"]
+    "/accounts/{accountKey}/contacts/{contactUuid}/roles":
+        delete:
+            description: Unassigns roles from the contact for the account.
+            operationId: deleteAccountContactContactUuidRole
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: contactUuid
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: contactRoleKeys
+                  required: true
+                  schema:
+                      items:
+                          type: string
+                      type: array
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Account"]
+        get:
+            description: Retrieves the account's contact's contact roles.
+            operationId: getAccountAccountKeyContactContactUuidRolesPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: contactUuid
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContactRole"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContactRole"
+                                type: array
+                    description: ""
+            tags: ["ContactRole"]
+        put:
+            description: Assigns roles to the contact for the account.
+            operationId: putAccountContactContactUuidRole
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: contactUuid
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: contactRoleKeys
+                  required: true
+                  schema:
+                      items:
+                          type: string
+                      type: array
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Account"]
+    "/accounts/{accountKey}/external-links":
+        get:
+            description: Retrieves the account's external links.
+            operationId: getAccountAccountKeyExternalLinksPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                    description: ""
+            tags: ["ExternalLink"]
+        post:
+            description: Adds an external link to the account.
+            operationId: postAccountAccountKeyExternalLink
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                    description: ""
+            tags: ["ExternalLink"]
+    "/accounts/{accountKey}/postal-addresses":
+        get:
+            description: Retrieves the accounts's postal addresses.
+            operationId: getAccountAccountKeyPostalAddressesPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/PostalAddress"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/PostalAddress"
+                                type: array
+                    description: ""
+            tags: ["PostalAddress"]
+        post:
+            operationId: postAccountAccountKeyPostalAddress
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/PostalAddress"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/PostalAddress"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                    description: ""
+            tags: ["PostalAddress"]
+    "/accounts/{accountKey}/product-consumptions":
+        get:
+            description: Retrieves the account's product consumptions.
+            operationId: getAccountAccountKeyProductConsumptionsPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ProductConsumption"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ProductConsumption"
+                                type: array
+                    description: ""
+            tags: ["ProductConsumption"]
+        post:
+            operationId: postAccountAccountKeyProductConsumption
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ProductConsumption"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ProductConsumption"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ProductConsumption"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ProductConsumption"
+                    description: ""
+            tags: ["ProductConsumption"]
+    "/accounts/{accountKey}/product-purchases":
+        get:
+            description: Retrieves the account's product purchases.
+            operationId: getAccountAccountKeyProductPurchasesPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ProductPurchase"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ProductPurchase"
+                                type: array
+                    description: ""
+            tags: ["ProductPurchase"]
+        post:
+            operationId: postAccountAccountKeyProductPurchase
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ProductPurchase"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ProductPurchase"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ProductPurchase"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ProductPurchase"
+                    description: ""
+            tags: ["ProductPurchase"]
+    "/accounts/{accountKey}/teams":
+        get:
+            description: Retrieves the account's teams.
+            operationId: getAccountAccountKeyTeamsPage
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Team"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Team"
+                                type: array
+                    description: ""
+            tags: ["Team"]
+        post:
+            operationId: postAccountAccountKeyTeam
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Team"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Team"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Team"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Team"
+                    description: ""
+            tags: ["Team"]
+    "/accounts/{accountKey}/teams/{teamKey}/roles":
+        delete:
+            description: Unassigns roles from the team for the account.
+            operationId: deleteAccountTeamTeamKeyRole
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: teamKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: teamRoleKeys
+                  required: true
+                  schema:
+                      items:
+                          type: string
+                      type: array
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Account"]
+        put:
+            description: Assigns roles to the team for the account.
+            operationId: putAccountTeamTeamKeyRole
+            parameters:
+                - in: path
+                  name: accountKey
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: teamKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: teamRoleKeys
+                  required: true
+                  schema:
+                      items:
+                          type: string
+                      type: array
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Account"]
+    "/audit-entries/{auditEntryKey}":
+        get:
+            description: Retrieves the audit entry.
+            operationId: getAuditEntry
+            parameters:
+                - in: path
+                  name: auditEntryKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AuditEntry"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/AuditEntry"
+                    description: ""
+            tags: ["AuditEntry"]
+    "/contact-roles":
+        get:
+            description: Retrieves the contact roles. Results can be paginated, filtered, searched, and sorted.
+            operationId: getContactRolesPage
+            parameters:
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContactRole"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContactRole"
+                                type: array
+                    description: ""
+            tags: ["ContactRole"]
+        post:
+            operationId: postContactRole
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ContactRole"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ContactRole"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContactRole"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContactRole"
+                    description: ""
+            tags: ["ContactRole"]
+    "/contact-roles/{contactRoleKey}":
+        delete:
+            operationId: deleteContactRole
+            parameters:
+                - in: path
+                  name: contactRoleKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["ContactRole"]
+        get:
+            description: Retrieves the contact role.
+            operationId: getContactRole
+            parameters:
+                - in: path
+                  name: contactRoleKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContactRole"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContactRole"
+                    description: ""
+            tags: ["ContactRole"]
+        put:
+            operationId: putContactRole
+            parameters:
+                - in: path
+                  name: contactRoleKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ContactRole"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ContactRole"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContactRole"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContactRole"
+                    description: ""
+            tags: ["ContactRole"]
+    "/contact-roles/{contactRoleKey}/audit-entries":
+        get:
+            description: Retrieves the contact role's audit history.
+            operationId: getContactRoleContactRoleKeyAuditEntriesPage
+            parameters:
+                - in: path
+                  name: contactRoleKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                    description: ""
+            tags: ["AuditEntry"]
+    "/contacts":
+        get:
+            description: Retrieves the contacts. Results can be paginated, filtered, searched, and sorted.
+            operationId: getContactsPage
+            parameters:
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Contact"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Contact"
+                                type: array
+                    description: ""
+            tags: ["Contact"]
+        post:
+            operationId: postContact
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Contact"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Contact"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                    description: ""
+            tags: ["Contact"]
+    "/contacts/by-email-address/{emailAddress}":
+        delete:
+            operationId: deleteContactByEmailAddresEmailAddress
+            parameters:
+                - in: path
+                  name: emailAddress
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Contact"]
+        get:
+            description: Retrieves the contact.
+            operationId: getContactByEmailAddresEmailAddress
+            parameters:
+                - in: path
+                  name: emailAddress
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                    description: ""
+            tags: ["Contact"]
+        put:
+            operationId: putContactByEmailAddresEmailAddress
+            parameters:
+                - in: path
+                  name: emailAddress
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Contact"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Contact"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                    description: ""
+            tags: ["Contact"]
+    "/contacts/by-okta-id/{oktaId}":
+        delete:
+            operationId: deleteContactByOkta
+            parameters:
+                - in: path
+                  name: oktaId
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Contact"]
+        get:
+            description: Retrieves the contact.
+            operationId: getContactByOkta
+            parameters:
+                - in: path
+                  name: oktaId
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                    description: ""
+            tags: ["Contact"]
+        put:
+            operationId: putContactByOkta
+            parameters:
+                - in: path
+                  name: oktaId
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Contact"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Contact"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                    description: ""
+            tags: ["Contact"]
+    "/contacts/by-okta-id/{oktaId}/audit-entries":
+        get:
+            description: Retrieves the contact's audit history.
+            operationId: getContactByOktaAuditEntriesPage
+            parameters:
+                - in: path
+                  name: oktaId
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                    description: ""
+            tags: ["AuditEntry"]
+    "/contacts/by-okta-id/{oktaId}/external-links":
+        get:
+            description: Retrieves the contact's external links.
+            operationId: getContactByOktaExternalLinksPage
+            parameters:
+                - in: path
+                  name: oktaId
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                    description: ""
+            tags: ["ExternalLink"]
+        post:
+            description: Adds an external link to the contact.
+            operationId: postContactByOktaExternalLink
+            parameters:
+                - in: path
+                  name: oktaId
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                    description: ""
+            tags: ["ExternalLink"]
+    "/contacts/by-uuid/{uuid}":
+        delete:
+            operationId: deleteContactByUuid
+            parameters:
+                - in: path
+                  name: uuid
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Contact"]
+        get:
+            description: Retrieves the contact.
+            operationId: getContactByUuid
+            parameters:
+                - in: path
+                  name: uuid
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                    description: ""
+            tags: ["Contact"]
+        put:
+            operationId: putContactByUuid
+            parameters:
+                - in: path
+                  name: uuid
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Contact"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Contact"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Contact"
+                    description: ""
+            tags: ["Contact"]
+    "/contacts/by-uuid/{uuid}/audit-entries":
+        get:
+            description: Retrieves the contact's audit history.
+            operationId: getContactByUuidAuditEntriesPage
+            parameters:
+                - in: path
+                  name: uuid
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                    description: ""
+            tags: ["AuditEntry"]
+    "/contacts/by-uuid/{uuid}/external-links":
+        get:
+            description: Retrieves the contact's external links.
+            operationId: getContactByUuidExternalLinksPage
+            parameters:
+                - in: path
+                  name: uuid
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                    description: ""
+            tags: ["ExternalLink"]
+        post:
+            description: Adds an external link to the contact.
+            operationId: postContactByUuidExternalLink
+            parameters:
+                - in: path
+                  name: uuid
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                    description: ""
+            tags: ["ExternalLink"]
+    "/external-links/{externalLinkKey}":
+        delete:
+            operationId: deleteExternalLink
+            parameters:
+                - in: path
+                  name: externalLinkKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["ExternalLink"]
+        get:
+            description: Retrieves the external link.
+            operationId: getExternalLink
+            parameters:
+                - in: path
+                  name: externalLinkKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                    description: ""
+            tags: ["ExternalLink"]
+    "/postal-addresses/{postalAddressId}":
+        delete:
+            operationId: deletePostalAddress
+            parameters:
+                - in: path
+                  name: postalAddressId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["PostalAddress"]
+        get:
+            description: Retrieves the postal address.
+            operationId: getPostalAddress
+            parameters:
+                - in: path
+                  name: postalAddressId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                    description: ""
+            tags: ["PostalAddress"]
+        put:
+            operationId: putPostalAddress
+            parameters:
+                - in: path
+                  name: postalAddressId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/PostalAddress"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/PostalAddress"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                    description: ""
+            tags: ["PostalAddress"]
+    "/product-consumptions":
+        get:
+            description: Retrieves the product consumptions. Results can be paginated, filtered, searched, and sorted.
+            operationId: getProductConsumptionsPage
+            parameters:
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ProductConsumption"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ProductConsumption"
+                                type: array
+                    description: ""
+            tags: ["ProductConsumption"]
+    "/product-consumptions/{productConsumptionKey}":
+        delete:
+            operationId: deleteProductConsumption
+            parameters:
+                - in: path
+                  name: productConsumptionKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["ProductConsumption"]
+        get:
+            description: Retrieves the product consumption.
+            operationId: getProductConsumption
+            parameters:
+                - in: path
+                  name: productConsumptionKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ProductConsumption"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ProductConsumption"
+                    description: ""
+            tags: ["ProductConsumption"]
+    "/product-consumptions/{productConsumptionKey}/external-links":
+        get:
+            description: Retrieves the product consumption's external links.
+            operationId: getProductConsumptionProductConsumptionKeyExternalLinksPage
+            parameters:
+                - in: path
+                  name: productConsumptionKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                    description: ""
+            tags: ["ExternalLink"]
+        post:
+            description: Adds an external link to the product consumption.
+            operationId: postProductConsumptionProductConsumptionKeyExternalLink
+            parameters:
+                - in: path
+                  name: productConsumptionKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                    description: ""
+            tags: ["ExternalLink"]
+    "/product-purchases":
+        get:
+            description: Retrieves the product purchases. Results can be paginated, filtered, searched, and sorted.
+            operationId: getProductPurchasesPage
+            parameters:
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ProductPurchase"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ProductPurchase"
+                                type: array
+                    description: ""
+            tags: ["ProductPurchase"]
+    "/product-purchases/{productPurchaseKey}":
+        delete:
+            operationId: deleteProductPurchase
+            parameters:
+                - in: path
+                  name: productPurchaseKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["ProductPurchase"]
+        get:
+            description: Retrieves the product purchase.
+            operationId: getProductPurchase
+            parameters:
+                - in: path
+                  name: productPurchaseKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ProductPurchase"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ProductPurchase"
+                    description: ""
+            tags: ["ProductPurchase"]
+        put:
+            operationId: putProductPurchase
+            parameters:
+                - in: path
+                  name: productPurchaseKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ProductPurchase"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ProductPurchase"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ProductPurchase"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ProductPurchase"
+                    description: ""
+            tags: ["ProductPurchase"]
+    "/product-purchases/{productPurchaseKey}/external-links":
+        get:
+            description: Retrieves the product purchase's external links.
+            operationId: getProductPurchaseProductPurchaseKeyExternalLinksPage
+            parameters:
+                - in: path
+                  name: productPurchaseKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                    description: ""
+            tags: ["ExternalLink"]
+        post:
+            description: Adds an external link to the product purchase.
+            operationId: postProductPurchaseProductPurchaseKeyExternalLink
+            parameters:
+                - in: path
+                  name: productPurchaseKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                    description: ""
+            tags: ["ExternalLink"]
+    "/products":
+        get:
+            description: Retrieves the products. Results can be paginated, filtered, searched, and sorted.
+            operationId: getProductsPage
+            parameters:
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Product"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Product"
+                                type: array
+                    description: ""
+            tags: ["Product"]
+        post:
+            operationId: postProduct
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Product"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Product"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                    description: ""
+            tags: ["Product"]
+    "/products/{productKey}":
+        delete:
+            operationId: deleteProduct
+            parameters:
+                - in: path
+                  name: productKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Product"]
+        get:
+            description: Retrieves the product.
+            operationId: getProduct
+            parameters:
+                - in: path
+                  name: productKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                    description: ""
+            tags: ["Product"]
+        put:
+            operationId: putProduct
+            parameters:
+                - in: path
+                  name: productKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Product"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Product"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Product"
+                    description: ""
+            tags: ["Product"]
+    "/products/{productKey}/external-links":
+        get:
+            description: Retrieves the product's external links.
+            operationId: getProductProductKeyExternalLinksPage
+            parameters:
+                - in: path
+                  name: productKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                    description: ""
+            tags: ["ExternalLink"]
+        post:
+            description: Adds an external link to the product.
+            operationId: postProductProductKeyExternalLink
+            parameters:
+                - in: path
+                  name: productKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                    description: ""
+            tags: ["ExternalLink"]
+    "/team-roles":
+        post:
+            operationId: postTeamRole
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TeamRole"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TeamRole"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TeamRole"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TeamRole"
+                    description: ""
+            tags: ["TeamRole"]
+    "/team-roles/{teamRoleKey}":
+        delete:
+            operationId: deleteTeamRole
+            parameters:
+                - in: path
+                  name: teamRoleKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["TeamRole"]
+        get:
+            description: Retrieves the team role.
+            operationId: getTeamRole
+            parameters:
+                - in: path
+                  name: teamRoleKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TeamRole"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TeamRole"
+                    description: ""
+            tags: ["TeamRole"]
+        put:
+            operationId: putTeamRole
+            parameters:
+                - in: path
+                  name: teamRoleKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TeamRole"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TeamRole"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TeamRole"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TeamRole"
+                    description: ""
+            tags: ["TeamRole"]
+    "/team-roles/{teamRoleKey}/audit-entries":
+        get:
+            description: Retrieves the team role's audit history.
+            operationId: getTeamRoleTeamRoleKeyAuditEntriesPage
+            parameters:
+                - in: path
+                  name: teamRoleKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                    description: ""
+            tags: ["AuditEntry"]
+    "/teams":
+        get:
+            description: Retrieves the teams. Results can be paginated, filtered, searched, and sorted.
+            operationId: getTeamsPage
+            parameters:
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Team"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Team"
+                                type: array
+                    description: ""
+            tags: ["Team"]
+    "/teams/by-external-link/{domain}/{entityName}/{entityId}":
+        get:
+            description: Retrieves the team by the external link.
+            operationId: getTeamByExternalLinkDomainEntityNameEntity
+            parameters:
+                - in: path
+                  name: domain
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: entityName
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: entityId
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Team"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Team"
+                                type: array
+                    description: ""
+            tags: ["Team"]
+    "/teams/{teamKey}":
+        delete:
+            operationId: deleteTeam
+            parameters:
+                - in: path
+                  name: teamKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                    description: ""
+            tags: ["Team"]
+        get:
+            description: Retrieves the team.
+            operationId: getTeam
+            parameters:
+                - in: path
+                  name: teamKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Team"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Team"
+                    description: ""
+            tags: ["Team"]
+        put:
+            operationId: putTeam
+            parameters:
+                - in: path
+                  name: teamKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Team"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Team"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Team"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Team"
+                    description: ""
+            tags: ["Team"]
+    "/teams/{teamKey}/audit-entries":
+        get:
+            description: Retrieves the team's audit history.
+            operationId: getTeamTeamKeyAuditEntriesPage
+            parameters:
+                - in: path
+                  name: teamKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/AuditEntry"
+                                type: array
+                    description: ""
+            tags: ["AuditEntry"]
+    "/teams/{teamKey}/external-links":
+        get:
+            description: Retrieves the team's external links.
+            operationId: getTeamTeamKeyExternalLinksPage
+            parameters:
+                - in: path
+                  name: teamKey
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ExternalLink"
+                                type: array
+                    description: ""
+            tags: ["ExternalLink"]
+        post:
+            description: Adds an external link to the team.
+            operationId: postTeamTeamKeyExternalLink
+            parameters:
+                - in: path
+                  name: teamKey
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ExternalLink"
+                required: true
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ExternalLink"
+                    description: ""
+            tags: ["ExternalLink"]

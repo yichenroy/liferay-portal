@@ -1,0 +1,288 @@
+<?xml version="1.0"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.2.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_2_0.dtd">
+
+<service-builder package-path="com.liferay.osb.koroneiki.taproot">
+	<namespace>Koroneiki</namespace>
+	<entity local-service="true" name="Account" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="accountId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="accountKey" type="String" />
+		<column name="parentAccountId" type="long" />
+		<column name="name" type="String" />
+		<column name="code" type="String" />
+		<column name="description" type="String" />
+		<column name="notes" type="String" />
+		<column name="logoId" type="long" />
+		<column name="contactEmailAddress" type="String" />
+		<column name="profileEmailAddress" type="String" />
+		<column name="phoneNumber" type="String" />
+		<column name="faxNumber" type="String" />
+		<column name="website" type="String" />
+		<column name="industry" type="String" />
+		<column name="tier" type="String" />
+		<column name="soldBy" type="String" />
+		<column name="status" type="int" />
+		<column name="statusByUserId" type="long" />
+		<column name="statusByUserName" type="String" />
+		<column name="statusDate" type="Date" />
+		<column name="statusMessage" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="AccountKey" return-type="Account" unique="true">
+			<finder-column name="accountKey" />
+		</finder>
+		<finder name="ParentAccountId" return-type="Collection">
+			<finder-column name="parentAccountId" />
+		</finder>
+		<finder name="Name" return-type="Account">
+			<finder-column name="name" />
+		</finder>
+		<finder name="Code" return-type="Account">
+			<finder-column name="code" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="Contact" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="contactId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="contactKey" type="String" />
+		<column name="oktaId" type="String" />
+		<column name="firstName" type="String" />
+		<column name="middleName" type="String" />
+		<column name="lastName" type="String" />
+		<column name="emailAddress" type="String" />
+		<column name="languageId" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="ContactKey" return-type="Contact" unique="true">
+			<finder-column name="contactKey" />
+		</finder>
+		<finder name="OktaId" return-type="Contact">
+			<finder-column name="oktaId" />
+		</finder>
+		<finder name="EmailAddress" return-type="Contact">
+			<finder-column name="emailAddress" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ContactAccountRole" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="contactId" primary="true" type="long" />
+		<column name="accountId" primary="true" type="long" />
+		<column name="contactRoleId" primary="true" type="long" />
+
+		<!-- Finder methods -->
+
+		<finder name="ContactId" return-type="Collection">
+			<finder-column name="contactId" />
+		</finder>
+		<finder name="AccountId" return-type="Collection">
+			<finder-column name="accountId" />
+		</finder>
+		<finder name="ContactRoleId" return-type="Collection">
+			<finder-column name="contactRoleId" />
+		</finder>
+		<finder name="CI_AI" return-type="Collection">
+			<finder-column name="contactId" />
+			<finder-column name="accountId" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ContactRole" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="contactRoleId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="contactRoleKey" type="String" />
+		<column accessor="true" name="name" type="String" />
+		<column name="description" type="String" />
+		<column name="type" type="int" />
+		<column name="system" type="boolean" />
+
+		<!-- Order -->
+
+		<order by="asc">
+			<order-column name="name" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="ContactRoleKey" return-type="ContactRole" unique="true">
+			<finder-column name="contactRoleKey" />
+		</finder>
+		<finder name="Type" return-type="Collection">
+			<finder-column name="type" />
+		</finder>
+		<finder name="N_T" return-type="ContactRole">
+			<finder-column name="name" />
+			<finder-column name="type" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ContactTeamRole" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="contactId" primary="true" type="long" />
+		<column name="teamId" primary="true" type="long" />
+		<column name="contactRoleId" primary="true" type="long" />
+
+		<!-- Finder methods -->
+
+		<finder name="ContactId" return-type="Collection">
+			<finder-column name="contactId" />
+		</finder>
+		<finder name="TeamId" return-type="Collection">
+			<finder-column name="teamId" />
+		</finder>
+		<finder name="ContactRoleId" return-type="Collection">
+			<finder-column name="contactRoleId" />
+		</finder>
+		<finder name="CI_TI" return-type="Collection">
+			<finder-column name="contactId" />
+			<finder-column name="teamId" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="Team" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="teamId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="teamKey" type="String" />
+		<column name="accountId" type="long" />
+		<column name="name" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="TeamKey" return-type="Team" unique="true">
+			<finder-column name="teamKey" />
+		</finder>
+		<finder name="AccountId" return-type="Collection">
+			<finder-column name="accountId" />
+		</finder>
+		<finder name="AI_N" return-type="Team">
+			<finder-column name="accountId" />
+			<finder-column name="name" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="TeamAccountRole" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="teamId" primary="true" type="long" />
+		<column name="accountId" primary="true" type="long" />
+		<column name="teamRoleId" primary="true" type="long" />
+
+		<!-- Finder methods -->
+
+		<finder name="TeamId" return-type="Collection">
+			<finder-column name="teamId" />
+		</finder>
+		<finder name="AccountId" return-type="Collection">
+			<finder-column name="accountId" />
+		</finder>
+		<finder name="TeamRoleId" return-type="Collection">
+			<finder-column name="teamRoleId" />
+		</finder>
+		<finder name="TI_AI" return-type="Collection">
+			<finder-column name="teamId" />
+			<finder-column name="accountId" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="TeamRole" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="teamRoleId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="teamRoleKey" type="String" />
+		<column accessor="true" name="name" type="String" />
+		<column name="description" type="String" />
+		<column name="type" type="int" />
+
+		<!-- Order -->
+
+		<order by="asc">
+			<order-column name="name" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="TeamRoleKey" return-type="TeamRole" unique="true">
+			<finder-column name="teamRoleKey" />
+		</finder>
+		<finder name="Type" return-type="Collection">
+			<finder-column name="type" />
+		</finder>
+		<finder name="N_T" return-type="TeamRole">
+			<finder-column name="name" />
+			<finder-column name="type" />
+		</finder>
+	</entity>
+	<exceptions>
+		<exception>AccountCode</exception>
+		<exception>AccountName</exception>
+		<exception>ContactEmailAddress</exception>
+		<exception>ContactOktaId</exception>
+		<exception>ContactRoleName</exception>
+		<exception>ContactRoleSystem</exception>
+		<exception>ContactRoleType</exception>
+		<exception>RequiredAccount</exception>
+		<exception>TeamName</exception>
+		<exception>TeamRoleName</exception>
+		<exception>TeamRoleType</exception>
+	</exceptions>
+</service-builder>

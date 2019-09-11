@@ -1,0 +1,3 @@
+Bundle-Name: Liferay OSB Koroneiki Phloem REST Implementation
+Bundle-SymbolicName: com.liferay.osb.koroneiki.phloem.rest.impl
+Bundle-Version: 1.0.0

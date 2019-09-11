@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<custom-sql>
+	<sql id="com.liferay.osb.koroneiki.trunk.service.persistence.ProductFieldFinder.findNameByClassNameId">
+		<![CDATA[
+			SELECT
+				DISTINCT Koroneiki_ProductField.name
+			FROM
+				Koroneiki_ProductField
+			WHERE
+				Koroneiki_ProductField.classNameId = ?
+		]]>
+	</sql>
+</custom-sql>

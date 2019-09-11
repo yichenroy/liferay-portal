@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.2.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_2_0.dtd">
+
+<service-builder package-path="com.liferay.osb.koroneiki.scion">
+	<namespace>Koroneiki</namespace>
+	<entity local-service="true" name="AuthenticationToken" remote-service="true">
+
+		<!-- PK fields -->
+
+		<column name="authenticationTokenId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="createDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
+
+		<!-- Other fields -->
+
+		<column name="serviceProducerId" type="long" />
+		<column name="name" type="String" />
+		<column name="prefix" type="String" />
+		<column name="digest" type="String" />
+		<column name="status" type="int" />
+
+		<!-- Order -->
+
+		<order by="asc">
+			<order-column name="name" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="ServiceProducerId" return-type="Collection">
+			<finder-column name="serviceProducerId" />
+		</finder>
+		<finder name="D_S" return-type="AuthenticationToken">
+			<finder-column name="digest" />
+			<finder-column name="status" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="ServiceProducer" remote-service="true" uuid="true">
+
+		<!-- PK fields -->
+
+		<column name="serviceProducerId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+
+		<!-- Other fields -->
+
+		<column name="authorizationUserId" type="long" />
+		<column name="name" type="String" />
+		<column name="description" type="String" />
+
+		<!-- Order -->
+
+		<order by="asc">
+			<order-column name="name" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="AuthorizationUserId" return-type="ServiceProducer">
+			<finder-column name="authorizationUserId" />
+		</finder>
+	</entity>
+	<exceptions>
+		<exception>ServiceProducerName</exception>
+	</exceptions>
+</service-builder>

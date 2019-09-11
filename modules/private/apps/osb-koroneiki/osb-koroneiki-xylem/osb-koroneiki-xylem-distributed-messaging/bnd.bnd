@@ -1,0 +1,5 @@
+Bundle-Name: Liferay OSB Koroneiki Xylem Distributed Messaging
+Bundle-SymbolicName: com.liferay.osb.koroneiki.xylem.distributed.messaging
+Bundle-Version: 1.0.0
+Export-Package: com.liferay.osb.koroneiki.xylem.distributed.messaging.model.listener
+-dsannotations-options: inherit

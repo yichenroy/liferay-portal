@@ -1,0 +1,10 @@
+Bundle-Name: Liferay OSB Koroneiki Taproot API
+Bundle-SymbolicName: com.liferay.osb.koroneiki.taproot.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.osb.koroneiki.taproot.constants,\
+	com.liferay.osb.koroneiki.taproot.exception,\
+	com.liferay.osb.koroneiki.taproot.model,\
+	com.liferay.osb.koroneiki.taproot.permission,\
+	com.liferay.osb.koroneiki.taproot.service,\
+	com.liferay.osb.koroneiki.taproot.service.persistence
