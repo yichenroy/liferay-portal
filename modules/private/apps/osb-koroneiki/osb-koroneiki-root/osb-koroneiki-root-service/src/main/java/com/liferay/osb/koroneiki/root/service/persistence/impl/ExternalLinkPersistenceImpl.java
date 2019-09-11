@@ -2411,7 +2411,7 @@ public class ExternalLinkPersistenceImpl
 
 	@Override
 	@Reference(
-		target = KoroneikiPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		target = KoroneikiPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
