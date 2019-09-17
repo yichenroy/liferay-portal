@@ -606,7 +606,15 @@ mariadb.executable=${mariadb.executable}]]></echo>
 
 	<macrodef name="get-test-batch-app-server-start-executable-arg-line">
 		<sequential>
-			<propertycopy from="app.server.${app.server.type}.start.executable.arg.line" name="start.executable.arg.line" />
+			<if>
+				<os family="windows" />
+				<then>
+					<propertycopy from="app.server.${app.server.type}.start.executable.arg.line.windows" name="start.executable.arg.line" />
+				</then>
+				<else>
+					<propertycopy from="app.server.${app.server.type}.start.executable.arg.line" name="start.executable.arg.line" />
+				</else>
+			</if>
 
 			<if>
 				<and>
