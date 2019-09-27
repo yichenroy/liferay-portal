@@ -7182,7 +7182,7 @@ google.drive.integration.client.id.1=${google.drive.integration.client.id.1}
 
 google.drive.integration.client.secret.1=${google.drive.integration.client.secret.1}
 
-google.drive.integration.refresh.token.1=${google.drive.integration.refresh.token.1}</echo>
+google.drive.integration.client.refresh.token.1=${google.drive.integration.client.refresh.token.1}</echo>
 
 		<if>
 			<equals arg1="${database.type}" arg2="oracle" />
