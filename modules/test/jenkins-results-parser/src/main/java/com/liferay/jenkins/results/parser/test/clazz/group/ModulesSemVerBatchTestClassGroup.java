@@ -160,6 +160,7 @@ public class ModulesSemVerBatchTestClassGroup
 			}
 		}
 
+		
 		for (File moduleDir : moduleDirsList) {
 			List<File> modulesProjectsDirs = getModulesProjectDirs(
 				moduleDir, portalModulesBaseDir);
