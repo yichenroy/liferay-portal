@@ -114,7 +114,7 @@ public class FilePropagator {
 				sb.append(_targetSlaves.size());
 				sb.append("\nTotal duration: ");
 				sb.append(System.currentTimeMillis() - start);
-				sb.append("\n");
+				sb.append("\n\n");
 
 				System.out.println(sb.toString());
 
