@@ -1225,6 +1225,35 @@ war.path=${app.server.portal.dir}/</echo>
 		</sequential>
 	</macrodef>
 
+	<target name="test1">
+		<local name="patch.requirements" />
+
+		<!-- <property name="hotfix.file.zip.url" value="http://mirrors/files.liferay.com/private/ee/fix-packs/7.2.10/security-dxp/liferay-security-dxp-1-201902-1-7210.zip" /> -->
+
+		<property name="hotfix.file.zip.url" value="http://mirrors/files.liferay.com/private/ee/fix-packs/7.2.10/hotfix/liferay-hotfix-1-7210.zip" />
+
+		<!-- <get-patch-requirements patch.file.zip.url="${hotfix.file.zip.url}" /> -->
+
+		<local name="hotfix.build.version" />
+		<local name="hotfix.portal.version" />
+
+		<propertyregex
+			input="${hotfix.file.zip.url}"
+			property="hotfix.build.version"
+			regexp=".+/hotfix/liferay-hotfix-\d+-(\d)(\d)(\d\d).zip"
+			replace="\1\2\3"
+		/>
+
+		<propertyregex
+			input="${hotfix.file.zip.url}"
+			property="hotfix.portal.version"
+			regexp=".+/hotfix/liferay-hotfix-\d+-(\d)(\d)(\d\d).zip"
+			replace="\1.\2.\3"
+		/>
+
+		<echo>http://files.liferay.com/private/ee/fix-packs/${hotfix.portal.version}/dxp/liferay-fix-pack-${patch.requirements}-${hotfix.build.version}.zip</echo>
+	</target>
+
 	<macrodef name="install-patch-dependencies">
 		<attribute name="hotfix.file.zip.url" />
 		<attribute default="${app.server.parent.dir}/patching-tool" name="patching.tool.dir" />
