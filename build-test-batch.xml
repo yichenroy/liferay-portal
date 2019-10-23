@@ -4740,15 +4740,11 @@ log.sanitizer.enabled=false</echo>
 
 						<antcall inheritAll="false" target="install-portal-snapshots" />
 
-						<echo>tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/build/system.packages.extra.mf --gzip --to-stdout --verbose > modules/core/portal-bootstrap/system.packages.extra.mf</echo>
-
-						<execute>
-							<![CDATA[
-								mkdir -p modules/core/portal-bootstrap
-
-								tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/build/system.packages.extra.mf --gzip --to-stdout --verbose > modules/core/portal-bootstrap/system.packages.extra.mf
-							]]>
-						</execute>
+						<untar
+							compression="gzip"
+							dest="."
+							src="liferay-portal-source.tar.gz"
+						/>
 					</then>
 					<else>
 						<prepare-test-build />
@@ -5429,15 +5425,11 @@ ${output.content}</echo>
 			</test-action>
 
 			<test-set-up>
-				<echo>tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/build/system.packages.extra.mf --gzip --verbose
-tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/lib/biz.aQute.bnd.annotation.jar --gzip --verbose</echo>
-
-				<execute>
-					<![CDATA[
-						tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/build/system.packages.extra.mf --gzip --verbose
-						tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/lib/biz.aQute.bnd.annotation.jar --gzip --verbose
-					]]>
-				</execute>
+				<untar
+					compression="gzip"
+					dest="."
+					src="liferay-portal-source.tar.gz"
+				/>
 
 				<echo>Deleting stale baseline log files.</echo>
 
