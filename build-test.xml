@@ -5923,7 +5923,6 @@ go</echo>
 
 										<gradle-execute dir="@{app.dir}" task="deploy">
 											<arg value="clean" />
-											<arg value="-Dbuild.profile=portal" />
 										</gradle-execute>
 
 										<for param="module.dir.path">
