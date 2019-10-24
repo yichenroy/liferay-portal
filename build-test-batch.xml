@@ -5435,7 +5435,7 @@ ${output.content}</echo>
 				<echo>tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/build/system.packages.extra.mf --gzip --verbose
 tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/lib/biz.aQute.bnd.annotation.jar --gzip --verbose
 tar -zxvf liferay-portal-source.tar.gz --wildcards '*.profile-dxp.properties'
-</echo>
+				</echo>
 
 				<execute>
 					<![CDATA[
