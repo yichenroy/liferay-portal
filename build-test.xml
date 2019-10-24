@@ -5921,11 +5921,19 @@ go</echo>
 											</sequential>
 										</for>
 
+										<echo>##########################################</echo>
+										<echo>### build.profile is: ${build.profile} ###</echo>
+										<echo>##########################################</echo>
+
 										<local name="deploy.build.profile" />
 
 										<condition else="portal" property="deploy.build.profile" value="${build.profile}">
 											<equals arg1="${build.profile}" arg2="dxp" />
 										</condition>
+
+										<echo>##########################################</echo>
+										<echo>### deploy.build.profile is: ${deploy.build.profile} ###</echo>
+										<echo>##########################################</echo>
 
 										<gradle-execute dir="@{app.dir}" task="deploy">
 											<arg value="clean" />
