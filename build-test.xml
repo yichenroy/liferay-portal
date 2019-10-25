@@ -9311,6 +9311,25 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 					/>
 				</unzip>
 
+				<move todir="${liferay.home}/tools">
+					<fileset dir="${liferay.home}/tools" />
+					<mapper type="regexp" from="^(.*com.liferay.portal.tools.db.upgrade.client).*\.jar$$" to="\1.jar" />
+				</move>
+
+				<move todir="${liferay.home}/tools">
+					<fileset dir="${liferay.home}/tools" />
+					<mapper type="regexp" from="^(.*portal-tools-db-upgrade-client)-[^/]*(/.*)?" to="\1\2" />
+				</move>
+
+				<if>
+					<available file="${liferay.home}/tools/portal-tools-db-upgrade-client" />
+					<then>
+						<move todir="${liferay.home}/tools/portal-tools-db-upgrade-client" flatten="true">
+							<fileset dir="${liferay.home}/tools/portal-tools-db-upgrade-client" />
+						</move>
+					</then>
+				</if>
+
 				<delete file="liferay-portal-tools.zip" />
 
 				<if>
