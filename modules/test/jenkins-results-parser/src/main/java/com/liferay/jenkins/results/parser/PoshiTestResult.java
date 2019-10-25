@@ -32,6 +32,7 @@ public class PoshiTestResult extends BaseTestResult {
 		Element downstreamBuildListItemElement = Dom4JUtil.getNewElement(
 			"div", null);
 
+		
 		downstreamBuildListItemElement.add(
 			Dom4JUtil.getNewAnchorElement(testReportURL, getDisplayName()));
 
