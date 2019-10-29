@@ -11185,6 +11185,22 @@ module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.pr
 			</then>
 		</if>
 
+		<echo>#############################################</echo>
+		<echo>#############################################</echo>
+		<echo>#############################################</echo>
+
+		<echo>Check if build.profile-dxp.properties is here</echo>
+
+		<execute>
+			<![CDATA[
+				ls -l
+			]]>
+		</execute>
+
+		<echo>#############################################</echo>
+		<echo>#############################################</echo>
+		<echo>#############################################</echo>
+
 		<antcall target="deploy-osgi-apps" />
 
 		<antcall target="deploy-osgi-modules" />
