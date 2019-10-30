@@ -9311,21 +9311,42 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 					/>
 				</unzip>
 
-				<move todir="${liferay.home}/tools">
-					<fileset dir="${liferay.home}/tools" />
-					<mapper type="regexp" from="^(.*com.liferay.portal.tools.db.upgrade.client).*\.jar$$" to="\1.jar" />
+				<move
+					todir="${liferay.home}/tools"
+				>
+					<fileset
+						dir="${liferay.home}/tools"
+					/>
+					<mapper
+						from="^(.*com.liferay.portal.tools.db.upgrade.client).*\.jar$$"
+						to="\1.jar"
+						type="regexp"
+					/>
 				</move>
 
-				<move todir="${liferay.home}/tools">
-					<fileset dir="${liferay.home}/tools" />
-					<mapper type="regexp" from="^(.*portal-tools-db-upgrade-client)-[^/]*(/.*)?" to="\1\2" />
+				<move
+					todir="${liferay.home}/tools"
+				>
+					<fileset
+						dir="${liferay.home}/tools"
+					/>
+					<mapper
+						from="^(.*portal-tools-db-upgrade-client)-[^/]*(/.*)?"
+						to="\1\2"
+						type="regexp"
+					/>
 				</move>
 
 				<if>
 					<available file="${liferay.home}/tools/portal-tools-db-upgrade-client" />
 					<then>
-						<move todir="${liferay.home}/tools/portal-tools-db-upgrade-client" flatten="true">
-							<fileset dir="${liferay.home}/tools/portal-tools-db-upgrade-client" />
+						<move
+							flatten="true"
+							todir="${liferay.home}/tools/portal-tools-db-upgrade-client"
+						>
+							<fileset
+								dir="${liferay.home}/tools/portal-tools-db-upgrade-client"
+							/>
 						</move>
 					</then>
 				</if>
