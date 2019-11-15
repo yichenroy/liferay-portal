@@ -769,6 +769,31 @@ information.
 				</then>
 			</if>
 
+			<echoxml file="gradle.execute.args">
+				<echo>
+					<args />
+				</echo>
+			</echoxml>
+
+			<var name="gradle.execute.args" unset="true" />
+
+			<loadfile srcFile="gradle.execute.args" property="gradle.execute.args" />
+
+			<var name="gradle.execute.build.profile" unset="true" />
+
+			<if>
+				<not>
+					<contains string="${gradle.execute.args}" substring="-Dbuild.profile=" />
+				</not>
+				<then>
+					<condition else="portal" property="gradle.execute.build.profile" value="${build.profile}">
+						<equals arg1="${build.profile}" arg2="dxp" />
+					</condition>
+				</then>
+			</if>
+
+			<delete failonerror="false" file="gradle.execute.args" />
+
 			<if>
 				<not>
 					<available file="${project.dir}/tools/${build.binaries.gradle.file}" />
@@ -950,6 +975,7 @@ information.
 								<arg value="--stacktrace" />
 								<arg value="-Dapp.server.parent.dir=${app.server.parent.dir}" />
 								<arg value="-Dforced.cache.enabled=@{forcedcacheenabled}" />
+								<arg if:set="gradle.execute.build.profile" value="-Dbuild.profile=${gradle.execute.build.profile}" />
 								<arg value="-Dliferay.home=${liferay.home}" />
 								<arg if:set="env.JENKINS_HOME" value="-Dliferay.ssl.context.enabled=${gradle.ci.liferay.ssl.context.enabled}" />
 								<arg if:set="env.JENKINS_HOME" value="-Dorg.gradle.internal.http.connectionTimeout=${gradle.ci.http.connection.timeout}" />
@@ -987,6 +1013,7 @@ information.
 									<arg value="--stacktrace" />
 									<arg value="-Dapp.server.parent.dir=${app.server.parent.dir}" />
 									<arg value="-Dforced.cache.enabled=@{forcedcacheenabled}" />
+									<arg if:set="gradle.execute.build.profile" value="-Dbuild.profile=${gradle.execute.build.profile}" />
 									<arg value="-Dliferay.home=${liferay.home}" />
 									<arg if:set="env.JENKINS_HOME" value="-Dliferay.ssl.context.enabled=${gradle.ci.liferay.ssl.context.enabled}" />
 									<arg if:set="env.JENKINS_HOME" value="-Dorg.gradle.internal.http.connectionTimeout=${gradle.ci.http.connection.timeout}" />
