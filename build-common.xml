@@ -792,6 +792,8 @@ information.
 				</then>
 			</if>
 
+			<echo>gradle.execute.build.profile: ${gradle.execute.build.profile}</echo>
+
 			<delete failonerror="false" file="gradle.execute.args" />
 
 			<if>
