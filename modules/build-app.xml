@@ -214,26 +214,39 @@
 				<local name="app.suite" />
 				<local name="Liferay-Releng-Suite" />
 
-				<basename file="@{app.dir}" property="app.name" />
-
-				<property file="@{app.dir}/app.bnd" />
-
-				<condition else="${app.name}" property="app.suite" value="${Liferay-Releng-Suite}">
-					<isset property="Liferay-Releng-Suite" />
-				</condition>
-
 				<if>
 					<or>
-						<equals arg1="${app.suite}" arg2="collaboration" />
-						<equals arg1="${app.suite}" arg2="forms-and-workflow" />
-						<equals arg1="${app.suite}" arg2="foundation" />
-						<equals arg1="${app.suite}" arg2="web-experience" />
+						<not>
+							<contains string="@{app.dir}" substring="dxp${file.separator}apps${file.separator}" />
+						</not>
+						<and>
+							<contains string="@{app.dir}" substring="dxp${file.separator}apps${file.separator}" />
+							<equals arg1="${build.profile}" arg2="dxp" />
+						</and>
 					</or>
 					<then>
-						<ant inheritAll="false" target="build-app-lpkg">
-							<property name="app.name" value="${app.name}" />
-							<property name="output.dir" value="${osgi.dir}/marketplace" />
-						</ant>
+						<basename file="@{app.dir}" property="app.name" />
+
+						<property file="@{app.dir}/app.bnd" />
+
+						<condition else="${app.name}" property="app.suite" value="${Liferay-Releng-Suite}">
+							<isset property="Liferay-Releng-Suite" />
+						</condition>
+
+						<if>
+							<or>
+								<equals arg1="${app.suite}" arg2="collaboration" />
+								<equals arg1="${app.suite}" arg2="forms-and-workflow" />
+								<equals arg1="${app.suite}" arg2="foundation" />
+								<equals arg1="${app.suite}" arg2="web-experience" />
+							</or>
+							<then>
+								<ant inheritAll="false" target="build-app-lpkg">
+									<property name="app.name" value="${app.name}" />
+									<property name="output.dir" value="${osgi.dir}/marketplace" />
+								</ant>
+							</then>
+						</if>
 					</then>
 				</if>
 			</sequential>
