@@ -1275,9 +1275,7 @@ war.path=${app.server.portal.dir}/</echo>
 						</then>
 					</if>
 
-					<gradle-execute dir="${test.poshi.runner.src.dir}" task="deploy">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${test.poshi.runner.src.dir}" task="deploy" />
 				</then>
 			</if>
 
@@ -1292,7 +1290,6 @@ war.path=${app.server.portal.dir}/</echo>
 
 					<gradle-execute failonerror="@{failonerror}" gradleopts="${poshi.java.jdk.opts}" task="@{task}">
 						<arg value="--build-file=portal-web/build-test.gradle" />
-						<arg value="-Dbuild.profile=${build.profile}" />
 						<arg value="-Plocal=${test.poshi.runner.local.release}" />
 						<arg value="-PposhiRunnerExtProperties=${test.ext.properties.file}" />
 						<arg value="-Ptmp.maven.repository.dir=../.m2-tmp" />
@@ -1303,7 +1300,6 @@ war.path=${app.server.portal.dir}/</echo>
 				<else>
 					<gradle-execute failonerror="@{failonerror}" task="@{task}">
 						<arg value="--build-file=portal-web/build-test.gradle" />
-						<arg value="-Dbuild.profile=${build.profile}" />
 						<arg value="-Plocal=${test.poshi.runner.local.release}" />
 						<arg value="-PposhiRunnerExtProperties=${test.ext.properties.file}" />
 						<arg value="-Ptmp.maven.repository.dir=../.m2-tmp" />
@@ -6198,7 +6194,6 @@ go</echo>
 						/>
 
 						<gradle-execute dir="@{osgi.module.path}" forcedcacheenabled="false" task="deploy">
-							<arg value="-Dbuild.profile=${build.profile}" />
 							<arg value="clean" />
 						</gradle-execute>
 
@@ -6217,13 +6212,9 @@ go</echo>
 		<if>
 			<equals arg1="${project.templates}" arg2="mvc-portlet" />
 			<then>
-				<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject">
-					<arg value="-Dbuild.profile=${build.profile}" />
-				</gradle-execute>
+				<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject" />
 
-				<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplemvc" task="assemble">
-					<arg value="-Dbuild.profile=${build.profile}" />
-				</gradle-execute>
+				<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplemvc" task="assemble" />
 
 				<copy
 					file="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplemvc/build/libs/samplemvc-1.0.0.jar"
@@ -6233,13 +6224,9 @@ go</echo>
 			<elseif>
 				<equals arg1="${project.templates}" arg2="rest" />
 				<then>
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject" />
 
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplerest" task="assemble">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplerest" task="assemble" />
 
 					<copy
 						file="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplerest/build/libs/samplerest-1.0.0.jar"
@@ -6250,17 +6237,11 @@ go</echo>
 			<elseif>
 				<equals arg1="${project.templates}" arg2="service-builder" />
 				<then>
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject" />
 
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/foo" task="buildService">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/foo" task="buildService" />
 
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/foo" task="assemble">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/foo" task="assemble" />
 
 					<copy
 						file="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/foo/foo-api/build/libs/foo.api-1.0.0.jar"
@@ -6276,13 +6257,9 @@ go</echo>
 			<elseif>
 				<equals arg1="${project.templates}" arg2="theme" />
 				<then>
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject" />
 
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/sampletheme" task="assemble">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/sampletheme" task="assemble" />
 
 					<copy
 						file="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/sampletheme/build/libs/sampletheme.war"
@@ -6293,13 +6270,9 @@ go</echo>
 			<elseif>
 				<equals arg1="${project.templates}" arg2="war-mvc-portlet" />
 				<then>
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}" task="generateSampleProject" />
 
-					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplewarmvcportlet" task="assemble">
-						<arg value="-Dbuild.profile=${build.profile}" />
-					</gradle-execute>
+					<gradle-execute dir="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplewarmvcportlet" task="assemble" />
 
 					<copy
 						file="${project.dir}/modules/sdk/project-templates/project-templates-${project.templates}/build/samplewarmvcportlet/build/libs/samplewarmvcportlet.war"
