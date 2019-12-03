@@ -580,9 +580,7 @@ mariadb.executable=${mariadb.executable}]]></echo>
 						<then>
 							<echo>Deploying @{release.dependency.module}</echo>
 
-							<gradle-execute dir="@{release.dependency.module}" forcedcacheenabled="false" task="deploy">
-								<arg value="-Dbuild.profile=${build.profile}" />
-							</gradle-execute>
+							<gradle-execute dir="@{release.dependency.module}" forcedcacheenabled="false" task="deploy" />
 						</then>
 					</if>
 				</sequential>
@@ -1180,7 +1178,6 @@ app.server.type=@{app.server.type}]]></echo>
 									<gradle-execute dir="@{app.dir}" task="test">
 										<arg value="--continue" />
 										<arg value="-Dbuild.exclude.ant.plugin=true" />
-										<arg value="-Dbuild.profile=${build.profile}" />
 										<arg value="-Djunit.code.coverage=${test.batch.code.coverage}" />
 									</gradle-execute>
 								</sequential>
@@ -1210,7 +1207,6 @@ app.server.type=@{app.server.type}]]></echo>
 											<gradle-execute dir="@{app.dir}" refreshdependencies="@{refreshdependencies}" task="testIntegration">
 												<arg value="--continue" />
 												<arg value="-Dbuild.exclude.ant.plugin=true" />
-												<arg value="-Dbuild.profile=${build.profile}" />
 											</gradle-execute>
 										</sequential>
 									</for>
@@ -1309,7 +1305,6 @@ app.server.type=@{app.server.type}]]></echo>
 								<arg value="--tests" />
 								<arg value="*.BundleBlacklistSetUpBatchTest" />
 								<arg value="-Dblacklist.cfg.name=${blacklist.cfg.name}" />
-								<arg value="-Dbuild.profile=${build.profile}" />
 								<arg value="-Dliferay.home=${liferay.home}" />
 							</gradle-execute>
 
@@ -1321,7 +1316,6 @@ app.server.type=@{app.server.type}]]></echo>
 										<arg value="testIntegration" />
 										<arg value="--tests" />
 										<arg value="*.BundleBlacklistVerifyUninstalledTest" />
-										<arg value="-Dbuild.profile=${build.profile}" />
 									</gradle-execute>
 								</try>
 
@@ -1344,7 +1338,6 @@ app.server.type=@{app.server.type}]]></echo>
 										<arg value="testIntegration" />
 										<arg value="--tests" />
 										<arg value="*.BundleBlacklistVerifyReinstalledTest" />
-										<arg value="-Dbuild.profile=${build.profile}" />
 									</gradle-execute>
 								</try>
 
@@ -1747,7 +1740,6 @@ com.liferay.portal.kernel.util.ServiceProxyFactory.timeout=300000</echo>
 								<arg value="test" />
 								<arg value="--tests" />
 								<arg value="*.LPKGContainerTest" />
-								<arg value="-Dbuild.profile=${build.profile}" />
 								<arg value="-Dliferay.home=${liferay.home}" />
 							</gradle-execute>
 
@@ -1759,7 +1751,6 @@ com.liferay.portal.kernel.util.ServiceProxyFactory.timeout=300000</echo>
 										<arg value="testIntegration" />
 										<arg value="--tests" />
 										<arg value="*.LPKGContainerVerifyTest" />
-										<arg value="-Dbuild.profile=${build.profile}" />
 									</gradle-execute>
 								</try>
 
@@ -1926,7 +1917,6 @@ com.liferay.portal.kernel.util.ServiceProxyFactory.timeout=300000</echo>
 										<arg value="testIntegration" />
 										<arg value="--tests" />
 										<arg value="*.LPKGIndependenceTest" />
-										<arg value="-Dbuild.profile=${build.profile}" />
 									</gradle-execute>
 								</try>
 
@@ -2008,7 +1998,6 @@ com.liferay.portal.kernel.util.ServiceProxyFactory.timeout=300000</echo>
 										<arg value="testIntegration" />
 										<arg value="--tests" />
 										<arg value="*.LPKGOverrideVerifyCleanStartupTest" />
-										<arg value="-Dbuild.profile=${build.profile}" />
 									</gradle-execute>
 								</try>
 
@@ -2526,9 +2515,7 @@ log.sanitizer.enabled=false</echo>
 								tofile="${liferay.home}/osgi/test/com.liferay.portal.test.integration.jar"
 							/>
 
-							<gradle-execute dir="modules/apps/static/required-dependencies/required-dependencies" task="deployReqTestLibs">
-								<arg value="-Dbuild.profile=${build.profile}" />
-							</gradle-execute>
+							<gradle-execute dir="modules/apps/static/required-dependencies/required-dependencies" task="deployReqTestLibs" />
 
 							<local name="artifact.version" />
 
@@ -4318,9 +4305,7 @@ log.sanitizer.enabled=false</echo>
 								substring="gradleTest"
 							/>
 							<then>
-								<gradle-execute dir="@{gradle.plugin.dir}" task="gradleTest">
-									<arg value="-Dbuild.profile=${build.profile}" />
-								</gradle-execute>
+								<gradle-execute dir="@{gradle.plugin.dir}" task="gradleTest" />
 							</then>
 						</if>
 					</sequential>
@@ -4424,7 +4409,7 @@ log.sanitizer.enabled=false</echo>
 						<gradle-execute dir="modules/dxp" task="packageRunTest">
 							<arg value="--continue" />
 							<arg value="--parallel" />
-							<arg value="-Dbuild.profile=${build.profile}" />
+							<arg value="-Dbuild.profile=dxp" />
 							<arg value="-DpackageRunTest.ignore.failures=true" />
 						</gradle-execute>
 					</then>
@@ -5838,7 +5823,6 @@ tar --extract --file=liferay-portal-source.tar.gz modules/core/portal-bootstrap/
 					<then>
 						<gradle-execute dir="modules/util/portal-tools-service-builder" task="deploy">
 							<arg value="clean" />
-							<arg value="-Dbuild.profile=${build.profile}" />
 						</gradle-execute>
 					</then>
 				</if>
@@ -5978,9 +5962,7 @@ information. Make sure to commit in all build services results.
 						<if>
 							<available file="modules/util/source-formatter" />
 							<then>
-								<gradle-execute dir="modules/util/source-formatter" task="deploy">
-									<arg value="-Dbuild.profile=${build.profile}" />
-								</gradle-execute>
+								<gradle-execute dir="modules/util/source-formatter" task="deploy" />
 							</then>
 						</if>
 					</then>
@@ -6011,7 +5993,6 @@ information. Make sure to commit in all build services results.
 					<then>
 						<gradle-execute dir="modules/util/source-formatter" task="deploy">
 							<arg value="clean" />
-							<arg value="-Dbuild.profile=${build.profile}" />
 						</gradle-execute>
 					</then>
 				</if>
@@ -6045,9 +6026,7 @@ information. Make sure to commit in all build services results.
 			<test-action>
 				<get-module-base-dir-from-subrepository-name subrepository.name="${subrepository.name}" />
 
-				<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="assemble">
-					<arg value="-Dbuild.profile=${build.profile}" />
-				</gradle-execute>
+				<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="assemble" />
 			</test-action>
 
 			<test-set-up>
@@ -6061,9 +6040,7 @@ information. Make sure to commit in all build services results.
 
 		<get-module-base-dir-from-subrepository-name subrepository.name="${subrepository.name}" />
 
-		<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="compileJava">
-			<arg value="-Dbuild.profile=${build.profile}" />
-		</gradle-execute>
+		<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="compileJava" />
 	</target>
 
 	<target name="subrepository-functional-tomcat90-mysql57-jdk8">
@@ -6090,7 +6067,6 @@ information. Make sure to commit in all build services results.
 		<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="pmdMain">
 			<arg value="pmdTest" />
 			<arg value="pmdTestIntegration" />
-			<arg value="-Dbuild.profile=${build.profile}" />
 		</gradle-execute>
 	</target>
 
@@ -6114,9 +6090,7 @@ information. Make sure to commit in all build services results.
 
 		<echo>Executing baseline on ${module.base.dir}.</echo>
 
-		<gradle-execute checktask="true" dir="${module.base.dir}" forcedcacheenabled="false" refreshdependencies="true" task="baseline">
-			<arg value="-Dbuild.profile=${build.profile}" />
-		</gradle-execute>
+		<gradle-execute checktask="true" dir="${module.base.dir}" forcedcacheenabled="false" refreshdependencies="true" task="baseline" />
 
 		<echo>Checking for baseline log files.</echo>
 
@@ -6156,7 +6130,6 @@ information. Make sure to commit in all build services results.
 		<get-module-base-dir-from-subrepository-name subrepository.name="${subrepository.name}" />
 
 		<gradle-execute dir="${module.base.dir}" refreshdependencies="true" task="checkSourceFormatting">
-			<arg value="-Dbuild.profile=${build.profile}" />
 			<arg value="-PdependencyCheckerIgnoreFailures=false" />
 		</gradle-execute>
 	</target>
@@ -6165,7 +6138,6 @@ information. Make sure to commit in all build services results.
 		<fail message="Please set the property ${subrepository.name}." unless="subrepository.name" />
 
 		<gradle-execute dir="${project.dir}/modules/apps/petra" task="deploy">
-			<arg value="-Dbuild.profile=${build.profile}" />
 			<arg value="-Dportal.build=true" />
 		</gradle-execute>
 
@@ -6180,9 +6152,7 @@ information. Make sure to commit in all build services results.
 					verbose="true"
 				/>
 
-				<gradle-execute checktask="true" dir="${module.base.dir}" forcedcacheenabled="false" refreshdependencies="true" task="test">
-					<arg value="-Dbuild.profile=${build.profile}" />
-				</gradle-execute>
+				<gradle-execute checktask="true" dir="${module.base.dir}" forcedcacheenabled="false" refreshdependencies="true" task="test" />
 
 				<move
 					file="${module.base.dir}/settings.gradle.temp"
