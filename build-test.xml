@@ -2394,12 +2394,10 @@ tell application "Safari" to quit
 							<ant dir="util-java" inheritAll="false" target="install-portal-snapshot" />
 
 							<gradle-execute dir="${project.dir}/modules/core" task="deploy">
-								<arg value="-Dbuild.profile=${build.profile}" />
 								<arg value="-Dportal.build=true" />
 							</gradle-execute>
 
 							<gradle-execute dir="${project.dir}/modules/apps/petra" task="deploy">
-								<arg value="-Dbuild.profile=${build.profile}" />
 								<arg value="-Dportal.build=true" />
 							</gradle-execute>
 						</then>
