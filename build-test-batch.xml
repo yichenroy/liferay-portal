@@ -6008,7 +6008,9 @@ information. Make sure to commit in all build services results.
 			<test-action>
 				<get-module-base-dir-from-subrepository-name subrepository.name="${subrepository.name}" />
 
-				<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="assemble" />
+				<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="assemble">
+					<arg value="-Dbuild.profile=${build.profile}" />
+				</gradle-execute>
 			</test-action>
 
 			<test-set-up>
@@ -6022,7 +6024,9 @@ information. Make sure to commit in all build services results.
 
 		<get-module-base-dir-from-subrepository-name subrepository.name="${subrepository.name}" />
 
-		<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="compileJava" />
+		<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="compileJava">
+			<arg value="-Dbuild.profile=${build.profile}" />
+		</gradle-execute>
 	</target>
 
 	<target name="subrepository-functional-tomcat90-mysql57-jdk8">
@@ -6049,6 +6053,7 @@ information. Make sure to commit in all build services results.
 		<gradle-execute checktask="true" dir="${module.base.dir}" refreshdependencies="true" task="pmdMain">
 			<arg value="pmdTest" />
 			<arg value="pmdTestIntegration" />
+			<arg value="-Dbuild.profile=${build.profile}" />
 		</gradle-execute>
 	</target>
 
@@ -6072,7 +6077,9 @@ information. Make sure to commit in all build services results.
 
 		<echo>Executing baseline on ${module.base.dir}.</echo>
 
-		<gradle-execute checktask="true" dir="${module.base.dir}" forcedcacheenabled="false" refreshdependencies="true" task="baseline" />
+		<gradle-execute checktask="true" dir="${module.base.dir}" forcedcacheenabled="false" refreshdependencies="true" task="baseline">
+			<arg value="-Dbuild.profile=${build.profile}" />
+		</gradle-execute>
 
 		<echo>Checking for baseline log files.</echo>
 
@@ -6112,6 +6119,7 @@ information. Make sure to commit in all build services results.
 		<get-module-base-dir-from-subrepository-name subrepository.name="${subrepository.name}" />
 
 		<gradle-execute dir="${module.base.dir}" refreshdependencies="true" task="checkSourceFormatting">
+			<arg value="-Dbuild.profile=${build.profile}" />
 			<arg value="-PdependencyCheckerIgnoreFailures=false" />
 		</gradle-execute>
 	</target>
@@ -6120,6 +6128,7 @@ information. Make sure to commit in all build services results.
 		<fail message="Please set the property ${subrepository.name}." unless="subrepository.name" />
 
 		<gradle-execute dir="${project.dir}/modules/apps/petra" task="deploy">
+			<arg value="-Dbuild.profile=${build.profile}" />
 			<arg value="-Dportal.build=true" />
 		</gradle-execute>
 
@@ -6134,7 +6143,9 @@ information. Make sure to commit in all build services results.
 					verbose="true"
 				/>
 
-				<gradle-execute checktask="true" dir="${module.base.dir}" forcedcacheenabled="false" refreshdependencies="true" task="test" />
+				<gradle-execute checktask="true" dir="${module.base.dir}" forcedcacheenabled="false" refreshdependencies="true" task="test">
+					<arg value="-Dbuild.profile=${build.profile}" />
+				</gradle-execute>
 
 				<move
 					file="${module.base.dir}/settings.gradle.temp"
@@ -6148,6 +6159,7 @@ information. Make sure to commit in all build services results.
 
 				<gradle-execute checktask="true" dir="modules" forcedcacheenabled="false" refreshdependencies="true" task="test">
 					<arg value="-Dbuild.exclude.ant.plugin=true" />
+					<arg value="-Dbuild.profile=${build.profile}" />
 					<arg value="-Dtest.class.group.index=${axis.variable}" />
 				</gradle-execute>
 			</else>
