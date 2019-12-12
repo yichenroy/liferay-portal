@@ -4398,25 +4398,30 @@ log.sanitizer.enabled=false</echo>
 	<target name="js-unit-private-jdk8">
 		<run-batch-test>
 			<test-action>
-				<gradle-execute dir="modules/dxp" task="packageRunTest">
-					<arg value="--continue" />
-					<arg value="--parallel" />
-					<arg value="-DpackageRunTest.ignore.failures=true" />
-				</gradle-execute>
+				<if>
+					<equals arg1="${build.profile}" arg2="dxp" />
+					<then>
+						<gradle-execute dir="modules/dxp" task="packageRunTest">
+							<arg value="--continue" />
+							<arg value="--parallel" />
+							<arg value="-DpackageRunTest.ignore.failures=true" />
+						</gradle-execute>
 
-				<replace
-					dir="modules"
-					includes="**/TEST-frontend-js.xml"
-				>
-					<replacefilter>
-						<replacetoken><![CDATA[<testsuites>]]></replacetoken>
-						<replacevalue><![CDATA[]]></replacevalue>
-					</replacefilter>
-					<replacefilter>
-						<replacetoken><![CDATA[</testsuites>]]></replacetoken>
-						<replacevalue><![CDATA[]]></replacevalue>
-					</replacefilter>
-				</replace>
+						<replace
+							dir="modules"
+							includes="**/TEST-frontend-js.xml"
+						>
+							<replacefilter>
+								<replacetoken><![CDATA[<testsuites>]]></replacetoken>
+								<replacevalue><![CDATA[]]></replacevalue>
+							</replacefilter>
+							<replacefilter>
+								<replacetoken><![CDATA[</testsuites>]]></replacetoken>
+								<replacevalue><![CDATA[]]></replacevalue>
+							</replacefilter>
+						</replace>
+					</then>
+				</if>
 			</test-action>
 
 			<test-set-up>
@@ -4537,6 +4542,7 @@ log.sanitizer.enabled=false</echo>
 						<gradle-execute dir="modules" outputproperty="modules.project.paths" task="printProjectPath">
 							<arg value="--quiet" />
 							<arg value="-Dbuild.exclude.dirs=private/apps/osb-lcs,third-party" />
+							<arg value="-Dbuild.profile=${build.profile}" />
 						</gradle-execute>
 
 						<loadresource property="modules.test.class.group">
@@ -4572,6 +4578,7 @@ log.sanitizer.enabled=false</echo>
 						<gradle-execute dir="modules" task="@{modules.compile.task.group}">
 							<arg value="--continue" />
 							<arg value="--parallel" />
+							<arg value="-Dbuild.profile=${build.profile}" />
 						</gradle-execute>
 					</sequential>
 				</for>
@@ -4994,6 +5001,7 @@ log.sanitizer.enabled=false</echo>
 						<gradle-execute dir="modules" forcedcacheenabled="false" task="@{modules.baseline.task.group}">
 							<arg value="--continue" />
 							<arg value="--parallel" />
+							<arg value="-Dbuild.profile=${build.profile}" />
 						</gradle-execute>
 					</sequential>
 				</for>
