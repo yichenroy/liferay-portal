@@ -2749,6 +2749,10 @@ ${tomcat-gc-log}
 
 					String testPortalBuildProfile = project.getProperty("build.profile");
 
+					System.out.println("##############################################");
+					System.out.println("build.profile is: " + testPortalBuildProfile);
+					System.out.println("##############################################");
+
 					if ((testPortalBuildProfile != null) && testPortalBuildProfile.equals("dxp")) {
 						buildProfile = BatchTestClassGroup.BuildProfile.DXP;
 					}
@@ -2832,6 +2836,10 @@ ${tomcat-gc-log}
 						BatchTestClassGroup.BuildProfile buildProfile = BatchTestClassGroup.BuildProfile.PORTAL;
 
 						String testPortalBuildProfile = project.getProperty("build.profile");
+
+						System.out.println("##############################################");
+						System.out.println("build.profile is: " + testPortalBuildProfile);
+						System.out.println("##############################################");
 
 						if ((testPortalBuildProfile != null) && testPortalBuildProfile.equals("dxp")) {
 							buildProfile = BatchTestClassGroup.BuildProfile.DXP;
@@ -11197,6 +11205,10 @@ if (ppstate.equals("normal")) {
 				BatchTestClassGroup.BuildProfile buildProfile = BatchTestClassGroup.BuildProfile.PORTAL;
 
 				String testPortalBuildProfile = project.getProperty("build.profile");
+
+				System.out.println("##############################################");
+				System.out.println("build.profile is: " + testPortalBuildProfile);
+				System.out.println("##############################################");
 
 				if ((testPortalBuildProfile != null) && testPortalBuildProfile.equals("dxp")) {
 					buildProfile = BatchTestClassGroup.BuildProfile.DXP;
