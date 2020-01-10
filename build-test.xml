@@ -7864,6 +7864,16 @@ javascript.fast.load=false</echo>
 
 module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.profile.names}</echo>
 
+		<if>
+			<equals arg1="${app.server.type}" arg2="tcserver" />
+			<then>
+				<echo append="true" file="portal-impl/src/portal-ext.properties">
+
+session.cookie.use.full.hostname=true
+				</echo>
+			</then>
+		</if>
+
 		<get-testcase-property property.name="portal.version" />
 
 		<propertyregex
