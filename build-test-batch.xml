@@ -6164,6 +6164,8 @@ ${output.content}</echo>
 	<target name="wsdd-builder-jdk8">
 		<run-batch-test>
 			<test-action>
+				<echo>Testing.....</echo>
+
 				<ant dir="portal-impl" target="build-wsdds" />
 			</test-action>
 
