@@ -1,8 +1,8 @@
 @component-name = "portal-social-networking"
-@ignore = "true"
 definition {
 
-	property portal.upstream = "true";
+	property osgi.app.includes="directory-web, social-activity-web, social-group-statistics-web, social-requests-web, social-user-statistics-web, network-utilities-web, opensocial-portlet";
+	property portal.upstream = "roy";
 	property custom.properties = "default.layout.template.id=1_column";
 	property testray.main.component.name = "Social Networking";
 	var pageName = "Site Members Directory Page";
