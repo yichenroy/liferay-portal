@@ -359,6 +359,8 @@ public class PullRequest {
 			_jsonObject = JenkinsResultsParserUtil.toJSONObject(
 				getURL(), false);
 
+			System.out.println(getURL());
+
 			_labels.clear();
 
 			JSONArray labelJSONArray = _jsonObject.getJSONArray("labels");
