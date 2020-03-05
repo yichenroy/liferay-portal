@@ -2882,53 +2882,13 @@ ${tomcat-gc-log}
 					import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
 					import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
 
-					Job job = JobFactory.newJob(project.getProperty("top.level.job.name"), project.getProperty("env.CI_TEST_SUITE"), project.getProperty("portal.branch.name"), project.getProperty("env.REPOSITORY_NAME"));
-
-					BatchTestClassGroup.BuildProfile buildProfile = BatchTestClassGroup.BuildProfile.PORTAL;
-
-					String testPortalBuildProfile = project.getProperty("build.profile");
-
-					if ((testPortalBuildProfile != null) && testPortalBuildProfile.equals("dxp")) {
-						buildProfile = BatchTestClassGroup.BuildProfile.DXP;
-					}
-
-					BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), buildProfile, job);
-
-					int axisCount = batchTestClassGroup.getAxisCount();
-
 					StringBuilder sb = new StringBuilder();
 
-					for (i = 0; i < axisCount; i++) {
-						AxisTestClassGroup axisTestClassGroup = batchTestClassGroup.getAxisTestClassGroup(i);
+					sb.append("TEST_CLASS_GROUP_0=com/liferay/document/library/service/test/DLFileEntryExtensionTest.class,com/liferay/document/library/service/test/DLFileEntryFinderTest.class,com/liferay/document/library/service/test/DLFileEntryLocalServiceTest.class,com/liferay/document/library/service/test/DLFileEntryLocalServiceTreeTest.class,com/liferay/document/library/service/test/DLFileEntryMetadataLocalServiceTest.class,com/liferay/document/library/service/test/DLFileEntryServiceTest.class,com/liferay/document/library/service/test/DLFileEntryTypeFinderTest.class,com/liferay/document/library/service/test/DLFileEntryTypeServiceTest.class,com/liferay/document/library/service/test/DLFileShortcutLocalServiceTreeTest.class,com/liferay/document/library/service/test/DLFileVersionHistoryTest.class,com/liferay/document/library/service/test/DLFileVersionLocalServiceTreeTest.class,com/liferay/document/library/service/test/DLFileVersionTest.class,com/liferay/document/library/service/test/DLFileVersionUpdateTest.class,com/liferay/document/library/service/test/DLFolderFinderTest.class,com/liferay/document/library/service/test/DLFolderLocalServiceTest.class,com/liferay/document/library/service/test/DLFolderLocalServiceTreeTest.class,com/liferay/document/library/service/test/DLFolderServiceTest.class,com/liferay/document/library/service/test/PDFProcessorTest.class,com/liferay/document/library/social/test/DLFileEntryActivityInterpreterTest.class,com/liferay/document/library/social/test/DLFolderActivityInterpreterTest.class,com/liferay/document/library/subscription/test/DLSubscriptionAuthorTest.class,com/liferay/document/library/subscription/test/DLSubscriptionClassTypeTest.class,com/liferay/document/library/subscription/test/DLSubscriptionContainerModelTest.class,com/liferay/document/library/subscription/test/DLSubscriptionLocalizedContentTest.class,com/liferay/document/library/subscription/test/DLSubscriptionRootContainerModelTest.class,com/liferay/document/library/sync/service/persistence/test/DLSyncEventPersistenceTest.class,com/liferay/document/library/trash/test/DLFileEntryTrashHandlerTest.class,com/liferay/document/library/trash/test/DLFileShortcutTrashHandlerTest.class,com/liferay/document/library/trash/test/DLFolderTrashHandlerTest.class,com/liferay/document/library/uad/anonymizer/test/DLFileEntryTypeUADAnonymizerTest.class,com/liferay/document/library/uad/anonymizer/test/DLFileEntryUADAnonymizerTest.class,com/liferay/document/library/uad/anonymizer/test/DLFileShortcutUADAnonymizerTest.class,com/liferay/document/library/uad/anonymizer/test/DLFolderUADAnonymizerTest.class,com/liferay/document/library/uad/display/test/DLFileEntryUADDisplayTest.class,com/liferay/document/library/uad/display/test/DLFolderUADDisplayTest.class");
 
-						List testClassGroup = axisTestClassGroup.getTestClassFiles();
+					sb.append("\n\n");
 
-						sb.append("TEST_CLASS_GROUP_");
-						sb.append(i);
-						sb.append("=");
-
-						for (File testClass : testClassGroup) {
-							sb.append(testClass.toPath());
-							sb.append(",");
-						}
-
-						if (!testClassGroup.isEmpty()) {
-							sb.setLength(sb.length() - 1);
-						}
-
-						sb.append("\n\n");
-					}
-
-					sb.append("TEST_CLASS_GROUPS=");
-
-					for (int i = 0; i < axisCount; i++) {
-						sb.append(i);
-						sb.append(" ");
-					}
-
-					if (axisCount > 0) {
-						sb.setLength(sb.length() - 1);
-					}
+					sb.append("TEST_CLASS_GROUPS=0");
 
 					project.setProperty("test.class.file.names.properties.content", sb.toString());
 				]]>
