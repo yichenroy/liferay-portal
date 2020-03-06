@@ -4359,34 +4359,66 @@ log.sanitizer.enabled=false</echo>
 	</target>
 
 	<target name="lpkg-base-jdk8">
+		<echo>######################################</echo>
+		<echo>build.profile: ${build.profile}</echo>
+		<echo>######################################</echo>
+
 		<run-lpkg-base-test />
 	</target>
 
 	<target name="lpkg-container-jdk8">
+		<echo>######################################</echo>
+		<echo>build.profile: ${build.profile}</echo>
+		<echo>######################################</echo>
+
 		<run-lpkg-container-test />
 	</target>
 
 	<target name="lpkg-controller-jdk8">
+		<echo>######################################</echo>
+		<echo>build.profile: ${build.profile}</echo>
+		<echo>######################################</echo>
+
 		<run-lpkg-controller-test />
 	</target>
 
 	<target name="lpkg-independence-jdk8">
+		<echo>######################################</echo>
+		<echo>build.profile: ${build.profile}</echo>
+		<echo>######################################</echo>
+
 		<run-lpkg-independence-test />
 	</target>
 
 	<target name="lpkg-override-jdk8">
+		<echo>######################################</echo>
+		<echo>build.profile: ${build.profile}</echo>
+		<echo>######################################</echo>
+
 		<run-lpkg-override-test />
 	</target>
 
 	<target name="lpkg-persistence-jdk8">
+		<echo>######################################</echo>
+		<echo>build.profile: ${build.profile}</echo>
+		<echo>######################################</echo>
+
 		<run-lpkg-persistence-test />
 	</target>
 
 	<target name="lpkg-release-jdk8">
+		<echo>######################################</echo>
+		<echo>build.profile: ${build.profile}</echo>
+		<echo>######################################</echo>
+
 		<run-lpkg-release-test />
 	</target>
 
 	<target name="lpkg-startup-jdk8">
+		<echo>######################################</echo>
+		<echo>build.profile: ${build.profile}</echo>
+		<echo>######################################</echo>
+
 		<run-lpkg-startup-test />
 	</target>
 
