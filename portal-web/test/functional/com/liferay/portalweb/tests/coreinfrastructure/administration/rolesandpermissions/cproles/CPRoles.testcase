@@ -69,7 +69,7 @@ definition {
 
 	@priority = "5"
 	test AddSiteRole {
-		property portal.acceptance = "true";
+		property portal.acceptance = "roy";
 
 		ProductMenu.gotoPortlet(
 			category = "Users",
