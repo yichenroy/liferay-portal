@@ -21,7 +21,7 @@
 				tofile="${db.upgrade.client.src.dir}/src/testFunctional/dependencies/temp.expect"
 				verbose="true"
 			/>
-			
+
 			<sleep seconds="2" />
 
 			<get-database-property property.name="database.host" />
@@ -83,6 +83,16 @@
 				file="@{db.upgrade.client.home}/db_upgrade@{file.suffix.bat}"
 				perm="+x"
 			/>
+
+			<echo>############################################################</echo>
+
+			<execute>
+				<![CDATA[
+					ls -la ${db.upgrade.client.src.dir}/src/testFunctional/dependencies
+				]]>
+			</execute>
+
+			<echo>############################################################</echo>
 
 			<exec executable="${db.upgrade.client.src.dir}/src/testFunctional/dependencies/temp.expect" failonerror="true" logError="true" />
 		</sequential>
