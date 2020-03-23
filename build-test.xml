@@ -40,6 +40,69 @@
 	<property location="${project.dir}/tools/putty/plink.exe" name="plink.executable" />
 	<property location="${project.dir}/tools/putty/pscp.exe" name="pscp.executable" />
 
+	<target name="print-relevant-pql">
+		<property name="batch.names" value="${test.batch.names[relevant]}" />
+		<property name="current.build.profile" value="dxp" />
+		<property name="env.CI_TEST_SUITE" value="relevant" />
+		<property name="env.REPOSITORY_NAME" value="liferay-portal" />
+		<property name="env.TOP_LEVEL_JOB_NAME" value="test-portal-acceptance-pullrequest(master)" />
+		<property name="portal.branch.name" value="master" />
+
+		<beanshell mapId="job">
+			<![CDATA[
+				import com.liferay.jenkins.results.parser.BatchDependentJob;
+				import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+				import com.liferay.jenkins.results.parser.Job;
+				import com.liferay.jenkins.results.parser.JobFactory;
+				import com.liferay.jenkins.results.parser.SubrepositoryGitRepositoryJob;
+				import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
+				import com.liferay.jenkins.results.parser.test.clazz.group.FunctionalBatchTestClassGroup;
+				import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
+
+				import org.apache.commons.lang.StringUtils;
+
+				String currentBuildProfile = project.getProperty("current.build.profile");
+
+				if (currentBuildProfile != null && currentBuildProfile.equals("dxp")) {
+					buildProfile = BatchTestClassGroup.BuildProfile.DXP;
+				}
+
+				List functionalRelevantPQL = new ArrayList();
+
+				Job job = job = JobFactory.newJob(project.getProperty("env.TOP_LEVEL_JOB_NAME"), project.getProperty("env.CI_TEST_SUITE"), project.getProperty("portal.branch.name"), project.getProperty("env.REPOSITORY_NAME"));
+
+				BatchTestClassGroup.BuildProfile buildProfile = BatchTestClassGroup.BuildProfile.PORTAL;
+
+				String testBatchNames = project.getProperty("batch.names");
+
+				for (String testBatchName : testBatchNames.split(",")) {
+					if (!testBatchName.contains("functional")) {
+						continue;
+					}
+
+					BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(testBatchName, buildProfile, job);
+
+					if (batchTestClassGroup instanceof FunctionalBatchTestClassGroup) {
+						FunctionalBatchTestClassGroup functionalBatchTestClassGroup = (FunctionalBatchTestClassGroup)batchTestClassGroup;
+
+						String relevantTestBatchRunPropertyQuery = functionalBatchTestClassGroup.getRelevantTestBatchRunPropertyQuery();
+
+						if (relevantTestBatchRunPropertyQuery != null) {
+							functionalRelevantPQL.add(testBatchName + ": " + relevantTestBatchRunPropertyQuery);
+						}
+					}
+				}
+
+				System.out.println("#### Listing Relevant PQL per functional batch");
+
+				for (String relevantPQL: functionalRelevantPQL) {
+					System.out.println(relevantPQL);
+					System.out.println();
+				}
+			]]>
+		</beanshell>
+	</target>
+
 	<macrodef name="apply-portal-ext-properties">
 		<sequential>
 			<if>
