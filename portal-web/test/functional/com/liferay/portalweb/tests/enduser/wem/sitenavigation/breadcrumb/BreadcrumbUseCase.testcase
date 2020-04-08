@@ -1,7 +1,7 @@
 @component-name = "portal-breadcrumb"
 definition {
 
-	property portal.release = "true";
+	property portal.release = "roy";
 	property portal.upstream = "true";
 	property testray.component.names = "Breadcrumb,Navigation";
 	property testray.main.component.name = "Navigation";
