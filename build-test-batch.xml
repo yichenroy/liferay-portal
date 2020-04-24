@@ -6128,7 +6128,7 @@ information. Make sure to commit in all build services results.
 	<target name="source-format-current-branch-jdk8">
 		<run-batch-test>
 			<test-action>
-				<echo>THIS IS A TEST!!!!!</echo>
+				<echo>THIS IS A TEST!!!!!!</echo>
 
 				<exec executable="git" failonerror="true" outputproperty="git.diff">
 					<arg value="diff" />
