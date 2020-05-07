@@ -4253,10 +4253,14 @@ log.sanitizer.enabled=false</echo>
 	</target>
 
 	<target name="functional-smoke-wildfly170-mariadb102-jdk8">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="17.0.0" />
+
 		<run-functional-test app.server.type="wildfly" app.server.version="17.0.0" database.type="mariadb" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-smoke-wildfly170-mariadb102-jdk11_open">
+		<set-app-server-version-number app.server.type="wildfly" app.server.version="17.0.0" />
+
 		<run-functional-test app.server.type="wildfly" app.server.version="17.0.0" database.type="mariadb" test.portal.log.assert="true" />
 	</target>
 
