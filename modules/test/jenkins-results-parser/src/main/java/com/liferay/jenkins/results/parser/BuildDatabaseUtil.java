@@ -37,7 +37,7 @@ public class BuildDatabaseUtil {
 		}
 
 		if (baseDirPath == null) {
-			baseDirPath = System.getenv("WORKSPACE");
+			baseDirPath = "/opt/dev/projects/github";
 
 			if (baseDirPath == null) {
 				throw new RuntimeException("Please set WORKSPACE");
