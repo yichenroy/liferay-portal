@@ -34,7 +34,6 @@ public class LegacyDataArchiveHelper {
 		GitWorkingDirectory legacyGitWorkingDirectory) {
 
 		_generatedArchiveDirectory = generatedArchiveDirectory;
-
 		_legacyGitWorkingDirectory = legacyGitWorkingDirectory;
 
 		_buildProperties = _getBuildProperties();
