@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * @author Yi-Chen Tsai
  */
-public class ServiceBuilderBatchTestClassGroup
+public class RESTBuilderBatchTestClassGroup
 	extends ModulesBatchTestClassGroup {
 
 	@Override
@@ -42,9 +42,7 @@ public class ServiceBuilderBatchTestClassGroup
 			return 0;
 		}
 
-		if ((_buildType == BuildType.FULL) ||
-			(testClasses.isEmpty() && (_buildType == BuildType.CORE))) {
-
+		if ((_buildType == BuildType.FULL) || testClasses.isEmpty()) {
 			return 1;
 		}
 
@@ -57,31 +55,31 @@ public class ServiceBuilderBatchTestClassGroup
 
 	public static enum BuildType {
 
-		CORE, FULL
+		FULL
 
 	}
 
-	public static class ServiceBuilderBatchTestClass
+	public static class RESTBuilderBatchTestClass
 		extends ModulesBatchTestClass {
 
-		protected static ServiceBuilderBatchTestClass getInstance(
+		protected static RESTBuilderBatchTestClass getInstance(
 			File moduleBaseDir, File modulesDir,
 			List<File> modulesProjectDirs) {
 
-			return new ServiceBuilderBatchTestClass(
+			return new RESTBuilderBatchTestClass(
 				new TestClassFile(
 					JenkinsResultsParserUtil.getCanonicalPath(moduleBaseDir)),
 				modulesDir, modulesProjectDirs);
 		}
 
-		protected ServiceBuilderBatchTestClass(
+		protected RESTBuilderBatchTestClass(
 			TestClassFile testClassFile, File modulesDir,
 			List<File> modulesProjectDirs) {
 
 			super(testClassFile);
 
 			initTestClassMethods(
-				modulesProjectDirs, modulesDir, "buildService");
+				modulesProjectDirs, modulesDir, "buildREST");
 		}
 
 	}
@@ -102,28 +100,14 @@ public class ServiceBuilderBatchTestClassGroup
 						File currentDirectory = filePath.toFile();
 						String filePathString = filePath.toString();
 
-						if (filePathString.endsWith("-service")) {
-							File buildFile = new File(
-								currentDirectory, "build.gradle");
-							File serviceXmlFile = new File(
-								currentDirectory, "service.xml");
+						if (filePathString.endsWith("-impl")) {
+							File restConfigYAMLFile = new File(
+								currentDirectory, "rest-config.yaml");
+							File restOpenAPIYAMLFile = new File(
+								currentDirectory, "rest-openapi.yaml");
 
-							if (buildFile.exists() && serviceXmlFile.exists()) {
-								modulesProjectDirs.add(currentDirectory);
-
-								return FileVisitResult.SKIP_SUBTREE;
-							}
-						}
-						else if (filePathString.endsWith("-portlet")) {
-							File portletXmlFile = new File(
-								currentDirectory,
-								"docroot/WEB-INF/portlet.xml");
-							File serviceXmlFile = new File(
-								currentDirectory,
-								"docroot/WEB-INF/service.xml");
-
-							if (portletXmlFile.exists() &&
-								serviceXmlFile.exists()) {
+							if (restConfigYAMLFile.exists() &&
+								restOpenAPIYAMLFile.exists()) {
 
 								modulesProjectDirs.add(currentDirectory);
 
@@ -146,7 +130,7 @@ public class ServiceBuilderBatchTestClassGroup
 		return modulesProjectDirs;
 	}
 
-	protected ServiceBuilderBatchTestClassGroup(
+	protected RESTBuilderBatchTestClassGroup(
 		String batchName, BuildProfile buildProfile,
 		PortalTestClassJob portalTestClassJob) {
 
@@ -182,43 +166,18 @@ public class ServiceBuilderBatchTestClassGroup
 			List<File> modifiedFiles =
 				portalGitWorkingDirectory.getModifiedFilesList();
 
-			List<File> modifiedPortalToolsServiceBuilderFiles =
+			List<File> modifiedPortalToolsRESTBuilderFiles =
 				JenkinsResultsParserUtil.getIncludedFiles(
 					null,
 					getPathMatchers(
-						"util/portal-tools-service-builder/**",
+						"util/portal-tools-rest-builder/**",
 						portalModulesBaseDir),
 					modifiedFiles);
 
-			if (!modifiedPortalToolsServiceBuilderFiles.isEmpty()) {
+			if (!modifiedPortalToolsRESTBuilderFiles.isEmpty()) {
 				_buildType = BuildType.FULL;
 
 				return;
-			}
-
-			List<File> modifiedPortalImplFiles =
-				JenkinsResultsParserUtil.getIncludedFiles(
-					null,
-					getPathMatchers(
-						"portal-impl/**",
-						portalGitWorkingDirectory.getWorkingDirectory()),
-					modifiedFiles);
-
-			if (!modifiedPortalImplFiles.isEmpty()) {
-				_buildType = BuildType.CORE;
-			}
-			else {
-				List<File> modifiedPortalKernelFiles =
-					JenkinsResultsParserUtil.getIncludedFiles(
-						null,
-						getPathMatchers(
-							"portal-kernel/**",
-							portalGitWorkingDirectory.getWorkingDirectory()),
-						modifiedFiles);
-
-				if (!modifiedPortalKernelFiles.isEmpty()) {
-					_buildType = BuildType.CORE;
-				}
 			}
 
 			moduleDirsList.addAll(
@@ -236,7 +195,7 @@ public class ServiceBuilderBatchTestClassGroup
 
 			if (!modulesProjectDirs.isEmpty()) {
 				testClasses.add(
-					ServiceBuilderBatchTestClass.getInstance(
+					RESTBuilderBatchTestClass.getInstance(
 						moduleDir, portalModulesBaseDir, modulesProjectDirs));
 			}
 		}
