@@ -33,8 +33,7 @@ import java.util.List;
 /**
  * @author Yi-Chen Tsai
  */
-public class RESTBuilderBatchTestClassGroup
-	extends ModulesBatchTestClassGroup {
+public class RESTBuilderBatchTestClassGroup extends ModulesBatchTestClassGroup {
 
 	@Override
 	public int getAxisCount() {
@@ -78,8 +77,7 @@ public class RESTBuilderBatchTestClassGroup
 
 			super(testClassFile);
 
-			initTestClassMethods(
-				modulesProjectDirs, modulesDir, "buildREST");
+			initTestClassMethods(modulesProjectDirs, modulesDir, "buildREST");
 		}
 
 	}
