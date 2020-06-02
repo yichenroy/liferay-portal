@@ -6132,6 +6132,125 @@ ${output.content}</echo>
 		<run-release-osgi-state-lpkg-test />
 	</target>
 
+	<target name="service-builder-jdk8">
+		<run-batch-test>
+			<test-action>
+				<if>
+					<available file="modules/util/portal-tools-service-builder" />
+					<then>
+						<gradle-execute dir="modules/util/portal-tools-service-builder" task="deploy">
+							<arg value="clean" />
+						</gradle-execute>
+					</then>
+				</if>
+
+				<exec executable="git">
+					<arg value="add" />
+					<arg value="--all" />
+				</exec>
+
+				<record action="start" name="${project.dir}/build.services.output.txt" />
+
+				<if>
+					<not>
+						<equals arg1="${skip.service.builder.full}" arg2="true" />
+					</not>
+					<then>
+						<ant dir="portal-impl" target="build-services">
+							<property name="com.liferay.portal.tools.service.builder.ignore.local" value="false" />
+						</ant>
+					</then>
+					<else>
+						<if>
+							<not>
+								<equals arg1="${skip.service.builder.core}" arg2="true" />
+							</not>
+							<then>
+								<ant dir="portal-impl" target="build-service-counter" />
+								<ant dir="portal-impl" target="build-service-portal" />
+								<ant dir="portal-impl" target="build-service-portlets" />
+							</then>
+						</if>
+
+						<if>
+							<isset property="modules.test.class.group" />
+							<then>
+								<loadresource property="modules.build.service.tasks">
+									<filterchain>
+										<tokenfilter>
+											<replaceregex flags="g" pattern="(\S+ )" replace="\0," />
+										</tokenfilter>
+									</filterchain>
+									<propertyresource name="modules.test.class.group" />
+								</loadresource>
+
+								<for list="${modules.build.service.tasks}" param="modules.build.service.task" trim="true">
+									<sequential>
+										<echo>Executing Gradle tasks: @{modules.build.service.task}</echo>
+
+										<gradle-execute dir="modules" forcedcacheenabled="false" task="@{modules.build.service.task}">
+											<arg value="-DbuildService.skipReadOnly=${build.services.skip.read.only}" />
+											<arg value="-Pcom.liferay.portal.tools.service.builder.ignore.local=false" />
+										</gradle-execute>
+									</sequential>
+								</for>
+							</then>
+						</if>
+					</else>
+				</if>
+
+				<record action="stop" name="${project.dir}/build.services.output.txt" />
+
+				<loadfile
+					property="build.services.output.txt.content"
+					srcfile="${project.dir}/build.services.output.txt"
+				/>
+
+				<delete file="${project.dir}/build.services.output.txt" />
+
+				<if>
+					<contains string="${build.services.output.txt.content}" substring="Writing " />
+					<then>
+						<exec executable="git" output="${project.dir}/build.services.diff.txt">
+							<arg value="diff" />
+							<arg value="--" />
+							<arg value="." />
+							<arg value=":!*/*-portlet-service.jar" />
+							<arg value=":!*/packageinfo" />
+							<arg value=":!*/src/main/resources/service.properties" />
+							<arg value=":!*/src/service.properties" />
+						</exec>
+
+						<loadfile
+							property="build.services.diff.txt.content"
+							srcfile="${project.dir}/build.services.diff.txt"
+						/>
+
+						<delete file="${project.dir}/build.services.diff.txt" />
+
+						<if>
+							<isset property="build.services.diff.txt.content" />
+							<then>
+								<echo message="${build.services.diff.txt.content}" />
+
+								<fail>
+.
+
+Detected build services changes. See above build services log for more
+information. Make sure to commit in all build services results.
+								</fail>
+							</then>
+						</if>
+					</then>
+				</if>
+			</test-action>
+
+			<test-set-up>
+				<setup-test-environment />
+			</test-set-up>
+		</run-batch-test>
+	</target>
+
 	<target name="ruby-sass-compiler-jdk8">
 		<antcall if:set="env.JENKINS_HOME" inheritAll="false" target="clean-up-java-processes" />
 
