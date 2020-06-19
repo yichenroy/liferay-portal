@@ -64,9 +64,17 @@ public class TestrayResultsParserUtil {
 
 			partitionID++;
 		}
+
+		System.out.println(
+			JenkinsResultsParserUtil.combine(
+				"The Testray result file '", file.getName(),
+				"' has been split into ", String.valueOf(partitionID),
+				" partitions, and the source file will be deleted."));
+
+		file.delete();
 	}
 
-	public static void processTestrayResultFiles(File dir) throws Exception {
+	public static void processTestrayResultFiles(File dir) {
 		for (File file : dir.listFiles()) {
 			if (file.isDirectory()) {
 				continue;
@@ -79,7 +87,24 @@ public class TestrayResultsParserUtil {
 			}
 
 			if (file.length() > _BYTES_MAX_SIZE_TESTRAY_RESULT_FILE) {
-				processTestrayResultFile(file);
+				int attempt = 0;
+
+				while (attempt < _RETRIES_MAX) {
+					try {
+						processTestrayResultFile(file);
+
+						break;
+					}
+					catch (Exception exception) {
+						System.out.println(
+							"Unable to process large Testray result file' " +
+								fileName + "'.");
+
+						exception.printStackTrace();
+					}
+
+					attempt++;
+				}
 			}
 		}
 	}
@@ -168,5 +193,7 @@ public class TestrayResultsParserUtil {
 
 	private static final String _NAME_TESTRAY_TESTCASE_STATUS_PROPERTY =
 		"testray.testcase.status";
+
+	private static final int _RETRIES_MAX = 3;
 
 }
