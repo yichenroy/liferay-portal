@@ -48,6 +48,10 @@ public class TestrayResultsParserUtil {
 			Dom4JUtil.addToElement(
 				partitionRootElement, testcaseElementsPartition.toArray());
 
+			Dom4JUtil.addToElement(
+				partitionRootElement,
+				_getSummaryElement(testcaseElementsPartition));
+
 			Document partitionDocument = Dom4JUtil.parse(
 				Dom4JUtil.format(partitionRootElement));
 
@@ -102,11 +106,64 @@ public class TestrayResultsParserUtil {
 		return filePath.replace(
 			_EXTENSION_TESTRAY_RESULT_FILE, partitionPredicate);
 	}
-	
+
+	private static Element _getSummaryElement(List<Element> testcaseElements) {
+		Element summaryElement = Dom4JUtil.getNewElement("summary");
+
+		int numPassed = 0;
+
+		for (Element testcaseElement : testcaseElements) {
+			String testrayTestcaseStatus = _getTestrayTestcaseStatus(
+				testcaseElement);
+
+			if (testrayTestcaseStatus.equals("passed")) {
+				numPassed++;
+			}
+		}
+
+		Element passedPropertyElement = Dom4JUtil.getNewElement("property");
+
+		passedPropertyElement.addAttribute("name", "passed");
+		passedPropertyElement.addAttribute("value", String.valueOf(numPassed));
+
+		Element failedPropertyElement = Dom4JUtil.getNewElement("property");
+
+		failedPropertyElement.addAttribute("name", "failed");
+		failedPropertyElement.addAttribute(
+			"value", String.valueOf(testcaseElements.size() - numPassed));
+
+		Dom4JUtil.addToElement(
+			summaryElement, passedPropertyElement, failedPropertyElement);
+
+		return summaryElement;
+	}
+
+	private static String _getTestrayTestcaseStatus(Element testcaseElement) {
+		String testrayTestcaseStatus = "";
+
+		Element propertiesElement = testcaseElement.element("properties");
+
+		List<Element> propertyElements = propertiesElement.elements("property");
+
+		for (Element propertyElement : propertyElements) {
+			if (_NAME_TESTRAY_TESTCASE_STATUS_PROPERTY.equals(
+					propertyElement.attributeValue("name", ""))) {
+
+				testrayTestcaseStatus = propertyElement.attributeValue(
+					"value", "");
+			}
+		}
+
+		return testrayTestcaseStatus;
+	}
+
 	private static final long _BYTES_MAX_SIZE_TESTRAY_RESULT_FILE = 1024 * 200;
 
 	private static final int _COUNT_MAX_TESTCASE = 100;
 
 	private static final String _EXTENSION_TESTRAY_RESULT_FILE = ".xml";
+
+	private static final String _NAME_TESTRAY_TESTCASE_STATUS_PROPERTY =
+		"testray.testcase.status";
 
 }
