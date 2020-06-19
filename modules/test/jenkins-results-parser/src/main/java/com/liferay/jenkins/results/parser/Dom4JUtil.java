@@ -210,6 +210,43 @@ public class Dom4JUtil {
 		return getOrderedListElement(itemElements, null, maxItems);
 	}
 
+	public static Element getTruncatedElement(Element element) {
+		Element truncatedElement = getNewElement(element.getName());
+
+		List<Attribute> attributes = element.attributes();
+
+		for (Attribute attribute : attributes) {
+			String value = attribute.getValue();
+
+			if (value.length() > _CHARS_MAX_SIZE_ELEMENT) {
+				value = value.substring(0, _CHARS_MAX_SIZE_ELEMENT);
+			}
+
+			truncatedElement.addAttribute(attribute.getName(), value);
+		}
+
+		String data = String.valueOf(element.getData());
+
+		data = data.trim();
+
+		if (!data.isEmpty()) {
+			if (data.length() > _CHARS_MAX_SIZE_ELEMENT) {
+				data = data.substring(0, _CHARS_MAX_SIZE_ELEMENT);
+			}
+
+			truncatedElement.addCDATA(data);
+		}
+
+		for (Iterator<Element> iterator = element.elementIterator();
+			 iterator.hasNext();) {
+
+			addToElement(
+				truncatedElement, getTruncatedElement(iterator.next()));
+		}
+
+		return truncatedElement;
+	}
+
 	public static void insertElementAfter(
 		Element parentElement, Element targetElement, Element newElement) {
 
@@ -324,5 +361,7 @@ public class Dom4JUtil {
 			getNewElement(
 				"code", null, JenkinsResultsParserUtil.redact(content)));
 	}
+
+	private static final int _CHARS_MAX_SIZE_ELEMENT = 2500;
 
 }

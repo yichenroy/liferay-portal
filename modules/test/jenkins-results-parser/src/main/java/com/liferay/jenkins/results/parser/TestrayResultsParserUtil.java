@@ -45,8 +45,11 @@ public class TestrayResultsParserUtil {
 
 			Element partitionRootElement = commonRootElement.createCopy();
 
-			Dom4JUtil.addToElement(
-				partitionRootElement, testcaseElementsPartition.toArray());
+			for (Element testcaseElement : testcaseElementsPartition) {
+				Dom4JUtil.addToElement(
+					partitionRootElement,
+					Dom4JUtil.getTruncatedElement(testcaseElement));
+			}
 
 			Dom4JUtil.addToElement(
 				partitionRootElement,
