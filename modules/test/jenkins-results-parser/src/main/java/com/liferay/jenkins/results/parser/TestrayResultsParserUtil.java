@@ -75,8 +75,6 @@ public class TestrayResultsParserUtil {
 					partitionRootElement,
 					_getSummaryElement(testcaseElementsPartition));
 
-				partitionDocument.add(partitionRootElement);
-
 				File partitionFile = new File(
 					_getPartitionFilePath(
 						file,
