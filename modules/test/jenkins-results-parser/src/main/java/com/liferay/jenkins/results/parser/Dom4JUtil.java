@@ -90,6 +90,16 @@ public class Dom4JUtil {
 		}
 	}
 
+	public static void detach(Object... items) {
+		for (Object item : items) {
+			if (item instanceof Node) {
+				Node node = (Node)item;
+
+				node.detach();
+			}
+		}
+	}
+
 	public static String format(Element element) throws IOException {
 		return format(element, true);
 	}

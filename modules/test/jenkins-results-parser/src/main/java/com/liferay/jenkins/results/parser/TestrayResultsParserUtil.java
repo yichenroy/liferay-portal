@@ -40,11 +40,13 @@ public class TestrayResultsParserUtil {
 
 		Element rootElement = document.getRootElement();
 
-		_detachElements(rootElement.elements("summary"));
+		List<Element> summaryElements = rootElement.elements("summary");
+
+		Dom4JUtil.detach(summaryElements.toArray());
 
 		List<Element> testcaseElements = rootElement.elements("testcase");
 
-		_detachElements(testcaseElements);
+		Dom4JUtil.detach(testcaseElements.toArray());
 
 		List<List<Element>> testcaseElementsPartitions = Lists.partition(
 			testcaseElements, _COUNT_MAX_TESTCASE);
@@ -139,12 +141,6 @@ public class TestrayResultsParserUtil {
 
 				exception.printStackTrace();
 			}
-		}
-	}
-
-	private static void _detachElements(List<Element> elements) {
-		for (Element element : elements) {
-			element.detach();
 		}
 	}
 
