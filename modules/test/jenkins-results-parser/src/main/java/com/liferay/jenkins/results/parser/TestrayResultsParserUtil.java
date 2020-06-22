@@ -48,6 +48,8 @@ public class TestrayResultsParserUtil {
 
 		Dom4JUtil.detach(testcaseElements.toArray());
 
+		rootElement.setText(rootElement.getTextTrim());
+
 		List<List<Element>> testcaseElementsPartitions = Lists.partition(
 			testcaseElements, _COUNT_MAX_TESTCASE);
 
