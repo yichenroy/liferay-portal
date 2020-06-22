@@ -40,10 +40,11 @@ public class TestrayResultsParserUtil {
 
 		_detachElements(testcaseElements);
 
-		int partitionID = 0;
+		List<List<Element>> testcaseElementsPartitions = Lists.partition(
+			testcaseElements, _COUNT_MAX_TESTCASE);
 
 		for (List<Element> testcaseElementsPartition :
-				Lists.partition(testcaseElements, _COUNT_MAX_TESTCASE)) {
+				testcaseElementsPartitions) {
 
 			Document partitionDocument = (Document)document.clone();
 
@@ -63,16 +64,18 @@ public class TestrayResultsParserUtil {
 			partitionDocument.add(partitionRootElement);
 
 			JenkinsResultsParserUtil.write(
-				_getPartitionFilePath(file, partitionID),
+				_getPartitionFilePath(
+					file,
+					testcaseElementsPartitions.indexOf(
+						testcaseElementsPartition)),
 				partitionDocument.asXML());
-
-			partitionID++;
 		}
 
 		System.out.println(
 			JenkinsResultsParserUtil.combine(
 				"The Testray result file '", file.getName(),
-				"' has been split into ", String.valueOf(partitionID),
+				"' has been split into ",
+				String.valueOf(testcaseElementsPartitions.size()),
 				" partitions, and the source file will be deleted."));
 
 		file.delete();
