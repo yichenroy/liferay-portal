@@ -17,6 +17,7 @@ package com.liferay.jenkins.results.parser;
 import com.google.common.collect.Lists;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -109,36 +110,34 @@ public class TestrayResultsParserUtil {
 	}
 
 	public static void processTestrayResultFiles(File dir) {
-		for (File file : dir.listFiles()) {
-			if (file.isDirectory()) {
-				continue;
-			}
+		FileFilter fileFilter = new FileFilter() {
 
-			String fileName = file.getName();
+			@Override
+			public boolean accept(File file) {
+				String name = file.getName();
 
-			if (!fileName.endsWith(_EXTENSION_TESTRAY_RESULT_FILE)) {
-				continue;
-			}
+				if (!file.isDirectory() &&
+					name.endsWith(_EXTENSION_TESTRAY_RESULT_FILE) &&
+					(file.length() > _BYTES_MAX_SIZE_TESTRAY_RESULT_FILE)) {
 
-			if (file.length() > _BYTES_MAX_SIZE_TESTRAY_RESULT_FILE) {
-				int attempt = 0;
-
-				while (attempt < _RETRIES_MAX) {
-					try {
-						processTestrayResultFile(file);
-
-						break;
-					}
-					catch (Exception exception) {
-						System.out.println(
-							"Unable to process large Testray result file' " +
-								fileName + "'.");
-
-						exception.printStackTrace();
-					}
-
-					attempt++;
+					return true;
 				}
+
+				return false;
+			}
+
+		};
+
+		for (File file : dir.listFiles(fileFilter)) {
+			try {
+				processTestrayResultFile(file);
+			}
+			catch (Exception exception) {
+				System.out.println(
+					"Unable to process large Testray result file' " +
+						file.getName() + "'.");
+
+				exception.printStackTrace();
 			}
 		}
 	}
@@ -220,7 +219,5 @@ public class TestrayResultsParserUtil {
 
 	private static final String _NAME_TESTRAY_TESTCASE_STATUS_PROPERTY =
 		"testray.testcase.status";
-
-	private static final int _RETRIES_MAX = 3;
 
 }
