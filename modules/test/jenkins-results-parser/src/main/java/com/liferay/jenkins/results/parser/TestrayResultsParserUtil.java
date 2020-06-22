@@ -108,7 +108,7 @@ public class TestrayResultsParserUtil {
 				"The Testray result file '", file.getName(),
 				"' has been split into ",
 				String.valueOf(testcaseElementsPartitions.size()),
-				" partitions, and the source file will be deleted."));
+				" partitions."));
 	}
 
 	public static void processTestrayResultFiles(File dir) {
@@ -136,8 +136,9 @@ public class TestrayResultsParserUtil {
 			}
 			catch (Exception exception) {
 				System.out.println(
-					"Unable to process large Testray result file' " +
-						file.getName() + "'.");
+					JenkinsResultsParserUtil.combine(
+						"Unable to process large Testray result file' ",
+						file.getName(), "'."));
 
 				exception.printStackTrace();
 			}
