@@ -17,10 +17,13 @@ package com.liferay.jenkins.results.parser;
 import com.google.common.collect.Lists;
 
 import java.io.File;
+import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
 /**
@@ -28,7 +31,9 @@ import org.dom4j.Element;
  */
 public class TestrayResultsParserUtil {
 
-	public static void processTestrayResultFile(File file) throws Exception {
+	public static void processTestrayResultFile(File file)
+		throws DocumentException, IOException {
+
 		Document document = Dom4JUtil.parse(
 			JenkinsResultsParserUtil.read(file));
 
@@ -43,33 +48,56 @@ public class TestrayResultsParserUtil {
 		List<List<Element>> testcaseElementsPartitions = Lists.partition(
 			testcaseElements, _COUNT_MAX_TESTCASE);
 
-		for (List<Element> testcaseElementsPartition :
-				testcaseElementsPartitions) {
+		List<File> partitionFiles = new ArrayList<>(
+			testcaseElementsPartitions.size());
 
-			Document partitionDocument = (Document)document.clone();
+		try {
+			for (List<Element> testcaseElementsPartition :
+					testcaseElementsPartitions) {
 
-			for (Element testcaseElement : testcaseElementsPartition) {
-				Dom4JUtil.truncateElement(
-					testcaseElement, _LENGTH_MAX_TESTCASE_FIELD);
+				Document partitionDocument = (Document)document.clone();
+
+				for (Element testcaseElement : testcaseElementsPartition) {
+					Dom4JUtil.truncateElement(
+						testcaseElement, _LENGTH_MAX_TESTCASE_FIELD);
+				}
+
+				Element partitionRootElement =
+					partitionDocument.getRootElement();
+
+				Dom4JUtil.addToElement(
+					partitionRootElement, testcaseElementsPartition.toArray());
+
+				Dom4JUtil.addToElement(
+					partitionRootElement,
+					_getSummaryElement(testcaseElementsPartition));
+
+				partitionDocument.add(partitionRootElement);
+
+				File partitionFile = new File(
+					_getPartitionFilePath(
+						file,
+						testcaseElementsPartitions.indexOf(
+							testcaseElementsPartition)));
+
+				JenkinsResultsParserUtil.write(
+					partitionFile, partitionDocument.asXML());
+
+				partitionFiles.add(partitionFile);
 			}
 
-			Element partitionRootElement = partitionDocument.getRootElement();
+			file.delete();
+		}
+		catch (Exception exception) {
+			for (File partitionFile : partitionFiles) {
+				partitionFile.delete();
+			}
 
-			Dom4JUtil.addToElement(
-				partitionRootElement, testcaseElementsPartition.toArray());
+			if (exception instanceof IOException) {
+				throw (IOException)exception;
+			}
 
-			Dom4JUtil.addToElement(
-				partitionRootElement,
-				_getSummaryElement(testcaseElementsPartition));
-
-			partitionDocument.add(partitionRootElement);
-
-			JenkinsResultsParserUtil.write(
-				_getPartitionFilePath(
-					file,
-					testcaseElementsPartitions.indexOf(
-						testcaseElementsPartition)),
-				partitionDocument.asXML());
+			throw new RuntimeException(exception);
 		}
 
 		System.out.println(
@@ -78,8 +106,6 @@ public class TestrayResultsParserUtil {
 				"' has been split into ",
 				String.valueOf(testcaseElementsPartitions.size()),
 				" partitions, and the source file will be deleted."));
-
-		file.delete();
 	}
 
 	public static void processTestrayResultFiles(File dir) {
