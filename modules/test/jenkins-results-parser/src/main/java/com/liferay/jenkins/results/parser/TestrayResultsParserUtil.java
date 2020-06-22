@@ -34,30 +34,33 @@ public class TestrayResultsParserUtil {
 
 		Element rootElement = document.getRootElement();
 
-		Element commonRootElement = _getCommonRootElement(rootElement);
-
-		int partitionID = 0;
+		_detachElements(rootElement.elements("summary"));
 
 		List<Element> testcaseElements = rootElement.elements("testcase");
+
+		_detachElements(testcaseElements);
+
+		int partitionID = 0;
 
 		for (List<Element> testcaseElementsPartition :
 				Lists.partition(testcaseElements, _COUNT_MAX_TESTCASE)) {
 
-			Element partitionRootElement = commonRootElement.createCopy();
+			Document partitionDocument = (Document)document.clone();
 
 			for (Element testcaseElement : testcaseElementsPartition) {
 				Dom4JUtil.truncateElement(testcaseElement, 2500);
-
-				Dom4JUtil.addToElement(
-					partitionRootElement, testcaseElement.detach());
 			}
+
+			Element partitionRootElement = partitionDocument.getRootElement();
+
+			Dom4JUtil.addToElement(
+				partitionRootElement, testcaseElementsPartition.toArray());
 
 			Dom4JUtil.addToElement(
 				partitionRootElement,
 				_getSummaryElement(testcaseElementsPartition));
 
-			Document partitionDocument = Dom4JUtil.parse(
-				Dom4JUtil.format(partitionRootElement));
+			partitionDocument.add(partitionRootElement);
 
 			JenkinsResultsParserUtil.write(
 				_getPartitionFilePath(file, partitionID),
@@ -110,19 +113,10 @@ public class TestrayResultsParserUtil {
 		}
 	}
 
-	private static Element _getCommonRootElement(Element rootElement) {
-		Element commonRootElement = rootElement.createCopy();
-
-		commonRootElement.clearContent();
-
-		Element environmentsElement = rootElement.element("environments");
-		Element propertiesElement = rootElement.element("properties");
-
-		Dom4JUtil.addToElement(
-			commonRootElement, environmentsElement.createCopy(),
-			propertiesElement.createCopy());
-
-		return commonRootElement;
+	private static void _detachElements(List<Element> elements) {
+		for (Element element : elements) {
+			element.detach();
+		}
 	}
 
 	private static String _getPartitionFilePath(File file, int partitionID) {
