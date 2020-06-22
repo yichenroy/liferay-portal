@@ -135,7 +135,7 @@ public class TestrayResultsParserUtil {
 			catch (Exception exception) {
 				System.out.println(
 					JenkinsResultsParserUtil.combine(
-						"Unable to process large Testray result file' ",
+						"Unable to process large Testray result file '",
 						file.getName(), "'."));
 
 				exception.printStackTrace();
