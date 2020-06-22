@@ -49,7 +49,8 @@ public class TestrayResultsParserUtil {
 			Document partitionDocument = (Document)document.clone();
 
 			for (Element testcaseElement : testcaseElementsPartition) {
-				Dom4JUtil.truncateElement(testcaseElement, 2500);
+				Dom4JUtil.truncateElement(
+					testcaseElement, _LENGTH_MAX_TESTCASE_FIELD);
 			}
 
 			Element partitionRootElement = partitionDocument.getRootElement();
@@ -188,6 +189,8 @@ public class TestrayResultsParserUtil {
 	private static final int _COUNT_MAX_TESTCASE = 100;
 
 	private static final String _EXTENSION_TESTRAY_RESULT_FILE = ".xml";
+
+	private static final int _LENGTH_MAX_TESTCASE_FIELD = 2500;
 
 	private static final String _NAME_TESTRAY_TESTCASE_STATUS_PROPERTY =
 		"testray.testcase.status";
