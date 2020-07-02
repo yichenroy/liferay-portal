@@ -10537,6 +10537,8 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 				<equals arg1="${app.server.type}" arg2="websphere" />
 			</or>
 			<then>
+				<print-file file.name=".gradle/gradle.properties" />
+
 				<gradle-execute dir="modules/apps/portal-search-elasticsearch7" task="deploySidecar" />
 			</then>
 		</if>
