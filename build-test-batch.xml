@@ -398,6 +398,24 @@ mariadb.executable=${mariadb.executable}]]></echo>
 						</else>
 					</if>
 
+					<echo>=========================================</echo>
+					<echo>env.DOCKER_ENABLED: ${env.DOCKER_ENABLED}</echo>
+					<echo>operating.system.type: ${operating.system.type}</echo>
+					<echo>operating.system.centos.version: ${operating.system.centos.version}</echo>
+					<if>
+						<not>
+							<and>
+								<equals arg1="${operating.system.type}" arg2="centos" />
+								<equals arg1="${operating.system.centos.version}" arg2="7" />
+							</and>
+						</not>
+						<then>
+							<echo>===== NOT CENTOS 7 ==================</echo>
+						</then>
+					</if>
+
+					<echo>=========================================</echo>
+
 					<if>
 						<and>
 							<not>
