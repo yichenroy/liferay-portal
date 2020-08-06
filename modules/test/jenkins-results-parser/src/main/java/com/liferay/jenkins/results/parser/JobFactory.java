@@ -25,6 +25,15 @@ import java.util.Map;
  */
 public class JobFactory {
 
+	public static BasePortalReleaseJob newBasePortalReleaseJob(
+		String jobName, String testSuiteName, String portalBranchName,
+		String repositoryName, BasePortalReleaseJob.BuildProfile buildProfile) {
+
+		return (BasePortalReleaseJob)_newJob(
+			jobName, testSuiteName, portalBranchName, repositoryName,
+			buildProfile);
+	}
+
 	public static Job newJob(BuildData buildData) {
 		String portalUpstreamBranchName = null;
 
@@ -58,15 +67,6 @@ public class JobFactory {
 
 		return _newJob(
 			jobName, testSuiteName, portalBranchName, repositoryName, null);
-	}
-
-	public static Job newJob(
-		String jobName, String testSuiteName, String portalBranchName,
-		String repositoryName, BasePortalReleaseJob.BuildProfile buildProfile) {
-
-		return _newJob(
-			jobName, testSuiteName, portalBranchName, repositoryName,
-			buildProfile);
 	}
 
 	private static boolean _isCentralMergePullRequest(
