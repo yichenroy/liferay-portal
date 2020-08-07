@@ -98,9 +98,9 @@ import org.json.JSONObject;
 public class JenkinsResultsParserUtil {
 
 	public static final String[] URLS_BUILD_PROPERTIES_DEFAULT = {
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
+		"file:///opt/dev/projects/github" +
 			"/liferay-jenkins-ee/build.properties",
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
+		"file:///opt/dev/projects/github" +
 			"/liferay-jenkins-ee/commands/build.properties",
 		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
 			"/liferay-portal/build.properties",

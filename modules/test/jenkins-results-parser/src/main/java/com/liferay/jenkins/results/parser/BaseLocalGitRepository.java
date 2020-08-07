@@ -196,6 +196,14 @@ public abstract class BaseLocalGitRepository
 			List<String> upstreamBranchNames = Arrays.asList(
 				upstreamBranchNamesString.split(","));
 
+			System.out.println("======= upstreamBranchNames ========");
+
+			for (String upstreamBranchNameOne : upstreamBranchNames) {
+				System.out.println(upstreamBranchNameOne);
+			}
+
+			System.out.println("=====================================");
+
 			if (!upstreamBranchNames.contains(upstreamBranchName)) {
 				throw new IllegalArgumentException(
 					"Invalid upstream branch name: " + upstreamBranchName);
