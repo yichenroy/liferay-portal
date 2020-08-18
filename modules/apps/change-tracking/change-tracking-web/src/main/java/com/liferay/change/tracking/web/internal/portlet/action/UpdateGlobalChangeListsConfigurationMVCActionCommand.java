@@ -90,7 +90,7 @@ public class UpdateGlobalChangeListsConfigurationMVCActionCommand
 				));
 
 			for (Group group : groups) {
-				if (group.isStagingGroup() || group.isStaged()) {
+				if (group.isStaged() || group.isStagingGroup()) {
 					SessionErrors.add(actionRequest, "stagingEnabled");
 
 					return;
