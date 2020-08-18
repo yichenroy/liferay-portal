@@ -42,9 +42,9 @@ public class AppPortletLayoutTypeController
 		Map<Locale, String> appNameMap, String portletName) {
 
 		this.servletContext = servletContext;
-
 		_appName = appName;
 		_appNameMap = appNameMap;
+
 		_url = StringBundler.concat(
 			"${liferay:mainPath}/portal/layout?p_l_id=${liferay:plid}&",
 			"p_p_state=pop_up&appName=", appName, "&portletName=", portletName);
