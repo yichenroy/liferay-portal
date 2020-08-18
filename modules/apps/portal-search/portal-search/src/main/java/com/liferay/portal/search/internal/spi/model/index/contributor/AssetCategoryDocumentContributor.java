@@ -50,6 +50,7 @@ public class AssetCategoryDocumentContributor
 	public void contribute(
 		Document document, BaseModel<AssetCategory> baseModel) {
 
+		Map<Long, AssetVocabulary> assetVocabulariesMap = new HashMap<>();
 		List<AssetCategory> publicAssetCategories = new ArrayList<>();
 
 		String className = document.get(Field.ENTRY_CLASS_NAME);
@@ -57,8 +58,6 @@ public class AssetCategoryDocumentContributor
 
 		List<AssetCategory> assetCategories =
 			assetCategoryLocalService.getCategories(className, classPK);
-
-		Map<Long, AssetVocabulary> assetVocabulariesMap = new HashMap<>();
 
 		for (AssetCategory assetCategory : assetCategories) {
 			AssetVocabulary assetVocabulary =
