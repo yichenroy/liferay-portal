@@ -16,7 +16,7 @@
 	padding-bottom: var(--aspect-ratio-16-to-9);
 }
 
-// Bg and text color variants
+// Background and text color variants
 
 @each $color, $value in $theme-colors-cp {
 	.bg-#{$color} {
