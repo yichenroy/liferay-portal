@@ -251,7 +251,7 @@ public class FreeMarkerFragmentEntryProcessor
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
 				fragmentEntryLink.getOriginalFragmentEntryLinkId())
 		).filter(
-			originalFragmentEntryLink -> _isPlidRelatedToLayout(
+			originalFragmentEntryLink -> _isRelated(
 				_layoutLocalService.fetchLayout(fragmentEntryLink.getPlid()),
 				originalFragmentEntryLink.getPlid())
 		).map(
@@ -261,7 +261,7 @@ public class FreeMarkerFragmentEntryProcessor
 		);
 	}
 
-	private boolean _isPlidRelatedToLayout(Layout layout, long plid) {
+	private boolean _isRelated(Layout layout, long plid) {
 		if (layout == null) {
 			return false;
 		}
