@@ -41,28 +41,30 @@ public class RemoteAppEntryTableClayDataSetDisplayView
 		ClayTableSchemaBuilder clayTableSchemaBuilder =
 			_clayTableSchemaBuilderFactory.create();
 
-		_addField(clayTableSchemaBuilder, "name", "name", "actionLink");
-		_addField(clayTableSchemaBuilder, "url", "url");
+		_addClayTableSchemaField(
+			clayTableSchemaBuilder, "name", "name", "actionLink");
+		_addClayTableSchemaField(clayTableSchemaBuilder, "url", "url");
 
 		return clayTableSchemaBuilder.build();
 	}
 
-	private void _addField(
+	private void _addClayTableSchemaField(
 		ClayTableSchemaBuilder clayTableSchemaBuilder, String fieldName,
 		String label) {
 
-		_addField(clayTableSchemaBuilder, fieldName, label, null);
+		_addClayTableSchemaField(
+			clayTableSchemaBuilder, fieldName, label, null);
 	}
 
-	private void _addField(
+	private void _addClayTableSchemaField(
 		ClayTableSchemaBuilder clayTableSchemaBuilder, String fieldName,
 		String label, String contentRenderer) {
 
-		ClayTableSchemaField field =
+		ClayTableSchemaField clayTableSchemaField =
 			clayTableSchemaBuilder.addClayTableSchemaField(fieldName, label);
 
 		if (contentRenderer != null) {
-			field.setContentRenderer(contentRenderer);
+			clayTableSchemaField.setContentRenderer(contentRenderer);
 		}
 	}
 
