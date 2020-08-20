@@ -287,14 +287,14 @@ public class GraphQLServletExtender {
 			public GraphQLType getGraphQLType(
 					Class<?> clazz,
 					ProcessingElementsContainer processingElementsContainer,
-					boolean isInput)
+					boolean input)
 				throws CannotCastMemberException, GraphQLAnnotationsException {
 
 				Map<String, GraphQLType> graphQLTypes =
 					processingElementsContainer.getTypeRegistry();
 
 				String typeName = _getTypeName(
-					isInput, processingElementsContainer,
+					input, processingElementsContainer,
 					graphQLObjectInfoRetriever.getTypeName(clazz));
 
 				GraphQLType graphQLType = graphQLTypes.get(typeName);
@@ -307,7 +307,7 @@ public class GraphQLServletExtender {
 					name = name.replaceAll("\\.", "_");
 
 					typeName = _getTypeName(
-						isInput, processingElementsContainer,
+						input, processingElementsContainer,
 						StringUtil.replace(name, '$', '_'));
 				}
 
@@ -353,7 +353,7 @@ public class GraphQLServletExtender {
 					).build();
 				}
 				else {
-					if (isInput) {
+					if (input) {
 						graphQLType = new InputObjectBuilder(
 							graphQLObjectInfoRetriever, parentalSearch,
 							breadthFirstSearch, _graphQLFieldRetriever
@@ -417,11 +417,11 @@ public class GraphQLServletExtender {
 			}
 
 			private String _getTypeName(
-				boolean isInput,
+				boolean input,
 				ProcessingElementsContainer processingElementsContainer,
 				String typeName) {
 
-				if (isInput) {
+				if (input) {
 					typeName =
 						processingElementsContainer.getInputPrefix() +
 							typeName +
