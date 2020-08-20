@@ -162,7 +162,6 @@ renderResponse.setTitle(headerTitle);
 						markupView="lexicon"
 						title="<%= workflowTaskDisplayContext.getPreviewOfTitle(workflowTask) %>"
 					>
-
 						<c:if test="<%= assetRenderer.isLocalizable() %>">
 							<div class="locale-actions">
 								<liferay-ui:language
