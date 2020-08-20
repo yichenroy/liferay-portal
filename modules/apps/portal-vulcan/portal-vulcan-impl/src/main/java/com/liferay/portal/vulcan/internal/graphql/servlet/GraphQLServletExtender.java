@@ -272,7 +272,7 @@ public class GraphQLServletExtender {
 		ParentalSearch parentalSearch = new ParentalSearch(
 			graphQLObjectInfoRetriever);
 
-		GraphQLExtensionsHandler extensionsHandler =
+		GraphQLExtensionsHandler graphQLExtensionsHandler =
 			new GraphQLExtensionsHandler() {
 				{
 					setFieldRetriever(_graphQLFieldRetriever);
@@ -340,7 +340,7 @@ public class GraphQLServletExtender {
 
 					graphQLType = new InterfaceBuilder(
 						graphQLObjectInfoRetriever, _graphQLFieldRetriever,
-						extensionsHandler
+						graphQLExtensionsHandler
 					).getInterfaceBuilder(
 						object, processingElementsContainer
 					).build();
@@ -365,7 +365,7 @@ public class GraphQLServletExtender {
 						graphQLType = new OutputObjectBuilder(
 							graphQLObjectInfoRetriever, parentalSearch,
 							breadthFirstSearch, _graphQLFieldRetriever,
-							graphQLInterfaceRetriever, extensionsHandler
+							graphQLInterfaceRetriever, graphQLExtensionsHandler
 						).getOutputObjectBuilder(
 							object, processingElementsContainer
 						).build();
@@ -470,7 +470,7 @@ public class GraphQLServletExtender {
 			private final Set<String> _typeKeys = new HashSet<>();
 
 			{
-				setExtensionsHandler(extensionsHandler);
+				setExtensionsHandler(graphQLExtensionsHandler);
 				setFieldSearchAlgorithm(parentalSearch);
 				setGraphQLFieldRetriever(_graphQLFieldRetriever);
 				setGraphQLInterfaceRetriever(graphQLInterfaceRetriever);
