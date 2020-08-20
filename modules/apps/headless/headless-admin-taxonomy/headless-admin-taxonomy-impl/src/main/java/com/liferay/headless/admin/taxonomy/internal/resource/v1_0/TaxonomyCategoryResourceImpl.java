@@ -64,6 +64,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MultivaluedMap;
@@ -146,7 +147,7 @@ public class TaxonomyCategoryResourceImpl
 
 		Map<String, Map<String, String>> actions = null;
 
-		if (!parentTaxonomyCategoryId.equals("0")) {
+		if (!Objects.equals(parentTaxonomyCategoryId, "0")) {
 			AssetCategory assetCategory = _getAssetCategory(
 				parentTaxonomyCategoryId);
 
