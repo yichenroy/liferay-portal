@@ -85,13 +85,14 @@ public class RemoteAppPortletRegistrar {
 
 		if (existingRemoteAppPortlet != null) {
 			throw new IllegalStateException(
-				"Remote app " + remoteAppEntryId + " is already registered");
+				"Remote app entry " + remoteAppEntryId +
+					" is already registered");
 		}
 
 		remoteAppPortlet.register(_bundleContext);
 
 		if (_log.isInfoEnabled()) {
-			_log.info("Started remote app " + remoteAppPortlet.getName());
+			_log.info("Started remote app entry " + remoteAppPortlet.getName());
 		}
 	}
 
@@ -103,7 +104,8 @@ public class RemoteAppPortletRegistrar {
 			remoteAppPortlet.unregister();
 
 			if (_log.isInfoEnabled()) {
-				_log.info("Stopped remote app " + remoteAppPortlet.getName());
+				_log.info(
+					"Stopped remote app entry " + remoteAppPortlet.getName());
 			}
 		}
 	}
