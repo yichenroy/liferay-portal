@@ -68,3 +68,7 @@ processResources {
 		includeEmptyDirs = false
 	}
 }
+
+updateFileVersions {
+	match(/classpath group: "com\.liferay", name: "com\.liferay\.gradle\.plugins\.defaults", version: "(\d.+)"/, "../../../portal-web/build-test.gradle")
+}
