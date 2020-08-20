@@ -1861,6 +1861,40 @@ public class ${entity.name}ModelImpl extends BaseModelImpl<${entity.name}> imple
 
 	}
 
+	<#if serviceBuilder.isVersionLTE_7_2_0() && dependencyInjectorDS>
+		<#if entity.hasEagerBlobColumn()>
+			private static final boolean _entityCacheEnabled = false;
+			private static final boolean _finderCacheEnabled = false;
+		<#else>
+			private static boolean _entityCacheEnabled;
+			private static boolean _finderCacheEnabled;
+		</#if>
+	</#if>
+
+	<#list entity.databaseRegularEntityColumns as entityColumn>
+		<#if stringUtil.equals(entityColumn.type, "Blob") && entityColumn.lazy>
+			private ${entity.name}${entityColumn.methodName}BlobModel _${entityColumn.name}BlobModel;
+		<#else>
+			private ${entityColumn.genericizedType} _${entityColumn.name};
+
+			<#if entityColumn.localized>
+				private String _${entityColumn.name}CurrentLanguageId;
+			</#if>
+
+			<#if serviceBuilder.isVersionLTE_7_2_0() && (entityColumn.isFinderPath() || (validator.isNotNull(parentPKColumn) && (parentPKColumn.name == entityColumn.name)))>
+				private ${entityColumn.type} _original${entityColumn.methodName};
+
+				<#if entityColumn.isPrimitiveType()>
+					private boolean _setOriginal${entityColumn.methodName};
+				</#if>
+			</#if>
+
+			<#if entity.hasEntityColumn("createDate", "Date") && entity.hasEntityColumn("modifiedDate", "Date") && stringUtil.equals(entityColumn.name, "modifiedDate")>
+				private boolean _setModifiedDate;
+			</#if>
+		</#if>
+	</#list>
+
 	<#if serviceBuilder.isVersionGTE_7_3_0()>
 		public static long getColumnBitmask(String columnName) {
 			return _columnBitmasks.get(columnName);
@@ -1906,40 +1940,6 @@ public class ${entity.name}ModelImpl extends BaseModelImpl<${entity.name}> imple
 
 		private transient Map<String, Object> _columnOriginalValues;
 	</#if>
-
-	<#if serviceBuilder.isVersionLTE_7_2_0() && dependencyInjectorDS>
-		<#if entity.hasEagerBlobColumn()>
-			private static final boolean _entityCacheEnabled = false;
-			private static final boolean _finderCacheEnabled = false;
-		<#else>
-			private static boolean _entityCacheEnabled;
-			private static boolean _finderCacheEnabled;
-		</#if>
-	</#if>
-
-	<#list entity.databaseRegularEntityColumns as entityColumn>
-		<#if stringUtil.equals(entityColumn.type, "Blob") && entityColumn.lazy>
-			private ${entity.name}${entityColumn.methodName}BlobModel _${entityColumn.name}BlobModel;
-		<#else>
-			private ${entityColumn.genericizedType} _${entityColumn.name};
-
-			<#if entityColumn.localized>
-				private String _${entityColumn.name}CurrentLanguageId;
-			</#if>
-
-			<#if serviceBuilder.isVersionLTE_7_2_0() && (entityColumn.isFinderPath() || (validator.isNotNull(parentPKColumn) && (parentPKColumn.name == entityColumn.name)))>
-				private ${entityColumn.type} _original${entityColumn.methodName};
-
-				<#if entityColumn.isPrimitiveType()>
-					private boolean _setOriginal${entityColumn.methodName};
-				</#if>
-			</#if>
-
-			<#if entity.hasEntityColumn("createDate", "Date") && entity.hasEntityColumn("modifiedDate", "Date") && stringUtil.equals(entityColumn.name, "modifiedDate")>
-				private boolean _setModifiedDate;
-			</#if>
-		</#if>
-	</#list>
 
 	<#if columnBitmaskEnabled>
 		private long _columnBitmask;
