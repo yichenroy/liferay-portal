@@ -300,7 +300,7 @@ public class GraphQLServletExtender {
 				GraphQLType graphQLType = graphQLTypes.get(typeName);
 
 				if ((graphQLType != null) &&
-					!_typeKeys.contains(clazz.getName())) {
+					!_classNames.contains(clazz.getName())) {
 
 					String name = clazz.getName();
 
@@ -326,7 +326,7 @@ public class GraphQLServletExtender {
 
 				processingStack.push(typeName);
 
-				_typeKeys.add(clazz.getName());
+				_classNames.add(clazz.getName());
 
 				if (clazz.getAnnotation(GraphQLUnion.class) != null) {
 					graphQLType = new UnionBuilder(
@@ -468,7 +468,7 @@ public class GraphQLServletExtender {
 				return false;
 			}
 
-			private final Set<String> _typeKeys = new HashSet<>();
+			private final Set<String> _classNames = new HashSet<>();
 
 			{
 				setExtensionsHandler(graphQLExtensionsHandler);
