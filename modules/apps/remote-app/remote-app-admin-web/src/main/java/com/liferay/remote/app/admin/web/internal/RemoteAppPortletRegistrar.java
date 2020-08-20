@@ -49,7 +49,7 @@ public class RemoteAppPortletRegistrar {
 		_bundleContext = bundleContext;
 
 		if (_log.isInfoEnabled()) {
-			_log.info("Starting remote apps");
+			_log.info("Starting remote app entries");
 		}
 
 		for (RemoteAppEntry remoteAppEntry :
@@ -63,7 +63,7 @@ public class RemoteAppPortletRegistrar {
 	@Deactivate
 	protected void deactivate() {
 		if (_log.isInfoEnabled()) {
-			_log.info("Stopping remote apps");
+			_log.info("Stopping remote app entries");
 		}
 
 		for (long remoteAppEntryId : _remoteAppPortlets.keySet()) {
