@@ -66,9 +66,10 @@ public class JournalTranslateDisplayContext {
 
 		_liferayPortletResponse = liferayPortletResponse;
 
+		_article = ActionUtil.getArticle(liferayPortletRequest);
+
 		_httpServletRequest = PortalUtil.getHttpServletRequest(
 			liferayPortletRequest);
-		_article = ActionUtil.getArticle(liferayPortletRequest);
 
 		_infoForm = (InfoForm)_httpServletRequest.getAttribute(
 			InfoForm.class.getName());
@@ -80,14 +81,15 @@ public class JournalTranslateDisplayContext {
 		_sourceInfoItemFieldValues =
 			(InfoItemFieldValues)_httpServletRequest.getAttribute(
 				JournalWebConstants.SOURCE_INFO_ITEM_FIELD_VALUES);
-		_targetInfoItemFieldValues =
-			(InfoItemFieldValues)_httpServletRequest.getAttribute(
-				JournalWebConstants.TARGET_INFO_ITEM_FIELD_VALUES);
 
 		_sourceLanguageId = (String)_httpServletRequest.getAttribute(
 			JournalWebConstants.SOURCE_LANGUAGE_ID);
 
 		_sourceLocale = LocaleUtil.fromLanguageId(_sourceLanguageId);
+
+		_targetInfoItemFieldValues =
+			(InfoItemFieldValues)_httpServletRequest.getAttribute(
+				JournalWebConstants.TARGET_INFO_ITEM_FIELD_VALUES);
 
 		_targetLanguageId = (String)_httpServletRequest.getAttribute(
 			JournalWebConstants.TARGET_LANGUAGE_ID);
