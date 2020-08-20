@@ -59,6 +59,7 @@ public class EditRemoteAppEntryMVCActionCommand extends BaseMVCActionCommand {
 		throws Exception {
 
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
+
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
 
 		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
