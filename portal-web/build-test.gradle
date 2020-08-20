@@ -103,7 +103,10 @@ dependencies {
 
 poshiRunnerResources {
 	baseName "portal"
-	dirs = ["test/functional/com/liferay/portalweb"]
+	dirs = [
+		"test/functional/com/liferay/portalweb",
+		"../modules/apps/account/account-test/src/testFunctional"
+	]
 }
 
 repositories {
