@@ -73,6 +73,18 @@ public class AddDefaultAssetVocabulariesPortalInstanceLifecycleListener
 
 		User defaultUser = company.getDefaultUser();
 
+		Map<Locale, String> titleMap = new HashMap<>();
+
+		for (Locale locale :
+				LanguageUtil.getCompanyAvailableLocales(
+					company.getCompanyId())) {
+
+			titleMap.put(
+				locale,
+				LanguageUtil.get(
+					ResourceBundleUtil.getBundle(locale, getClass()), name));
+		}
+
 		AssetVocabularySettingsHelper assetVocabularySettingsHelper =
 			new AssetVocabularySettingsHelper();
 
@@ -85,18 +97,6 @@ public class AddDefaultAssetVocabulariesPortalInstanceLifecycleListener
 
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
-
-		Map<Locale, String> titleMap = new HashMap<>();
-
-		for (Locale locale :
-				LanguageUtil.getCompanyAvailableLocales(
-					company.getCompanyId())) {
-
-			titleMap.put(
-				locale,
-				LanguageUtil.get(
-					ResourceBundleUtil.getBundle(locale, getClass()), name));
-		}
 
 		_assetVocabularyLocalService.addVocabulary(
 			defaultUser.getUserId(), company.getGroupId(), name,
