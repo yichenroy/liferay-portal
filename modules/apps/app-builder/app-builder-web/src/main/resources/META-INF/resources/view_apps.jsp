@@ -21,9 +21,9 @@
 </liferay-util:html-top>
 
 <div id="<portlet:namespace />-app-builder-root">
-	<liferay-portlet:renderURL portletName="<%= AppBuilderPortletKeys.OBJECTS %>" var="objectsPortletURL" />
-
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" var="baseResourceURL" />
+
+	<liferay-portlet:renderURL portletName="<%= AppBuilderPortletKeys.OBJECTS %>" var="objectsPortletURL" />
 
 	<react:component
 		module="js/pages/apps/index.es"
