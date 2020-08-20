@@ -423,21 +423,6 @@ public class GraphQLServletExtender {
 				return graphQLType;
 			}
 
-			private String _getTypeName(
-				boolean input,
-				ProcessingElementsContainer processingElementsContainer,
-				String typeName) {
-
-				if (input) {
-					typeName =
-						processingElementsContainer.getInputPrefix() +
-							typeName +
-								processingElementsContainer.getInputSuffix();
-				}
-
-				return typeName;
-			}
-
 			private boolean _equals(
 				GraphQLType graphQLType1, GraphQLType graphQLType2) {
 
@@ -472,6 +457,21 @@ public class GraphQLServletExtender {
 				}
 
 				return false;
+			}
+
+			private String _getTypeName(
+				boolean input,
+				ProcessingElementsContainer processingElementsContainer,
+				String typeName) {
+
+				if (input) {
+					typeName =
+						processingElementsContainer.getInputPrefix() +
+							typeName +
+								processingElementsContainer.getInputSuffix();
+				}
+
+				return typeName;
 			}
 
 			private final Set<String> _classNames = new HashSet<>();
