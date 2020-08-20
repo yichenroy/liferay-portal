@@ -2051,8 +2051,6 @@ public class SegmentsEntryRelPersistenceImpl
 	@Override
 	public void cacheResult(SegmentsEntryRel segmentsEntryRel) {
 		if (segmentsEntryRel.getCtCollectionId() != 0) {
-			segmentsEntryRel.resetOriginalValues();
-
 			return;
 		}
 
@@ -2067,8 +2065,6 @@ public class SegmentsEntryRelPersistenceImpl
 				segmentsEntryRel.getClassNameId(), segmentsEntryRel.getClassPK()
 			},
 			segmentsEntryRel);
-
-		segmentsEntryRel.resetOriginalValues();
 	}
 
 	/**
@@ -2080,8 +2076,6 @@ public class SegmentsEntryRelPersistenceImpl
 	public void cacheResult(List<SegmentsEntryRel> segmentsEntryRels) {
 		for (SegmentsEntryRel segmentsEntryRel : segmentsEntryRels) {
 			if (segmentsEntryRel.getCtCollectionId() != 0) {
-				segmentsEntryRel.resetOriginalValues();
-
 				continue;
 			}
 
@@ -2090,9 +2084,6 @@ public class SegmentsEntryRelPersistenceImpl
 					segmentsEntryRel.getPrimaryKey()) == null) {
 
 				cacheResult(segmentsEntryRel);
-			}
-			else {
-				segmentsEntryRel.resetOriginalValues();
 			}
 		}
 	}
@@ -2191,9 +2182,10 @@ public class SegmentsEntryRelPersistenceImpl
 			 _finderPathFetchByS_CN_CPK.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				segmentsEntryRelModelImpl.getOriginalSegmentsEntryId(),
-				segmentsEntryRelModelImpl.getOriginalClassNameId(),
-				segmentsEntryRelModelImpl.getOriginalClassPK()
+				segmentsEntryRelModelImpl.getColumnOriginalValue(
+					"segmentsEntryId"),
+				segmentsEntryRelModelImpl.getColumnOriginalValue("classNameId"),
+				segmentsEntryRelModelImpl.getColumnOriginalValue("classPK")
 			};
 
 			finderCache.removeResult(_finderPathCountByS_CN_CPK, args);
@@ -2432,7 +2424,8 @@ public class SegmentsEntryRelPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					segmentsEntryRelModelImpl.getOriginalSegmentsEntryId()
+					segmentsEntryRelModelImpl.getColumnOriginalValue(
+						"segmentsEntryId")
 				};
 
 				finderCache.removeResult(
@@ -2455,8 +2448,9 @@ public class SegmentsEntryRelPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					segmentsEntryRelModelImpl.getOriginalClassNameId(),
-					segmentsEntryRelModelImpl.getOriginalClassPK()
+					segmentsEntryRelModelImpl.getColumnOriginalValue(
+						"classNameId"),
+					segmentsEntryRelModelImpl.getColumnOriginalValue("classPK")
 				};
 
 				finderCache.removeResult(_finderPathCountByCN_CPK, args);
@@ -2478,9 +2472,10 @@ public class SegmentsEntryRelPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					segmentsEntryRelModelImpl.getOriginalGroupId(),
-					segmentsEntryRelModelImpl.getOriginalClassNameId(),
-					segmentsEntryRelModelImpl.getOriginalClassPK()
+					segmentsEntryRelModelImpl.getColumnOriginalValue("groupId"),
+					segmentsEntryRelModelImpl.getColumnOriginalValue(
+						"classNameId"),
+					segmentsEntryRelModelImpl.getColumnOriginalValue("classPK")
 				};
 
 				finderCache.removeResult(_finderPathCountByG_CN_CPK, args);
@@ -2976,7 +2971,7 @@ public class SegmentsEntryRelPersistenceImpl
 			SegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findBySegmentsEntryId",
 			new String[] {Long.class.getName()},
-			SegmentsEntryRelModelImpl.SEGMENTSENTRYID_COLUMN_BITMASK);
+			SegmentsEntryRelModelImpl.getColumnBitmask("segmentsEntryId"));
 
 		_finderPathCountBySegmentsEntryId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -2995,8 +2990,8 @@ public class SegmentsEntryRelPersistenceImpl
 			SegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCN_CPK",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			SegmentsEntryRelModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			SegmentsEntryRelModelImpl.CLASSPK_COLUMN_BITMASK);
+			SegmentsEntryRelModelImpl.getColumnBitmask("classNameId") |
+			SegmentsEntryRelModelImpl.getColumnBitmask("classPK"));
 
 		_finderPathCountByCN_CPK = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -3018,9 +3013,9 @@ public class SegmentsEntryRelPersistenceImpl
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
-			SegmentsEntryRelModelImpl.GROUPID_COLUMN_BITMASK |
-			SegmentsEntryRelModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			SegmentsEntryRelModelImpl.CLASSPK_COLUMN_BITMASK);
+			SegmentsEntryRelModelImpl.getColumnBitmask("groupId") |
+			SegmentsEntryRelModelImpl.getColumnBitmask("classNameId") |
+			SegmentsEntryRelModelImpl.getColumnBitmask("classPK"));
 
 		_finderPathCountByG_CN_CPK = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -3035,9 +3030,9 @@ public class SegmentsEntryRelPersistenceImpl
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
-			SegmentsEntryRelModelImpl.SEGMENTSENTRYID_COLUMN_BITMASK |
-			SegmentsEntryRelModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			SegmentsEntryRelModelImpl.CLASSPK_COLUMN_BITMASK);
+			SegmentsEntryRelModelImpl.getColumnBitmask("segmentsEntryId") |
+			SegmentsEntryRelModelImpl.getColumnBitmask("classNameId") |
+			SegmentsEntryRelModelImpl.getColumnBitmask("classPK"));
 
 		_finderPathCountByS_CN_CPK = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,

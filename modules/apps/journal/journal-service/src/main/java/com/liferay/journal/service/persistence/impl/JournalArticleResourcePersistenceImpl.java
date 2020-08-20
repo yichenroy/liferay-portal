@@ -2331,8 +2331,6 @@ public class JournalArticleResourcePersistenceImpl
 	@Override
 	public void cacheResult(JournalArticleResource journalArticleResource) {
 		if (journalArticleResource.getCtCollectionId() != 0) {
-			journalArticleResource.resetOriginalValues();
-
 			return;
 		}
 
@@ -2355,8 +2353,6 @@ public class JournalArticleResourcePersistenceImpl
 				journalArticleResource.getArticleId()
 			},
 			journalArticleResource);
-
-		journalArticleResource.resetOriginalValues();
 	}
 
 	/**
@@ -2372,8 +2368,6 @@ public class JournalArticleResourcePersistenceImpl
 				journalArticleResources) {
 
 			if (journalArticleResource.getCtCollectionId() != 0) {
-				journalArticleResource.resetOriginalValues();
-
 				continue;
 			}
 
@@ -2382,9 +2376,6 @@ public class JournalArticleResourcePersistenceImpl
 					journalArticleResource.getPrimaryKey()) == null) {
 
 				cacheResult(journalArticleResource);
-			}
-			else {
-				journalArticleResource.resetOriginalValues();
 			}
 		}
 	}
@@ -2500,8 +2491,9 @@ public class JournalArticleResourcePersistenceImpl
 			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				journalArticleResourceModelImpl.getOriginalUuid(),
-				journalArticleResourceModelImpl.getOriginalGroupId()
+				journalArticleResourceModelImpl.getColumnOriginalValue("uuid_"),
+				journalArticleResourceModelImpl.getColumnOriginalValue(
+					"groupId")
 			};
 
 			finderCache.removeResult(_finderPathCountByUUID_G, args);
@@ -2522,8 +2514,10 @@ public class JournalArticleResourcePersistenceImpl
 			 _finderPathFetchByG_A.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				journalArticleResourceModelImpl.getOriginalGroupId(),
-				journalArticleResourceModelImpl.getOriginalArticleId()
+				journalArticleResourceModelImpl.getColumnOriginalValue(
+					"groupId"),
+				journalArticleResourceModelImpl.getColumnOriginalValue(
+					"articleId")
 			};
 
 			finderCache.removeResult(_finderPathCountByG_A, args);
@@ -2751,7 +2745,8 @@ public class JournalArticleResourcePersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					journalArticleResourceModelImpl.getOriginalUuid()
+					journalArticleResourceModelImpl.getColumnOriginalValue(
+						"uuid_")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid, args);
@@ -2770,8 +2765,10 @@ public class JournalArticleResourcePersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					journalArticleResourceModelImpl.getOriginalUuid(),
-					journalArticleResourceModelImpl.getOriginalCompanyId()
+					journalArticleResourceModelImpl.getColumnOriginalValue(
+						"uuid_"),
+					journalArticleResourceModelImpl.getColumnOriginalValue(
+						"companyId")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid_C, args);
@@ -2793,7 +2790,8 @@ public class JournalArticleResourcePersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					journalArticleResourceModelImpl.getOriginalGroupId()
+					journalArticleResourceModelImpl.getColumnOriginalValue(
+						"groupId")
 				};
 
 				finderCache.removeResult(_finderPathCountByGroupId, args);
@@ -3298,7 +3296,7 @@ public class JournalArticleResourcePersistenceImpl
 			JournalArticleResourceImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()},
-			JournalArticleResourceModelImpl.UUID_COLUMN_BITMASK);
+			JournalArticleResourceModelImpl.getColumnBitmask("uuid_"));
 
 		_finderPathCountByUuid = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -3308,8 +3306,8 @@ public class JournalArticleResourcePersistenceImpl
 			JournalArticleResourceImpl.class, FINDER_CLASS_NAME_ENTITY,
 			"fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			JournalArticleResourceModelImpl.UUID_COLUMN_BITMASK |
-			JournalArticleResourceModelImpl.GROUPID_COLUMN_BITMASK);
+			JournalArticleResourceModelImpl.getColumnBitmask("uuid_") |
+			JournalArticleResourceModelImpl.getColumnBitmask("groupId"));
 
 		_finderPathCountByUUID_G = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -3329,8 +3327,8 @@ public class JournalArticleResourcePersistenceImpl
 			JournalArticleResourceImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			JournalArticleResourceModelImpl.UUID_COLUMN_BITMASK |
-			JournalArticleResourceModelImpl.COMPANYID_COLUMN_BITMASK);
+			JournalArticleResourceModelImpl.getColumnBitmask("uuid_") |
+			JournalArticleResourceModelImpl.getColumnBitmask("companyId"));
 
 		_finderPathCountByUuid_C = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -3349,7 +3347,7 @@ public class JournalArticleResourcePersistenceImpl
 			JournalArticleResourceImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
 			new String[] {Long.class.getName()},
-			JournalArticleResourceModelImpl.GROUPID_COLUMN_BITMASK);
+			JournalArticleResourceModelImpl.getColumnBitmask("groupId"));
 
 		_finderPathCountByGroupId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -3359,8 +3357,8 @@ public class JournalArticleResourcePersistenceImpl
 			JournalArticleResourceImpl.class, FINDER_CLASS_NAME_ENTITY,
 			"fetchByG_A",
 			new String[] {Long.class.getName(), String.class.getName()},
-			JournalArticleResourceModelImpl.GROUPID_COLUMN_BITMASK |
-			JournalArticleResourceModelImpl.ARTICLEID_COLUMN_BITMASK);
+			JournalArticleResourceModelImpl.getColumnBitmask("groupId") |
+			JournalArticleResourceModelImpl.getColumnBitmask("articleId"));
 
 		_finderPathCountByG_A = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_A",

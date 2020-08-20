@@ -911,8 +911,6 @@ public class AppBuilderAppDeploymentPersistenceImpl
 				appBuilderAppDeployment.getType()
 			},
 			appBuilderAppDeployment);
-
-		appBuilderAppDeployment.resetOriginalValues();
 	}
 
 	/**
@@ -932,9 +930,6 @@ public class AppBuilderAppDeploymentPersistenceImpl
 					appBuilderAppDeployment.getPrimaryKey()) == null) {
 
 				cacheResult(appBuilderAppDeployment);
-			}
-			else {
-				appBuilderAppDeployment.resetOriginalValues();
 			}
 		}
 	}
@@ -1040,8 +1035,9 @@ public class AppBuilderAppDeploymentPersistenceImpl
 			 _finderPathFetchByA_T.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				appBuilderAppDeploymentModelImpl.getOriginalAppBuilderAppId(),
-				appBuilderAppDeploymentModelImpl.getOriginalType()
+				appBuilderAppDeploymentModelImpl.getColumnOriginalValue(
+					"appBuilderAppId"),
+				appBuilderAppDeploymentModelImpl.getColumnOriginalValue("type_")
 			};
 
 			finderCache.removeResult(_finderPathCountByA_T, args);
@@ -1229,8 +1225,8 @@ public class AppBuilderAppDeploymentPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					appBuilderAppDeploymentModelImpl.
-						getOriginalAppBuilderAppId()
+					appBuilderAppDeploymentModelImpl.getColumnOriginalValue(
+						"appBuilderAppId")
 				};
 
 				finderCache.removeResult(
@@ -1554,7 +1550,8 @@ public class AppBuilderAppDeploymentPersistenceImpl
 			AppBuilderAppDeploymentImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByAppBuilderAppId",
 			new String[] {Long.class.getName()},
-			AppBuilderAppDeploymentModelImpl.APPBUILDERAPPID_COLUMN_BITMASK);
+			AppBuilderAppDeploymentModelImpl.getColumnBitmask(
+				"appBuilderAppId"));
 
 		_finderPathCountByAppBuilderAppId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -1564,8 +1561,9 @@ public class AppBuilderAppDeploymentPersistenceImpl
 			AppBuilderAppDeploymentImpl.class, FINDER_CLASS_NAME_ENTITY,
 			"fetchByA_T",
 			new String[] {Long.class.getName(), String.class.getName()},
-			AppBuilderAppDeploymentModelImpl.APPBUILDERAPPID_COLUMN_BITMASK |
-			AppBuilderAppDeploymentModelImpl.TYPE_COLUMN_BITMASK);
+			AppBuilderAppDeploymentModelImpl.getColumnBitmask(
+				"appBuilderAppId") |
+			AppBuilderAppDeploymentModelImpl.getColumnBitmask("type_"));
 
 		_finderPathCountByA_T = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByA_T",

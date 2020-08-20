@@ -13255,8 +13255,6 @@ public class MBThreadPersistenceImpl
 	@Override
 	public void cacheResult(MBThread mbThread) {
 		if (mbThread.getCtCollectionId() != 0) {
-			mbThread.resetOriginalValues();
-
 			return;
 		}
 
@@ -13270,8 +13268,6 @@ public class MBThreadPersistenceImpl
 		finderCache.putResult(
 			_finderPathFetchByRootMessageId,
 			new Object[] {mbThread.getRootMessageId()}, mbThread);
-
-		mbThread.resetOriginalValues();
 	}
 
 	/**
@@ -13283,8 +13279,6 @@ public class MBThreadPersistenceImpl
 	public void cacheResult(List<MBThread> mbThreads) {
 		for (MBThread mbThread : mbThreads) {
 			if (mbThread.getCtCollectionId() != 0) {
-				mbThread.resetOriginalValues();
-
 				continue;
 			}
 
@@ -13292,9 +13286,6 @@ public class MBThreadPersistenceImpl
 					MBThreadImpl.class, mbThread.getPrimaryKey()) == null) {
 
 				cacheResult(mbThread);
-			}
-			else {
-				mbThread.resetOriginalValues();
 			}
 		}
 	}
@@ -13392,8 +13383,8 @@ public class MBThreadPersistenceImpl
 			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				mbThreadModelImpl.getOriginalUuid(),
-				mbThreadModelImpl.getOriginalGroupId()
+				mbThreadModelImpl.getColumnOriginalValue("uuid_"),
+				mbThreadModelImpl.getColumnOriginalValue("groupId")
 			};
 
 			finderCache.removeResult(_finderPathCountByUUID_G, args);
@@ -13411,7 +13402,7 @@ public class MBThreadPersistenceImpl
 			 _finderPathFetchByRootMessageId.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				mbThreadModelImpl.getOriginalRootMessageId()
+				mbThreadModelImpl.getColumnOriginalValue("rootMessageId")
 			};
 
 			finderCache.removeResult(_finderPathCountByRootMessageId, args);
@@ -13723,7 +13714,7 @@ public class MBThreadPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalUuid()
+					mbThreadModelImpl.getColumnOriginalValue("uuid_")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid, args);
@@ -13742,8 +13733,8 @@ public class MBThreadPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalUuid(),
-					mbThreadModelImpl.getOriginalCompanyId()
+					mbThreadModelImpl.getColumnOriginalValue("uuid_"),
+					mbThreadModelImpl.getColumnOriginalValue("companyId")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid_C, args);
@@ -13765,7 +13756,7 @@ public class MBThreadPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId()
+					mbThreadModelImpl.getColumnOriginalValue("groupId")
 				};
 
 				finderCache.removeResult(_finderPathCountByGroupId, args);
@@ -13784,8 +13775,8 @@ public class MBThreadPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId(),
-					mbThreadModelImpl.getOriginalCategoryId()
+					mbThreadModelImpl.getColumnOriginalValue("groupId"),
+					mbThreadModelImpl.getColumnOriginalValue("categoryId")
 				};
 
 				finderCache.removeResult(_finderPathCountByG_C, args);
@@ -13807,8 +13798,8 @@ public class MBThreadPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId(),
-					mbThreadModelImpl.getOriginalStatus()
+					mbThreadModelImpl.getColumnOriginalValue("groupId"),
+					mbThreadModelImpl.getColumnOriginalValue("status")
 				};
 
 				finderCache.removeResult(_finderPathCountByG_S, args);
@@ -13830,8 +13821,8 @@ public class MBThreadPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalCategoryId(),
-					mbThreadModelImpl.getOriginalPriority()
+					mbThreadModelImpl.getColumnOriginalValue("categoryId"),
+					mbThreadModelImpl.getColumnOriginalValue("priority")
 				};
 
 				finderCache.removeResult(_finderPathCountByC_P, args);
@@ -13853,8 +13844,8 @@ public class MBThreadPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalLastPostDate(),
-					mbThreadModelImpl.getOriginalPriority()
+					mbThreadModelImpl.getColumnOriginalValue("lastPostDate"),
+					mbThreadModelImpl.getColumnOriginalValue("priority")
 				};
 
 				finderCache.removeResult(_finderPathCountByL_P, args);
@@ -13876,9 +13867,9 @@ public class MBThreadPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId(),
-					mbThreadModelImpl.getOriginalCategoryId(),
-					mbThreadModelImpl.getOriginalLastPostDate()
+					mbThreadModelImpl.getColumnOriginalValue("groupId"),
+					mbThreadModelImpl.getColumnOriginalValue("categoryId"),
+					mbThreadModelImpl.getColumnOriginalValue("lastPostDate")
 				};
 
 				finderCache.removeResult(_finderPathCountByG_C_L, args);
@@ -13901,9 +13892,9 @@ public class MBThreadPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId(),
-					mbThreadModelImpl.getOriginalCategoryId(),
-					mbThreadModelImpl.getOriginalStatus()
+					mbThreadModelImpl.getColumnOriginalValue("groupId"),
+					mbThreadModelImpl.getColumnOriginalValue("categoryId"),
+					mbThreadModelImpl.getColumnOriginalValue("status")
 				};
 
 				finderCache.removeResult(_finderPathCountByG_C_S, args);
@@ -14404,9 +14395,9 @@ public class MBThreadPersistenceImpl
 		_finderPathWithoutPaginationFindByUuid = new FinderPath(
 			MBThreadImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByUuid", new String[] {String.class.getName()},
-			MBThreadModelImpl.UUID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("uuid_") |
+			MBThreadModelImpl.getColumnBitmask("priority") |
+			MBThreadModelImpl.getColumnBitmask("lastPostDate"));
 
 		_finderPathCountByUuid = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -14415,8 +14406,8 @@ public class MBThreadPersistenceImpl
 		_finderPathFetchByUUID_G = new FinderPath(
 			MBThreadImpl.class, FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			MBThreadModelImpl.UUID_COLUMN_BITMASK |
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("uuid_") |
+			MBThreadModelImpl.getColumnBitmask("groupId"));
 
 		_finderPathCountByUUID_G = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -14436,10 +14427,10 @@ public class MBThreadPersistenceImpl
 			MBThreadImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			MBThreadModelImpl.UUID_COLUMN_BITMASK |
-			MBThreadModelImpl.COMPANYID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("uuid_") |
+			MBThreadModelImpl.getColumnBitmask("companyId") |
+			MBThreadModelImpl.getColumnBitmask("priority") |
+			MBThreadModelImpl.getColumnBitmask("lastPostDate"));
 
 		_finderPathCountByUuid_C = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -14457,9 +14448,9 @@ public class MBThreadPersistenceImpl
 		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
 			MBThreadImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByGroupId", new String[] {Long.class.getName()},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("groupId") |
+			MBThreadModelImpl.getColumnBitmask("priority") |
+			MBThreadModelImpl.getColumnBitmask("lastPostDate"));
 
 		_finderPathCountByGroupId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -14468,7 +14459,7 @@ public class MBThreadPersistenceImpl
 		_finderPathFetchByRootMessageId = new FinderPath(
 			MBThreadImpl.class, FINDER_CLASS_NAME_ENTITY,
 			"fetchByRootMessageId", new String[] {Long.class.getName()},
-			MBThreadModelImpl.ROOTMESSAGEID_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("rootMessageId"));
 
 		_finderPathCountByRootMessageId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -14487,10 +14478,10 @@ public class MBThreadPersistenceImpl
 			MBThreadImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByG_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.CATEGORYID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("groupId") |
+			MBThreadModelImpl.getColumnBitmask("categoryId") |
+			MBThreadModelImpl.getColumnBitmask("priority") |
+			MBThreadModelImpl.getColumnBitmask("lastPostDate"));
 
 		_finderPathCountByG_C = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C",
@@ -14526,10 +14517,10 @@ public class MBThreadPersistenceImpl
 			MBThreadImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByG_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.STATUS_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("groupId") |
+			MBThreadModelImpl.getColumnBitmask("status") |
+			MBThreadModelImpl.getColumnBitmask("priority") |
+			MBThreadModelImpl.getColumnBitmask("lastPostDate"));
 
 		_finderPathCountByG_S = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
@@ -14548,9 +14539,9 @@ public class MBThreadPersistenceImpl
 			MBThreadImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByC_P",
 			new String[] {Long.class.getName(), Double.class.getName()},
-			MBThreadModelImpl.CATEGORYID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("categoryId") |
+			MBThreadModelImpl.getColumnBitmask("priority") |
+			MBThreadModelImpl.getColumnBitmask("lastPostDate"));
 
 		_finderPathCountByC_P = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_P",
@@ -14569,8 +14560,8 @@ public class MBThreadPersistenceImpl
 			MBThreadImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByL_P",
 			new String[] {Date.class.getName(), Double.class.getName()},
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("lastPostDate") |
+			MBThreadModelImpl.getColumnBitmask("priority"));
 
 		_finderPathCountByL_P = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByL_P",
@@ -14591,10 +14582,10 @@ public class MBThreadPersistenceImpl
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Date.class.getName()
 			},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.CATEGORYID_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("groupId") |
+			MBThreadModelImpl.getColumnBitmask("categoryId") |
+			MBThreadModelImpl.getColumnBitmask("lastPostDate") |
+			MBThreadModelImpl.getColumnBitmask("priority"));
 
 		_finderPathCountByG_C_L = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -14619,11 +14610,11 @@ public class MBThreadPersistenceImpl
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
 			},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.CATEGORYID_COLUMN_BITMASK |
-			MBThreadModelImpl.STATUS_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			MBThreadModelImpl.getColumnBitmask("groupId") |
+			MBThreadModelImpl.getColumnBitmask("categoryId") |
+			MBThreadModelImpl.getColumnBitmask("status") |
+			MBThreadModelImpl.getColumnBitmask("priority") |
+			MBThreadModelImpl.getColumnBitmask("lastPostDate"));
 
 		_finderPathCountByG_C_S = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,

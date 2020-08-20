@@ -3762,8 +3762,6 @@ public class DDMFormInstanceRecordPersistenceImpl
 	@Override
 	public void cacheResult(DDMFormInstanceRecord ddmFormInstanceRecord) {
 		if (ddmFormInstanceRecord.getCtCollectionId() != 0) {
-			ddmFormInstanceRecord.resetOriginalValues();
-
 			return;
 		}
 
@@ -3778,8 +3776,6 @@ public class DDMFormInstanceRecordPersistenceImpl
 				ddmFormInstanceRecord.getGroupId()
 			},
 			ddmFormInstanceRecord);
-
-		ddmFormInstanceRecord.resetOriginalValues();
 	}
 
 	/**
@@ -3795,8 +3791,6 @@ public class DDMFormInstanceRecordPersistenceImpl
 				ddmFormInstanceRecords) {
 
 			if (ddmFormInstanceRecord.getCtCollectionId() != 0) {
-				ddmFormInstanceRecord.resetOriginalValues();
-
 				continue;
 			}
 
@@ -3805,9 +3799,6 @@ public class DDMFormInstanceRecordPersistenceImpl
 					ddmFormInstanceRecord.getPrimaryKey()) == null) {
 
 				cacheResult(ddmFormInstanceRecord);
-			}
-			else {
-				ddmFormInstanceRecord.resetOriginalValues();
 			}
 		}
 	}
@@ -3910,8 +3901,8 @@ public class DDMFormInstanceRecordPersistenceImpl
 			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				ddmFormInstanceRecordModelImpl.getOriginalUuid(),
-				ddmFormInstanceRecordModelImpl.getOriginalGroupId()
+				ddmFormInstanceRecordModelImpl.getColumnOriginalValue("uuid_"),
+				ddmFormInstanceRecordModelImpl.getColumnOriginalValue("groupId")
 			};
 
 			finderCache.removeResult(_finderPathCountByUUID_G, args);
@@ -4190,7 +4181,8 @@ public class DDMFormInstanceRecordPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					ddmFormInstanceRecordModelImpl.getOriginalUuid()
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"uuid_")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid, args);
@@ -4209,8 +4201,10 @@ public class DDMFormInstanceRecordPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					ddmFormInstanceRecordModelImpl.getOriginalUuid(),
-					ddmFormInstanceRecordModelImpl.getOriginalCompanyId()
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"uuid_"),
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"companyId")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid_C, args);
@@ -4232,7 +4226,8 @@ public class DDMFormInstanceRecordPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					ddmFormInstanceRecordModelImpl.getOriginalCompanyId()
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"companyId")
 				};
 
 				finderCache.removeResult(_finderPathCountByCompanyId, args);
@@ -4253,7 +4248,8 @@ public class DDMFormInstanceRecordPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					ddmFormInstanceRecordModelImpl.getOriginalFormInstanceId()
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"formInstanceId")
 				};
 
 				finderCache.removeResult(
@@ -4276,8 +4272,10 @@ public class DDMFormInstanceRecordPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					ddmFormInstanceRecordModelImpl.getOriginalUserId(),
-					ddmFormInstanceRecordModelImpl.getOriginalFormInstanceId()
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"userId"),
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"formInstanceId")
 				};
 
 				finderCache.removeResult(_finderPathCountByU_F, args);
@@ -4299,9 +4297,10 @@ public class DDMFormInstanceRecordPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					ddmFormInstanceRecordModelImpl.getOriginalFormInstanceId(),
-					ddmFormInstanceRecordModelImpl.
-						getOriginalFormInstanceVersion()
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"formInstanceId"),
+					ddmFormInstanceRecordModelImpl.getColumnOriginalValue(
+						"formInstanceVersion")
 				};
 
 				finderCache.removeResult(_finderPathCountByF_F, args);
@@ -4811,7 +4810,7 @@ public class DDMFormInstanceRecordPersistenceImpl
 			DDMFormInstanceRecordImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()},
-			DDMFormInstanceRecordModelImpl.UUID_COLUMN_BITMASK);
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("uuid_"));
 
 		_finderPathCountByUuid = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -4821,8 +4820,8 @@ public class DDMFormInstanceRecordPersistenceImpl
 			DDMFormInstanceRecordImpl.class, FINDER_CLASS_NAME_ENTITY,
 			"fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			DDMFormInstanceRecordModelImpl.UUID_COLUMN_BITMASK |
-			DDMFormInstanceRecordModelImpl.GROUPID_COLUMN_BITMASK);
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("uuid_") |
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("groupId"));
 
 		_finderPathCountByUUID_G = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -4842,8 +4841,8 @@ public class DDMFormInstanceRecordPersistenceImpl
 			DDMFormInstanceRecordImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			DDMFormInstanceRecordModelImpl.UUID_COLUMN_BITMASK |
-			DDMFormInstanceRecordModelImpl.COMPANYID_COLUMN_BITMASK);
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("uuid_") |
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("companyId"));
 
 		_finderPathCountByUuid_C = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -4862,7 +4861,7 @@ public class DDMFormInstanceRecordPersistenceImpl
 			DDMFormInstanceRecordImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
 			new String[] {Long.class.getName()},
-			DDMFormInstanceRecordModelImpl.COMPANYID_COLUMN_BITMASK);
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("companyId"));
 
 		_finderPathCountByCompanyId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -4880,7 +4879,7 @@ public class DDMFormInstanceRecordPersistenceImpl
 			DDMFormInstanceRecordImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByFormInstanceId",
 			new String[] {Long.class.getName()},
-			DDMFormInstanceRecordModelImpl.FORMINSTANCEID_COLUMN_BITMASK);
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("formInstanceId"));
 
 		_finderPathCountByFormInstanceId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -4899,8 +4898,8 @@ public class DDMFormInstanceRecordPersistenceImpl
 			DDMFormInstanceRecordImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByU_F",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			DDMFormInstanceRecordModelImpl.USERID_COLUMN_BITMASK |
-			DDMFormInstanceRecordModelImpl.FORMINSTANCEID_COLUMN_BITMASK);
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("userId") |
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("formInstanceId"));
 
 		_finderPathCountByU_F = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_F",
@@ -4919,8 +4918,9 @@ public class DDMFormInstanceRecordPersistenceImpl
 			DDMFormInstanceRecordImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByF_F",
 			new String[] {Long.class.getName(), String.class.getName()},
-			DDMFormInstanceRecordModelImpl.FORMINSTANCEID_COLUMN_BITMASK |
-			DDMFormInstanceRecordModelImpl.FORMINSTANCEVERSION_COLUMN_BITMASK);
+			DDMFormInstanceRecordModelImpl.getColumnBitmask("formInstanceId") |
+			DDMFormInstanceRecordModelImpl.getColumnBitmask(
+				"formInstanceVersion"));
 
 		_finderPathCountByF_F = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByF_F",

@@ -1277,8 +1277,6 @@ public class OAuth2ApplicationPersistenceImpl
 				oAuth2Application.getClientId()
 			},
 			oAuth2Application);
-
-		oAuth2Application.resetOriginalValues();
 	}
 
 	/**
@@ -1294,9 +1292,6 @@ public class OAuth2ApplicationPersistenceImpl
 					oAuth2Application.getPrimaryKey()) == null) {
 
 				cacheResult(oAuth2Application);
-			}
-			else {
-				oAuth2Application.resetOriginalValues();
 			}
 		}
 	}
@@ -1393,8 +1388,8 @@ public class OAuth2ApplicationPersistenceImpl
 			 _finderPathFetchByC_C.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				oAuth2ApplicationModelImpl.getOriginalCompanyId(),
-				oAuth2ApplicationModelImpl.getOriginalClientId()
+				oAuth2ApplicationModelImpl.getColumnOriginalValue("companyId"),
+				oAuth2ApplicationModelImpl.getColumnOriginalValue("clientId")
 			};
 
 			finderCache.removeResult(_finderPathCountByC_C, args);
@@ -1599,7 +1594,8 @@ public class OAuth2ApplicationPersistenceImpl
 				 _finderPathWithoutPaginationFindByC.getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					oAuth2ApplicationModelImpl.getOriginalCompanyId()
+					oAuth2ApplicationModelImpl.getColumnOriginalValue(
+						"companyId")
 				};
 
 				finderCache.removeResult(_finderPathCountByC, args);
@@ -1912,7 +1908,7 @@ public class OAuth2ApplicationPersistenceImpl
 			OAuth2ApplicationImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC",
 			new String[] {Long.class.getName()},
-			OAuth2ApplicationModelImpl.COMPANYID_COLUMN_BITMASK);
+			OAuth2ApplicationModelImpl.getColumnBitmask("companyId"));
 
 		_finderPathCountByC = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC",
@@ -1921,8 +1917,8 @@ public class OAuth2ApplicationPersistenceImpl
 		_finderPathFetchByC_C = new FinderPath(
 			OAuth2ApplicationImpl.class, FINDER_CLASS_NAME_ENTITY, "fetchByC_C",
 			new String[] {Long.class.getName(), String.class.getName()},
-			OAuth2ApplicationModelImpl.COMPANYID_COLUMN_BITMASK |
-			OAuth2ApplicationModelImpl.CLIENTID_COLUMN_BITMASK);
+			OAuth2ApplicationModelImpl.getColumnBitmask("companyId") |
+			OAuth2ApplicationModelImpl.getColumnBitmask("clientId"));
 
 		_finderPathCountByC_C = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",

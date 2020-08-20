@@ -860,8 +860,6 @@ public class DDMTemplateLinkPersistenceImpl
 	@Override
 	public void cacheResult(DDMTemplateLink ddmTemplateLink) {
 		if (ddmTemplateLink.getCtCollectionId() != 0) {
-			ddmTemplateLink.resetOriginalValues();
-
 			return;
 		}
 
@@ -875,8 +873,6 @@ public class DDMTemplateLinkPersistenceImpl
 				ddmTemplateLink.getClassNameId(), ddmTemplateLink.getClassPK()
 			},
 			ddmTemplateLink);
-
-		ddmTemplateLink.resetOriginalValues();
 	}
 
 	/**
@@ -888,8 +884,6 @@ public class DDMTemplateLinkPersistenceImpl
 	public void cacheResult(List<DDMTemplateLink> ddmTemplateLinks) {
 		for (DDMTemplateLink ddmTemplateLink : ddmTemplateLinks) {
 			if (ddmTemplateLink.getCtCollectionId() != 0) {
-				ddmTemplateLink.resetOriginalValues();
-
 				continue;
 			}
 
@@ -898,9 +892,6 @@ public class DDMTemplateLinkPersistenceImpl
 					ddmTemplateLink.getPrimaryKey()) == null) {
 
 				cacheResult(ddmTemplateLink);
-			}
-			else {
-				ddmTemplateLink.resetOriginalValues();
 			}
 		}
 	}
@@ -997,8 +988,8 @@ public class DDMTemplateLinkPersistenceImpl
 			 _finderPathFetchByC_C.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				ddmTemplateLinkModelImpl.getOriginalClassNameId(),
-				ddmTemplateLinkModelImpl.getOriginalClassPK()
+				ddmTemplateLinkModelImpl.getColumnOriginalValue("classNameId"),
+				ddmTemplateLinkModelImpl.getColumnOriginalValue("classPK")
 			};
 
 			finderCache.removeResult(_finderPathCountByC_C, args);
@@ -1193,7 +1184,8 @@ public class DDMTemplateLinkPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					ddmTemplateLinkModelImpl.getOriginalTemplateId()
+					ddmTemplateLinkModelImpl.getColumnOriginalValue(
+						"templateId")
 				};
 
 				finderCache.removeResult(_finderPathCountByTemplateId, args);
@@ -1678,7 +1670,7 @@ public class DDMTemplateLinkPersistenceImpl
 			DDMTemplateLinkImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByTemplateId",
 			new String[] {Long.class.getName()},
-			DDMTemplateLinkModelImpl.TEMPLATEID_COLUMN_BITMASK);
+			DDMTemplateLinkModelImpl.getColumnBitmask("templateId"));
 
 		_finderPathCountByTemplateId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -1687,8 +1679,8 @@ public class DDMTemplateLinkPersistenceImpl
 		_finderPathFetchByC_C = new FinderPath(
 			DDMTemplateLinkImpl.class, FINDER_CLASS_NAME_ENTITY, "fetchByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			DDMTemplateLinkModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			DDMTemplateLinkModelImpl.CLASSPK_COLUMN_BITMASK);
+			DDMTemplateLinkModelImpl.getColumnBitmask("classNameId") |
+			DDMTemplateLinkModelImpl.getColumnBitmask("classPK"));
 
 		_finderPathCountByC_C = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",

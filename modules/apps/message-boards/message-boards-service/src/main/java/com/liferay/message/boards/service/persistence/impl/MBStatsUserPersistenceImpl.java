@@ -1936,8 +1936,6 @@ public class MBStatsUserPersistenceImpl
 	@Override
 	public void cacheResult(MBStatsUser mbStatsUser) {
 		if (mbStatsUser.getCtCollectionId() != 0) {
-			mbStatsUser.resetOriginalValues();
-
 			return;
 		}
 
@@ -1948,8 +1946,6 @@ public class MBStatsUserPersistenceImpl
 			_finderPathFetchByG_U,
 			new Object[] {mbStatsUser.getGroupId(), mbStatsUser.getUserId()},
 			mbStatsUser);
-
-		mbStatsUser.resetOriginalValues();
 	}
 
 	/**
@@ -1961,8 +1957,6 @@ public class MBStatsUserPersistenceImpl
 	public void cacheResult(List<MBStatsUser> mbStatsUsers) {
 		for (MBStatsUser mbStatsUser : mbStatsUsers) {
 			if (mbStatsUser.getCtCollectionId() != 0) {
-				mbStatsUser.resetOriginalValues();
-
 				continue;
 			}
 
@@ -1971,9 +1965,6 @@ public class MBStatsUserPersistenceImpl
 						null) {
 
 				cacheResult(mbStatsUser);
-			}
-			else {
-				mbStatsUser.resetOriginalValues();
 			}
 		}
 	}
@@ -2066,8 +2057,8 @@ public class MBStatsUserPersistenceImpl
 			 _finderPathFetchByG_U.getColumnBitmask()) != 0) {
 
 			Object[] args = new Object[] {
-				mbStatsUserModelImpl.getOriginalGroupId(),
-				mbStatsUserModelImpl.getOriginalUserId()
+				mbStatsUserModelImpl.getColumnOriginalValue("groupId"),
+				mbStatsUserModelImpl.getColumnOriginalValue("userId")
 			};
 
 			finderCache.removeResult(_finderPathCountByG_U, args);
@@ -2262,7 +2253,7 @@ public class MBStatsUserPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					mbStatsUserModelImpl.getOriginalGroupId()
+					mbStatsUserModelImpl.getColumnOriginalValue("groupId")
 				};
 
 				finderCache.removeResult(_finderPathCountByGroupId, args);
@@ -2281,7 +2272,7 @@ public class MBStatsUserPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					mbStatsUserModelImpl.getOriginalUserId()
+					mbStatsUserModelImpl.getColumnOriginalValue("userId")
 				};
 
 				finderCache.removeResult(_finderPathCountByUserId, args);
@@ -2761,8 +2752,8 @@ public class MBStatsUserPersistenceImpl
 		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
 			MBStatsUserImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByGroupId", new String[] {Long.class.getName()},
-			MBStatsUserModelImpl.GROUPID_COLUMN_BITMASK |
-			MBStatsUserModelImpl.MESSAGECOUNT_COLUMN_BITMASK);
+			MBStatsUserModelImpl.getColumnBitmask("groupId") |
+			MBStatsUserModelImpl.getColumnBitmask("messageCount"));
 
 		_finderPathCountByGroupId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -2779,8 +2770,8 @@ public class MBStatsUserPersistenceImpl
 		_finderPathWithoutPaginationFindByUserId = new FinderPath(
 			MBStatsUserImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByUserId", new String[] {Long.class.getName()},
-			MBStatsUserModelImpl.USERID_COLUMN_BITMASK |
-			MBStatsUserModelImpl.MESSAGECOUNT_COLUMN_BITMASK);
+			MBStatsUserModelImpl.getColumnBitmask("userId") |
+			MBStatsUserModelImpl.getColumnBitmask("messageCount"));
 
 		_finderPathCountByUserId = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -2789,8 +2780,8 @@ public class MBStatsUserPersistenceImpl
 		_finderPathFetchByG_U = new FinderPath(
 			MBStatsUserImpl.class, FINDER_CLASS_NAME_ENTITY, "fetchByG_U",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			MBStatsUserModelImpl.GROUPID_COLUMN_BITMASK |
-			MBStatsUserModelImpl.USERID_COLUMN_BITMASK);
+			MBStatsUserModelImpl.getColumnBitmask("groupId") |
+			MBStatsUserModelImpl.getColumnBitmask("userId"));
 
 		_finderPathCountByG_U = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_U",

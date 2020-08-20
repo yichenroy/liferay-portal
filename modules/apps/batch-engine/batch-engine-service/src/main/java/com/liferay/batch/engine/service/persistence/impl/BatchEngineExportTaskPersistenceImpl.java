@@ -1799,8 +1799,6 @@ public class BatchEngineExportTaskPersistenceImpl
 		entityCache.putResult(
 			BatchEngineExportTaskImpl.class,
 			batchEngineExportTask.getPrimaryKey(), batchEngineExportTask);
-
-		batchEngineExportTask.resetOriginalValues();
 	}
 
 	/**
@@ -1820,9 +1818,6 @@ public class BatchEngineExportTaskPersistenceImpl
 					batchEngineExportTask.getPrimaryKey()) == null) {
 
 				cacheResult(batchEngineExportTask);
-			}
-			else {
-				batchEngineExportTask.resetOriginalValues();
 			}
 		}
 	}
@@ -2123,7 +2118,8 @@ public class BatchEngineExportTaskPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					batchEngineExportTaskModelImpl.getOriginalUuid()
+					batchEngineExportTaskModelImpl.getColumnOriginalValue(
+						"uuid_")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid, args);
@@ -2142,8 +2138,10 @@ public class BatchEngineExportTaskPersistenceImpl
 					 0) {
 
 				Object[] args = new Object[] {
-					batchEngineExportTaskModelImpl.getOriginalUuid(),
-					batchEngineExportTaskModelImpl.getOriginalCompanyId()
+					batchEngineExportTaskModelImpl.getColumnOriginalValue(
+						"uuid_"),
+					batchEngineExportTaskModelImpl.getColumnOriginalValue(
+						"companyId")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid_C, args);
@@ -2165,7 +2163,8 @@ public class BatchEngineExportTaskPersistenceImpl
 					 getColumnBitmask()) != 0) {
 
 				Object[] args = new Object[] {
-					batchEngineExportTaskModelImpl.getOriginalExecuteStatus()
+					batchEngineExportTaskModelImpl.getColumnOriginalValue(
+						"executeStatus")
 				};
 
 				finderCache.removeResult(_finderPathCountByExecuteStatus, args);
@@ -2482,7 +2481,7 @@ public class BatchEngineExportTaskPersistenceImpl
 			BatchEngineExportTaskImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()},
-			BatchEngineExportTaskModelImpl.UUID_COLUMN_BITMASK);
+			BatchEngineExportTaskModelImpl.getColumnBitmask("uuid_"));
 
 		_finderPathCountByUuid = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -2501,8 +2500,8 @@ public class BatchEngineExportTaskPersistenceImpl
 			BatchEngineExportTaskImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			BatchEngineExportTaskModelImpl.UUID_COLUMN_BITMASK |
-			BatchEngineExportTaskModelImpl.COMPANYID_COLUMN_BITMASK);
+			BatchEngineExportTaskModelImpl.getColumnBitmask("uuid_") |
+			BatchEngineExportTaskModelImpl.getColumnBitmask("companyId"));
 
 		_finderPathCountByUuid_C = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
@@ -2521,7 +2520,7 @@ public class BatchEngineExportTaskPersistenceImpl
 			BatchEngineExportTaskImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByExecuteStatus",
 			new String[] {String.class.getName()},
-			BatchEngineExportTaskModelImpl.EXECUTESTATUS_COLUMN_BITMASK);
+			BatchEngineExportTaskModelImpl.getColumnBitmask("executeStatus"));
 
 		_finderPathCountByExecuteStatus = new FinderPath(
 			Long.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,

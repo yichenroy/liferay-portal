@@ -893,8 +893,6 @@ public class EagerBlobEntityPersistenceImpl
 				eagerBlobEntity.getUuid(), eagerBlobEntity.getGroupId()
 			},
 			eagerBlobEntity);
-
-		eagerBlobEntity.resetOriginalValues();
 	}
 
 	/**
@@ -910,9 +908,6 @@ public class EagerBlobEntityPersistenceImpl
 					eagerBlobEntity.getPrimaryKey()) == null) {
 
 				cacheResult(eagerBlobEntity);
-			}
-			else {
-				eagerBlobEntity.resetOriginalValues();
 			}
 		}
 	}
@@ -1007,13 +1002,14 @@ public class EagerBlobEntityPersistenceImpl
 
 		if (!Objects.equals(
 				eagerBlobEntityModelImpl.getUuid(),
-				eagerBlobEntityModelImpl.getOriginalUuid()) ||
-			(eagerBlobEntityModelImpl.getGroupId() !=
-				eagerBlobEntityModelImpl.getOriginalGroupId())) {
+				eagerBlobEntityModelImpl.getColumnOriginalValue("uuid_")) ||
+			!Objects.equals(
+				eagerBlobEntityModelImpl.getGroupId(),
+				eagerBlobEntityModelImpl.getColumnOriginalValue("groupId"))) {
 
 			Object[] args = new Object[] {
-				eagerBlobEntityModelImpl.getOriginalUuid(),
-				eagerBlobEntityModelImpl.getOriginalGroupId()
+				eagerBlobEntityModelImpl.getColumnOriginalValue("uuid_"),
+				eagerBlobEntityModelImpl.getColumnOriginalValue("groupId")
 			};
 
 			finderCache.removeResult(_finderPathCountByUUID_G, args);
@@ -1189,10 +1185,10 @@ public class EagerBlobEntityPersistenceImpl
 		else {
 			if (!Objects.equals(
 					eagerBlobEntity.getUuid(),
-					eagerBlobEntityModelImpl.getOriginalUuid())) {
+					eagerBlobEntityModelImpl.getColumnOriginalValue("uuid_"))) {
 
 				Object[] args = new Object[] {
-					eagerBlobEntityModelImpl.getOriginalUuid()
+					eagerBlobEntityModelImpl.getColumnOriginalValue("uuid_")
 				};
 
 				finderCache.removeResult(_finderPathCountByUuid, args);
