@@ -1368,7 +1368,8 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static List<JenkinsMaster> getJenkinsMasters(
-		Properties buildProperties, int minimumRAM, String prefix) {
+		Properties buildProperties, int minimumRAM, int maximumSlavesPerHost,
+		String prefix) {
 
 		List<JenkinsMaster> jenkinsMasters = new ArrayList<>();
 
@@ -1379,7 +1380,9 @@ public class JenkinsResultsParserUtil {
 
 			JenkinsMaster jenkinsMaster = new JenkinsMaster(prefix + "-" + i);
 
-			if (jenkinsMaster.getSlaveRAM() >= minimumRAM) {
+			if ((jenkinsMaster.getSlaveRAM() >= minimumRAM) &&
+				(jenkinsMaster.getSlavesPerHost() <= maximumSlavesPerHost)) {
+
 				jenkinsMasters.add(jenkinsMaster);
 			}
 		}
@@ -1537,12 +1540,13 @@ public class JenkinsResultsParserUtil {
 
 		return getMostAvailableMasterURL(
 			baseInvocationURL, null, invokedBatchSize,
-			JenkinsMaster.SLAVE_RAM_DEFAULT);
+			JenkinsMaster.getSlaveRAMMinimumDefault(),
+			JenkinsMaster.getSlavesPerHostDefault());
 	}
 
 	public static String getMostAvailableMasterURL(
 		String baseInvocationURL, String blacklist, int invokedBatchSize,
-		int minimumRAM) {
+		int minimumRAM, int maximumSlavesPerHost) {
 
 		StringBuilder sb = new StringBuilder();
 
@@ -1584,7 +1588,8 @@ public class JenkinsResultsParserUtil {
 			List<JenkinsMaster> availableJenkinsMasters =
 				LoadBalancerUtil.getAvailableJenkinsMasters(
 					LoadBalancerUtil.getMasterPrefix(baseInvocationURL),
-					blacklist, minimumRAM, buildProperties);
+					blacklist, minimumRAM, maximumSlavesPerHost,
+					buildProperties);
 
 			Random random = new Random(System.currentTimeMillis());
 
