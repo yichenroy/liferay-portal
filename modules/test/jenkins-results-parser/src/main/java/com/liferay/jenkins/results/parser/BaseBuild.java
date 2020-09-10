@@ -1452,25 +1452,6 @@ public abstract class BaseBuild implements Build {
 				"\n\n");
 
 			System.out.println(message);
-
-			TopLevelBuild topLevelBuild = getTopLevelBuild();
-
-			if (topLevelBuild != null) {
-				message = JenkinsResultsParserUtil.combine(
-					message, "Top Level Build URL: ",
-					topLevelBuild.getBuildURL());
-			}
-
-			String notificationRecipients =
-				reinvokeRule.getNotificationRecipients();
-
-			if ((notificationRecipients != null) &&
-				!notificationRecipients.isEmpty()) {
-
-				NotificationUtil.sendEmail(
-					message, "jenkins", "Build Reinvoked",
-					reinvokeRule.notificationRecipients);
-			}
 		}
 
 		String invocationURL = getInvocationURL();
