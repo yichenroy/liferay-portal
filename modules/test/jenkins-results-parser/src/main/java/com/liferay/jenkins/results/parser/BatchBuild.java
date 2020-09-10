@@ -400,7 +400,7 @@ public class BatchBuild extends BaseBuild {
 		String status = getStatus();
 		String result = getResult();
 
-		if ((status.equals("completed") && result.equals("SUCCESS")) ||
+		if ((status.equals("completed") && result.equals("DONE")) ||
 			fromArchive) {
 
 			return;
@@ -416,15 +416,15 @@ public class BatchBuild extends BaseBuild {
 			for (ReinvokeRule reinvokeRule : reinvokeRules) {
 				String downstreamBuildResult = downstreamBuild.getResult();
 
-				if ((downstreamBuildResult == null) ||
-					downstreamBuildResult.equals("SUCCESS")) {
+//				if ((downstreamBuildResult == null) ||
+//					downstreamBuildResult.equals("SUCCESS")) {
+//
+//					continue;
+//				}
 
-					continue;
-				}
-
-				if (!reinvokeRule.matches(downstreamBuild)) {
-					continue;
-				}
+//				if (!reinvokeRule.matches(downstreamBuild)) {
+//					continue;
+//				}
 
 				reinvoke(reinvokeRule);
 

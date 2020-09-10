@@ -1640,7 +1640,7 @@ public abstract class BaseBuild implements Build {
 
 					findDownstreamBuilds();
 
-					if ((result == null) || result.equals("SUCCESS")) {
+					if ((result == null) || result.equals("DONE")) {
 						return;
 					}
 
@@ -1673,9 +1673,9 @@ public abstract class BaseBuild implements Build {
 					}
 
 					for (ReinvokeRule reinvokeRule : reinvokeRules) {
-						if (!reinvokeRule.matches(this)) {
-							continue;
-						}
+//						if (!reinvokeRule.matches(this)) {
+//							continue;
+//						}
 
 						reinvoke(reinvokeRule);
 
