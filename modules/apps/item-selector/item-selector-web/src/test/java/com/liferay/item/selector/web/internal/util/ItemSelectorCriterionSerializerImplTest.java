@@ -19,11 +19,11 @@ import com.liferay.item.selector.web.internal.FlickrItemSelectorCriterion;
 import com.liferay.item.selector.web.internal.TestFileEntryItemSelectorReturnType;
 import com.liferay.item.selector.web.internal.TestStringItemSelectorReturnType;
 import com.liferay.item.selector.web.internal.TestURLItemSelectorReturnType;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import org.junit.Assert;
@@ -40,14 +40,8 @@ public class ItemSelectorCriterionSerializerImplTest {
 	public void setUp() {
 		_flickrItemSelectorCriterion = new FlickrItemSelectorCriterion();
 
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		desiredItemSelectorReturnTypes.add(_testStringItemSelectorReturnType);
-		desiredItemSelectorReturnTypes.add(_testURLItemSelectorReturnType);
-
 		_flickrItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
+			_testStringItemSelectorReturnType, _testURLItemSelectorReturnType);
 
 		_stubItemSelectorCriterionSerializerImpl.addItemSelectorReturnType(
 			_testFileEntryItemSelectorReturnType);
@@ -63,24 +57,19 @@ public class ItemSelectorCriterionSerializerImplTest {
 
 	@Test
 	public void testGetProperties() {
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		desiredItemSelectorReturnTypes.add(_testURLItemSelectorReturnType);
-
 		_flickrItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
+			_testURLItemSelectorReturnType);
 
 		String json = _stubItemSelectorCriterionSerializerImpl.serialize(
 			_flickrItemSelectorCriterion);
 
-		Class<? extends ItemSelectorReturnType>
-			testURLItemSelectorReturnTypeClass =
-				_testURLItemSelectorReturnType.getClass();
+		String itemSelectorReturnTypeKey =
+			ItemSelectorKeyUtil.getItemSelectorReturnTypeKey(
+				TestURLItemSelectorReturnType.class);
 
 		json = _assert(
 			"\"desiredItemSelectorReturnTypes\":\"" +
-				testURLItemSelectorReturnTypeClass.getName() + "\"",
+				itemSelectorReturnTypeKey + "\"",
 			json);
 
 		json = _assert("\"tags\":[\"me\",\"photo\",\"picture\"]", json);
@@ -95,10 +84,10 @@ public class ItemSelectorCriterionSerializerImplTest {
 			testURLItemSelectorReturnTypeClass =
 				_testURLItemSelectorReturnType.getClass();
 
-		String json =
-			"{\"desiredItemSelectorReturnTypes\":\"" +
-				testURLItemSelectorReturnTypeClass.getName() + "\",\"tags\":" +
-					"[\"tag1\",\"tag2\",\"tag3\"],\"user\":\"Joe Bloggs\"}";
+		String json = StringBundler.concat(
+			"{\"desiredItemSelectorReturnTypes\":\"",
+			testURLItemSelectorReturnTypeClass.getName(), "\",\"tags\":",
+			"[\"tag1\",\"tag2\",\"tag3\"],\"user\":\"Joe Bloggs\"}");
 
 		_flickrItemSelectorCriterion =
 			_stubItemSelectorCriterionSerializerImpl.deserialize(
@@ -110,14 +99,8 @@ public class ItemSelectorCriterionSerializerImplTest {
 			new String[] {"tag1", "tag2", "tag3"},
 			_flickrItemSelectorCriterion.getTags());
 
-		List<ItemSelectorReturnType> expectedDesiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		expectedDesiredItemSelectorReturnTypes.add(
-			_testURLItemSelectorReturnType);
-
 		Assert.assertEquals(
-			expectedDesiredItemSelectorReturnTypes,
+			ListUtil.fromArray(_testURLItemSelectorReturnType),
 			_flickrItemSelectorCriterion.getDesiredItemSelectorReturnTypes());
 	}
 

@@ -19,12 +19,13 @@ import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
 import com.liferay.calendar.model.CalendarBookingModel;
 import com.liferay.calendar.model.CalendarResource;
-import com.liferay.calendar.service.CalendarBookingLocalServiceUtil;
+import com.liferay.calendar.service.CalendarBookingLocalService;
 import com.liferay.calendar.test.util.CalendarBookingTestUtil;
 import com.liferay.calendar.test.util.CalendarTestUtil;
 import com.liferay.calendar.test.util.RecurrenceTestUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.test.util.lar.BaseWorkflowedStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -32,6 +33,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
@@ -76,14 +78,14 @@ public class CalendarBookingStagedModelDataHandlerTest
 				RecurrenceTestUtil.getDailyRecurrence(), serviceContext);
 
 		CalendarBooking calendarBookingInstance =
-			CalendarBookingLocalServiceUtil.updateCalendarBookingInstance(
+			_calendarBookingLocalService.updateCalendarBookingInstance(
 				TestPropsValues.getUserId(),
 				calendarBooking.getCalendarBookingId(), 2,
 				calendar.getCalendarId(), calendarBooking.getTitleMap(),
 				calendarBooking.getDescriptionMap(),
 				calendarBooking.getLocation(),
-				calendarBooking.getStartTime() + Time.DAY * 2,
-				calendarBooking.getEndTime() + Time.DAY * 2,
+				calendarBooking.getStartTime() + (Time.DAY * 2),
+				calendarBooking.getEndTime() + (Time.DAY * 2),
 				calendarBooking.isAllDay(), null, false, 0, null, 0, null,
 				serviceContext);
 
@@ -107,7 +109,7 @@ public class CalendarBookingStagedModelDataHandlerTest
 				exportedCalendarBooking.getUuid(), liveGroup);
 
 		List<CalendarBooking> importedCalendarBookingInstances =
-			CalendarBookingLocalServiceUtil.getRecurringCalendarBookings(
+			_calendarBookingLocalService.getRecurringCalendarBookings(
 				importedCalendarBooking);
 
 		CalendarBookingModel importedCalendarBookingInstance =
@@ -193,14 +195,11 @@ public class CalendarBookingStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return CalendarBookingLocalServiceUtil.
-				getCalendarBookingByUuidAndGroupId(uuid, group.getGroupId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return _calendarBookingLocalService.getCalendarBookingByUuidAndGroupId(
+			uuid, group.getGroupId());
 	}
 
 	@Override
@@ -212,5 +211,8 @@ public class CalendarBookingStagedModelDataHandlerTest
 	protected boolean isCommentableStagedModel() {
 		return true;
 	}
+
+	@Inject
+	private CalendarBookingLocalService _calendarBookingLocalService;
 
 }

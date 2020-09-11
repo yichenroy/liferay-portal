@@ -36,16 +36,12 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 
 	@Override
 	public void onBeforeRemove(Layout layout) throws ModelListenerException {
-		if (!layout.isHead()) {
-			return;
-		}
-
 		try {
 			commentManager.deleteDiscussion(
 				Layout.class.getName(), layout.getPlid());
 		}
-		catch (Exception e) {
-			throw new ModelListenerException(e);
+		catch (Exception exception) {
+			throw new ModelListenerException(exception);
 		}
 	}
 

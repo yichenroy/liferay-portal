@@ -22,9 +22,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -32,10 +32,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -47,46 +51,49 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Generated("")
 @GraphQLName("BlogPosting")
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"articleBody", "headline"})
+@Schema(
+	requiredProperties = {"articleBody", "headline"},
+	description = "Represents a blog post. See [BlogPosting](https://www.schema.org/BlogPosting) for more information."
+)
 @XmlRootElement(name = "BlogPosting")
 public class BlogPosting {
 
-	public static enum ViewableBy {
-
-		ANYONE("Anyone"), MEMBERS("Members"), OWNER("Owner");
-
-		@JsonCreator
-		public static ViewableBy create(String value) {
-			for (ViewableBy viewableBy : values()) {
-				if (Objects.equals(viewableBy.getValue(), value)) {
-					return viewableBy;
-				}
-			}
-
-			return null;
-		}
-
-		@JsonValue
-		public String getValue() {
-			return _value;
-		}
-
-		@Override
-		public String toString() {
-			return _value;
-		}
-
-		private ViewableBy(String value) {
-			_value = value;
-		}
-
-		private final String _value;
-
+	public static BlogPosting toDTO(String json) {
+		return ObjectMapperUtil.readValue(BlogPosting.class, json);
 	}
 
-	@Schema(
-		description = "The information of the ratings (average, number) associated to this resource."
-	)
+	@Schema
+	@Valid
+	public Map<String, Map<String, String>> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+	}
+
+	@JsonIgnore
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		try {
+			actions = actionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, Map<String, String>> actions;
+
+	@Schema(description = "The blog post's average rating.")
+	@Valid
 	public AggregateRating getAggregateRating() {
 		return aggregateRating;
 	}
@@ -111,11 +118,11 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's average rating.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected AggregateRating aggregateRating;
 
-	@Schema(description = "The subtitle of this BlogPosting.")
+	@Schema(description = "The blog post's subtitle.")
 	public String getAlternativeHeadline() {
 		return alternativeHeadline;
 	}
@@ -139,11 +146,11 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's subtitle.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String alternativeHeadline;
 
-	@Schema(description = "The article content of this BlogPosting.")
+	@Schema(description = "The blog post's body (content).")
 	public String getArticleBody() {
 		return articleBody;
 	}
@@ -167,12 +174,13 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's body (content).")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	@NotEmpty
 	protected String articleBody;
 
-	@Schema(description = "The creator of the BlogPosting")
+	@Schema(description = "The blog post's author.")
+	@Valid
 	public Creator getCreator() {
 		return creator;
 	}
@@ -196,11 +204,40 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's author.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema(description = "The creation date of the BlogPosting.")
+	@Schema
+	@Valid
+	public CustomField[] getCustomFields() {
+		return customFields;
+	}
+
+	public void setCustomFields(CustomField[] customFields) {
+		this.customFields = customFields;
+	}
+
+	@JsonIgnore
+	public void setCustomFields(
+		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+
+		try {
+			customFields = customFieldsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected CustomField[] customFields;
+
+	@Schema(description = "The blog post's creation date.")
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -224,11 +261,11 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's creation date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
-	@Schema(description = "The last time a field of the BlogPosting changed.")
+	@Schema(description = "The blog post's most recent modification date.")
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -252,11 +289,13 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The blog post's most recent modification date."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
-	@Schema(description = "The last date when the BlogPosting was published.")
+	@Schema(description = "The blog post's publication date.")
 	public Date getDatePublished() {
 		return datePublished;
 	}
@@ -280,11 +319,11 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's publication date.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date datePublished;
 
-	@Schema(description = "A description explaining this BlogPosting.")
+	@Schema(description = "The blog post's description.")
 	public String getDescription() {
 		return description;
 	}
@@ -308,11 +347,13 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's description.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String description;
 
-	@Schema(description = "The media format of the content (html, bbcode...).")
+	@Schema(
+		description = "The blog post's media format (e.g., HTML, BBCode, etc.)."
+	)
 	public String getEncodingFormat() {
 		return encodingFormat;
 	}
@@ -336,13 +377,13 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The blog post's media format (e.g., HTML, BBCode, etc.)."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String encodingFormat;
 
-	@Schema(
-		description = "A relative URL where this content will be accesible."
-	)
+	@Schema(description = "The blog post's relative URL.")
 	public String getFriendlyUrlPath() {
 		return friendlyUrlPath;
 	}
@@ -366,11 +407,11 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's relative URL.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String friendlyUrlPath;
 
-	@Schema(description = "The main title of this BlogPosting.")
+	@Schema(description = "The blog post's main title.")
 	public String getHeadline() {
 		return headline;
 	}
@@ -394,12 +435,12 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's main title.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	@NotEmpty
 	protected String headline;
 
-	@Schema(description = "The identifier of the resource.")
+	@Schema(description = "The blog post's identifier.")
 	public Long getId() {
 		return id;
 	}
@@ -421,11 +462,12 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's identifier.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema(description = "The cover image of the BlogPosting.")
+	@Schema(description = "The blog post's cover image.")
+	@Valid
 	public Image getImage() {
 		return image;
 	}
@@ -447,11 +489,11 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The blog post's cover image.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Image image;
 
-	@Schema(description = "A list of keywords describing the BlogPosting.")
+	@Schema(description = "A list of keywords describing the blog post.")
 	public String[] getKeywords() {
 		return keywords;
 	}
@@ -475,13 +517,11 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of keywords describing the blog post.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String[] keywords;
 
-	@Schema(
-		description = "The number of comments this BlogPosting has received."
-	)
+	@Schema(description = "The number of comments this blog post has received.")
 	public Integer getNumberOfComments() {
 		return numberOfComments;
 	}
@@ -505,12 +545,44 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The number of comments this blog post has received."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer numberOfComments;
 
+	@Schema
+	@Valid
+	public RelatedContent[] getRelatedContents() {
+		return relatedContents;
+	}
+
+	public void setRelatedContents(RelatedContent[] relatedContents) {
+		this.relatedContents = relatedContents;
+	}
+
+	@JsonIgnore
+	public void setRelatedContents(
+		UnsafeSupplier<RelatedContent[], Exception>
+			relatedContentsUnsafeSupplier) {
+
+		try {
+			relatedContents = relatedContentsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected RelatedContent[] relatedContents;
+
 	@Schema(
-		description = "The site identificator where this BlogPosting is scoped."
+		description = "The ID of the site to which this blog post is scoped."
 	)
 	public Long getSiteId() {
 		return siteId;
@@ -535,26 +607,31 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The ID of the site to which this blog post is scoped."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long siteId;
 
-	@Schema(description = "The categories asociated with this BlogPosting.")
-	public TaxonomyCategory[] getTaxonomyCategories() {
-		return taxonomyCategories;
+	@Schema(description = "The categories associated with this blog post.")
+	@Valid
+	public TaxonomyCategoryBrief[] getTaxonomyCategoryBriefs() {
+		return taxonomyCategoryBriefs;
 	}
 
-	public void setTaxonomyCategories(TaxonomyCategory[] taxonomyCategories) {
-		this.taxonomyCategories = taxonomyCategories;
+	public void setTaxonomyCategoryBriefs(
+		TaxonomyCategoryBrief[] taxonomyCategoryBriefs) {
+
+		this.taxonomyCategoryBriefs = taxonomyCategoryBriefs;
 	}
 
 	@JsonIgnore
-	public void setTaxonomyCategories(
-		UnsafeSupplier<TaxonomyCategory[], Exception>
-			taxonomyCategoriesUnsafeSupplier) {
+	public void setTaxonomyCategoryBriefs(
+		UnsafeSupplier<TaxonomyCategoryBrief[], Exception>
+			taxonomyCategoryBriefsUnsafeSupplier) {
 
 		try {
-			taxonomyCategories = taxonomyCategoriesUnsafeSupplier.get();
+			taxonomyCategoryBriefs = taxonomyCategoryBriefsUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -564,12 +641,14 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The categories associated with this blog post."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected TaxonomyCategory[] taxonomyCategories;
+	protected TaxonomyCategoryBrief[] taxonomyCategoryBriefs;
 
 	@Schema(
-		description = "A write only field to add TaxonomyCategory to this resource."
+		description = "A write-only field that adds a `TaxonomyCategory` to this resource."
 	)
 	public Long[] getTaxonomyCategoryIds() {
 		return taxonomyCategoryIds;
@@ -594,13 +673,16 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A write-only field that adds a `TaxonomyCategory` to this resource."
+	)
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	protected Long[] taxonomyCategoryIds;
 
 	@Schema(
-		description = "Write only property to specify the default permissions."
+		description = "A write-only property that specifies the default permissions."
 	)
+	@Valid
 	public ViewableBy getViewableBy() {
 		return viewableBy;
 	}
@@ -633,7 +715,9 @@ public class BlogPosting {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A write-only property that specifies the default permissions."
+	)
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	protected ViewableBy viewableBy;
 
@@ -667,12 +751,22 @@ public class BlogPosting {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (actions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(actions));
+		}
+
 		if (aggregateRating != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"aggregateRating\":");
+			sb.append("\"aggregateRating\": ");
 
 			sb.append(String.valueOf(aggregateRating));
 		}
@@ -682,7 +776,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"alternativeHeadline\":");
+			sb.append("\"alternativeHeadline\": ");
 
 			sb.append("\"");
 
@@ -696,7 +790,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"articleBody\":");
+			sb.append("\"articleBody\": ");
 
 			sb.append("\"");
 
@@ -710,9 +804,29 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"creator\":");
+			sb.append("\"creator\": ");
 
 			sb.append(String.valueOf(creator));
+		}
+
+		if (customFields != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customFields.length; i++) {
+				sb.append(String.valueOf(customFields[i]));
+
+				if ((i + 1) < customFields.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (dateCreated != null) {
@@ -720,7 +834,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -734,7 +848,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateModified\":");
+			sb.append("\"dateModified\": ");
 
 			sb.append("\"");
 
@@ -748,7 +862,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"datePublished\":");
+			sb.append("\"datePublished\": ");
 
 			sb.append("\"");
 
@@ -762,7 +876,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"description\":");
+			sb.append("\"description\": ");
 
 			sb.append("\"");
 
@@ -776,7 +890,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"encodingFormat\":");
+			sb.append("\"encodingFormat\": ");
 
 			sb.append("\"");
 
@@ -790,7 +904,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"friendlyUrlPath\":");
+			sb.append("\"friendlyUrlPath\": ");
 
 			sb.append("\"");
 
@@ -804,7 +918,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"headline\":");
+			sb.append("\"headline\": ");
 
 			sb.append("\"");
 
@@ -818,7 +932,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(id);
 		}
@@ -828,7 +942,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"image\":");
+			sb.append("\"image\": ");
 
 			sb.append(String.valueOf(image));
 		}
@@ -838,7 +952,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"keywords\":");
+			sb.append("\"keywords\": ");
 
 			sb.append("[");
 
@@ -862,9 +976,29 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"numberOfComments\":");
+			sb.append("\"numberOfComments\": ");
 
 			sb.append(numberOfComments);
+		}
+
+		if (relatedContents != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"relatedContents\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < relatedContents.length; i++) {
+				sb.append(String.valueOf(relatedContents[i]));
+
+				if ((i + 1) < relatedContents.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (siteId != null) {
@@ -872,24 +1006,24 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"siteId\":");
+			sb.append("\"siteId\": ");
 
 			sb.append(siteId);
 		}
 
-		if (taxonomyCategories != null) {
+		if (taxonomyCategoryBriefs != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"taxonomyCategories\":");
+			sb.append("\"taxonomyCategoryBriefs\": ");
 
 			sb.append("[");
 
-			for (int i = 0; i < taxonomyCategories.length; i++) {
-				sb.append(String.valueOf(taxonomyCategories[i]));
+			for (int i = 0; i < taxonomyCategoryBriefs.length; i++) {
+				sb.append(String.valueOf(taxonomyCategoryBriefs[i]));
 
-				if ((i + 1) < taxonomyCategories.length) {
+				if ((i + 1) < taxonomyCategoryBriefs.length) {
 					sb.append(", ");
 				}
 			}
@@ -902,7 +1036,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"taxonomyCategoryIds\":");
+			sb.append("\"taxonomyCategoryIds\": ");
 
 			sb.append("[");
 
@@ -922,7 +1056,7 @@ public class BlogPosting {
 				sb.append(", ");
 			}
 
-			sb.append("\"viewableBy\":");
+			sb.append("\"viewableBy\": ");
 
 			sb.append("\"");
 
@@ -936,10 +1070,122 @@ public class BlogPosting {
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.delivery.dto.v1_0.BlogPosting",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
+	@GraphQLName("ViewableBy")
+	public static enum ViewableBy {
+
+		ANYONE("Anyone"), MEMBERS("Members"), OWNER("Owner");
+
+		@JsonCreator
+		public static ViewableBy create(String value) {
+			for (ViewableBy viewableBy : values()) {
+				if (Objects.equals(viewableBy.getValue(), value)) {
+					return viewableBy;
+				}
+			}
+
+			return null;
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private ViewableBy(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

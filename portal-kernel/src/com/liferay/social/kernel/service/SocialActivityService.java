@@ -14,8 +14,7 @@
 
 package com.liferay.social.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -28,6 +27,8 @@ import com.liferay.social.kernel.model.SocialActivity;
 
 import java.util.List;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the remote service interface for SocialActivity. Methods of this
  * service are expected to have security checks based on the propagated JAAS
@@ -38,6 +39,7 @@ import java.util.List;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -49,7 +51,7 @@ public interface SocialActivityService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SocialActivityServiceUtil} to access the social activity remote service. Add custom service methods to <code>com.liferay.portlet.social.service.impl.SocialActivityServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.social.service.impl.SocialActivityServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the social activity remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SocialActivityServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**

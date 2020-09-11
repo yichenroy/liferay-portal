@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.IOException;
 import java.io.Writer;
 
@@ -33,7 +31,6 @@ import javax.portlet.annotations.PortletSerializable;
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class PortletURLWrapper implements PortletURL {
 
 	public PortletURLWrapper(PortletURL portletURL) {

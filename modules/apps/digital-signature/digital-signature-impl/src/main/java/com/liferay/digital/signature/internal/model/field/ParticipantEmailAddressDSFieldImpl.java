@@ -14,14 +14,11 @@
 
 package com.liferay.digital.signature.internal.model.field;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.digital.signature.model.field.ParticipantEmailAddressDSField;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class ParticipantEmailAddressDSFieldImpl
 	extends StyledDSFieldImpl<ParticipantEmailAddressDSField>
 	implements ParticipantEmailAddressDSField {

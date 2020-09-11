@@ -33,31 +33,34 @@ public class InputPermissionsTag extends IncludeTag {
 			String formName, String modelName, PageContext pageContext)
 		throws Exception {
 
-		return doTag(_PAGE, formName, modelName, pageContext);
+		return doTag(_PAGE, formName, modelName, false, pageContext);
 	}
 
 	public static String doTag(
-			String page, String formName, String modelName,
+			String page, String formName, String modelName, boolean reverse,
 			PageContext pageContext)
 		throws Exception {
 
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		request.setAttribute("liferay-ui:input-permissions:formName", formName);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-permissions:formName", formName);
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-permissions:groupDefaultActions",
 			ResourceActionsUtil.getModelResourceGroupDefaultActions(modelName));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-permissions:guestDefaultActions",
 			ResourceActionsUtil.getModelResourceGuestDefaultActions(modelName));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-permissions:guestUnsupportedActions",
 			ResourceActionsUtil.getModelResourceGuestUnsupportedActions(
 				modelName));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-permissions:modelName", modelName);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-permissions:reverse", reverse);
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-permissions:supportedActions",
 			ResourceActionsUtil.getModelResourceActions(modelName));
 
@@ -69,12 +72,12 @@ public class InputPermissionsTag extends IncludeTag {
 	@Override
 	public int doEndTag() throws JspException {
 		try {
-			doTag(getPage(), _formName, _modelName, pageContext);
+			doTag(getPage(), _formName, _modelName, _reverse, pageContext);
 
 			return EVAL_PAGE;
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 	}
 
@@ -86,12 +89,20 @@ public class InputPermissionsTag extends IncludeTag {
 		return _modelName;
 	}
 
+	public boolean isReverse() {
+		return _reverse;
+	}
+
 	public void setFormName(String formName) {
 		_formName = formName;
 	}
 
 	public void setModelName(String modelName) {
 		_modelName = modelName;
+	}
+
+	public void setReverse(boolean reverse) {
+		_reverse = reverse;
 	}
 
 	@Override
@@ -104,5 +115,6 @@ public class InputPermissionsTag extends IncludeTag {
 
 	private String _formName = "fm";
 	private String _modelName;
+	private boolean _reverse;
 
 }

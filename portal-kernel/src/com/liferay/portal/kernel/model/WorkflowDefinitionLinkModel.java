@@ -14,11 +14,12 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the WorkflowDefinitionLink service. Represents a row in the &quot;WorkflowDefinitionLink&quot; database table, with each column mapped to a property of this class.
@@ -33,8 +34,9 @@ import java.util.Date;
  */
 @ProviderType
 public interface WorkflowDefinitionLinkModel
-	extends AttachedModel, BaseModel<WorkflowDefinitionLink>, GroupedModel,
-			MVCCModel, ShardedModel {
+	extends AttachedModel, BaseModel<WorkflowDefinitionLink>,
+			CTModel<WorkflowDefinitionLink>, GroupedModel, MVCCModel,
+			ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -47,6 +49,7 @@ public interface WorkflowDefinitionLinkModel
 	 *
 	 * @return the primary key of this workflow definition link
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -54,6 +57,7 @@ public interface WorkflowDefinitionLinkModel
 	 *
 	 * @param primaryKey the primary key of this workflow definition link
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -71,6 +75,22 @@ public interface WorkflowDefinitionLinkModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this workflow definition link.
+	 *
+	 * @return the ct collection ID of this workflow definition link
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this workflow definition link.
+	 *
+	 * @param ctCollectionId the ct collection ID of this workflow definition link
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the workflow definition link ID of this workflow definition link.

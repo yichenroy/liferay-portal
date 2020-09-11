@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.resiliency.spi.provider;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.nio.intraband.RegistrationReference;
 import com.liferay.portal.kernel.nio.intraband.welder.Welder;
 import com.liferay.portal.kernel.process.ProcessChannel;
@@ -27,7 +28,6 @@ import com.liferay.portal.kernel.resiliency.spi.remote.RemoteSPI;
 import com.liferay.portal.kernel.resiliency.spi.remote.RemoteSPIProxy;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -36,8 +36,10 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author Shuyang Zhou
+ * @author     Shuyang Zhou
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public abstract class BaseSPIProvider implements SPIProvider {
 
 	public abstract RemoteSPI createRemoteSPI(SPIConfiguration spiConfiguration)
@@ -110,17 +112,17 @@ public abstract class BaseSPIProvider implements SPIProvider {
 				"SPI synchronous queue waiting timeout. Forcibly cancelled " +
 					"SPI process launch.");
 		}
-		catch (InterruptedException ie) {
+		catch (InterruptedException interruptedException) {
 			throw new PortalResiliencyException(
 				"Interrupted on waiting SPI process, registering back RMI stub",
-				ie);
+				interruptedException);
 		}
-		catch (PortalResiliencyException pre) {
-			throw pre;
+		catch (PortalResiliencyException portalResiliencyException) {
+			throw portalResiliencyException;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new PortalResiliencyException(
-				"Unable to launch SPI process", e);
+				"Unable to launch SPI process", exception);
 		}
 		finally {
 			weldServerFutureTask.cancel(true);

@@ -28,7 +28,9 @@ public class ModuleNameUtilTest {
 
 	@Before
 	public void setUp() {
-		new FileUtil().setFile(new FileImpl());
+		FileUtil fileUtil = new FileUtil();
+
+		fileUtil.setFile(new FileImpl());
 	}
 
 	@Test
@@ -45,6 +47,12 @@ public class ModuleNameUtilTest {
 			"a-dir/dep",
 			ModuleNameUtil.getDependencyPath(
 				"a-dir/other-dir/a-module", "../dep"));
+		Assert.assertEquals(
+			"a-dir/other-dir",
+			ModuleNameUtil.getDependencyPath("a-dir/other-dir/a-module", "."));
+		Assert.assertEquals(
+			"a-dir",
+			ModuleNameUtil.getDependencyPath("a-dir/other-dir/a-module", ".."));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -70,9 +78,8 @@ public class ModuleNameUtilTest {
 
 	@Test
 	public void testGetPackageNameNoModule() throws Exception {
-		String packageName = ModuleNameUtil.getPackageName("mypackage");
-
-		Assert.assertEquals("mypackage", packageName);
+		Assert.assertEquals(
+			"mypackage", ModuleNameUtil.getPackageName("mypackage"));
 	}
 
 	@Test
@@ -115,9 +122,7 @@ public class ModuleNameUtilTest {
 
 	@Test
 	public void testGetPackagePathNoModule() throws Exception {
-		String packagePath = ModuleNameUtil.getPackagePath("mypackage");
-
-		Assert.assertNull(packagePath);
+		Assert.assertNull(ModuleNameUtil.getPackagePath("mypackage"));
 	}
 
 	@Test

@@ -17,8 +17,8 @@ package com.liferay.journal.web.internal.upload;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.ImageTypeException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.ServletResponseConstants;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
@@ -39,21 +39,21 @@ public class ImageJournalUploadResponseHandler
 
 	@Override
 	public JSONObject onFailure(
-			PortletRequest portletRequest, PortalException pe)
+			PortletRequest portletRequest, PortalException portalException)
 		throws PortalException {
 
 		JSONObject jsonObject = _defaultUploadResponseHandler.onFailure(
-			portletRequest, pe);
+			portletRequest, portalException);
 
-		if (pe instanceof ImageTypeException) {
-			JSONObject errorJSONObject = JSONFactoryUtil.createJSONObject();
-
-			errorJSONObject.put(
-				"errorType",
-				ServletResponseConstants.SC_FILE_EXTENSION_EXCEPTION);
-			errorJSONObject.put("message", StringPool.BLANK);
-
-			jsonObject.put("error", errorJSONObject);
+		if (portalException instanceof ImageTypeException) {
+			jsonObject.put(
+				"error",
+				JSONUtil.put(
+					"errorType",
+					ServletResponseConstants.SC_FILE_EXTENSION_EXCEPTION
+				).put(
+					"message", StringPool.BLANK
+				));
 		}
 
 		return jsonObject;

@@ -16,10 +16,10 @@ package com.liferay.blogs.portlet.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.portlet.BasePortletLayoutFinder;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
@@ -35,12 +35,11 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.struts.FindStrutsAction;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.LayoutTestUtil;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -86,10 +85,8 @@ public class PortletLayoutFinderTest {
 
 		};
 
-		User user = TestPropsValues.getUser();
-
 		PermissionChecker permissionChecker =
-			PermissionCheckerFactoryUtil.create(user);
+			PermissionCheckerFactoryUtil.create(TestPropsValues.getUser());
 
 		_originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
@@ -130,14 +127,14 @@ public class PortletLayoutFinderTest {
 	public void testSetTargetGroupWithDifferentGroup() throws Exception {
 		addLayouts(true, true);
 
-		HttpServletRequest request = getHttpServletRequest();
+		HttpServletRequest httpServletRequest = getHttpServletRequest();
 
 		ReflectionTestUtil.invoke(
 			FindStrutsAction.class, "_setTargetLayout",
 			new Class<?>[] {HttpServletRequest.class, long.class, long.class},
-			request, _blogsEntryGroupId, _blogLayout.getPlid());
+			httpServletRequest, _blogsEntryGroupId, _blogLayout.getPlid());
 
-		Layout layout = (Layout)request.getAttribute(WebKeys.LAYOUT);
+		Layout layout = (Layout)httpServletRequest.getAttribute(WebKeys.LAYOUT);
 
 		Assert.assertTrue(layout instanceof VirtualLayout);
 		Assert.assertNotEquals(_group.getGroupId(), layout.getGroupId());
@@ -147,14 +144,14 @@ public class PortletLayoutFinderTest {
 	public void testSetTargetGroupWithSameGroup() throws Exception {
 		addLayouts(true, false);
 
-		HttpServletRequest request = getHttpServletRequest();
+		HttpServletRequest httpServletRequest = getHttpServletRequest();
 
 		ReflectionTestUtil.invoke(
 			FindStrutsAction.class, "_setTargetLayout",
 			new Class<?>[] {HttpServletRequest.class, long.class, long.class},
-			request, _blogsEntryGroupId, _blogLayout.getPlid());
+			httpServletRequest, _blogsEntryGroupId, _blogLayout.getPlid());
 
-		Layout layout = (Layout)request.getAttribute(WebKeys.LAYOUT);
+		Layout layout = (Layout)httpServletRequest.getAttribute(WebKeys.LAYOUT);
 
 		Assert.assertNull(layout);
 	}
@@ -175,9 +172,9 @@ public class PortletLayoutFinderTest {
 			LayoutTestUtil.addPortletToLayout(_blogLayout, portletId);
 		}
 
-		Map<String, String[]> preferenceMap = new HashMap<>();
-
-		preferenceMap.put("assetLinkBehavior", new String[] {"viewInPortlet"});
+		Map<String, String[]> preferenceMap = HashMapBuilder.put(
+			"assetLinkBehavior", new String[] {"viewInPortlet"}
+		).build();
 
 		_testPortletId = PortletIdCodec.encode(
 			"com_liferay_hello_world_web_portlet_HelloWorldPortlet");
@@ -196,13 +193,12 @@ public class PortletLayoutFinderTest {
 	}
 
 	protected HttpServletRequest getHttpServletRequest() throws Exception {
-		HttpServletRequest request = new MockHttpServletRequest();
+		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
-		ThemeDisplay themeDisplay = getThemeDisplay();
+		httpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, getThemeDisplay());
 
-		request.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
-
-		return request;
+		return httpServletRequest;
 	}
 
 	protected ThemeDisplay getThemeDisplay() throws Exception {

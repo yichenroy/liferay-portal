@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.opener.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -32,7 +30,6 @@ import org.osgi.util.tracker.ServiceTracker;
  * @see DLOpenerFileEntryReferenceLocalService
  * @generated
  */
-@ProviderType
 public class DLOpenerFileEntryReferenceLocalServiceUtil {
 
 	/*
@@ -43,6 +40,10 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 
 	/**
 	 * Adds the dl opener file entry reference to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLOpenerFileEntryReferenceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlOpenerFileEntryReference the dl opener file entry reference
 	 * @return the dl opener file entry reference that was added
@@ -57,6 +58,12 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 			dlOpenerFileEntryReference);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 #addDLOpenerFileEntryReference(long, String, String,
+	 FileEntry, int)}
+	 */
+	@Deprecated
 	public static
 		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
 				addDLOpenerFileEntryReference(
@@ -72,6 +79,25 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 
 	public static
 		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
+				addDLOpenerFileEntryReference(
+					long userId, String referenceKey, String referenceType,
+					com.liferay.portal.kernel.repository.model.FileEntry
+						fileEntry,
+					int type)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().addDLOpenerFileEntryReference(
+			userId, referenceKey, referenceType, fileEntry, type);
+	}
+
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 #addPlaceholderDLOpenerFileEntryReference(long, String,
+	 FileEntry, int)}
+	 */
+	@Deprecated
+	public static
+		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
 				addPlaceholderDLOpenerFileEntryReference(
 					long userId,
 					com.liferay.portal.kernel.repository.model.FileEntry
@@ -81,6 +107,19 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 
 		return getService().addPlaceholderDLOpenerFileEntryReference(
 			userId, fileEntry, type);
+	}
+
+	public static
+		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
+				addPlaceholderDLOpenerFileEntryReference(
+					long userId, String referenceType,
+					com.liferay.portal.kernel.repository.model.FileEntry
+						fileEntry,
+					int type)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().addPlaceholderDLOpenerFileEntryReference(
+			userId, referenceType, fileEntry, type);
 	}
 
 	/**
@@ -99,7 +138,21 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 	}
 
 	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
+	}
+
+	/**
 	 * Deletes the dl opener file entry reference from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLOpenerFileEntryReferenceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlOpenerFileEntryReference the dl opener file entry reference
 	 * @return the dl opener file entry reference that was removed
@@ -114,6 +167,11 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 			dlOpenerFileEntryReference);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 #deleteDLOpenerFileEntryReference(String, FileEntry)}
+	 */
+	@Deprecated
 	public static void deleteDLOpenerFileEntryReference(
 			com.liferay.portal.kernel.repository.model.FileEntry fileEntry)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -123,6 +181,10 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 
 	/**
 	 * Deletes the dl opener file entry reference with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLOpenerFileEntryReferenceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlOpenerFileEntryReferenceId the primary key of the dl opener file entry reference
 	 * @return the dl opener file entry reference that was removed
@@ -138,6 +200,14 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 			dlOpenerFileEntryReferenceId);
 	}
 
+	public static void deleteDLOpenerFileEntryReference(
+			String referenceType,
+			com.liferay.portal.kernel.repository.model.FileEntry fileEntry)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		getService().deleteDLOpenerFileEntryReference(referenceType, fileEntry);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -147,6 +217,12 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
+	}
+
+	public static <T> T dslQuery(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return getService().dslQuery(dslQuery);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
@@ -171,7 +247,7 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.document.library.opener.model.impl.DLOpenerFileEntryReferenceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.document.library.opener.model.impl.DLOpenerFileEntryReferenceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -190,7 +266,7 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.document.library.opener.model.impl.DLOpenerFileEntryReferenceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.document.library.opener.model.impl.DLOpenerFileEntryReferenceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -234,6 +310,11 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 #fetchDLOpenerFileEntryReference(String, FileEntry)}
+	 */
+	@Deprecated
 	public static
 		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
 			fetchDLOpenerFileEntryReference(
@@ -251,12 +332,28 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 			dlOpenerFileEntryReferenceId);
 	}
 
+	public static
+		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
+			fetchDLOpenerFileEntryReference(
+				String referenceKey,
+				com.liferay.portal.kernel.repository.model.FileEntry
+					fileEntry) {
+
+		return getService().fetchDLOpenerFileEntryReference(
+			referenceKey, fileEntry);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
 		return getService().getActionableDynamicQuery();
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 #getDLOpenerFileEntryReference(String, FileEntry)}
+	 */
+	@Deprecated
 	public static
 		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
 				getDLOpenerFileEntryReference(
@@ -283,11 +380,23 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 			dlOpenerFileEntryReferenceId);
 	}
 
+	public static
+		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
+				getDLOpenerFileEntryReference(
+					String referenceType,
+					com.liferay.portal.kernel.repository.model.FileEntry
+						fileEntry)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().getDLOpenerFileEntryReference(
+			referenceType, fileEntry);
+	}
+
 	/**
 	 * Returns a range of all the dl opener file entry references.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.document.library.opener.model.impl.DLOpenerFileEntryReferenceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.document.library.opener.model.impl.DLOpenerFileEntryReferenceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of dl opener file entry references
@@ -326,6 +435,9 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -335,6 +447,10 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 
 	/**
 	 * Updates the dl opener file entry reference in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLOpenerFileEntryReferenceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlOpenerFileEntryReference the dl opener file entry reference
 	 * @return the dl opener file entry reference that was updated
@@ -349,6 +465,11 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 			dlOpenerFileEntryReference);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 #updateDLOpenerFileEntryReference(String, String, FileEntry)}
+	 */
+	@Deprecated
 	public static
 		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
 			updateDLOpenerFileEntryReference(
@@ -358,6 +479,17 @@ public class DLOpenerFileEntryReferenceLocalServiceUtil {
 
 		return getService().updateDLOpenerFileEntryReference(
 			referenceKey, fileEntry);
+	}
+
+	public static
+		com.liferay.document.library.opener.model.DLOpenerFileEntryReference
+			updateDLOpenerFileEntryReference(
+				String referenceKey, String referenceType,
+				com.liferay.portal.kernel.repository.model.FileEntry
+					fileEntry) {
+
+		return getService().updateDLOpenerFileEntryReference(
+			referenceKey, referenceType, fileEntry);
 	}
 
 	public static DLOpenerFileEntryReferenceLocalService getService() {

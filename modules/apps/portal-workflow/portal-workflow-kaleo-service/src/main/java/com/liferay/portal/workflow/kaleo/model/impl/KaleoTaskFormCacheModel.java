@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -35,22 +33,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoTaskFormCacheModel
 	implements CacheModel<KaleoTaskForm>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof KaleoTaskFormCacheModel)) {
+		if (!(object instanceof KaleoTaskFormCacheModel)) {
 			return false;
 		}
 
 		KaleoTaskFormCacheModel kaleoTaskFormCacheModel =
-			(KaleoTaskFormCacheModel)obj;
+			(KaleoTaskFormCacheModel)object;
 
 		if ((kaleoTaskFormId == kaleoTaskFormCacheModel.kaleoTaskFormId) &&
 			(mvccVersion == kaleoTaskFormCacheModel.mvccVersion)) {
@@ -80,7 +77,7 @@ public class KaleoTaskFormCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(43);
+		StringBundler sb = new StringBundler(45);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -98,6 +95,8 @@ public class KaleoTaskFormCacheModel
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", kaleoDefinitionId=");
+		sb.append(kaleoDefinitionId);
 		sb.append(", kaleoDefinitionVersionId=");
 		sb.append(kaleoDefinitionVersionId);
 		sb.append(", kaleoNodeId=");
@@ -160,6 +159,7 @@ public class KaleoTaskFormCacheModel
 			kaleoTaskFormImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		kaleoTaskFormImpl.setKaleoDefinitionId(kaleoDefinitionId);
 		kaleoTaskFormImpl.setKaleoDefinitionVersionId(kaleoDefinitionVersionId);
 		kaleoTaskFormImpl.setKaleoNodeId(kaleoNodeId);
 		kaleoTaskFormImpl.setKaleoTaskId(kaleoTaskId);
@@ -233,6 +233,8 @@ public class KaleoTaskFormCacheModel
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 
+		kaleoDefinitionId = objectInput.readLong();
+
 		kaleoDefinitionVersionId = objectInput.readLong();
 
 		kaleoNodeId = objectInput.readLong();
@@ -275,6 +277,8 @@ public class KaleoTaskFormCacheModel
 
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
+
+		objectOutput.writeLong(kaleoDefinitionId);
 
 		objectOutput.writeLong(kaleoDefinitionVersionId);
 
@@ -341,6 +345,7 @@ public class KaleoTaskFormCacheModel
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
+	public long kaleoDefinitionId;
 	public long kaleoDefinitionVersionId;
 	public long kaleoNodeId;
 	public long kaleoTaskId;

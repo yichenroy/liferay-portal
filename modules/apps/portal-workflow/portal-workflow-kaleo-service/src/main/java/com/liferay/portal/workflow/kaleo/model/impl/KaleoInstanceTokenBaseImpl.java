@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.workflow.kaleo.model.KaleoInstanceToken;
 import com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalServiceU
  * @see KaleoInstanceToken
  * @generated
  */
-@ProviderType
 public abstract class KaleoInstanceTokenBaseImpl
 	extends KaleoInstanceTokenModelImpl implements KaleoInstanceToken {
 

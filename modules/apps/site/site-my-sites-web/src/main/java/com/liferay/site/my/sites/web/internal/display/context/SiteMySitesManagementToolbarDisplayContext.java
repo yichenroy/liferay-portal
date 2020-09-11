@@ -30,13 +30,13 @@ public class SiteMySitesManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public SiteMySitesManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request,
 		SiteMySitesDisplayContext siteMySitesDisplayContext) {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			siteMySitesDisplayContext.getGroupSearchContainer());
 	}
 

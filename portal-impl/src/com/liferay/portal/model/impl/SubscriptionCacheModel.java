@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -37,22 +35,21 @@ import java.util.Date;
  * @generated
  */
 @Deprecated
-@ProviderType
 public class SubscriptionCacheModel
 	implements CacheModel<Subscription>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof SubscriptionCacheModel)) {
+		if (!(object instanceof SubscriptionCacheModel)) {
 			return false;
 		}
 
 		SubscriptionCacheModel subscriptionCacheModel =
-			(SubscriptionCacheModel)obj;
+			(SubscriptionCacheModel)object;
 
 		if ((subscriptionId == subscriptionCacheModel.subscriptionId) &&
 			(mvccVersion == subscriptionCacheModel.mvccVersion)) {

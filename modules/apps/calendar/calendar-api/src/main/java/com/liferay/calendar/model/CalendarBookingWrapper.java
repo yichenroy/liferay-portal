@@ -14,8 +14,6 @@
 
 package com.liferay.calendar.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,7 +31,6 @@ import java.util.Map;
  * @see CalendarBooking
  * @generated
  */
-@ProviderType
 public class CalendarBookingWrapper
 	extends BaseModelWrapper<CalendarBooking>
 	implements CalendarBooking, ModelWrapper<CalendarBooking> {
@@ -46,6 +43,7 @@ public class CalendarBookingWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("uuid", getUuid());
 		attributes.put("calendarBookingId", getCalendarBookingId());
 		attributes.put("groupId", getGroupId());
@@ -82,6 +80,12 @@ public class CalendarBookingWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -510,6 +514,16 @@ public class CalendarBookingWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this calendar booking.
+	 *
+	 * @return the mvcc version of this calendar booking
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	@Override
@@ -1171,6 +1185,16 @@ public class CalendarBookingWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the mvcc version of this calendar booking.
+	 *
+	 * @param mvccVersion the mvcc version of this calendar booking
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**

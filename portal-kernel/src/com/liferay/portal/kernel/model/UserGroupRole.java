@@ -14,10 +14,10 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the UserGroupRole service. Represents a row in the &quot;UserGroupRole&quot; database table, with each column mapped to a property of this class.
@@ -35,6 +35,25 @@ public interface UserGroupRole extends PersistedModel, UserGroupRoleModel {
 	 *
 	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.model.impl.UserGroupRoleImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
+	public static final Accessor<UserGroupRole, Long>
+		USER_GROUP_ROLE_ID_ACCESSOR = new Accessor<UserGroupRole, Long>() {
+
+			@Override
+			public Long get(UserGroupRole userGroupRole) {
+				return userGroupRole.getUserGroupRoleId();
+			}
+
+			@Override
+			public Class<Long> getAttributeClass() {
+				return Long.class;
+			}
+
+			@Override
+			public Class<UserGroupRole> getTypeClass() {
+				return UserGroupRole.class;
+			}
+
+		};
 	public static final Accessor<UserGroupRole, Long> USER_ID_ACCESSOR =
 		new Accessor<UserGroupRole, Long>() {
 
@@ -93,6 +112,9 @@ public interface UserGroupRole extends PersistedModel, UserGroupRoleModel {
 
 		};
 
+	@Override
+	public boolean equals(Object object);
+
 	public Group getGroup()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
@@ -101,5 +123,7 @@ public interface UserGroupRole extends PersistedModel, UserGroupRoleModel {
 
 	public User getUser()
 		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public int hashCode();
 
 }

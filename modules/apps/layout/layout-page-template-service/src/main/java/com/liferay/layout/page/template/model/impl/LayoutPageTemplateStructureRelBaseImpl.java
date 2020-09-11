@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLo
  * @see LayoutPageTemplateStructureRel
  * @generated
  */
-@ProviderType
 public abstract class LayoutPageTemplateStructureRelBaseImpl
 	extends LayoutPageTemplateStructureRelModelImpl
 	implements LayoutPageTemplateStructureRel {

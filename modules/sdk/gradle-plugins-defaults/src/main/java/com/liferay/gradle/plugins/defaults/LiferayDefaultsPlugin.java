@@ -18,11 +18,16 @@ import com.liferay.gradle.plugins.LiferayPlugin;
 import com.liferay.gradle.plugins.defaults.internal.JavaDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LicenseReportDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayBaseDefaultsPlugin;
+import com.liferay.gradle.plugins.defaults.internal.LiferayCIPatcherPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayCIPlugin;
+import com.liferay.gradle.plugins.defaults.internal.LiferayProfileDXPPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayRelengPlugin;
 import com.liferay.gradle.plugins.defaults.internal.MavenDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.NodeDefaultsPlugin;
+import com.liferay.gradle.plugins.defaults.internal.util.LiferayRelengUtil;
 import com.liferay.gradle.util.Validator;
+
+import java.io.File;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -42,12 +47,31 @@ public class LiferayDefaultsPlugin extends LiferayPlugin {
 
 		JavaDefaultsPlugin.INSTANCE.apply(project);
 		LiferayBaseDefaultsPlugin.INSTANCE.apply(project);
-		LiferayRelengPlugin.INSTANCE.apply(project);
 		MavenDefaultsPlugin.INSTANCE.apply(project);
 		NodeDefaultsPlugin.INSTANCE.apply(project);
 
+		String buildProfile = System.getProperty("build.profile");
+
+		if (Validator.isNull(buildProfile)) {
+			File relengDir = LiferayRelengUtil.getRelengDir(project);
+
+			if (relengDir != null) {
+				LiferayRelengPlugin.INSTANCE.apply(project);
+			}
+		}
+
+		String projectPath = project.getPath();
+
+		if (projectPath.startsWith(":dxp:") && !_isRunningInCIEnvironment()) {
+			LiferayProfileDXPPlugin.INSTANCE.apply(project);
+		}
+
 		if (_isRunningInCIEnvironment()) {
 			LiferayCIPlugin.INSTANCE.apply(project);
+		}
+
+		if (_isRunningInCIPatcherEnvironment()) {
+			LiferayCIPatcherPlugin.INSTANCE.apply(project);
 		}
 	}
 
@@ -68,6 +92,16 @@ public class LiferayDefaultsPlugin extends LiferayPlugin {
 
 	private boolean _isRunningInCIEnvironment() {
 		if (Validator.isNotNull(System.getenv("JENKINS_HOME"))) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isRunningInCIPatcherEnvironment() {
+		if (Validator.isNotNull(
+				System.getenv("FIX_PACKS_RELEASE_ENVIRONMENT"))) {
+
 			return true;
 		}
 

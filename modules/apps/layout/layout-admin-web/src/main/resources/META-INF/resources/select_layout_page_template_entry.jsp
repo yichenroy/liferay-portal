@@ -33,9 +33,14 @@ portletDisplay.setURLBack(backURL);
 renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 %>
 
-<div class="container-fluid container-fluid-max-xl container-view" id="<portlet:namespace />layoutPageTemplateEntries">
-	<div class="row">
-		<div class="col-lg-3">
+<clay:container-fluid
+	cssClass="container-view"
+	id='<%= liferayPortletResponse.getNamespace() + "layoutPageTemplateEntries" %>'
+>
+	<clay:row>
+		<clay:col
+			lg="3"
+		>
 			<nav class="menubar menubar-transparent menubar-vertical-expand-lg">
 				<ul class="nav nav-nested">
 					<li class="nav-item">
@@ -54,7 +59,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 
 								<c:if test="<%= layoutPageTemplateEntriesCount > 0 %>">
 									<li class="nav-item">
-										<a class="nav-link truncate-text <%= (selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId() == layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), layoutsAdminDisplayContext.isPrivateLayout()) %>">
+										<a class="nav-link text-truncate <%= (selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId() == layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), layoutsAdminDisplayContext.isPrivateLayout()) %>">
 											<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
 										</a>
 									</li>
@@ -65,22 +70,12 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 							%>
 
 							<li class="nav-item">
-
-								<%
-								String basicPagesURL = layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "basic-pages", layoutsAdminDisplayContext.isPrivateLayout());
-								%>
-
-								<a class="nav-link truncate-text <%= selectLayoutPageTemplateEntryDisplayContext.isBasicPages() ? "active" : StringPool.BLANK %>" href="<%= basicPagesURL %>">
-									<liferay-ui:message key="basic-pages" />
+								<a class="nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isBasicTemplates() ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "basic-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>">
+									<liferay-ui:message key="basic-templates" />
 								</a>
 							</li>
 							<li class="nav-item">
-
-								<%
-								String globalTemplatesURL = layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "global-templates", layoutsAdminDisplayContext.isPrivateLayout());
-								%>
-
-								<a class="nav-link truncate-text <%= selectLayoutPageTemplateEntryDisplayContext.isGlobalTemplates() ? "active" : StringPool.BLANK %>" href="<%= globalTemplatesURL %>">
+								<a class="nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isGlobalTemplates() ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "global-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>">
 									<liferay-ui:message key="global-templates" />
 								</a>
 							</li>
@@ -88,30 +83,44 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 					</li>
 				</ul>
 			</nav>
-		</div>
+		</clay:col>
 
-		<div class="col-lg-9">
-			<div class="sheet">
-				<h3 class="sheet-title">
-					<c:choose>
-						<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isContentPages() %>">
+		<clay:col
+			lg="9"
+		>
+			<clay:sheet
+				size="full"
+			>
+				<h2 class="sheet-title">
+					<clay:content-row
+						verticalAlign="center"
+					>
+						<clay:content-col
+							expand="<%= true %>"
+						>
+							<span class="text-uppercase">
+								<c:choose>
+									<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isContentPages() %>">
 
-							<%
-							LayoutPageTemplateCollection layoutPageTemplateCollection = LayoutPageTemplateCollectionLocalServiceUtil.fetchLayoutPageTemplateCollection(selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId());
-							%>
+										<%
+										LayoutPageTemplateCollection layoutPageTemplateCollection = LayoutPageTemplateCollectionLocalServiceUtil.fetchLayoutPageTemplateCollection(selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId());
+										%>
 
-							<c:if test="<%= layoutPageTemplateCollection != null %>">
-								<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
-							</c:if>
-						</c:when>
-						<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isBasicPages() %>">
-							<liferay-ui:message key="basic-pages" />
-						</c:when>
-						<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isGlobalTemplates() %>">
-							<liferay-ui:message key="global-templates" />
-						</c:when>
-					</c:choose>
-				</h3>
+										<c:if test="<%= layoutPageTemplateCollection != null %>">
+											<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
+										</c:if>
+									</c:when>
+									<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isBasicTemplates() %>">
+										<liferay-ui:message key="basic-templates" />
+									</c:when>
+									<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isGlobalTemplates() %>">
+										<liferay-ui:message key="global-templates" />
+									</c:when>
+								</c:choose>
+							</span>
+						</clay:content-col>
+					</clay:content-row>
+				</h2>
 
 				<c:choose>
 					<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isContentPages() %>">
@@ -146,46 +155,40 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 							/>
 						</liferay-ui:search-container>
 					</c:when>
-					<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isBasicPages() %>">
-						<liferay-util:include page="/select_basic_pages.jsp" servletContext="<%= application %>" />
+					<c:when test="<%= selectLayoutPageTemplateEntryDisplayContext.isBasicTemplates() %>">
+						<liferay-util:include page="/select_basic_templates.jsp" servletContext="<%= application %>" />
 					</c:when>
 					<c:otherwise>
 						<liferay-util:include page="/select_global_templates.jsp" servletContext="<%= application %>" />
 					</c:otherwise>
 				</c:choose>
-			</div>
-		</div>
-	</div>
-</div>
+			</clay:sheet>
+		</clay:col>
+	</clay:row>
+</clay:container-fluid>
 
-<aui:script use="aui-base">
-	var addLayoutActionOptionQueryClickHandler = A.one('#<portlet:namespace />layoutPageTemplateEntries').delegate(
+<aui:script require="metal-dom/src/all/dom as dom">
+	var layoutPageTemplateEntries = document.getElementById(
+		'<portlet:namespace />layoutPageTemplateEntries'
+	);
+
+	var addLayoutActionOptionQueryClickHandler = dom.delegate(
+		layoutPageTemplateEntries,
 		'click',
-		function(event) {
-			var actionElement = event.currentTarget;
-
-			Liferay.Util.openWindow(
-				{
-					dialog: {
-						destroyOnHide: true,
-						height: 480,
-						resizable: false,
-						width: 640
-					},
-					dialogIframe: {
-						bodyCssClass: 'dialog-with-footer'
-					},
-					id: '<portlet:namespace />addLayoutDialog',
-					title: '<liferay-ui:message key="add-page" />',
-					uri: actionElement.getData('add-layout-url')
-				}
-			);
-		},
-		'.add-layout-action-option'
+		'.add-layout-action-option',
+		function (event) {
+			Liferay.Util.openModal({
+				height: '540px',
+				id: '<portlet:namespace />addLayoutDialog',
+				size: 'md',
+				title: '<liferay-ui:message key="add-page" />',
+				url: event.delegateTarget.dataset.addLayoutUrl,
+			});
+		}
 	);
 
 	function handleDestroyPortlet() {
-		addLayoutActionOptionQueryClickHandler.detach();
+		addLayoutActionOptionQueryClickHandler.removeListener();
 
 		Liferay.detach('destroyPortlet', handleDestroyPortlet);
 	}

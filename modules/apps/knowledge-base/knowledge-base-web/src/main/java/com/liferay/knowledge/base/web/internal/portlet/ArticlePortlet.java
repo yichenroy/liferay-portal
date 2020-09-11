@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.exception.NoSuchSubscriptionException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -76,8 +75,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=administrator,guest,power-user,user",
 		"javax.portlet.supported-public-render-parameter=categoryId",
-		"javax.portlet.supported-public-render-parameter=tag",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.supported-public-render-parameter=tag"
 	},
 	service = Portlet.class
 )
@@ -141,11 +139,11 @@ public class ArticlePortlet extends BaseKBPortlet {
 
 			renderRequest.setAttribute(KBWebKeys.KNOWLEDGE_BASE_STATUS, status);
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchArticleException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchArticleException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
 
 				SessionMessages.add(
 					renderRequest,
@@ -153,16 +151,13 @@ public class ArticlePortlet extends BaseKBPortlet {
 						SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_ERROR_MESSAGE);
 			}
 			else {
-				throw new PortletException(e);
+				throw new PortletException(exception);
 			}
 		}
 	}
 
 	protected long getResourcePrimKey(RenderRequest renderRequest)
 		throws Exception {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			KBWebKeys.THEME_DISPLAY);
 
 		PortletPreferences preferences = renderRequest.getPreferences();
 
@@ -193,11 +188,12 @@ public class ArticlePortlet extends BaseKBPortlet {
 			return resourcePrimKey;
 		}
 
-		PermissionChecker permissionChecker =
-			themeDisplay.getPermissionChecker();
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			KBWebKeys.THEME_DISPLAY);
 
 		if (!_kbArticleModelResourcePermission.contains(
-				permissionChecker, defaultValue, KBActionKeys.VIEW)) {
+				themeDisplay.getPermissionChecker(), defaultValue,
+				KBActionKeys.VIEW)) {
 
 			return 0;
 		}
@@ -245,7 +241,7 @@ public class ArticlePortlet extends BaseKBPortlet {
 	}
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.knowledge.base.web)(&(release.schema.version>=1.2.0)(!(release.schema.version>=1.3.0))))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.knowledge.base.web)(&(release.schema.version>=1.2.0)(!(release.schema.version>=2.0.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

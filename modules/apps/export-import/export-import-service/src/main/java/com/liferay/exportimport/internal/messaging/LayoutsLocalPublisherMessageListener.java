@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.messaging;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.staging.Staging;
@@ -53,7 +51,6 @@ import org.osgi.service.component.annotations.Reference;
 	},
 	service = LayoutsLocalPublisherMessageListener.class
 )
-@ProviderType
 public class LayoutsLocalPublisherMessageListener
 	extends BasePublisherMessageListener {
 
@@ -130,7 +127,7 @@ public class LayoutsLocalPublisherMessageListener
 	}
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.exportimport.service)(release.schema.version=1.0.0))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.exportimport.service)(release.schema.version=1.0.1))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

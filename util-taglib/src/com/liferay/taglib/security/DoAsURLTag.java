@@ -34,11 +34,13 @@ import javax.servlet.jsp.tagext.TagSupport;
  */
 public class DoAsURLTag extends TagSupport {
 
-	public static String doTag(long doAsUserId, HttpServletRequest request)
+	public static String doTag(
+			long doAsUserId, HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Company company = themeDisplay.getCompany();
 
@@ -77,8 +79,8 @@ public class DoAsURLTag extends TagSupport {
 				jspWriter.write(doAsURL);
 			}
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 
 		return EVAL_PAGE;

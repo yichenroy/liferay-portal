@@ -14,14 +14,11 @@
 
 package com.liferay.message.boards.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchDiscussionException extends NoSuchModelException {
 
 	public NoSuchDiscussionException() {
@@ -31,12 +28,12 @@ public class NoSuchDiscussionException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchDiscussionException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchDiscussionException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchDiscussionException(Throwable cause) {
-		super(cause);
+	public NoSuchDiscussionException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

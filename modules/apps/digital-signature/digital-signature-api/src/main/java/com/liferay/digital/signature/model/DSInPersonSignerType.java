@@ -14,12 +14,9 @@
 
 package com.liferay.digital.signature.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum DSInPersonSignerType {
 
 	IN_PERSON, NOTARY

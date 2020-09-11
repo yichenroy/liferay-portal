@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.workflow.kaleo.model.KaleoInstance;
 import com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalServiceUtil;
  * @see KaleoInstance
  * @generated
  */
-@ProviderType
 public abstract class KaleoInstanceBaseImpl
 	extends KaleoInstanceModelImpl implements KaleoInstance {
 

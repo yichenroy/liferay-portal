@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.engine.adapter.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.search.suggest.SuggesterResult;
 
 import java.util.Collection;
@@ -26,7 +24,6 @@ import java.util.Map;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class SuggesterResults {
 
 	public void addSuggesterResult(SuggesterResult suggesterResult) {

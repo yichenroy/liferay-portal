@@ -14,6 +14,7 @@
 
 package com.liferay.portal.service.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.NoSuchLayoutFriendlyURLException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -28,7 +29,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -235,7 +235,7 @@ public class LayoutFriendlyURLLocalServiceImpl
 
 		Map<Long, String> layoutFriendlyURLMap = new HashMap<>();
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			siteGroup.getTypeSettingsProperties();
 
 		List<LayoutFriendlyURL> layoutFriendlyURLs =
@@ -250,7 +250,7 @@ public class LayoutFriendlyURLLocalServiceImpl
 		}
 
 		if (GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty(
+				typeSettingsUnicodeProperties.getProperty(
 					GroupConstants.TYPE_SETTINGS_KEY_INHERIT_LOCALES),
 				true)) {
 
@@ -260,7 +260,7 @@ public class LayoutFriendlyURLLocalServiceImpl
 		Map<Long, String> filteredLayoutFriendlyURLMap = new HashMap<>();
 
 		String[] locales = StringUtil.split(
-			typeSettingsProperties.getProperty(PropsKeys.LOCALES));
+			typeSettingsUnicodeProperties.getProperty(PropsKeys.LOCALES));
 
 		if (!ArrayUtil.contains(locales, languageId)) {
 			for (Layout layout : layouts) {

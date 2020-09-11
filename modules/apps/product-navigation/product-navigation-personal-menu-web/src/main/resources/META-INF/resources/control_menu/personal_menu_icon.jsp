@@ -16,27 +16,33 @@
 
 <%@ include file="/init.jsp" %>
 
+<style type="text/css">
+	#impersonate-user-icon {
+		color: #272833;
+	}
+
+	#impersonate-user-icon .lexicon-icon {
+		margin-top: -.125rem;
+	}
+
+	#impersonate-user-sticker {
+		bottom: -.4rem;
+		color: #000;
+		font-size: .6rem;
+		height: 1.2rem;
+		right: -0.4rem;
+		width: 1.2rem;
+	}
+
+	#personal-menu-icon-wrapper .lexicon-icon {
+		margin-top: -.25rem;
+	}
+</style>
+
 <li class="control-menu-nav-item">
 	<span class="user-avatar-link">
-		<liferay-util:buffer
-			var="userAvatar"
-		>
-			<span class="sticker">
-				<liferay-ui:user-portrait
-					user="<%= user %>"
-				/>
-
-				<c:if test="<%= themeDisplay.isImpersonated() %>">
-					<span class="sticker sticker-bottom-right sticker-circle sticker-outside sticker-sm sticker-user-icon">
-						<aui:icon image="user" markupView="lexicon" />
-					</span>
-				</c:if>
-			</span>
-		</liferay-util:buffer>
-
 		<liferay-product-navigation:personal-menu
-			expanded="<%= true %>"
-			label="<%= userAvatar %>"
+			user="<%= user %>"
 		/>
 
 		<%
@@ -49,10 +55,12 @@
 			String notificationsURL = PersonalApplicationURLUtil.getPersonalApplicationURL(request, PortletProviderUtil.getPortletId(UserNotificationEvent.class.getName(), PortletProvider.Action.VIEW));
 			%>
 
-			<aui:a href="<%= (notificationsURL != null) ? notificationsURL.toString() : null %>">
-				<span class="badge badge-danger panel-notifications-count">
-					<span class="badge-item badge-item-expand"><%= notificationsCount %></span>
-				</span>
+			<aui:a href="<%= (notificationsURL != null) ? notificationsURL : null %>">
+				<clay:badge
+					cssClass="panel-notifications-count"
+					displayType="danger"
+					label="<%= String.valueOf(notificationsCount) %>"
+				/>
 			</aui:a>
 		</c:if>
 	</span>

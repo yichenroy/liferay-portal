@@ -14,10 +14,10 @@
 
 package com.liferay.fragment.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 
 /**
  * The extended model base implementation for the FragmentEntry service. Represents a row in the &quot;FragmentEntry&quot; database table, with each column mapped to a property of this class.
@@ -31,7 +31,6 @@ import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
  * @see FragmentEntry
  * @generated
  */
-@ProviderType
 public abstract class FragmentEntryBaseImpl
 	extends FragmentEntryModelImpl implements FragmentEntry {
 
@@ -46,7 +45,12 @@ public abstract class FragmentEntryBaseImpl
 			FragmentEntryLocalServiceUtil.addFragmentEntry(this);
 		}
 		else {
-			FragmentEntryLocalServiceUtil.updateFragmentEntry(this);
+			try {
+				FragmentEntryLocalServiceUtil.updateFragmentEntry(this);
+			}
+			catch (PortalException portalException) {
+				throw new SystemException(portalException);
+			}
 		}
 	}
 

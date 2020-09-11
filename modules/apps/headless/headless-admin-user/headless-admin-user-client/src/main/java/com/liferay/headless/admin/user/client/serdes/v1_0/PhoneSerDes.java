@@ -17,9 +17,11 @@ package com.liferay.headless.admin.user.client.serdes.v1_0;
 import com.liferay.headless.admin.user.client.dto.v1_0.Phone;
 import com.liferay.headless.admin.user.client.json.BaseJSONParser;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.annotation.Generated;
 
@@ -56,7 +58,7 @@ public class PhoneSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"extension\":");
+			sb.append("\"extension\": ");
 
 			sb.append("\"");
 
@@ -70,7 +72,7 @@ public class PhoneSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(phone.getId());
 		}
@@ -80,7 +82,7 @@ public class PhoneSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"phoneNumber\":");
+			sb.append("\"phoneNumber\": ");
 
 			sb.append("\"");
 
@@ -94,7 +96,7 @@ public class PhoneSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"phoneType\":");
+			sb.append("\"phoneType\": ");
 
 			sb.append("\"");
 
@@ -108,7 +110,7 @@ public class PhoneSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"primary\":");
+			sb.append("\"primary\": ");
 
 			sb.append(phone.getPrimary());
 		}
@@ -118,12 +120,18 @@ public class PhoneSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		PhoneJSONParser phoneJSONParser = new PhoneJSONParser();
+
+		return phoneJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(Phone phone) {
 		if (phone == null) {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		if (phone.getExtension() == null) {
 			map.put("extension", null);
@@ -163,13 +171,7 @@ public class PhoneSerDes {
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class PhoneJSONParser extends BaseJSONParser<Phone> {
+	public static class PhoneJSONParser extends BaseJSONParser<Phone> {
 
 		@Override
 		protected Phone createDTO() {
@@ -211,12 +213,80 @@ public class PhoneSerDes {
 					phone.setPrimary((Boolean)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

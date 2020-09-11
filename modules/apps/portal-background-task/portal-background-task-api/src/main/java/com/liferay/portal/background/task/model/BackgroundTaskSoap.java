@@ -14,8 +14,6 @@
 
 package com.liferay.portal.background.task.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,9 +25,10 @@ import java.util.Map;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.background.task.service.http.BackgroundTaskServiceSoap}.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class BackgroundTaskSoap implements Serializable {
 
 	public static BackgroundTaskSoap toSoapModel(BackgroundTask model) {

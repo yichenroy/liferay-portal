@@ -14,8 +14,6 @@
 
 package com.liferay.site.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.site.model.SiteFriendlyURL;
 import com.liferay.site.service.SiteFriendlyURLLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.site.service.SiteFriendlyURLLocalServiceUtil;
  * @see SiteFriendlyURL
  * @generated
  */
-@ProviderType
 public abstract class SiteFriendlyURLBaseImpl
 	extends SiteFriendlyURLModelImpl implements SiteFriendlyURL {
 

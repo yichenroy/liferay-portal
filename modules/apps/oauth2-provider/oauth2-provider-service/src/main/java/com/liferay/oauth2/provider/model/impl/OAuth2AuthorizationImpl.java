@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * The extended model implementation for the OAuth2Authorization service.
  * Represents a row in the &quot;OAuth2Authorization&quot; database table, with
@@ -30,7 +28,6 @@ import aQute.bnd.annotation.ProviderType;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class OAuth2AuthorizationImpl extends OAuth2AuthorizationBaseImpl {
 
 	/**

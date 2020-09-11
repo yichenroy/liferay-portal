@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.configuration;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 import java.util.List;
@@ -26,7 +24,6 @@ import javax.portlet.PortletRequest;
 /**
  * @author Akos Thurzo
  */
-@ProviderType
 public class ExportImportConfigurationParameterMapFactoryUtil {
 
 	public static Map<String, String[]> buildFullPublishParameterMap() {

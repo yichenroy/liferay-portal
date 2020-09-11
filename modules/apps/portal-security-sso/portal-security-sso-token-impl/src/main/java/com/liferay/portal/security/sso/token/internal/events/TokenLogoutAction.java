@@ -25,10 +25,10 @@ import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.security.sso.token.configuration.TokenConfiguration;
+import com.liferay.portal.security.sso.token.constants.TokenConstants;
 import com.liferay.portal.security.sso.token.events.LogoutProcessor;
 import com.liferay.portal.security.sso.token.events.LogoutProcessorType;
-import com.liferay.portal.security.sso.token.internal.configuration.TokenConfiguration;
-import com.liferay.portal.security.sso.token.internal.constants.TokenConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -71,15 +71,17 @@ import org.osgi.service.component.annotations.Reference;
 public class TokenLogoutAction extends Action {
 
 	@Override
-	public void run(HttpServletRequest request, HttpServletResponse response) {
-		try {
-			long companyId = _portal.getCompanyId(request);
+	public void run(
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
+		try {
 			TokenConfiguration tokenCompanyServiceSettings =
 				_configurationProvider.getConfiguration(
 					TokenConfiguration.class,
 					new CompanyServiceSettingsLocator(
-						companyId, TokenConstants.SERVICE_NAME));
+						_portal.getCompanyId(httpServletRequest),
+						TokenConstants.SERVICE_NAME));
 
 			if (!tokenCompanyServiceSettings.enabled()) {
 				return;
@@ -94,7 +96,8 @@ public class TokenLogoutAction extends Action {
 
 				if (cookieLogoutProcessor != null) {
 					cookieLogoutProcessor.logout(
-						request, response, authenticationCookies);
+						httpServletRequest, httpServletResponse,
+						authenticationCookies);
 				}
 			}
 
@@ -107,12 +110,13 @@ public class TokenLogoutAction extends Action {
 
 				if (redirectLogoutProcessor != null) {
 					redirectLogoutProcessor.logout(
-						request, response, logoutRedirectURL);
+						httpServletRequest, httpServletResponse,
+						logoutRedirectURL);
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see LayoutSetPrototype
  * @generated
  */
-@ProviderType
 public class LayoutSetPrototypeWrapper
 	extends BaseModelWrapper<LayoutSetPrototype>
 	implements LayoutSetPrototype, ModelWrapper<LayoutSetPrototype> {
@@ -699,9 +696,10 @@ public class LayoutSetPrototypeWrapper
 
 	@Override
 	public void setSettingsProperties(
-		com.liferay.portal.kernel.util.UnicodeProperties settingsProperties) {
+		com.liferay.portal.kernel.util.UnicodeProperties
+			settingsUnicodeProperties) {
 
-		model.setSettingsProperties(settingsProperties);
+		model.setSettingsProperties(settingsUnicodeProperties);
 	}
 
 	/**

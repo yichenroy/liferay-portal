@@ -1,9 +1,8 @@
 {
-	"cssPath": "index.css",
+	"cacheable": true,
 	"fragmentEntryKey": "heading",
-	"htmlPath": "index.html",
-	"jsPath": "index.js",
-	"name": "Heading",
+	"icon": "h1",
+	"name": "heading",
 	"thumbnail": "heading.png",
 	"type": "component"
 }

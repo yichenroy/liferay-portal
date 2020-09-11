@@ -14,10 +14,10 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the Layout service. Represents a row in the &quot;Layout&quot; database table, with each column mapped to a property of this class.
@@ -73,6 +73,8 @@ public interface Layout extends LayoutModel, PersistedModel {
 			}
 
 		};
+
+	public Layout fetchDraftLayout();
 
 	/**
 	 * Returns all layouts that are direct or indirect children of the current
@@ -247,15 +249,16 @@ public interface Layout extends LayoutModel, PersistedModel {
 	 */
 	public Layout getLinkedToLayout();
 
-	public String getRegularURL(javax.servlet.http.HttpServletRequest request)
+	public String getRegularURL(
+			javax.servlet.http.HttpServletRequest httpServletRequest)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public String getResetLayoutURL(
-			javax.servlet.http.HttpServletRequest request)
+			javax.servlet.http.HttpServletRequest httpServletRequest)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public String getResetMaxStateURL(
-			javax.servlet.http.HttpServletRequest request)
+			javax.servlet.http.HttpServletRequest httpServletRequest)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public Group getScopeGroup()
@@ -312,8 +315,8 @@ public interface Layout extends LayoutModel, PersistedModel {
 	public boolean hasSetModifiedDate();
 
 	public boolean includeLayoutContent(
-			javax.servlet.http.HttpServletRequest request,
-			javax.servlet.http.HttpServletResponse response)
+			javax.servlet.http.HttpServletRequest httpServletRequest,
+			javax.servlet.http.HttpServletResponse httpServletResponse)
 		throws Exception;
 
 	public boolean isChildSelected(boolean selectable, Layout layout)
@@ -411,6 +414,10 @@ public interface Layout extends LayoutModel, PersistedModel {
 	 */
 	public boolean isSupportsEmbeddedPortlets();
 
+	public boolean isTypeAssetDisplay();
+
+	public boolean isTypeContent();
+
 	public boolean isTypeControlPanel();
 
 	public boolean isTypeEmbedded();
@@ -421,21 +428,16 @@ public interface Layout extends LayoutModel, PersistedModel {
 
 	public boolean isTypePortlet();
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public boolean isTypeSharedPortlet();
-
 	public boolean isTypeURL();
 
 	public boolean matches(
-		javax.servlet.http.HttpServletRequest request, String friendlyURL);
+		javax.servlet.http.HttpServletRequest httpServletRequest,
+		String friendlyURL);
 
 	public void setLayoutSet(LayoutSet layoutSet);
 
 	public void setTypeSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties
-			typeSettingsProperties);
+			typeSettingsUnicodeProperties);
 
 }

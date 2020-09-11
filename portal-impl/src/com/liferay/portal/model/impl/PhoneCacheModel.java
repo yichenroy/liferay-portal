@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -35,21 +33,20 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class PhoneCacheModel
 	implements CacheModel<Phone>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof PhoneCacheModel)) {
+		if (!(object instanceof PhoneCacheModel)) {
 			return false;
 		}
 
-		PhoneCacheModel phoneCacheModel = (PhoneCacheModel)obj;
+		PhoneCacheModel phoneCacheModel = (PhoneCacheModel)object;
 
 		if ((phoneId == phoneCacheModel.phoneId) &&
 			(mvccVersion == phoneCacheModel.mvccVersion)) {

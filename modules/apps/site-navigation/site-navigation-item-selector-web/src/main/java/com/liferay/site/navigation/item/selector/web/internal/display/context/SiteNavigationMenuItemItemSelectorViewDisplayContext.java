@@ -44,10 +44,10 @@ import javax.servlet.http.HttpServletRequest;
 public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 
 	public SiteNavigationMenuItemItemSelectorViewDisplayContext(
-		HttpServletRequest request, String itemSelectedEventName,
+		HttpServletRequest httpServletRequest, String itemSelectedEventName,
 		SiteNavigationMenuItemTypeRegistry siteNavigationMenuItemTypeRegistry) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_itemSelectedEventName = itemSelectedEventName;
 		_siteNavigationMenuItemTypeRegistry =
 			siteNavigationMenuItemTypeRegistry;
@@ -63,7 +63,7 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 		}
 
 		long siteNavigationMenuId = ParamUtil.getLong(
-			_request, "siteNavigationMenuId");
+			_httpServletRequest, "siteNavigationMenuId");
 
 		if (siteNavigationMenuId > 0) {
 			_siteNavigationMenu =
@@ -83,8 +83,9 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 			return _siteNavigationMenu;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_siteNavigationMenu =
 			SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(
@@ -104,12 +105,16 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 			jsonObject.put(
 				"children",
 				_getSiteNavigationMenuItemsJSONArray(
-					siteNavigationMenu.getSiteNavigationMenuId(), 0));
-
-			jsonObject.put("disabled", true);
-			jsonObject.put("icon", "blogs");
-			jsonObject.put("id", "0");
-			jsonObject.put("name", siteNavigationMenu.getName());
+					siteNavigationMenu.getSiteNavigationMenuId(), 0)
+			).put(
+				"disabled", true
+			).put(
+				"icon", "blogs"
+			).put(
+				"id", "0"
+			).put(
+				"name", siteNavigationMenu.getName()
+			);
 
 			jsonArray.put(jsonObject);
 
@@ -136,14 +141,19 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 			privateLayout = false;
 		}
 
-		jsonObject.put("children", _getLayoutItemsJSONArray(privateLayout, 0));
+		jsonObject.put(
+			"children", _getLayoutItemsJSONArray(privateLayout, 0)
+		).put(
+			"disabled", true
+		).put(
+			"icon", "page"
+		).put(
+			"id", "0"
+		);
 
-		jsonObject.put("disabled", true);
-		jsonObject.put("icon", "page");
-		jsonObject.put("id", "0");
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			themeDisplay.getLocale(),
@@ -183,8 +193,9 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 	private JSONArray _getLayoutItemsJSONArray(
 		boolean privateLayout, long parentLayoutId) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
@@ -205,10 +216,15 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 				jsonObject.put("children", childrenJSONArray);
 			}
 
-			jsonObject.put("icon", "page");
-			jsonObject.put("id", layout.getUuid());
-			jsonObject.put("name", layout.getName(themeDisplay.getLocale()));
-			jsonObject.put("selected", false);
+			jsonObject.put(
+				"icon", "page"
+			).put(
+				"id", layout.getUuid()
+			).put(
+				"name", layout.getName(themeDisplay.getLocale())
+			).put(
+				"selected", false
+			);
 
 			jsonArray.put(jsonObject);
 		}
@@ -222,7 +238,7 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 		}
 
 		_siteNavigationMenuItemId = ParamUtil.getLong(
-			_request, "siteNavigationMenuItemId");
+			_httpServletRequest, "siteNavigationMenuItemId");
 
 		return _siteNavigationMenuItemId;
 	}
@@ -232,8 +248,9 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		List<SiteNavigationMenuItem> siteNavigationMenuItems =
 			SiteNavigationMenuItemLocalServiceUtil.getSiteNavigationMenuItems(
@@ -257,17 +274,17 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 					getSiteNavigationMenuItemType(
 						siteNavigationMenuItem.getType());
 
-			jsonObject.put("icon", siteNavigationMenuItemType.getIcon());
-
 			jsonObject.put(
+				"icon", siteNavigationMenuItemType.getIcon()
+			).put(
 				"id",
 				String.valueOf(
-					siteNavigationMenuItem.getSiteNavigationMenuItemId()));
-
-			jsonObject.put(
+					siteNavigationMenuItem.getSiteNavigationMenuItemId())
+			).put(
 				"name",
 				siteNavigationMenuItemType.getTitle(
-					siteNavigationMenuItem, themeDisplay.getLocale()));
+					siteNavigationMenuItem, themeDisplay.getLocale())
+			);
 
 			if (siteNavigationMenuItem.getSiteNavigationMenuItemId() ==
 					_getSiteNavigationMenuItemId()) {
@@ -287,13 +304,13 @@ public class SiteNavigationMenuItemItemSelectorViewDisplayContext {
 		}
 
 		_siteNavigationMenuType = ParamUtil.getInteger(
-			_request, "siteNavigationMenuType");
+			_httpServletRequest, "siteNavigationMenuType");
 
 		return _siteNavigationMenuType;
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private final String _itemSelectedEventName;
-	private final HttpServletRequest _request;
 	private SiteNavigationMenu _siteNavigationMenu;
 	private Long _siteNavigationMenuItemId;
 	private final SiteNavigationMenuItemTypeRegistry

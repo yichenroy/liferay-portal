@@ -17,18 +17,22 @@ package com.liferay.fragment.model.impl;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentExportImportConstants;
+import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
+import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.fragment.util.FragmentEntryRenderUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.zip.ZipWriter;
 
 /**
@@ -37,8 +41,28 @@ import com.liferay.portal.kernel.zip.ZipWriter;
 public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 
 	@Override
+	public FragmentEntry fetchDraftFragmentEntry() {
+		if (isDraft()) {
+			return null;
+		}
+
+		return FragmentEntryLocalServiceUtil.fetchDraft(getFragmentEntryId());
+	}
+
+	@Override
 	public String getContent() {
 		return FragmentEntryRenderUtil.renderFragmentEntry(this);
+	}
+
+	@Override
+	public int getGlobalUsageCount() {
+		return FragmentEntryLinkLocalServiceUtil.
+			getFragmentEntryLinksCountByFragmentEntryId(getFragmentEntryId());
+	}
+
+	@Override
+	public String getIcon() {
+		return _icon;
 	}
 
 	@Override
@@ -56,11 +80,21 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 
 			return DLUtil.getImagePreviewURL(fileEntry, themeDisplay);
 		}
-		catch (Exception e) {
-			_log.error("Unable to get preview entry image URL", e);
+		catch (Exception exception) {
+			_log.error("Unable to get preview entry image URL", exception);
 		}
 
 		return StringPool.BLANK;
+	}
+
+	@JSON
+	@Override
+	public int getStatus() {
+		if (isHead()) {
+			return WorkflowConstants.STATUS_APPROVED;
+		}
+
+		return WorkflowConstants.STATUS_DRAFT;
 	}
 
 	@Override
@@ -75,17 +109,40 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 	}
 
 	@Override
+	public boolean isApproved() {
+		if (isHead()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isDraft() {
+		if (isHead()) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
 	public void populateZipWriter(ZipWriter zipWriter, String path)
 		throws Exception {
 
 		path = path + StringPool.SLASH + getFragmentEntryKey();
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("cssPath", "index.css");
-		jsonObject.put("htmlPath", "index.html");
-		jsonObject.put("jsPath", "index.js");
-		jsonObject.put("name", getName());
+		JSONObject jsonObject = JSONUtil.put(
+			"configurationPath", "index.json"
+		).put(
+			"cssPath", "index.css"
+		).put(
+			"htmlPath", "index.html"
+		).put(
+			"jsPath", "index.js"
+		).put(
+			"name", getName()
+		);
 
 		FileEntry previewFileEntry = _getPreviewFileEntry();
 
@@ -103,11 +160,12 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 
 		zipWriter.addEntry(
 			path + StringPool.SLASH +
-				FragmentExportImportConstants.FILE_NAME_FRAGMENT_CONFIG,
+				FragmentExportImportConstants.FILE_NAME_FRAGMENT,
 			jsonObject.toString());
 
 		zipWriter.addEntry(path + "/index.css", getCss());
 		zipWriter.addEntry(path + "/index.js", getJs());
+		zipWriter.addEntry(path + "/index.json", getConfiguration());
 		zipWriter.addEntry(path + "/index.html", getHtml());
 
 		if (previewFileEntry != null) {
@@ -115,6 +173,11 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 				path + "/thumbnail." + previewFileEntry.getExtension(),
 				previewFileEntry.getContentStream());
 		}
+	}
+
+	@Override
+	public void setIcon(String icon) {
+		_icon = icon;
 	}
 
 	@Override
@@ -131,9 +194,10 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 			return PortletFileRepositoryUtil.getPortletFileEntry(
 				getPreviewFileEntryId());
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to get file entry preview ", pe);
+				_log.debug(
+					"Unable to get file entry preview ", portalException);
 			}
 		}
 
@@ -143,6 +207,7 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		FragmentEntryImpl.class);
 
+	private String _icon = "code";
 	private String _imagePreviewURL;
 
 }

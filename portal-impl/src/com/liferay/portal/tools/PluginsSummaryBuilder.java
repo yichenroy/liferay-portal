@@ -15,13 +15,13 @@
 package com.liferay.portal.tools;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.OSDetector;
 import com.liferay.portal.kernel.util.PropertiesUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.FileImpl;
@@ -53,9 +53,7 @@ public class PluginsSummaryBuilder {
 	public PluginsSummaryBuilder(File pluginsDir) throws Exception {
 		_pluginsDir = pluginsDir;
 
-		String latestHASH = null;
-
-		latestHASH = _getLatestHASH(pluginsDir);
+		String latestHASH = _getLatestHASH(pluginsDir);
 
 		_latestHASH = latestHASH;
 
@@ -221,7 +219,7 @@ public class PluginsSummaryBuilder {
 
 		System.out.println("## read a " + buildXmlFile);
 
-		String buildXmlContent = _fileUtil.read(buildXmlFile);
+		String buildXmlContent = _fileImpl.read(buildXmlFile);
 
 		int x = buildXmlContent.indexOf("import.shared");
 
@@ -443,8 +441,6 @@ public class PluginsSummaryBuilder {
 						_latestHASH;
 
 				relengChangeLogEntries.add(range);
-
-				continue;
 			}
 		}
 
@@ -523,7 +519,7 @@ public class PluginsSummaryBuilder {
 			}
 
 			String ticketIdsString = StringUtil.merge(
-				ticketIds.toArray(new String[ticketIds.size()]), " ");
+				ticketIds.toArray(new String[0]), " ");
 
 			changeLogVersion++;
 
@@ -561,9 +557,9 @@ public class PluginsSummaryBuilder {
 		File relengChangeLogMD5File = new File(
 			webInfDir, "liferay-releng.changelog.md5");
 
-		String md5Checksum = FileUtil.getMD5Checksum(relengChangeLogFile);
-
-		FileUtil.write(relengChangeLogMD5File, md5Checksum);
+		FileUtil.write(
+			relengChangeLogMD5File,
+			FileUtil.getMD5Checksum(relengChangeLogFile));
 	}
 
 	private String _updateRelengPropertiesFile(
@@ -631,7 +627,7 @@ public class PluginsSummaryBuilder {
 		"CLDSVCS", "LPS", "SOS", "SYNC"
 	};
 
-	private static final FileImpl _fileUtil = FileImpl.getInstance();
+	private static final FileImpl _fileImpl = FileImpl.getInstance();
 
 	private final Set<String> _distinctAuthors = new TreeSet<>();
 	private final Set<String> _distinctLicenses = new TreeSet<>();

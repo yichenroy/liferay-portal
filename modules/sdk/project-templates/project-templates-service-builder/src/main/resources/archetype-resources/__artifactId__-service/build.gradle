@@ -1,24 +1,18 @@
-#if (${projectType} != "workspace")apply plugin: "com.liferay.portal.tools.service.builder"
-#end
 dependencies {
-#if (${dependencyManagementEnabled} == "true")
-	compileOnly group: "biz.aQute.bnd", name: "biz.aQute.bndlib"
-#if (${liferayVersion.startsWith("7.0")})
-	compileOnly group: "com.liferay", name: "com.liferay.portal.spring.extender"
-#elseif (${liferayVersion.startsWith("7.1")})
-	compileOnly group: "com.liferay", name: "com.liferay.portal.spring.extender.api"
+#if (${liferayVersion.startsWith("7.0")} || ${liferayVersion.startsWith("7.1")})
+	compileOnly group: "biz.aQute.bnd", name: "biz.aQute.bnd.annotation", version: "@biz.aQute.bnd.version@"
 #end
-	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel"
-#else
-	compileOnly group: "biz.aQute.bnd", name: "biz.aQute.bndlib", version: "3.5.0"
-#if (${liferayVersion.startsWith("7.0")})
-	compileOnly group: "com.liferay", name: "com.liferay.portal.spring.extender", version: "2.0.0"
-	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "2.6.0"
-#elseif (${liferayVersion.startsWith("7.1")})
-	compileOnly group: "com.liferay", name: "com.liferay.portal.spring.extender.api", version: "3.0.0"
-	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "3.0.0"
+
+	compileOnly group: "com.liferay.portal", name: "release.portal.api"
+
+#if (${liferayVersion.startsWith("7.2")})
+	compileOnly group: "org.osgi", name: "org.osgi.annotation.versioning"
 #end
+#if (${liferayVersion.startsWith("7.0")} || ${liferayVersion.startsWith("7.1")} || ${liferayVersion.startsWith("7.2")})
+	compileOnly group: "org.osgi", name: "org.osgi.core"
+	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations"
 #end
+
 	compileOnly project("${apiPath}")
 }
 
@@ -27,3 +21,11 @@ buildService {
 }
 
 group = "${package}"
+
+tasks.withType(JavaCompile) {
+
+	// Generated classes using Jodd library are unable to be read when compiled against JDK 11
+
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}

@@ -14,11 +14,10 @@
 
 package com.liferay.portal.kernel.util;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.net.URI;
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -31,6 +30,8 @@ import javax.portlet.RenderRequest;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -75,25 +76,11 @@ public interface Http {
 
 	public String encodePath(String path);
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             URLCodec#encodeURL(String)}
-	 */
-	@Deprecated
-	public String encodeURL(String url);
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             URLCodec#encodeURL(String, boolean)}
-	 */
-	@Deprecated
-	public String encodeURL(String url, boolean escapeSpaces);
-
 	public String fixPath(String path);
 
 	public String fixPath(String path, boolean leading, boolean trailing);
 
-	public String getCompleteURL(HttpServletRequest request);
+	public String getCompleteURL(HttpServletRequest httpServletRequest);
 
 	public Cookie[] getCookies();
 
@@ -113,7 +100,7 @@ public interface Http {
 
 	public String getProtocol(boolean secure);
 
-	public String getProtocol(HttpServletRequest request);
+	public String getProtocol(HttpServletRequest httpServletRequest);
 
 	public String getProtocol(RenderRequest renderRequest);
 
@@ -121,7 +108,9 @@ public interface Http {
 
 	public String getQueryString(String url);
 
-	public String getRequestURL(HttpServletRequest request);
+	public String getRequestURL(HttpServletRequest httpServletRequest);
+
+	public URI getURI(String uriString);
 
 	public boolean hasDomain(String url);
 
@@ -148,7 +137,8 @@ public interface Http {
 
 	public String protocolize(String url, boolean secure);
 
-	public String protocolize(String url, HttpServletRequest request);
+	public String protocolize(
+		String url, HttpServletRequest httpServletRequest);
 
 	public String protocolize(String url, int port, boolean secure);
 
@@ -177,12 +167,6 @@ public interface Http {
 	public String setParameter(String url, String name, String value);
 
 	public String shortenURL(String url);
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #shortenURL(String)}
-	 */
-	@Deprecated
-	public String shortenURL(String url, int count);
 
 	public byte[] URLtoByteArray(Http.Options options) throws IOException;
 

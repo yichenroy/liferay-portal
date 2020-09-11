@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMContent;
 import com.liferay.dynamic.data.mapping.service.DDMContentLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.dynamic.data.mapping.service.DDMContentLocalServiceUtil;
  * @see DDMContent
  * @generated
  */
-@ProviderType
 public abstract class DDMContentBaseImpl
 	extends DDMContentModelImpl implements DDMContent {
 

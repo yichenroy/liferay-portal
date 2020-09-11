@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Address;
@@ -35,21 +33,20 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class AddressCacheModel
 	implements CacheModel<Address>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AddressCacheModel)) {
+		if (!(object instanceof AddressCacheModel)) {
 			return false;
 		}
 
-		AddressCacheModel addressCacheModel = (AddressCacheModel)obj;
+		AddressCacheModel addressCacheModel = (AddressCacheModel)object;
 
 		if ((addressId == addressCacheModel.addressId) &&
 			(mvccVersion == addressCacheModel.mvccVersion)) {

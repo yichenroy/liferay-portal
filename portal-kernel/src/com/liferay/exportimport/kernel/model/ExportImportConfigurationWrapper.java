@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -34,7 +32,6 @@ import java.util.Map;
  * @see ExportImportConfiguration
  * @generated
  */
-@ProviderType
 public class ExportImportConfigurationWrapper
 	extends BaseModelWrapper<ExportImportConfiguration>
 	implements ExportImportConfiguration,

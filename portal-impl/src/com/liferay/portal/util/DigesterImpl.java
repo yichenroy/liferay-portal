@@ -14,13 +14,13 @@
 
 package com.liferay.portal.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.StreamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -173,8 +173,8 @@ public class DigesterImpl implements Digester {
 
 			messageDigest.update(byteBuffer);
 		}
-		catch (NoSuchAlgorithmException nsae) {
-			_log.error(nsae, nsae);
+		catch (NoSuchAlgorithmException noSuchAlgorithmException) {
+			_log.error(noSuchAlgorithmException, noSuchAlgorithmException);
 		}
 
 		return messageDigest.digest();
@@ -197,11 +197,11 @@ public class DigesterImpl implements Digester {
 				}
 			}
 		}
-		catch (IOException ioe) {
-			_log.error(ioe, ioe);
+		catch (IOException ioException) {
+			_log.error(ioException, ioException);
 		}
-		catch (NoSuchAlgorithmException nsae) {
-			_log.error(nsae, nsae);
+		catch (NoSuchAlgorithmException noSuchAlgorithmException) {
+			_log.error(noSuchAlgorithmException, noSuchAlgorithmException);
 		}
 
 		return messageDigest.digest();
@@ -214,7 +214,7 @@ public class DigesterImpl implements Digester {
 		try {
 			messageDigest = MessageDigest.getInstance(algorithm);
 
-			StringBundler sb = new StringBundler(text.length * 2 - 1);
+			StringBundler sb = new StringBundler((text.length * 2) - 1);
 
 			for (String t : text) {
 				if (sb.length() > 0) {
@@ -228,11 +228,12 @@ public class DigesterImpl implements Digester {
 
 			messageDigest.update(s.getBytes(Digester.ENCODING));
 		}
-		catch (NoSuchAlgorithmException nsae) {
-			_log.error(nsae, nsae);
+		catch (NoSuchAlgorithmException noSuchAlgorithmException) {
+			_log.error(noSuchAlgorithmException, noSuchAlgorithmException);
 		}
-		catch (UnsupportedEncodingException uee) {
-			_log.error(uee, uee);
+		catch (UnsupportedEncodingException unsupportedEncodingException) {
+			_log.error(
+				unsupportedEncodingException, unsupportedEncodingException);
 		}
 
 		return messageDigest.digest();

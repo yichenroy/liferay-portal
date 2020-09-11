@@ -112,29 +112,26 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 			editPageURL.setPortletMode(PortletMode.VIEW);
 			editPageURL.setWindowState(WindowState.MAXIMIZED);
 
-			HttpServletRequest request = _portal.getHttpServletRequest(
-				actionRequest);
-			HttpServletResponse response = _portal.getHttpServletResponse(
-				actionResponse);
-
 			getFile(
 				nodeId, title, version, targetExtension, viewPageURL,
-				editPageURL, themeDisplay, request, response);
+				editPageURL, themeDisplay,
+				_portal.getHttpServletRequest(actionRequest),
+				_portal.getHttpServletResponse(actionResponse));
 
 			actionResponse.setRenderParameter("mvcPath", "/null.jsp");
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			_portal.sendError(e, actionRequest, actionResponse);
+			_portal.sendError(exception, actionRequest, actionResponse);
 		}
 	}
 
 	protected void getFile(
 			long nodeId, String title, double version, String targetExtension,
 			PortletURL viewPageURL, PortletURL editPageURL,
-			ThemeDisplay themeDisplay, HttpServletRequest request,
-			HttpServletResponse response)
+			ThemeDisplay themeDisplay, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		WikiPage page = _wikiPageService.getPage(nodeId, title, version);
@@ -148,12 +145,12 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 			content = _wikiEngineRenderer.convert(
 				page, viewPageURL, editPageURL, attachmentURLPrefix);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				StringBundler.concat(
 					"Error formatting the wiki page ", page.getPageId(),
 					" with the format ", page.getFormat()),
-				e);
+				exception);
 		}
 
 		StringBundler sb = new StringBundler(17);
@@ -183,16 +180,13 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 
 		String s = sb.toString();
 
-		InputStream is = new UnsyncByteArrayInputStream(
+		InputStream inputStream = new UnsyncByteArrayInputStream(
 			s.getBytes(StringPool.UTF8));
 
 		String sourceExtension = "html";
 
-		String fileName = title.concat(
-			StringPool.PERIOD
-		).concat(
-			sourceExtension
-		);
+		String fileName = StringBundler.concat(
+			title, StringPool.PERIOD, sourceExtension);
 
 		if (Validator.isNotNull(targetExtension)) {
 			String id =
@@ -200,23 +194,19 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 					page.getUuid();
 
 			File convertedFile = DocumentConversionUtil.convert(
-				id, is, sourceExtension, targetExtension);
+				id, inputStream, sourceExtension, targetExtension);
 
 			if (convertedFile != null) {
-				fileName = title.concat(
-					StringPool.PERIOD
-				).concat(
-					targetExtension
-				);
+				fileName = StringBundler.concat(
+					title, StringPool.PERIOD, targetExtension);
 
-				is = new FileInputStream(convertedFile);
+				inputStream = new FileInputStream(convertedFile);
 			}
 		}
 
-		String contentType = MimeTypesUtil.getContentType(fileName);
-
 		ServletResponseUtil.sendFile(
-			request, response, fileName, is, contentType);
+			httpServletRequest, httpServletResponse, fileName, inputStream,
+			MimeTypesUtil.getContentType(fileName));
 	}
 
 	@Reference(unbind = "-")

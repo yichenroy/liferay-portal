@@ -15,8 +15,9 @@
 package com.liferay.headless.delivery.internal.jaxrs.exception.mapper;
 
 import com.liferay.document.library.kernel.exception.FileNameException;
+import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
+import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -26,7 +27,6 @@ import org.osgi.service.component.annotations.Component;
  * Converts any {@code FileNameException} to a {@code 400} error.
  *
  * @author Alejandro Hernández
- * @review
  */
 @Component(
 	property = {
@@ -37,17 +37,12 @@ import org.osgi.service.component.annotations.Component;
 	service = ExceptionMapper.class
 )
 public class DocumentFileNameExceptionMapper
-	implements ExceptionMapper<FileNameException> {
+	extends BaseExceptionMapper<FileNameException> {
 
 	@Override
-	public Response toResponse(FileNameException fne) {
-		return Response.status(
-			400
-		).type(
-			MediaType.TEXT_PLAIN
-		).entity(
-			fne.getMessage()
-		).build();
+	protected Problem getProblem(FileNameException fileNameException) {
+		return new Problem(
+			Response.Status.BAD_REQUEST, fileNameException.getMessage());
 	}
 
 }

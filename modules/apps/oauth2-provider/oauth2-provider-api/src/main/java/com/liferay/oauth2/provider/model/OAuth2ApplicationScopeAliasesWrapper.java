@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,11 +30,10 @@ import java.util.Map;
  * @see OAuth2ApplicationScopeAliases
  * @generated
  */
-@ProviderType
 public class OAuth2ApplicationScopeAliasesWrapper
 	extends BaseModelWrapper<OAuth2ApplicationScopeAliases>
-	implements OAuth2ApplicationScopeAliases,
-			   ModelWrapper<OAuth2ApplicationScopeAliases> {
+	implements ModelWrapper<OAuth2ApplicationScopeAliases>,
+			   OAuth2ApplicationScopeAliases {
 
 	public OAuth2ApplicationScopeAliasesWrapper(
 		OAuth2ApplicationScopeAliases oAuth2ApplicationScopeAliases) {

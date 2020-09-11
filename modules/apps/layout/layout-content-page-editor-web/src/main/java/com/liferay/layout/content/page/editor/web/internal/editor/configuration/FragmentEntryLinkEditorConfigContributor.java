@@ -16,22 +16,20 @@ package com.liferay.layout.content.page.editor.web.internal.editor.configuration
 
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
-import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.DownloadURLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
+import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.item.selector.criteria.url.criterion.URLItemSelectorCriterion;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.portlet.PortletURL;
@@ -47,7 +45,10 @@ import org.osgi.service.component.annotations.Reference;
 		"editor.config.key=fragmenEntryLinkEditor",
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET
 	},
-	service = EditorConfigContributor.class
+	service = {
+		EditorConfigContributor.class,
+		FragmentEntryLinkEditorConfigContributor.class
+	}
 )
 public class FragmentEntryLinkEditorConfigContributor
 	extends BaseEditorConfigContributor {
@@ -58,31 +59,34 @@ public class FragmentEntryLinkEditorConfigContributor
 		ThemeDisplay themeDisplay,
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
-		String namespace = GetterUtil.getString(
-			inputEditorTaglibAttributes.get(
-				"liferay-ui:input-editor:namespace"));
-		String name = GetterUtil.getString(
-			inputEditorTaglibAttributes.get("liferay-ui:input-editor:name"));
-
 		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
-			requestBackedPortletURLFactory, namespace + name + "selectItem",
+			requestBackedPortletURLFactory, "_EDITOR_NAME_selectItem",
+			getFileItemSelectorCriterion(), getLayoutItemSelectorURL());
+		PortletURL imageSelectorURL = _itemSelector.getItemSelectorURL(
+			requestBackedPortletURLFactory, "_EDITOR_NAME_selectImage",
 			getImageItemSelectorCriterion(), getURLItemSelectorCriterion());
 
-		jsonObject.put("allowedContent", "");
-
-		jsonObject.put("disallowedContent", "br");
-
-		jsonObject.put("enterMode", 2);
-
-		jsonObject.put("extraPlugins", getExtraPluginsLists());
-
 		jsonObject.put(
-			"filebrowserImageBrowseLinkUrl", itemSelectorURL.toString());
-		jsonObject.put("filebrowserImageBrowseUrl", itemSelectorURL.toString());
-
-		jsonObject.put("removePlugins", getRemovePluginsLists());
-
-		jsonObject.put("toolbars", JSONFactoryUtil.createJSONObject());
+			"allowedContent", ""
+		).put(
+			"disallowedContent", "br"
+		).put(
+			"documentBrowseLinkUrl", itemSelectorURL.toString()
+		).put(
+			"enterMode", 2
+		).put(
+			"extraPlugins", getExtraPluginsLists()
+		).put(
+			"filebrowserImageBrowseLinkUrl", imageSelectorURL.toString()
+		).put(
+			"filebrowserImageBrowseUrl", imageSelectorURL.toString()
+		).put(
+			"removePlugins", getRemovePluginsLists()
+		).put(
+			"skin", "moono-lisa"
+		).put(
+			"toolbars", JSONFactoryUtil.createJSONObject()
+		);
 	}
 
 	protected String getExtraPluginsLists() {
@@ -91,20 +95,35 @@ public class FragmentEntryLinkEditorConfigContributor
 				"ae_tabletools,ae_uicore,itemselector,media,adaptivemedia";
 	}
 
-	protected ItemSelectorCriterion getImageItemSelectorCriterion() {
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
+	protected ItemSelectorCriterion getFileItemSelectorCriterion() {
+		ItemSelectorCriterion fileItemSelectorCriterion =
+			new FileItemSelectorCriterion();
 
-		desiredItemSelectorReturnTypes.add(
+		fileItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new DownloadURLItemSelectorReturnType());
 
-		ItemSelectorCriterion imageItemSelectorCriterion =
+		return fileItemSelectorCriterion;
+	}
+
+	protected ItemSelectorCriterion getImageItemSelectorCriterion() {
+		ItemSelectorCriterion itemSelectorCriterion =
 			new ImageItemSelectorCriterion();
 
-		imageItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new DownloadURLItemSelectorReturnType());
 
-		return imageItemSelectorCriterion;
+		return itemSelectorCriterion;
+	}
+
+	protected ItemSelectorCriterion getLayoutItemSelectorURL() {
+		LayoutItemSelectorCriterion layoutItemSelectorCriterion =
+			new LayoutItemSelectorCriterion();
+
+		layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new URLItemSelectorReturnType());
+		layoutItemSelectorCriterion.setShowHiddenPages(true);
+
+		return layoutItemSelectorCriterion;
 	}
 
 	protected String getRemovePluginsLists() {
@@ -113,18 +132,13 @@ public class FragmentEntryLinkEditorConfigContributor
 	}
 
 	protected ItemSelectorCriterion getURLItemSelectorCriterion() {
-		ItemSelectorCriterion urlItemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new URLItemSelectorCriterion();
 
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new URLItemSelectorReturnType());
 
-		desiredItemSelectorReturnTypes.add(new URLItemSelectorReturnType());
-
-		urlItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
-
-		return urlItemSelectorCriterion;
+		return itemSelectorCriterion;
 	}
 
 	@Reference

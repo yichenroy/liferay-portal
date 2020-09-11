@@ -59,8 +59,8 @@ public class TemplateRendererTag extends BaseTemplateRendererTag {
 
 			return EVAL_BODY_INCLUDE;
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 	}
 
@@ -79,28 +79,30 @@ public class TemplateRendererTag extends BaseTemplateRendererTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		super.setAttributes(request);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		super.setAttributes(httpServletRequest);
 
-		long displaStyleGroupId = getDisplayStyleGroupId();
+		long displayStyleGroupId = getDisplayStyleGroupId();
 
-		if (displaStyleGroupId == 0) {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+		if (displayStyleGroupId == 0) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
-			displaStyleGroupId = themeDisplay.getScopeGroupId();
+			displayStyleGroupId = themeDisplay.getScopeGroupId();
 
 			setNamespacedAttribute(
-				request, "displayStyleGroupId", displaStyleGroupId);
+				httpServletRequest, "displayStyleGroupId", displayStyleGroupId);
 		}
 
 		_portletDisplayDDMTemplate =
 			PortletDisplayTemplateUtil.getPortletDisplayTemplateDDMTemplate(
-				displaStyleGroupId, PortalUtil.getClassNameId(getClassName()),
+				displayStyleGroupId, PortalUtil.getClassNameId(getClassName()),
 				getDisplayStyle(), true);
 
 		setNamespacedAttribute(
-			request, "portletDisplayDDMTemplate", _portletDisplayDDMTemplate);
+			httpServletRequest, "portletDisplayDDMTemplate",
+			_portletDisplayDDMTemplate);
 	}
 
 	private DDMTemplate _portletDisplayDDMTemplate;

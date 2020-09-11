@@ -14,12 +14,11 @@
 
 package com.liferay.mobile.device.rules.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.mobile.device.rules.model.MDRRule;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,22 +33,24 @@ import java.util.Date;
  * @author Edward C. Han
  * @generated
  */
-@ProviderType
-public class MDRRuleCacheModel implements CacheModel<MDRRule>, Externalizable {
+public class MDRRuleCacheModel
+	implements CacheModel<MDRRule>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof MDRRuleCacheModel)) {
+		if (!(object instanceof MDRRuleCacheModel)) {
 			return false;
 		}
 
-		MDRRuleCacheModel mdrRuleCacheModel = (MDRRuleCacheModel)obj;
+		MDRRuleCacheModel mdrRuleCacheModel = (MDRRuleCacheModel)object;
 
-		if (ruleId == mdrRuleCacheModel.ruleId) {
+		if ((ruleId == mdrRuleCacheModel.ruleId) &&
+			(mvccVersion == mdrRuleCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -58,14 +59,28 @@ public class MDRRuleCacheModel implements CacheModel<MDRRule>, Externalizable {
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, ruleId);
+		int hashCode = HashUtil.hash(0, ruleId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(31);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", ruleId=");
 		sb.append(ruleId);
@@ -101,6 +116,8 @@ public class MDRRuleCacheModel implements CacheModel<MDRRule>, Externalizable {
 	@Override
 	public MDRRule toEntityModel() {
 		MDRRuleImpl mdrRuleImpl = new MDRRuleImpl();
+
+		mdrRuleImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			mdrRuleImpl.setUuid("");
@@ -178,7 +195,10 @@ public class MDRRuleCacheModel implements CacheModel<MDRRule>, Externalizable {
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		ruleId = objectInput.readLong();
@@ -196,12 +216,14 @@ public class MDRRuleCacheModel implements CacheModel<MDRRule>, Externalizable {
 		name = objectInput.readUTF();
 		description = objectInput.readUTF();
 		type = objectInput.readUTF();
-		typeSettings = objectInput.readUTF();
+		typeSettings = (String)objectInput.readObject();
 		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -251,15 +273,16 @@ public class MDRRuleCacheModel implements CacheModel<MDRRule>, Externalizable {
 		}
 
 		if (typeSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(typeSettings);
+			objectOutput.writeObject(typeSettings);
 		}
 
 		objectOutput.writeLong(lastPublishDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long ruleId;
 	public long groupId;

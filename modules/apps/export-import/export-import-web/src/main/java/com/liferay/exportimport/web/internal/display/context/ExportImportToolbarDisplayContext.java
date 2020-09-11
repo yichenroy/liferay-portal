@@ -14,15 +14,14 @@
 
 package com.liferay.exportimport.web.internal.display.context;
 
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -48,41 +47,38 @@ import javax.servlet.http.HttpServletRequest;
 public class ExportImportToolbarDisplayContext {
 
 	public ExportImportToolbarDisplayContext(
-		HttpServletRequest request, LiferayPortletResponse portletResponse) {
+		HttpServletRequest httpServletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 
-		_portletResponse = portletResponse;
+		_liferayPortletResponse = liferayPortletResponse;
 
-		Portlet portlet = portletResponse.getPortlet();
+		Portlet portlet = liferayPortletResponse.getPortlet();
 
 		_portletNamespace = PortalUtil.getPortletNamespace(
 			portlet.getRootPortletId());
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							"javascript:" + _portletNamespace +
-								"deleteEntries();");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					"javascript:" + _portletNamespace + "deleteEntries();");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
 			}
-		};
+		).build();
 	}
 
 	public CreationMenu getCreationMenu() {
 		return new CreationMenu() {
 			{
 				GroupDisplayContextHelper groupDisplayContextHelper =
-					new GroupDisplayContextHelper(_request);
+					new GroupDisplayContextHelper(_httpServletRequest);
 
 				String mvcRenderCommandName = ParamUtil.getString(
-					_request, "mvcRenderCommandName");
+					_httpServletRequest, "mvcRenderCommandName");
 
 				String cmd;
 				String label;
@@ -105,16 +101,18 @@ public class ExportImportToolbarDisplayContext {
 							getRenderURL(), "mvcPath", mvcPath, Constants.CMD,
 							cmd, "groupId",
 							String.valueOf(
-								ParamUtil.getLong(_request, "groupId")),
+								ParamUtil.getLong(
+									_httpServletRequest, "groupId")),
 							"liveGroupId",
 							String.valueOf(
 								groupDisplayContextHelper.getLiveGroupId()),
 							"privateLayout", Boolean.FALSE.toString(),
 							"displayStyle",
 							ParamUtil.getString(
-								_request, "displayStyle", "descriptive"));
+								_httpServletRequest, "displayStyle",
+								"descriptive"));
 						dropdownItem.setLabel(
-							LanguageUtil.get(_request, label));
+							LanguageUtil.get(_httpServletRequest, label));
 					});
 
 				if (Objects.equals(cmd, Constants.EXPORT)) {
@@ -143,7 +141,8 @@ public class ExportImportToolbarDisplayContext {
 											getExportImportConfigurationId()),
 									"groupId",
 									String.valueOf(
-										ParamUtil.getLong(_request, "groupId")),
+										ParamUtil.getLong(
+											_httpServletRequest, "groupId")),
 									"liveGroupId",
 									String.valueOf(
 										groupDisplayContextHelper.
@@ -153,7 +152,7 @@ public class ExportImportToolbarDisplayContext {
 										settingsMap, "privateLayout"),
 									"displayStyle",
 									ParamUtil.getString(
-										_request, "displayStyle",
+										_httpServletRequest, "displayStyle",
 										"descriptive"));
 
 								dropdownItem.setLabel(
@@ -166,52 +165,51 @@ public class ExportImportToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigatioDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter"));
-						dropdownGroupItem.setSeparator(true);
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropDownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigatioDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "filter"));
+				dropdownGroupItem.setSeparator(true);
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropDownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public String getSearchContainerId() {
-		return ParamUtil.getString(
-			_request, "searchContainerId", StringPool.BLANK);
+		return ParamUtil.getString(_httpServletRequest, "searchContainerId");
 	}
 
 	public String getSortingOrder() {
-		return ParamUtil.getString(_request, "orderByType", "asc");
+		return ParamUtil.getString(_httpServletRequest, "orderByType", "asc");
 	}
 
 	public String getSortingURL() {
 		PortletURL sortingURL = getRenderURL();
 
 		sortingURL.setParameter(
-			"groupId", String.valueOf(ParamUtil.getLong(_request, "groupId")));
+			"groupId",
+			String.valueOf(ParamUtil.getLong(_httpServletRequest, "groupId")));
 		sortingURL.setParameter(
 			"privateLayout",
-			String.valueOf(ParamUtil.getBoolean(_request, "privateLayout")));
+			String.valueOf(
+				ParamUtil.getBoolean(_httpServletRequest, "privateLayout")));
 		sortingURL.setParameter(
 			"displayStyle",
-			ParamUtil.getString(_request, "displayStyle", "descriptive"));
+			ParamUtil.getString(
+				_httpServletRequest, "displayStyle", "descriptive"));
 		sortingURL.setParameter(
-			"orderByCol", ParamUtil.getString(_request, "orderByCol"));
+			"orderByCol",
+			ParamUtil.getString(_httpServletRequest, "orderByCol"));
 
-		String orderByType = ParamUtil.getString(_request, "orderByType");
+		String orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType");
 
 		if (orderByType.equals("asc")) {
 			sortingURL.setParameter("orderByType", "desc");
@@ -221,10 +219,11 @@ public class ExportImportToolbarDisplayContext {
 		}
 
 		sortingURL.setParameter(
-			"navigation", ParamUtil.getString(_request, "navigation", "all"));
+			"navigation",
+			ParamUtil.getString(_httpServletRequest, "navigation", "all"));
 		sortingURL.setParameter(
 			"searchContainerId",
-			ParamUtil.getString(_request, "searchContainerId"));
+			ParamUtil.getString(_httpServletRequest, "searchContainerId"));
 
 		return sortingURL.toString();
 	}
@@ -239,165 +238,164 @@ public class ExportImportToolbarDisplayContext {
 	}
 
 	protected String getDisplayStyle() {
-		return ParamUtil.getString(_request, "displayStyle", "list");
+		return ParamUtil.getString(_httpServletRequest, "displayStyle", "list");
 	}
 
 	protected PortletURL getRenderURL() {
-		return _portletResponse.createRenderURL();
+		return _liferayPortletResponse.createRenderURL();
 	}
 
 	private List<DropdownItem> _getFilterNavigatioDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							getRenderURL(), "groupId",
-							String.valueOf(
-								ParamUtil.getLong(_request, "groupId")),
-							"privateLayout",
-							String.valueOf(
-								ParamUtil.getBoolean(
-									_request, "privateLayout")),
-							"displayStyle",
-							ParamUtil.getString(
-								_request, "displayStyle", "descriptive"),
-							"orderByCol",
-							ParamUtil.getString(_request, "orderByCol"),
-							"orderByType",
-							ParamUtil.getString(_request, "orderByType"),
-							"navigation", "all", "searchContainerId",
-							ParamUtil.getString(_request, "searchContainerId"));
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							getRenderURL(), "groupId",
-							String.valueOf(
-								ParamUtil.getLong(_request, "groupId")),
-							"privateLayout",
-							String.valueOf(
-								ParamUtil.getBoolean(
-									_request, "privateLayout")),
-							"displayStyle",
-							ParamUtil.getString(
-								_request, "displayStyle", "descriptive"),
-							"orderByCol",
-							ParamUtil.getString(_request, "orderByCol"),
-							"orderByType",
-							ParamUtil.getString(_request, "orderByType"),
-							"navigation", "completed", "searchContainerId",
-							ParamUtil.getString(_request, "searchContainerId"));
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "completed"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							getRenderURL(), "groupId",
-							String.valueOf(
-								ParamUtil.getLong(_request, "groupId")),
-							"privateLayout",
-							String.valueOf(
-								ParamUtil.getBoolean(
-									_request, "privateLayout")),
-							"displayStyle",
-							ParamUtil.getString(
-								_request, "displayStyle", "descriptive"),
-							"orderByCol",
-							ParamUtil.getString(_request, "orderByCol"),
-							"orderByType",
-							ParamUtil.getString(_request, "orderByType"),
-							"navigation", "in-progress", "searchContainerId",
-							ParamUtil.getString(_request, "searchContainerId"));
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "in-progress"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					getRenderURL(), "groupId",
+					String.valueOf(
+						ParamUtil.getLong(_httpServletRequest, "groupId")),
+					"privateLayout",
+					String.valueOf(
+						ParamUtil.getBoolean(
+							_httpServletRequest, "privateLayout")),
+					"displayStyle",
+					ParamUtil.getString(
+						_httpServletRequest, "displayStyle", "descriptive"),
+					"orderByCol",
+					ParamUtil.getString(_httpServletRequest, "orderByCol"),
+					"orderByType",
+					ParamUtil.getString(_httpServletRequest, "orderByType"),
+					"navigation", "all", "searchContainerId",
+					ParamUtil.getString(
+						_httpServletRequest, "searchContainerId"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					getRenderURL(), "groupId",
+					String.valueOf(
+						ParamUtil.getLong(_httpServletRequest, "groupId")),
+					"privateLayout",
+					String.valueOf(
+						ParamUtil.getBoolean(
+							_httpServletRequest, "privateLayout")),
+					"displayStyle",
+					ParamUtil.getString(
+						_httpServletRequest, "displayStyle", "descriptive"),
+					"orderByCol",
+					ParamUtil.getString(_httpServletRequest, "orderByCol"),
+					"orderByType",
+					ParamUtil.getString(_httpServletRequest, "orderByType"),
+					"navigation", "completed", "searchContainerId",
+					ParamUtil.getString(
+						_httpServletRequest, "searchContainerId"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "completed"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					getRenderURL(), "groupId",
+					String.valueOf(
+						ParamUtil.getLong(_httpServletRequest, "groupId")),
+					"privateLayout",
+					String.valueOf(
+						ParamUtil.getBoolean(
+							_httpServletRequest, "privateLayout")),
+					"displayStyle",
+					ParamUtil.getString(
+						_httpServletRequest, "displayStyle", "descriptive"),
+					"orderByCol",
+					ParamUtil.getString(_httpServletRequest, "orderByCol"),
+					"orderByType",
+					ParamUtil.getString(_httpServletRequest, "orderByType"),
+					"navigation", "in-progress", "searchContainerId",
+					ParamUtil.getString(
+						_httpServletRequest, "searchContainerId"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "in-progress"));
+			}
+		).build();
 	}
 
 	private List<DropdownItem> _getOrderByDropDownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							getRenderURL(), "groupId",
-							String.valueOf(
-								ParamUtil.getLong(_request, "groupId")),
-							"privateLayout",
-							String.valueOf(
-								ParamUtil.getBoolean(
-									_request, "privateLayout")),
-							"displayStyle",
-							ParamUtil.getString(
-								_request, "displayStyle", "descriptive"),
-							"orderByCol", "name", "orderByType",
-							ParamUtil.getString(_request, "orderByType"),
-							"navigation",
-							ParamUtil.getString(_request, "navigation", "all"),
-							"searchContainerId",
-							ParamUtil.getString(_request, "searchContainerId"));
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							getRenderURL(), "groupId",
-							String.valueOf(
-								ParamUtil.getLong(_request, "groupId")),
-							"privateLayout",
-							String.valueOf(
-								ParamUtil.getBoolean(
-									_request, "privateLayout")),
-							"displayStyle",
-							ParamUtil.getString(
-								_request, "displayStyle", "descriptive"),
-							"orderByCol", "create-date", "orderByType",
-							ParamUtil.getString(_request, "orderByType"),
-							"navigation",
-							ParamUtil.getString(_request, "navigation", "all"),
-							"searchContainerId",
-							ParamUtil.getString(_request, "searchContainerId"));
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "create-date"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							getRenderURL(), "groupId",
-							String.valueOf(
-								ParamUtil.getLong(_request, "groupId")),
-							"privateLayout",
-							String.valueOf(
-								ParamUtil.getBoolean(
-									_request, "privateLayout")),
-							"displayStyle",
-							ParamUtil.getString(
-								_request, "displayStyle", "descriptive"),
-							"orderByCol", "completion-date", "orderByType",
-							ParamUtil.getString(_request, "orderByType"),
-							"navigation",
-							ParamUtil.getString(_request, "navigation", "all"),
-							"searchContainerId",
-							ParamUtil.getString(_request, "searchContainerId"));
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "completion-date"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					getRenderURL(), "groupId",
+					String.valueOf(
+						ParamUtil.getLong(_httpServletRequest, "groupId")),
+					"privateLayout",
+					String.valueOf(
+						ParamUtil.getBoolean(
+							_httpServletRequest, "privateLayout")),
+					"displayStyle",
+					ParamUtil.getString(
+						_httpServletRequest, "displayStyle", "descriptive"),
+					"orderByCol", "name", "orderByType",
+					ParamUtil.getString(_httpServletRequest, "orderByType"),
+					"navigation",
+					ParamUtil.getString(
+						_httpServletRequest, "navigation", "all"),
+					"searchContainerId",
+					ParamUtil.getString(
+						_httpServletRequest, "searchContainerId"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "name"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					getRenderURL(), "groupId",
+					String.valueOf(
+						ParamUtil.getLong(_httpServletRequest, "groupId")),
+					"privateLayout",
+					String.valueOf(
+						ParamUtil.getBoolean(
+							_httpServletRequest, "privateLayout")),
+					"displayStyle",
+					ParamUtil.getString(
+						_httpServletRequest, "displayStyle", "descriptive"),
+					"orderByCol", "create-date", "orderByType",
+					ParamUtil.getString(_httpServletRequest, "orderByType"),
+					"navigation",
+					ParamUtil.getString(
+						_httpServletRequest, "navigation", "all"),
+					"searchContainerId",
+					ParamUtil.getString(
+						_httpServletRequest, "searchContainerId"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "create-date"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					getRenderURL(), "groupId",
+					String.valueOf(
+						ParamUtil.getLong(_httpServletRequest, "groupId")),
+					"privateLayout",
+					String.valueOf(
+						ParamUtil.getBoolean(
+							_httpServletRequest, "privateLayout")),
+					"displayStyle",
+					ParamUtil.getString(
+						_httpServletRequest, "displayStyle", "descriptive"),
+					"orderByCol", "completion-date", "orderByType",
+					ParamUtil.getString(_httpServletRequest, "orderByType"),
+					"navigation",
+					ParamUtil.getString(
+						_httpServletRequest, "navigation", "all"),
+					"searchContainerId",
+					ParamUtil.getString(
+						_httpServletRequest, "searchContainerId"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "completion-date"));
+			}
+		).build();
 	}
 
+	private final HttpServletRequest _httpServletRequest;
+	private final LiferayPortletResponse _liferayPortletResponse;
 	private final String _portletNamespace;
-	private final LiferayPortletResponse _portletResponse;
-	private final HttpServletRequest _request;
 
 }

@@ -16,12 +16,11 @@ package com.liferay.sharing.web.internal.servlet.taglib.ui;
 
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.servlet.taglib.ui.BaseJSPFormNavigatorEntry;
 import com.liferay.portal.kernel.servlet.taglib.ui.FormNavigatorConstants;
 import com.liferay.portal.kernel.servlet.taglib.ui.FormNavigatorEntry;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.configuration.SharingConfiguration;
 import com.liferay.sharing.configuration.SharingConfigurationFactory;
 import com.liferay.sharing.web.internal.constants.SharingWebKeys;
@@ -71,28 +70,27 @@ public class SharingSitesFormNavigatorEntry
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		Group liveGroup = (Group)httpServletRequest.getAttribute(
+			"site.liveGroup");
 
-		SharingConfiguration companySharingConfiguration =
-			_sharingConfigurationFactory.getCompanySharingConfiguration(
-				themeDisplay.getCompany());
-
-		request.setAttribute(
-			SharingWebKeys.COMPANY_SHARING_CONFIGURATION,
-			companySharingConfiguration);
-
-		Group liveGroup = (Group)request.getAttribute("site.liveGroup");
-
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			SharingWebKeys.GROUP_SHARING_CONFIGURATION,
 			_sharingConfigurationFactory.getGroupSharingConfiguration(
 				liveGroup));
 
-		super.include(request, response);
+		super.include(httpServletRequest, httpServletResponse);
+	}
+
+	@Override
+	public boolean isVisible(User user, Group group) {
+		SharingConfiguration groupSharingConfiguration =
+			_sharingConfigurationFactory.getGroupSharingConfiguration(group);
+
+		return groupSharingConfiguration.isAvailable();
 	}
 
 	@Override

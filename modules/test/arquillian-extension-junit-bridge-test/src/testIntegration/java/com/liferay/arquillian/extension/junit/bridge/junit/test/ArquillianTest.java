@@ -20,18 +20,26 @@ import com.liferay.arquillian.extension.junit.bridge.junit.test.item.BeforeAfter
 import com.liferay.arquillian.extension.junit.bridge.junit.test.item.BeforeAfterTestItem;
 import com.liferay.arquillian.extension.junit.bridge.junit.test.item.ClassRuleTestItem;
 import com.liferay.arquillian.extension.junit.bridge.junit.test.item.ExpectedExceptionTestItem;
+import com.liferay.arquillian.extension.junit.bridge.junit.test.item.FailTestItem;
 import com.liferay.arquillian.extension.junit.bridge.junit.test.item.IgnoreTestItem;
+import com.liferay.arquillian.extension.junit.bridge.junit.test.item.NoExpectedExceptionTestItem;
+import com.liferay.arquillian.extension.junit.bridge.junit.test.item.NotSerializableExceptionTestItem;
+import com.liferay.arquillian.extension.junit.bridge.junit.test.item.NotSerializableExceptionTestItem.UnserializableException;
 import com.liferay.arquillian.extension.junit.bridge.junit.test.item.RuleTestItem;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.test.junit.BridgeJUnitTestRunner;
 
 import java.io.IOException;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.Result;
 import org.junit.runner.RunWith;
+import org.junit.runner.notification.Failure;
 import org.junit.runners.model.TestClass;
 
 /**
@@ -113,6 +121,24 @@ public class ArquillianTest {
 	}
 
 	@Test
+	public void testFail() {
+		AtomicBoolean atomicBoolean = new AtomicBoolean();
+
+		BridgeJUnitTestRunner.runBridgeTests(
+			new BridgeJUnitTestRunner.BridgeRunListener(ArquillianTest.class) {
+
+				@Override
+				public void testFailure(Failure failure) {
+					atomicBoolean.set(true);
+				}
+
+			},
+			FailTestItem.class);
+
+		Assert.assertTrue(atomicBoolean.get());
+	}
+
+	@Test
 	public void testIgnore() throws IOException {
 		try {
 			Result result = BridgeJUnitTestRunner.runBridgeTests(
@@ -126,6 +152,64 @@ public class ArquillianTest {
 		finally {
 			IgnoreTestItem.assertAndTearDown();
 		}
+	}
+
+	@Test
+	public void testNoExpectedException() {
+		AtomicReference<Throwable> throwableContainer = new AtomicReference<>();
+
+		BridgeJUnitTestRunner.runBridgeTests(
+			new BridgeJUnitTestRunner.BridgeRunListener(ArquillianTest.class) {
+
+				@Override
+				public void testFailure(Failure failure) {
+					throwableContainer.set(failure.getException());
+				}
+
+			},
+			NoExpectedExceptionTestItem.class);
+
+		Throwable throwable = throwableContainer.get();
+
+		Assert.assertNotNull(throwable);
+
+		String message = throwable.getMessage();
+
+		Assert.assertTrue(
+			message,
+			message.startsWith(
+				StringBundler.concat(
+					AssertionError.class.getName(), ": Expected test to throw ",
+					IOException.class)));
+	}
+
+	@Test
+	public void testNotSerializableException() {
+		AtomicReference<Throwable> throwableContainer = new AtomicReference<>();
+
+		BridgeJUnitTestRunner.runBridgeTests(
+			new BridgeJUnitTestRunner.BridgeRunListener(ArquillianTest.class) {
+
+				@Override
+				public void testFailure(Failure failure) {
+					throwableContainer.set(failure.getException());
+				}
+
+			},
+			NotSerializableExceptionTestItem.class);
+
+		Throwable throwable = throwableContainer.get();
+
+		Assert.assertNotNull(throwable);
+
+		String message = throwable.getMessage();
+
+		Assert.assertTrue(
+			message,
+			message.startsWith(
+				StringBundler.concat(
+					UnserializableException.class.getName(), ": ",
+					NotSerializableExceptionTestItem.class.getName())));
 	}
 
 	@Test

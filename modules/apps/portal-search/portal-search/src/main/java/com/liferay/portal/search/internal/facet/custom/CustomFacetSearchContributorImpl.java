@@ -41,12 +41,12 @@ public class CustomFacetSearchContributorImpl
 
 		Facet facet = searchRequestBuilder.withSearchContextGet(
 			searchContext -> {
-				CustomFacetBuilderImpl customBuilderImplImpl =
+				CustomFacetBuilderImpl customFacetBuilderImpl =
 					new CustomFacetBuilderImpl(searchContext);
 
-				customFacetBuilderConsumer.accept(customBuilderImplImpl);
+				customFacetBuilderConsumer.accept(customFacetBuilderImpl);
 
-				return customBuilderImplImpl.build();
+				return customFacetBuilderImpl.build();
 			});
 
 		searchRequestBuilder.withFacetContext(
@@ -123,8 +123,11 @@ public class CustomFacetSearchContributorImpl
 
 			JSONObject jsonObject = facetConfiguration.getData();
 
-			jsonObject.put("frequencyThreshold", _frequencyThreshold);
-			jsonObject.put("maxTerms", _maxTerms);
+			jsonObject.put(
+				"frequencyThreshold", _frequencyThreshold
+			).put(
+				"maxTerms", _maxTerms
+			);
 
 			return facetConfiguration;
 		}

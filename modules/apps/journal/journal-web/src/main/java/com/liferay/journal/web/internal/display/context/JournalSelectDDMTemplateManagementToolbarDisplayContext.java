@@ -30,15 +30,15 @@ public class JournalSelectDDMTemplateManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public JournalSelectDDMTemplateManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request,
 			JournalSelectDDMTemplateDisplayContext
 				journalSelectDDMTemplateDisplayContext)
 		throws Exception {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			journalSelectDDMTemplateDisplayContext.getTemplateSearch());
 
 		_journalSelectDDMTemplateDisplayContext =
@@ -77,6 +77,16 @@ public class JournalSelectDDMTemplateManagementToolbarDisplayContext
 	@Override
 	public Boolean isSelectable() {
 		return false;
+	}
+
+	@Override
+	protected String getDefaultDisplayStyle() {
+		return "icon";
+	}
+
+	@Override
+	protected String[] getDisplayViews() {
+		return new String[] {"list", "icon"};
 	}
 
 	@Override

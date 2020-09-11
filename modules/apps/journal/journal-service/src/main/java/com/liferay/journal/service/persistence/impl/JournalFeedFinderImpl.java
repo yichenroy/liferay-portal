@@ -28,15 +28,18 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.Iterator;
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Raymond Augé
  * @author Connor McKay
  */
+@Component(service = JournalFeedFinder.class)
 public class JournalFeedFinderImpl
 	extends JournalFeedFinderBaseImpl implements JournalFeedFinder {
 
@@ -96,8 +99,7 @@ public class JournalFeedFinderImpl
 			String sql = _customSQL.get(getClass(), COUNT_BY_C_G_F_N_D);
 
 			if (groupId <= 0) {
-				sql = StringUtil.replace(
-					sql, "(groupId = ?) AND", StringPool.BLANK);
+				sql = StringUtil.removeSubstring(sql, "(groupId = ?) AND");
 			}
 
 			sql = _customSQL.replaceKeywords(
@@ -109,26 +111,26 @@ public class JournalFeedFinderImpl
 
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupId > 0) {
-				qPos.add(groupId);
+				queryPos.add(groupId);
 			}
 
-			qPos.add(feedIds, 2);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(feedIds, 2);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> iterator = sqlQuery.iterate();
 
-			if (itr.hasNext()) {
-				Long count = itr.next();
+			if (iterator.hasNext()) {
+				Long count = iterator.next();
 
 				if (count != null) {
 					return count.intValue();
@@ -137,8 +139,8 @@ public class JournalFeedFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -148,7 +150,7 @@ public class JournalFeedFinderImpl
 	@Override
 	public List<JournalFeed> findByKeywords(
 		long companyId, long groupId, String keywords, int start, int end,
-		OrderByComparator<JournalFeed> obc) {
+		OrderByComparator<JournalFeed> orderByComparator) {
 
 		String[] feedIds = null;
 		String[] names = null;
@@ -166,14 +168,14 @@ public class JournalFeedFinderImpl
 
 		return findByC_G_F_N_D(
 			companyId, groupId, feedIds, names, descriptions, andOperator,
-			start, end, obc);
+			start, end, orderByComparator);
 	}
 
 	@Override
 	public List<JournalFeed> findByC_G_F_N_D(
 		long companyId, long groupId, String feedId, String name,
 		String description, boolean andOperator, int start, int end,
-		OrderByComparator<JournalFeed> obc) {
+		OrderByComparator<JournalFeed> orderByComparator) {
 
 		String[] feedIds = _customSQL.keywords(feedId, false);
 		String[] names = _customSQL.keywords(name);
@@ -181,14 +183,14 @@ public class JournalFeedFinderImpl
 
 		return findByC_G_F_N_D(
 			companyId, groupId, feedIds, names, descriptions, andOperator,
-			start, end, obc);
+			start, end, orderByComparator);
 	}
 
 	@Override
 	public List<JournalFeed> findByC_G_F_N_D(
 		long companyId, long groupId, String[] feedIds, String[] names,
 		String[] descriptions, boolean andOperator, int start, int end,
-		OrderByComparator<JournalFeed> obc) {
+		OrderByComparator<JournalFeed> orderByComparator) {
 
 		feedIds = _customSQL.keywords(feedIds, false);
 		names = _customSQL.keywords(names);
@@ -202,8 +204,7 @@ public class JournalFeedFinderImpl
 			String sql = _customSQL.get(getClass(), FIND_BY_C_G_F_N_D);
 
 			if (groupId <= 0) {
-				sql = StringUtil.replace(
-					sql, "(groupId = ?) AND", StringPool.BLANK);
+				sql = StringUtil.removeSubstring(sql, "(groupId = ?) AND");
 			}
 
 			sql = _customSQL.replaceKeywords(
@@ -214,36 +215,36 @@ public class JournalFeedFinderImpl
 				sql, "LOWER(description)", StringPool.LIKE, true, descriptions);
 
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
-			sql = _customSQL.replaceOrderBy(sql, obc);
+			sql = _customSQL.replaceOrderBy(sql, orderByComparator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("JournalFeed", JournalFeedImpl.class);
+			sqlQuery.addEntity("JournalFeed", JournalFeedImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupId > 0) {
-				qPos.add(groupId);
+				queryPos.add(groupId);
 			}
 
-			qPos.add(feedIds, 2);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(feedIds, 2);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
 			return (List<JournalFeed>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

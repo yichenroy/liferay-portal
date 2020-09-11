@@ -15,6 +15,7 @@
 package com.liferay.portal.jsonwebservice;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.action.JSONServiceAction;
 import com.liferay.portal.jsonwebservice.action.JSONWebServiceDiscoverAction;
@@ -30,7 +31,6 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -49,24 +49,30 @@ public class JSONWebServiceServiceAction extends JSONServiceAction {
 
 	@Override
 	public String getJSON(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		UploadException uploadException = (UploadException)request.getAttribute(
-			WebKeys.UPLOAD_EXCEPTION);
+		UploadException uploadException =
+			(UploadException)httpServletRequest.getAttribute(
+				WebKeys.UPLOAD_EXCEPTION);
 
 		if (uploadException != null) {
-			return JSONFactoryUtil.serializeThrowable(uploadException);
+			if (PropsValues.JSON_SERVICE_SERIALIZE_THROWABLE) {
+				return JSONFactoryUtil.serializeThrowable(uploadException);
+			}
+
+			return JSONFactoryUtil.getNullJSON();
 		}
 
 		try {
 			JSONWebServiceAction jsonWebServiceAction = getJSONWebServiceAction(
-				request);
+				httpServletRequest);
 
-			Object returnObj = jsonWebServiceAction.invoke();
+			Object returnObject = jsonWebServiceAction.invoke();
 
-			if (returnObj != null) {
-				return getReturnValue(returnObj);
+			if (returnObject != null) {
+				return getReturnValue(returnObject);
 			}
 
 			return JSONFactoryUtil.getNullJSON();
@@ -86,9 +92,13 @@ public class JSONWebServiceServiceAction extends JSONServiceAction {
 					_log.debug(getThrowableMessage(throwable), throwable);
 				}
 
-				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
 
-				return JSONFactoryUtil.serializeThrowable(throwable);
+				if (PropsValues.JSON_SERVICE_SERIALIZE_THROWABLE) {
+					return JSONFactoryUtil.serializeThrowable(throwable);
+				}
+
+				return JSONFactoryUtil.getNullJSON();
 			}
 			else if (throwable instanceof PrincipalException ||
 					 throwable instanceof SecurityException) {
@@ -97,9 +107,13 @@ public class JSONWebServiceServiceAction extends JSONServiceAction {
 					_log.debug(getThrowableMessage(throwable), throwable);
 				}
 
-				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+				httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
-				return JSONFactoryUtil.serializeThrowable(throwable);
+				if (PropsValues.JSON_SERVICE_SERIALIZE_THROWABLE) {
+					return JSONFactoryUtil.serializeThrowable(throwable);
+				}
+
+				return JSONFactoryUtil.getNullJSON();
 			}
 			else {
 				status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
@@ -112,9 +126,13 @@ public class JSONWebServiceServiceAction extends JSONServiceAction {
 				_log.error(getThrowableMessage(throwable));
 			}
 
-			response.setStatus(status);
+			httpServletResponse.setStatus(status);
 
-			return JSONFactoryUtil.serializeThrowable(throwable);
+			if (PropsValues.JSON_SERVICE_SERIALIZE_THROWABLE) {
+				return JSONFactoryUtil.serializeThrowable(throwable);
+			}
+
+			return JSONFactoryUtil.getNullJSON();
 		}
 	}
 
@@ -122,8 +140,8 @@ public class JSONWebServiceServiceAction extends JSONServiceAction {
 	 * @see JSONServiceAction#getCSRFOrigin(HttpServletRequest)
 	 */
 	@Override
-	protected String getCSRFOrigin(HttpServletRequest request) {
-		String uri = request.getRequestURI();
+	protected String getCSRFOrigin(HttpServletRequest httpServletRequest) {
+		String uri = httpServletRequest.getRequestURI();
 
 		int x = uri.indexOf("jsonws/");
 
@@ -159,23 +177,23 @@ public class JSONWebServiceServiceAction extends JSONServiceAction {
 	}
 
 	protected JSONWebServiceAction getJSONWebServiceAction(
-			HttpServletRequest request)
+			HttpServletRequest httpServletRequest)
 		throws NoSuchJSONWebServiceException {
 
-		String path = GetterUtil.getString(request.getPathInfo());
+		String path = GetterUtil.getString(httpServletRequest.getPathInfo());
 
 		if (path.equals("/invoke")) {
-			return new JSONWebServiceInvokerAction(request);
+			return new JSONWebServiceInvokerAction(httpServletRequest);
 		}
 
 		if (PropsValues.JSONWS_WEB_SERVICE_API_DISCOVERABLE &&
-			(request.getParameter("discover") != null)) {
+			(httpServletRequest.getParameter("discover") != null)) {
 
-			return new JSONWebServiceDiscoverAction(request);
+			return new JSONWebServiceDiscoverAction(httpServletRequest);
 		}
 
 		return JSONWebServiceActionsManagerUtil.getJSONWebServiceAction(
-			request);
+			httpServletRequest);
 	}
 
 	@Override

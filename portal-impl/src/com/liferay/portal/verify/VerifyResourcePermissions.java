@@ -14,6 +14,7 @@
 
 package com.liferay.portal.verify;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
@@ -21,11 +22,10 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.verify.model.VerifiableResourcedModel;
 import com.liferay.portal.util.PortalInstances;
 
@@ -40,9 +40,8 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
- * @author Raymond Augé
- * @author James Lefeu
- *
+ * @author     Raymond Augé
+ * @author     James Lefeu
  * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
 @Deprecated
@@ -83,9 +82,7 @@ public class VerifyResourcePermissions extends VerifyProcess {
 			verifiableResourcedModelsMap.values();
 
 		verify(
-			verifiableResourcedModels.toArray(
-				new VerifiableResourcedModel
-					[verifiableResourcedModels.size()]));
+			verifiableResourcedModels.toArray(new VerifiableResourcedModel[0]));
 	}
 
 	private String _getVerifyResourcedModelSQL(
@@ -141,19 +138,17 @@ public class VerifyResourcePermissions extends VerifyProcess {
 		if (_log.isInfoEnabled() && ((cur % 100) == 0)) {
 			_log.info(
 				StringBundler.concat(
-					"Processed ", String.valueOf(cur), " of ",
-					String.valueOf(total), " resource permissions for company ",
-					"= ", String.valueOf(companyId), " and model ", modelName));
+					"Processed ", cur, " of ", total,
+					" resource permissions for company = ", companyId,
+					" and model ", modelName));
 		}
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
-					"No resource found for {", String.valueOf(companyId), ", ",
-					modelName, ", ",
-					String.valueOf(ResourceConstants.SCOPE_INDIVIDUAL), ", ",
-					String.valueOf(primKey), ", ",
-					String.valueOf(role.getRoleId()), "}"));
+					"No resource found for {", companyId, ", ", modelName, ", ",
+					ResourceConstants.SCOPE_INDIVIDUAL, ", ", primKey, ", ",
+					role.getRoleId(), "}"));
 		}
 
 		ResourceLocalServiceUtil.addResources(

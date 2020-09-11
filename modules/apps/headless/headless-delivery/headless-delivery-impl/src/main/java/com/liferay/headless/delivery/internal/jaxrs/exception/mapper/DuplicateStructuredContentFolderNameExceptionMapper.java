@@ -15,8 +15,9 @@
 package com.liferay.headless.delivery.internal.jaxrs.exception.mapper;
 
 import com.liferay.journal.exception.DuplicateFolderNameException;
+import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
+import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -26,7 +27,6 @@ import org.osgi.service.component.annotations.Component;
  * Converts any {@code DuplicateFolderNameException} to a {@code 409} error.
  *
  * @author Víctor Galán
- * @review
  */
 @Component(
 	property = {
@@ -37,18 +37,16 @@ import org.osgi.service.component.annotations.Component;
 	service = ExceptionMapper.class
 )
 public class DuplicateStructuredContentFolderNameExceptionMapper
-	implements ExceptionMapper<DuplicateFolderNameException> {
+	extends BaseExceptionMapper<DuplicateFolderNameException> {
 
 	@Override
-	public Response toResponse(DuplicateFolderNameException dfne) {
-		return Response.status(
-			409
-		).type(
-			MediaType.TEXT_PLAIN
-		).entity(
+	protected Problem getProblem(
+		DuplicateFolderNameException duplicateFolderNameException) {
+
+		return new Problem(
+			Response.Status.CONFLICT,
 			"A structured content folder already exists with the name " +
-				dfne.getMessage()
-		).build();
+				duplicateFolderNameException.getMessage());
 	}
 
 }

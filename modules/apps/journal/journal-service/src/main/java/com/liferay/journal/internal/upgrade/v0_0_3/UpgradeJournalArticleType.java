@@ -14,6 +14,7 @@
 
 package com.liferay.journal.internal.upgrade.v0_0_3;
 
+import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalService;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetVocabulary;
@@ -34,13 +35,14 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -53,12 +55,16 @@ public class UpgradeJournalArticleType extends UpgradeProcess {
 
 	public UpgradeJournalArticleType(
 		AssetCategoryLocalService assetCategoryLocalService,
+		AssetEntryAssetCategoryRelLocalService
+			assetEntryAssetCategoryRelLocalService,
 		AssetEntryLocalService assetEntryLocalService,
 		AssetVocabularyLocalService assetVocabularyLocalService,
 		CompanyLocalService companyLocalService,
 		UserLocalService userLocalService) {
 
 		_assetCategoryLocalService = assetCategoryLocalService;
+		_assetEntryAssetCategoryRelLocalService =
+			assetEntryAssetCategoryRelLocalService;
 		_assetEntryLocalService = assetEntryLocalService;
 		_assetVocabularyLocalService = assetVocabularyLocalService;
 		_companyLocalService = companyLocalService;
@@ -120,15 +126,15 @@ public class UpgradeJournalArticleType extends UpgradeProcess {
 		alterTable();
 	}
 
-	protected List<String> getArticleTypes() throws Exception {
+	protected Set<String> getArticleTypes() throws Exception {
 		try (PreparedStatement ps = connection.prepareStatement(
 				"select distinct type_ from JournalArticle");
 			ResultSet rs = ps.executeQuery()) {
 
-			List<String> types = new ArrayList<>();
+			Set<String> types = new HashSet<>();
 
 			while (rs.next()) {
-				types.add(rs.getString("type_"));
+				types.add(StringUtil.toLowerCase(rs.getString("type_")));
 			}
 
 			return types;
@@ -184,13 +190,14 @@ public class UpgradeJournalArticleType extends UpgradeProcess {
 						continue;
 					}
 
-					String type = rs.getString("type_");
+					String type = StringUtil.toLowerCase(rs.getString("type_"));
 
 					long assetCategoryId =
 						journalArticleTypesToAssetCategoryIds.get(type);
 
-					_assetEntryLocalService.addAssetCategoryAssetEntry(
-						assetCategoryId, assetEntry);
+					_assetEntryAssetCategoryRelLocalService.
+						addAssetEntryAssetCategoryRel(
+							assetEntry.getEntryId(), assetCategoryId);
 				}
 			}
 		}
@@ -202,7 +209,7 @@ public class UpgradeJournalArticleType extends UpgradeProcess {
 				return;
 			}
 
-			List<String> types = getArticleTypes();
+			Set<String> types = getArticleTypes();
 
 			if (types.size() <= 0) {
 				return;
@@ -257,6 +264,8 @@ public class UpgradeJournalArticleType extends UpgradeProcess {
 	}
 
 	private final AssetCategoryLocalService _assetCategoryLocalService;
+	private final AssetEntryAssetCategoryRelLocalService
+		_assetEntryAssetCategoryRelLocalService;
 	private final AssetEntryLocalService _assetEntryLocalService;
 	private final AssetVocabularyLocalService _assetVocabularyLocalService;
 	private final CompanyLocalService _companyLocalService;

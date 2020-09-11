@@ -16,7 +16,10 @@ package com.liferay.arquillian.extension.junit.bridge.server;
 
 import com.liferay.arquillian.extension.junit.bridge.command.RunNotifierCommand;
 
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import java.lang.annotation.Annotation;
@@ -25,7 +28,9 @@ import java.lang.reflect.Method;
 
 import java.net.Socket;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,6 +41,7 @@ import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.internal.runners.statements.FailOnTimeout;
@@ -45,6 +51,7 @@ import org.junit.internal.runners.statements.RunBefores;
 import org.junit.rules.RunRules;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
+import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.MultipleFailureException;
 import org.junit.runners.model.Statement;
@@ -59,36 +66,54 @@ import org.osgi.framework.BundleException;
 public class TestExecutorRunnable implements Runnable {
 
 	public TestExecutorRunnable(
-		Bundle bundle, TestClass testClass, Socket socket, long passCode) {
+		Bundle bundle, Map<String, List<String>> filteredMethodNamesMap,
+		String reportServerHostName, int reportServerPort, long passCode) {
 
 		_bundle = bundle;
-		_testClass = testClass;
-		_socket = socket;
+		_filteredMethodNamesMap = filteredMethodNamesMap;
+		_reportServerHostName = reportServerHostName;
+		_reportServerPort = reportServerPort;
 		_passCode = passCode;
 	}
 
 	@Override
 	public void run() {
-		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-				_socket.getOutputStream())) {
+		try (Socket socket = new Socket(
+				_reportServerHostName, _reportServerPort);
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+				socket.getOutputStream());
+			ObjectInputStream objectInputStream = new ObjectInputStream(
+				socket.getInputStream())) {
 
 			objectOutputStream.writeLong(_passCode);
 
-			_execute(_testClass, objectOutputStream);
+			objectOutputStream.flush();
+
+			while (true) {
+				String testClass = objectInputStream.readUTF();
+
+				_execute(_createTestClass(testClass), objectOutputStream);
+
+				objectOutputStream.writeObject(null);
+
+				objectOutputStream.flush();
+			}
 		}
-		catch (IOException ioe) {
+		catch (EOFException eofException) {
+		}
+		catch (Exception exception) {
 			try {
 				_bundle.uninstall();
 			}
-			catch (BundleException be) {
-				ioe.addSuppressed(be);
+			catch (BundleException bundleException) {
+				exception.addSuppressed(bundleException);
 			}
 
 			_logger.log(
 				Level.SEVERE,
 				"Unable to report back to client. Uninstalled test bundle " +
 					"and abort test.",
-				ioe);
+				exception);
 		}
 	}
 
@@ -117,9 +142,9 @@ public class TestExecutorRunnable implements Runnable {
 
 						statement.evaluate();
 					}
-					catch (Throwable t) {
+					catch (Throwable throwable) {
 						_processThrowable(
-							false, t, objectOutputStream, description);
+							false, throwable, objectOutputStream, description);
 					}
 					finally {
 						objectOutputStream.writeObject(
@@ -155,9 +180,35 @@ public class TestExecutorRunnable implements Runnable {
 
 			statement.evaluate();
 		}
-		catch (Throwable t) {
-			_processThrowable(true, t, objectOutputStream, description);
+		catch (Throwable throwable) {
+			_processThrowable(true, throwable, objectOutputStream, description);
 		}
+	}
+
+	private static Throwable _findAssumptionViolatedException(
+		Throwable throwable) {
+
+		if (throwable instanceof AssumptionViolatedException) {
+			return throwable;
+		}
+
+		Throwable[] suppressionThrowables = throwable.getSuppressed();
+
+		for (Throwable suppressionThrowable : suppressionThrowables) {
+			return _findAssumptionViolatedException(suppressionThrowable);
+		}
+
+		return null;
+	}
+
+	private static Class<?> _getExpectedExceptionClass(Method method) {
+		Test test = method.getAnnotation(Test.class);
+
+		if (test == null) {
+			return Test.None.class;
+		}
+
+		return test.expected();
 	}
 
 	private static Statement _methodBlock(TestClass testClass, Method method)
@@ -177,22 +228,37 @@ public class TestExecutorRunnable implements Runnable {
 
 				currentThread.setContextClassLoader(clazz.getClassLoader());
 
+				Throwable throwable1 = null;
+
 				try {
 					method.invoke(target);
 				}
-				catch (Throwable t) {
-					if (t instanceof InvocationTargetException) {
-						t = t.getCause();
-					}
-
-					if (t instanceof AssumptionViolatedException) {
-						throw t;
-					}
-
-					_processExpectedException(t, method);
+				catch (Throwable throwable2) {
+					throwable1 = throwable2;
 				}
 				finally {
 					currentThread.setContextClassLoader(classLoader);
+				}
+
+				if (throwable1 == null) {
+					Class<?> throwableClass = _getExpectedExceptionClass(
+						method);
+
+					if (Test.None.class != throwableClass) {
+						throw new AssertionError(
+							"Expected test to throw " + throwableClass);
+					}
+				}
+				else {
+					if (throwable1 instanceof InvocationTargetException) {
+						throwable1 = throwable1.getCause();
+					}
+
+					if (throwable1 instanceof AssumptionViolatedException) {
+						throw throwable1;
+					}
+
+					_processExpectedException(throwable1, method);
 				}
 			}
 
@@ -216,23 +282,17 @@ public class TestExecutorRunnable implements Runnable {
 			Throwable throwable, Method method)
 		throws Throwable {
 
-		Test test = method.getAnnotation(Test.class);
+		Class<?> expectedThrown = _getExpectedExceptionClass(method);
 
-		if (test == null) {
-			throw throwable;
-		}
-
-		Class<?> expected = test.expected();
-
-		if (test.expected() == Test.None.class) {
+		if (expectedThrown == Test.None.class) {
 			throw throwable;
 		}
 
 		Class<?> clazz = throwable.getClass();
 
-		if (!expected.isAssignableFrom(clazz)) {
+		if (!expectedThrown.isAssignableFrom(clazz)) {
 			String message =
-				"Unexpected exception, expected<" + expected.getName() +
+				"Unexpected exception, expected<" + expectedThrown.getName() +
 					"> but was<" + clazz.getName() + ">";
 
 			throw new Exception(message, throwable);
@@ -244,7 +304,10 @@ public class TestExecutorRunnable implements Runnable {
 			ObjectOutputStream objectOutputStream, Description description)
 		throws IOException {
 
-		if (throwable instanceof AssumptionViolatedException) {
+		Throwable assumptionViolatedThrowable =
+			_findAssumptionViolatedException(throwable);
+
+		if (assumptionViolatedThrowable != null) {
 			if (classLevel) {
 				objectOutputStream.writeObject(
 					RunNotifierCommand.testStarted(description));
@@ -253,13 +316,16 @@ public class TestExecutorRunnable implements Runnable {
 			// To neutralize the nonserializable Matcher field inside
 			// AssumptionViolatedException
 
-			AssumptionViolatedException ave = new AssumptionViolatedException(
-				throwable.getMessage());
+			AssumptionViolatedException assumptionViolatedException =
+				new AssumptionViolatedException(
+					assumptionViolatedThrowable.getMessage());
 
-			ave.setStackTrace(throwable.getStackTrace());
+			assumptionViolatedException.setStackTrace(
+				assumptionViolatedThrowable.getStackTrace());
 
 			objectOutputStream.writeObject(
-				RunNotifierCommand.assumptionFailed(description, ave));
+				RunNotifierCommand.assumptionFailed(
+					description, assumptionViolatedException));
 
 			if (classLevel) {
 				objectOutputStream.writeObject(
@@ -267,19 +333,48 @@ public class TestExecutorRunnable implements Runnable {
 			}
 		}
 		else if (throwable instanceof MultipleFailureException) {
-			MultipleFailureException mfe = (MultipleFailureException)throwable;
+			MultipleFailureException multipleFailureException =
+				(MultipleFailureException)throwable;
 
-			for (Throwable t : mfe.getFailures()) {
-				objectOutputStream.writeObject(
-					RunNotifierCommand.testFailure(description, t));
+			for (Throwable curThrowable :
+					multipleFailureException.getFailures()) {
+
+				_processThrowable(
+					objectOutputStream, description, curThrowable);
 			}
 		}
 		else {
-			objectOutputStream.writeObject(
-				RunNotifierCommand.testFailure(description, throwable));
+			_processThrowable(objectOutputStream, description, throwable);
 		}
 
 		objectOutputStream.flush();
+	}
+
+	private static void _processThrowable(
+			ObjectOutputStream objectOutputStream, Description description,
+			Throwable throwable)
+		throws IOException {
+
+		try {
+			objectOutputStream.writeObject(
+				RunNotifierCommand.testFailure(description, throwable));
+		}
+		catch (NotSerializableException notSerializableException) {
+			objectOutputStream.reset();
+
+			Class<? extends Throwable> clazz = throwable.getClass();
+
+			Exception exception = new Exception(
+				clazz.getName() + ": " + throwable.getMessage());
+
+			exception.setStackTrace(throwable.getStackTrace());
+
+			notSerializableException.initCause(exception);
+
+			objectOutputStream.writeObject(
+				RunNotifierCommand.testFailure(
+					description, notSerializableException));
+		}
 	}
 
 	private static Statement _withAfters(
@@ -342,12 +437,54 @@ public class TestExecutorRunnable implements Runnable {
 		return builder.build(statement);
 	}
 
+	private TestClass _createTestClass(String testClassName)
+		throws ClassNotFoundException {
+
+		return new TestClass(_bundle.loadClass(testClassName)) {
+
+			@Override
+			protected void scanAnnotatedMembers(
+				Map<Class<? extends Annotation>, List<FrameworkMethod>>
+					frameworkMethodsMap,
+				Map<Class<? extends Annotation>, List<FrameworkField>>
+					frameworkFieldsMap) {
+
+				super.scanAnnotatedMembers(
+					frameworkMethodsMap, frameworkFieldsMap);
+
+				List<FrameworkMethod> testFrameworkMethods =
+					frameworkMethodsMap.get(Test.class);
+
+				List<FrameworkMethod> ignoreFrameworkMethods =
+					frameworkMethodsMap.get(Ignore.class);
+
+				if (ignoreFrameworkMethods != null) {
+					testFrameworkMethods.removeAll(ignoreFrameworkMethods);
+				}
+
+				List<String> filteredMethodNames = _filteredMethodNamesMap.get(
+					getName());
+
+				if (filteredMethodNames != null) {
+					testFrameworkMethods.removeIf(
+						frameworkMethod -> filteredMethodNames.contains(
+							frameworkMethod.getName()));
+				}
+
+				testFrameworkMethods.sort(
+					Comparator.comparing(FrameworkMethod::getName));
+			}
+
+		};
+	}
+
 	private static final Logger _logger = Logger.getLogger(
 		TestExecutorRunnable.class.getName());
 
 	private final Bundle _bundle;
+	private final Map<String, List<String>> _filteredMethodNamesMap;
 	private final long _passCode;
-	private final Socket _socket;
-	private final TestClass _testClass;
+	private final String _reportServerHostName;
+	private final int _reportServerPort;
 
 }

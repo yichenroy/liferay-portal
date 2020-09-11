@@ -15,7 +15,6 @@
 package com.liferay.document.library.internal.security.permission.resource;
 
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.RepositoryFactory;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -36,42 +35,30 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Preston Crary
  */
-@Component(immediate = true, service = {})
+@Component(service = {})
 public class FolderModelResourcePermissionRegistrar {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		properties.put("model.class.name", Folder.class.getName());
 
 		_serviceRegistration = bundleContext.registerService(
-			ModelResourcePermission.class,
+			(Class<ModelResourcePermission<Folder>>)
+				(Class<?>)ModelResourcePermission.class,
 			ModelResourcePermissionFactory.create(
 				Folder.class, Folder::getFolderId,
 				_dlAppLocalService::getFolder, _portletResourcePermission,
 				(modelResourcePermission, consumer) -> consumer.accept(
-					(permissionChecker, name, folder, actionId) -> {
-						if (folder.isMountPoint()) {
-							Repository repository =
-								_repositoryFactory.createRepository(
-									folder.getRepositoryId());
-
-							Folder repositoryFolder = repository.getFolder(
-								folder.getFolderId());
-
-							return repositoryFolder.containsPermission(
-								permissionChecker, actionId);
-						}
-
-						return folder.containsPermission(
-							permissionChecker, actionId);
-					})),
+					(permissionChecker, name, folder, actionId) ->
+						folder.containsPermission(
+							permissionChecker, actionId))),
 			properties);
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_serviceRegistration.unregister();
 	}
 
@@ -84,6 +71,7 @@ public class FolderModelResourcePermissionRegistrar {
 	@Reference
 	private RepositoryFactory _repositoryFactory;
 
-	private ServiceRegistration<ModelResourcePermission> _serviceRegistration;
+	private ServiceRegistration<ModelResourcePermission<Folder>>
+		_serviceRegistration;
 
 }

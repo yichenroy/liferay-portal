@@ -14,15 +14,13 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 import com.liferay.users.admin.kernel.file.uploads.UserFileUploadsSettings;
@@ -30,7 +28,6 @@ import com.liferay.users.admin.kernel.file.uploads.UserFileUploadsSettings;
 /**
  * @author Amos Fong
  */
-@ProviderType
 public class UserConstants {
 
 	public static final int FULL_NAME_MAX_LENGTH = 75;

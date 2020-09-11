@@ -1,6 +1,7 @@
 definition {
+
 	macro configureDisplaySettings {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		for (var SettingName : list "${uncheckSetting}") {
 			Uncheck(locator1 = "Checkbox#${SettingName}");
@@ -17,14 +18,10 @@ definition {
 		Navigator.gotoNavItem(navItem = "Sharing");
 
 		if ("${enabled}" == "true") {
-			Check.checkToggleSwitch(
-				locator1 = "WikiConfiguration#ALLOW_USERS_TO_ADD_WIKI_TO_ANY_WEBSITE_CHECKBOX"
-			);
+			Check.checkToggleSwitch(locator1 = "WikiConfiguration#ALLOW_USERS_TO_ADD_WIKI_TO_ANY_WEBSITE_CHECKBOX");
 		}
 		else {
-			Uncheck.uncheckToggleSwitch(
-				locator1 = "WikiConfiguration#ALLOW_USERS_TO_ADD_WIKI_TO_ANY_WEBSITE_CHECKBOX"
-			);
+			Uncheck.uncheckToggleSwitch(locator1 = "WikiConfiguration#ALLOW_USERS_TO_ADD_WIKI_TO_ANY_WEBSITE_CHECKBOX");
 		}
 
 		Button.clickSave();
@@ -49,9 +46,7 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Wiki"
-		);
+			portlet = "Wiki");
 
 		LexiconEntry.openEntryMenu(rowEntry = "Main");
 
@@ -65,7 +60,7 @@ definition {
 	}
 
 	macro viewConfigurationTabs {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		for (var isPresent : list "${isPresent}") {
 			AssertElementPresent(locator1 = "Configuration#${isPresent}");
@@ -82,21 +77,17 @@ definition {
 		Navigator.gotoNavItem(navItem = "Sharing");
 
 		if ("${enabled}" == "true") {
-			AssertChecked.assertCheckedNotVisible(
-				locator1 = "WikiConfiguration#ALLOW_USERS_TO_ADD_WIKI_TO_ANY_WEBSITE_CHECKBOX"
-			);
+			AssertChecked.assertCheckedNotVisible(locator1 = "WikiConfiguration#ALLOW_USERS_TO_ADD_WIKI_TO_ANY_WEBSITE_CHECKBOX");
 		}
 		else {
-			AssertNotChecked.assertNotCheckedNotVisible(
-				locator1 = "WikiConfiguration#ALLOW_USERS_TO_ADD_WIKI_TO_ANY_WEBSITE_CHECKBOX"
-			);
+			AssertNotChecked.assertNotCheckedNotVisible(locator1 = "WikiConfiguration#ALLOW_USERS_TO_ADD_WIKI_TO_ANY_WEBSITE_CHECKBOX");
 		}
 
 		SelectFrame(value1 = "relative=top");
 	}
 
 	macro viewDisplaySettings {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		for (var SettingName : list "${uncheckedSetting}") {
 			AssertNotChecked(locator1 = "Checkbox#${SettingName}");
@@ -108,6 +99,9 @@ definition {
 
 		AssertElementNotPresent(locator1 = "Button#ADD_WIKI");
 
-		AssertElementNotPresent(locator1 = "Button#PERMISSIONS");
+		LexiconEntry.openEntryMenu(rowEntry = "Main");
+
+		MenuItem.viewNotPresent(menuItem = "Permissions");
 	}
+
 }

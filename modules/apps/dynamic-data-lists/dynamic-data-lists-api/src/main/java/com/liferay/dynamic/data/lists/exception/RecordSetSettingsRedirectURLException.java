@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.lists.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class RecordSetSettingsRedirectURLException extends PortalException {
 
 	public RecordSetSettingsRedirectURLException() {
@@ -31,12 +28,14 @@ public class RecordSetSettingsRedirectURLException extends PortalException {
 		super(msg);
 	}
 
-	public RecordSetSettingsRedirectURLException(String msg, Throwable cause) {
-		super(msg, cause);
+	public RecordSetSettingsRedirectURLException(
+		String msg, Throwable throwable) {
+
+		super(msg, throwable);
 	}
 
-	public RecordSetSettingsRedirectURLException(Throwable cause) {
-		super(cause);
+	public RecordSetSettingsRedirectURLException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

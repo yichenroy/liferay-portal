@@ -14,12 +14,17 @@
 
 package com.liferay.oauth2.provider.client.test;
 
-import com.liferay.oauth2.provider.test.internal.TestApplication;
-import com.liferay.oauth2.provider.test.internal.activator.BaseTestPreparatorBundleActivator;
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.oauth2.provider.internal.test.TestApplication;
+import com.liferay.oauth2.provider.internal.test.TestHeadHandlingApplication;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.log.CaptureAppender;
+import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,27 +36,26 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
+import org.apache.log4j.Level;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.BundleActivator;
 
 /**
  * @author Carlos Sierra Andrés
  */
-@RunAsClient
 @RunWith(Arquillian.class)
 public class HttpMethodApplicationClientTest extends BaseClientTestCase {
 
-	@Deployment
-	public static Archive<?> getArchive() throws Exception {
-		return BaseClientTestCase.getArchive(
-			MethodApplicationTestPreparatorBundleActivator.class);
-	}
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new LiferayIntegrationTestRule();
 
 	@Test
 	public void test() throws Exception {
@@ -70,14 +74,63 @@ public class HttpMethodApplicationClientTest extends BaseClientTestCase {
 		builder = authorize(
 			webTarget.request(), getToken("oauthTestApplicationBefore"));
 
-		response = builder.get();
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+
+			response = builder.get();
+
+			Assert.assertEquals(403, response.getStatus());
+
+			builder = authorize(
+				webTarget.request(), getToken("oauthTestApplicationWrong"));
+
+			response = builder.get();
+
+			Assert.assertEquals(403, response.getStatus());
+		}
+	}
+
+	@Test
+	public void testIgnoredMethods() throws Exception {
+		WebTarget webTarget = getWebTarget("/methods");
+
+		Invocation.Builder builder = authorize(
+			webTarget.request(), getToken("oauthTestApplicationAfter"));
+
+		Response response = builder.head();
+
+		Assert.assertEquals(200, response.getStatus());
+
+		webTarget = getWebTarget("/methods-with-ignore-missing-scopes-empty");
+
+		builder = authorize(
+			webTarget.request(), getToken("oauthTestApplicationAfter"));
+
+		response = builder.head();
+
+		Assert.assertEquals(403, response.getStatus());
+
+		webTarget = getWebTarget("/methods-with-head");
+
+		builder = authorize(
+			webTarget.request(), getToken("oauthTestApplicationAfter"));
+
+		response = builder.head();
 
 		Assert.assertEquals(403, response.getStatus());
 
 		builder = authorize(
-			webTarget.request(), getToken("oauthTestApplicationWrong"));
+			webTarget.request(), getToken("oauthTestApplicationWithHead"));
 
-		response = builder.get();
+		response = builder.head();
+
+		Assert.assertEquals(200, response.getStatus());
+
+		builder = authorize(
+			webTarget.request(), getToken("oauthTestApplicationWithHead"));
+
+		response = builder.method("CUSTOM");
 
 		Assert.assertEquals(403, response.getStatus());
 	}
@@ -91,26 +144,41 @@ public class HttpMethodApplicationClientTest extends BaseClientTestCase {
 
 			User user = UserTestUtil.getAdminUser(defaultCompanyId);
 
-			Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-			properties.put("oauth2.test.application", true);
-
 			createOAuth2Application(
 				defaultCompanyId, user, "oauthTestApplicationBefore",
 				Arrays.asList("GET", "POST"));
 
+			registerJaxRsApplication(new TestApplication(), "methods", null);
+
 			registerJaxRsApplication(
-				new TestApplication(), "methods", properties);
+				new TestHeadHandlingApplication(), "methods-with-head", null);
+
+			Dictionary<String, Object> properties = new HashMapDictionary<>();
+
+			properties.put("ignore.missing.scopes", "");
+
+			registerJaxRsApplication(
+				new TestApplication(),
+				"methods-with-ignore-missing-scopes-empty", properties);
 
 			createOAuth2Application(
 				defaultCompanyId, user, "oauthTestApplicationAfter",
 				Arrays.asList("GET", "POST"));
 
 			createOAuth2Application(
+				defaultCompanyId, user, "oauthTestApplicationWithHead",
+				Arrays.asList("HEAD"));
+
+			createOAuth2Application(
 				defaultCompanyId, user, "oauthTestApplicationWrong",
 				Collections.singletonList("everything"));
 		}
 
+	}
+
+	@Override
+	protected BundleActivator getBundleActivator() {
+		return new MethodApplicationTestPreparatorBundleActivator();
 	}
 
 }

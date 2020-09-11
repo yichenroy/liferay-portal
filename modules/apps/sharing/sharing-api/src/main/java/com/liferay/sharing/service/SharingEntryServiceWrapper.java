@@ -14,8 +14,6 @@
 
 package com.liferay.sharing.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,9 +23,8 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see SharingEntryService
  * @generated
  */
-@ProviderType
 public class SharingEntryServiceWrapper
-	implements SharingEntryService, ServiceWrapper<SharingEntryService> {
+	implements ServiceWrapper<SharingEntryService>, SharingEntryService {
 
 	public SharingEntryServiceWrapper(SharingEntryService sharingEntryService) {
 		_sharingEntryService = sharingEntryService;

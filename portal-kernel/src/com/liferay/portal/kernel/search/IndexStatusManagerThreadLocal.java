@@ -14,14 +14,11 @@
 
 package com.liferay.portal.kernel.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.CentralizedThreadLocal;
 
 /**
  * @author Daniel Kocsis
  */
-@ProviderType
 public class IndexStatusManagerThreadLocal {
 
 	public static boolean isIndexReadOnly() {

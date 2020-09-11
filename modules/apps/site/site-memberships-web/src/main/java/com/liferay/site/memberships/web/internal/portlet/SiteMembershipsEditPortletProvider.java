@@ -17,7 +17,7 @@ package com.liferay.site.memberships.web.internal.portlet;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.BasePortletProvider;
 import com.liferay.portal.kernel.portlet.EditPortletProvider;
-import com.liferay.site.memberships.web.internal.constants.SiteMembershipsPortletKeys;
+import com.liferay.site.memberships.constants.SiteMembershipsPortletKeys;
 
 import javax.portlet.PortletURL;
 
@@ -42,10 +42,10 @@ public class SiteMembershipsEditPortletProvider
 	}
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request)
+	public PortletURL getPortletURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		PortletURL portletURL = super.getPortletURL(request);
+		PortletURL portletURL = super.getPortletURL(httpServletRequest);
 
 		portletURL.setParameter("mvcPath", "/edit_site_assignments.jsp");
 

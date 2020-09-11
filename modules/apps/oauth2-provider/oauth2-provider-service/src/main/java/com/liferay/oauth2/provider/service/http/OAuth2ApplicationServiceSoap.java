@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.oauth2.provider.service.OAuth2ApplicationServiceUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -59,11 +57,47 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see OAuth2ApplicationServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class OAuth2ApplicationServiceSoap {
 
+	public static com.liferay.oauth2.provider.model.OAuth2ApplicationSoap
+			addOAuth2Application(
+				java.util.List<com.liferay.oauth2.provider.constants.GrantType>
+					allowedGrantTypesList,
+				long clientCredentialUserId, String clientId, int clientProfile,
+				String clientSecret, String description,
+				java.util.List<String> featuresList, String homePageURL,
+				long iconFileEntryId, String name, String privacyPolicyURL,
+				java.util.List<String> redirectURIsList,
+				java.util.List<String> scopeAliasesList,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws RemoteException {
+
+		try {
+			com.liferay.oauth2.provider.model.OAuth2Application returnValue =
+				OAuth2ApplicationServiceUtil.addOAuth2Application(
+					allowedGrantTypesList, clientCredentialUserId, clientId,
+					clientProfile, clientSecret, description, featuresList,
+					homePageURL, iconFileEntryId, name, privacyPolicyURL,
+					redirectURIsList, scopeAliasesList, serviceContext);
+
+			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
+				toSoapModel(returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	/**
+	 * @deprecated As of Mueller (7.2.x)
+	 */
+	@Deprecated
 	public static com.liferay.oauth2.provider.model.OAuth2ApplicationSoap
 			addOAuth2Application(
 				java.util.List<com.liferay.oauth2.provider.constants.GrantType>
@@ -88,10 +122,10 @@ public class OAuth2ApplicationServiceSoap {
 			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -107,10 +141,10 @@ public class OAuth2ApplicationServiceSoap {
 			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -126,10 +160,10 @@ public class OAuth2ApplicationServiceSoap {
 			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -145,10 +179,10 @@ public class OAuth2ApplicationServiceSoap {
 			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -164,10 +198,10 @@ public class OAuth2ApplicationServiceSoap {
 			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -188,10 +222,10 @@ public class OAuth2ApplicationServiceSoap {
 			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
 				toSoapModels(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -205,13 +239,50 @@ public class OAuth2ApplicationServiceSoap {
 
 			return returnValue;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
+	public static com.liferay.oauth2.provider.model.OAuth2ApplicationSoap
+			updateOAuth2Application(
+				long oAuth2ApplicationId,
+				java.util.List<com.liferay.oauth2.provider.constants.GrantType>
+					allowedGrantTypesList,
+				long clientCredentialUserId, String clientId, int clientProfile,
+				String clientSecret, String description,
+				java.util.List<String> featuresList, String homePageURL,
+				long iconFileEntryId, String name, String privacyPolicyURL,
+				java.util.List<String> redirectURIsList,
+				long auth2ApplicationScopeAliasesId,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws RemoteException {
+
+		try {
+			com.liferay.oauth2.provider.model.OAuth2Application returnValue =
+				OAuth2ApplicationServiceUtil.updateOAuth2Application(
+					oAuth2ApplicationId, allowedGrantTypesList,
+					clientCredentialUserId, clientId, clientProfile,
+					clientSecret, description, featuresList, homePageURL,
+					iconFileEntryId, name, privacyPolicyURL, redirectURIsList,
+					auth2ApplicationScopeAliasesId, serviceContext);
+
+			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
+				toSoapModel(returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	/**
+	 * @deprecated As of Mueller (7.2.x)
+	 */
+	@Deprecated
 	public static com.liferay.oauth2.provider.model.OAuth2ApplicationSoap
 			updateOAuth2Application(
 				long oAuth2ApplicationId,
@@ -238,10 +309,10 @@ public class OAuth2ApplicationServiceSoap {
 			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -259,10 +330,10 @@ public class OAuth2ApplicationServiceSoap {
 			return com.liferay.oauth2.provider.model.OAuth2ApplicationSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 

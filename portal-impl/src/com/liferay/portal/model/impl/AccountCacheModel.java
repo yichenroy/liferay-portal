@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Account;
@@ -35,21 +33,20 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class AccountCacheModel
 	implements CacheModel<Account>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AccountCacheModel)) {
+		if (!(object instanceof AccountCacheModel)) {
 			return false;
 		}
 
-		AccountCacheModel accountCacheModel = (AccountCacheModel)obj;
+		AccountCacheModel accountCacheModel = (AccountCacheModel)object;
 
 		if ((accountId == accountCacheModel.accountId) &&
 			(mvccVersion == accountCacheModel.mvccVersion)) {

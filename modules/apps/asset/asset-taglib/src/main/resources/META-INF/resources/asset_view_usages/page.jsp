@@ -20,89 +20,58 @@
 String className = (String)request.getAttribute("liferay-asset:asset-view-usages:className");
 long classPK = GetterUtil.getLong((String)request.getAttribute("liferay-asset:asset-view-usages:classPK"));
 
-AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(className, classPK);
-
-List<AssetEntryUsage> assetEntryUsages = AssetEntryUsageLocalServiceUtil.getAssetEntryUsages(assetEntry.getEntryId());
+AssetEntryUsagesDisplayContext assetEntryUsagesDisplayContext = new AssetEntryUsagesDisplayContext(renderRequest, renderResponse, className, classPK);
 %>
 
-<liferay-ui:search-container
-	compactEmptyResultsMessage="<%= true %>"
-	emptyResultsMessage="there-are-no-asset-entry-usages"
-	total="<%= assetEntryUsages.size() %>"
->
-	<liferay-ui:search-container-results
-		results="<%= assetEntryUsages %>"
-	/>
-
-	<liferay-ui:search-container-row
-		className="com.liferay.asset.model.AssetEntryUsage"
-		modelVar="assetEntryUsage"
+<div id="<portlet:namespace />assetEntryUsagesList">
+	<liferay-ui:search-container
+		compactEmptyResultsMessage="<%= true %>"
+		searchContainer="<%= assetEntryUsagesDisplayContext.getSearchContainer() %>"
 	>
-
-		<%
-		String name = StringPool.BLANK;
-		String previewURL = StringPool.BLANK;
-
-		Layout curLayout = LayoutLocalServiceUtil.fetchLayout(assetEntryUsage.getPlid());
-
-		if (curLayout != null) {
-			name = curLayout.getName(locale);
-
-			previewURL = PortalUtil.getLayoutFriendlyURL(curLayout, themeDisplay);
-		}
-		%>
-
-		<liferay-ui:search-container-column-text
-			name="pages"
+		<liferay-ui:search-container-row
+			className="com.liferay.asset.model.AssetEntryUsage"
+			modelVar="assetEntryUsage"
 		>
-			<h5>
-				<%= HtmlUtil.escape(name) %>
-			</h5>
+			<liferay-ui:search-container-column-text
+				name="pages"
+			>
+				<h5>
+					<%= HtmlUtil.escape(assetEntryUsagesDisplayContext.getAssetEntryUsageName(assetEntryUsage)) %>
+				</h5>
 
-			<div class="text-secondary">
-				<c:choose>
-					<c:when test="<%= assetEntryUsage.getType() == AssetEntryUsageConstants.TYPE_DISPLAY_PAGE_TEMPLATE %>">
-						<liferay-ui:message key="display-page-template" />
-					</c:when>
-					<c:when test="<%= assetEntryUsage.getType() == AssetEntryUsageConstants.TYPE_PAGE_TEMPLATE %>">
-						<liferay-ui:message key="page" />
-					</c:when>
-					<c:otherwise>
-						<liferay-ui:message key="page-template" />
-					</c:otherwise>
-				</c:choose>
-			</div>
-		</liferay-ui:search-container-column-text>
+				<div class="text-secondary">
+					<%= LanguageUtil.get(request, assetEntryUsagesDisplayContext.getAssetEntryUsageTypeLabel(assetEntryUsage)) %>
+				</div>
+			</liferay-ui:search-container-column-text>
 
-		<liferay-ui:search-container-column-text
-			cssClass="text-right"
-		>
-			<c:if test="<%= assetEntryUsage.getType() != AssetEntryUsageConstants.TYPE_DISPLAY_PAGE_TEMPLATE %>">
+			<liferay-ui:search-container-column-text
+				cssClass="text-right"
+			>
+				<c:if test="<%= assetEntryUsagesDisplayContext.isShowPreview(assetEntryUsage) %>">
 
-				<%
-				Map<String, String> data = new HashMap<>();
+					<%
+					Layout curLayout = LayoutLocalServiceUtil.fetchLayout(assetEntryUsage.getPlid());
+					%>
 
-				data.put("href", previewURL);
-				data.put("title", assetEntry.getTitle(locale));
-				%>
+					<c:if test="<%= curLayout != null %>">
+						<clay:button
+							cssClass="preview-asset-entry-usage table-action-link"
+							data-href="<%= assetEntryUsagesDisplayContext.getPreviewURL(assetEntryUsage) %>"
+							displayType="secondary"
+							icon="view"
+						/>
+					</c:if>
+				</c:if>
+			</liferay-ui:search-container-column-text>
+		</liferay-ui:search-container-row>
 
-				<clay:button
-					data="<%= data %>"
-					elementClasses="preview-asset-entry-usage table-action-link"
-					icon="view"
-					monospaced="<%= true %>"
-					style="secondary"
-				/>
-			</c:if>
-		</liferay-ui:search-container-column-text>
-	</liferay-ui:search-container-row>
-
-	<liferay-ui:search-iterator
-		markupView="lexicon"
-		paginate="<%= false %>"
-		searchResultCssClass="table table-autofit table-heading-nowrap"
-	/>
-</liferay-ui:search-container>
+		<liferay-ui:search-iterator
+			markupView="lexicon"
+			paginate="<%= false %>"
+			searchResultCssClass="table table-autofit table-heading-nowrap"
+		/>
+	</liferay-ui:search-container>
+</div>
 
 <aui:script require="metal-dom/src/all/dom as dom">
 	if (document.querySelector('#<portlet:namespace/>assetEntryUsagesList')) {
@@ -110,16 +79,14 @@ List<AssetEntryUsage> assetEntryUsages = AssetEntryUsageLocalServiceUtil.getAsse
 			document.querySelector('#<portlet:namespace/>assetEntryUsagesList'),
 			'click',
 			'.preview-asset-entry-usage',
-			function(event) {
+			function (event) {
 				var delegateTarget = event.delegateTarget;
 
-				Liferay.fire(
-					'previewArticle',
-					{
-						title: delegateTarget.getAttribute('data-title'),
-						uri: delegateTarget.getAttribute('data-href')
-					}
-				);
+				Liferay.Util.openModal({
+					iframeBodyCssClass: 'article-preview',
+					title: '<liferay-ui:message key="preview" />',
+					url: delegateTarget.getAttribute('data-href'),
+				});
 			}
 		);
 

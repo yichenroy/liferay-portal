@@ -14,14 +14,11 @@
 
 package com.liferay.portlet.exportimport.staging;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.CentralizedThreadLocal;
 
 /**
  * @author Raymond Augé
  */
-@ProviderType
 public class StagingAdvicesThreadLocal {
 
 	public static boolean isEnabled() {

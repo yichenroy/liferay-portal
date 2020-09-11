@@ -30,9 +30,9 @@ RuleGroupSearch ruleGroupSearch = new RuleGroupSearch(liferayPortletRequest, Por
 
 RuleGroupSearchTerms searchTerms = (RuleGroupSearchTerms)ruleGroupSearch.getSearchTerms();
 
-LinkedHashMap<String, Object> params = new LinkedHashMap<String, Object>();
-
-params.put("includeGlobalScope", Boolean.TRUE);
+LinkedHashMap<String, Object> params = LinkedHashMapBuilder.<String, Object>put(
+	"includeGlobalScope", Boolean.TRUE
+).build();
 
 int mdrRuleGroupsCount = MDRRuleGroupLocalServiceUtil.searchByKeywordsCount(groupId, searchTerms.getKeywords(), params, searchTerms.isAndOperator());
 
@@ -43,36 +43,15 @@ List<MDRRuleGroup> mdrRuleGroups = MDRRuleGroupLocalServiceUtil.searchByKeywords
 ruleGroupSearch.setResults(mdrRuleGroups);
 %>
 
-<clay:navigation-bar
-	inverted="<%= true %>"
-	navigationItems="<%=
-		new JSPNavigationItemList(pageContext) {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(renderResponse.createRenderURL());
-						navigationItem.setLabel(LanguageUtil.get(request, "device-families"));
-					});
-			}
-		}
-	%>"
-/>
-
 <liferay-frontend:management-bar
 	disabled="<%= mdrRuleGroupsCount <= 0 %>"
 	includeCheckBox="<%= true %>"
 	searchContainerId="deviceFamilies"
 >
-
-	<%
-	PortletURL displayStyleURL = PortletURLUtil.clone(portletURL, renderResponse);
-	%>
-
 	<liferay-frontend:management-bar-buttons>
 		<liferay-frontend:management-bar-display-buttons
 			displayViews='<%= new String[] {"icon", "descriptive", "list"} %>'
-			portletURL="<%= displayStyleURL %>"
+			portletURL="<%= PortletURLUtil.clone(portletURL, renderResponse) %>"
 			selectedDisplayStyle="<%= displayStyle %>"
 		/>
 
@@ -249,13 +228,25 @@ ruleGroupSearch.setResults(mdrRuleGroups);
 	</liferay-ui:search-container>
 </aui:form>
 
-<aui:script>
-	$('#<portlet:namespace />deleteSelectedDeviceFamilies').on(
-		'click',
-		function() {
-			if (confirm('<%= UnicodeLanguageUtil.get(resourceBundle, "are-you-sure-you-want-to-delete-this") %>')) {
-				submitForm($(document.<portlet:namespace />fm));
-			}
+<script>
+	(function () {
+		var deleteSelectedDeviceFamiliesButton = document.getElementById(
+			'<portlet:namespace />deleteSelectedDeviceFamilies'
+		);
+
+		if (deleteSelectedDeviceFamiliesButton) {
+			deleteSelectedDeviceFamiliesButton.addEventListener(
+				'click',
+				function () {
+					if (
+						confirm(
+							'<%= UnicodeLanguageUtil.get(resourceBundle, "are-you-sure-you-want-to-delete-this") %>'
+						)
+					) {
+						submitForm(document.<portlet:namespace />fm);
+					}
+				}
+			);
 		}
-	);
-</aui:script>
+	})();
+</script>

@@ -14,11 +14,11 @@
 
 package com.liferay.wiki.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the WikiPage service. Represents a row in the &quot;WikiPage&quot; database table, with each column mapped to a property of this class.
@@ -75,14 +75,17 @@ public interface WikiPage extends PersistedModel, WikiPageModel {
 	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
 			getAttachmentsFileEntries(
 				int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator obc)
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.portal.kernel.repository.model.FileEntry>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
 			getAttachmentsFileEntries(
 				String[] mimeTypes, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.portal.kernel.repository.model.FileEntry> obc)
+					<com.liferay.portal.kernel.repository.model.FileEntry>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public int getAttachmentsFileEntriesCount()

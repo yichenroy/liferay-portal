@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 
@@ -25,7 +23,6 @@ import java.io.Serializable;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class OrgGroupRolePK
 	implements Comparable<OrgGroupRolePK>, Serializable {
 
@@ -120,16 +117,16 @@ public class OrgGroupRolePK
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof OrgGroupRolePK)) {
+		if (!(object instanceof OrgGroupRolePK)) {
 			return false;
 		}
 
-		OrgGroupRolePK pk = (OrgGroupRolePK)obj;
+		OrgGroupRolePK pk = (OrgGroupRolePK)object;
 
 		if ((organizationId == pk.organizationId) && (groupId == pk.groupId) &&
 			(roleId == pk.roleId)) {

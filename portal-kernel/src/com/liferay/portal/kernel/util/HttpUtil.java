@@ -17,6 +17,7 @@ package com.liferay.portal.kernel.util;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.net.URI;
 import java.net.URL;
 
 import java.util.Map;
@@ -72,24 +73,6 @@ public class HttpUtil {
 		return getHttp().encodePath(path);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             URLCodec#encodeURL(String)}
-	 */
-	@Deprecated
-	public static String encodeURL(String url) {
-		return getHttp().encodeURL(url);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             URLCodec#encodeURL(String, boolean)}
-	 */
-	@Deprecated
-	public static String encodeURL(String url, boolean escapeSpaces) {
-		return getHttp().encodeURL(url, escapeSpaces);
-	}
-
 	public static String fixPath(String path) {
 		return getHttp().fixPath(path);
 	}
@@ -100,8 +83,8 @@ public class HttpUtil {
 		return getHttp().fixPath(path, leading, trailing);
 	}
 
-	public static String getCompleteURL(HttpServletRequest request) {
-		return getHttp().getCompleteURL(request);
+	public static String getCompleteURL(HttpServletRequest httpServletRequest) {
+		return getHttp().getCompleteURL(httpServletRequest);
 	}
 
 	public static Cookie[] getCookies() {
@@ -146,8 +129,8 @@ public class HttpUtil {
 		return getHttp().getProtocol(secure);
 	}
 
-	public static String getProtocol(HttpServletRequest request) {
-		return getHttp().getProtocol(request);
+	public static String getProtocol(HttpServletRequest httpServletRequest) {
+		return getHttp().getProtocol(httpServletRequest);
 	}
 
 	public static String getProtocol(RenderRequest renderRequest) {
@@ -162,8 +145,12 @@ public class HttpUtil {
 		return getHttp().getQueryString(url);
 	}
 
-	public static String getRequestURL(HttpServletRequest request) {
-		return getHttp().getRequestURL(request);
+	public static String getRequestURL(HttpServletRequest httpServletRequest) {
+		return getHttp().getRequestURL(httpServletRequest);
+	}
+
+	public static URI getURI(String uriString) {
+		return getHttp().getURI(uriString);
 	}
 
 	public static boolean hasDomain(String url) {
@@ -220,8 +207,10 @@ public class HttpUtil {
 		return getHttp().protocolize(url, secure);
 	}
 
-	public static String protocolize(String url, HttpServletRequest request) {
-		return getHttp().protocolize(url, request);
+	public static String protocolize(
+		String url, HttpServletRequest httpServletRequest) {
+
+		return getHttp().protocolize(url, httpServletRequest);
 	}
 
 	public static String protocolize(String url, int port, boolean secure) {
@@ -278,14 +267,6 @@ public class HttpUtil {
 
 	public static String shortenURL(String url) {
 		return getHttp().shortenURL(url);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #shortenURL(String)}
-	 */
-	@Deprecated
-	public static String shortenURL(String url, int count) {
-		return getHttp().shortenURL(url, count);
 	}
 
 	public static byte[] URLtoByteArray(Http.Options options)

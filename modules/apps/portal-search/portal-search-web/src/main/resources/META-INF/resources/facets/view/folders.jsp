@@ -17,10 +17,10 @@
 <%@ include file="/facets/init.jsp" %>
 
 <%
-FolderSearchFacetDisplayBuilder folderSearchFacetDisplayBuilder = new FolderSearchFacetDisplayBuilder();
+FolderSearchFacetDisplayBuilder folderSearchFacetDisplayBuilder = new FolderSearchFacetDisplayBuilder(renderRequest);
 
 folderSearchFacetDisplayBuilder.setFacet(facet);
-folderSearchFacetDisplayBuilder.setFolderTitleLookup(new FolderTitleLookupImpl(request));
+folderSearchFacetDisplayBuilder.setFolderTitleLookup(new FolderTitleLookupImpl(new FolderSearcher(), request));
 folderSearchFacetDisplayBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
 folderSearchFacetDisplayBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
 folderSearchFacetDisplayBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms", 10));

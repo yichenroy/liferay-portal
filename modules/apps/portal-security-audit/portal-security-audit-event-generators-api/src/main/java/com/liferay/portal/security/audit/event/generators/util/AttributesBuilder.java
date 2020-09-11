@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.audit.event.generators.util;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 
 import java.util.ArrayList;
@@ -25,7 +23,6 @@ import java.util.Objects;
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class AttributesBuilder {
 
 	public AttributesBuilder(Object newBean, Object oldBean) {

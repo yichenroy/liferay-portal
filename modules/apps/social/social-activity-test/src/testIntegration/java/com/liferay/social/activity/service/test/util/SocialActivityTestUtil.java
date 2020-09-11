@@ -17,8 +17,8 @@ package com.liferay.social.activity.service.test.util;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -73,9 +73,7 @@ public class SocialActivityTestUtil {
 	}
 
 	public static String createExtraDataJSON(String key, String value) {
-		JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-		extraDataJSONObject.put(key, value);
+		JSONObject extraDataJSONObject = JSONUtil.put(key, value);
 
 		return extraDataJSONObject.toString();
 	}
@@ -90,11 +88,17 @@ public class SocialActivityTestUtil {
 
 		if (owner instanceof User) {
 			classNameId = PortalUtil.getClassNameId(User.class.getName());
-			classPK = ((User)owner).getUserId();
+
+			User user = (User)owner;
+
+			classPK = user.getUserId();
 		}
 		else if (owner instanceof AssetEntry) {
-			classNameId = ((AssetEntry)owner).getClassNameId();
-			classPK = ((AssetEntry)owner).getClassPK();
+			AssetEntry assetEntry = (AssetEntry)owner;
+
+			classNameId = assetEntry.getClassNameId();
+			classPK = assetEntry.getClassPK();
+
 			ownerType = SocialActivityCounterConstants.TYPE_ASSET;
 		}
 

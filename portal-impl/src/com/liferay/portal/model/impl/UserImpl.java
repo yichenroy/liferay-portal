@@ -14,6 +14,7 @@
 
 package com.liferay.portal.model.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -64,7 +65,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.RemotePreference;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -339,11 +339,9 @@ public class UserImpl extends UserBaseImpl {
 
 			return PortalUtil.addPreservedParameters(
 				themeDisplay,
-				portalURL.concat(
-					PortalUtil.getPathContext()
-				).concat(
-					profileFriendlyURL
-				));
+				StringBundler.concat(
+					portalURL, PortalUtil.getPathContext(),
+					profileFriendlyURL));
 		}
 
 		Group group = getGroup();
@@ -541,7 +539,7 @@ public class UserImpl extends UserBaseImpl {
 
 	@Override
 	public String getOriginalEmailAddress() {
-		return super.getOriginalEmailAddress();
+		return getColumnOriginalValue("emailAddress");
 	}
 
 	@Override
@@ -809,8 +807,8 @@ public class UserImpl extends UserBaseImpl {
 
 			emailAddressVerificationRequired = company.isStrangersVerify();
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 		}
 
 		if (emailAddressVerificationRequired) {
@@ -841,12 +839,11 @@ public class UserImpl extends UserBaseImpl {
 			return true;
 		}
 
-		if (PropsValues.USERS_REMINDER_QUERIES_ENABLED) {
-			if (Validator.isNull(getReminderQueryQuestion()) ||
-				Validator.isNull(getReminderQueryAnswer())) {
+		if (PropsValues.USERS_REMINDER_QUERIES_ENABLED &&
+			(Validator.isNull(getReminderQueryQuestion()) ||
+			 Validator.isNull(getReminderQueryAnswer()))) {
 
-				return false;
-			}
+			return false;
 		}
 
 		return true;

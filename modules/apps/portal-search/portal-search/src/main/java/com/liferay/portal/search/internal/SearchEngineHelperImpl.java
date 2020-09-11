@@ -110,8 +110,7 @@ public class SearchEngineHelperImpl implements SearchEngineHelper {
 			}
 		}
 
-		return assetEntryClassNames.toArray(
-			new String[assetEntryClassNames.size()]);
+		return assetEntryClassNames.toArray(new String[0]);
 	}
 
 	@Override
@@ -186,20 +185,14 @@ public class SearchEngineHelperImpl implements SearchEngineHelper {
 
 	@Override
 	public String getSearchReaderDestinationName(String searchEngineId) {
-		return DestinationNames.SEARCH_READER.concat(
-			StringPool.SLASH
-		).concat(
-			searchEngineId
-		);
+		return StringBundler.concat(
+			DestinationNames.SEARCH_READER, StringPool.SLASH, searchEngineId);
 	}
 
 	@Override
 	public String getSearchWriterDestinationName(String searchEngineId) {
-		return DestinationNames.SEARCH_WRITER.concat(
-			StringPool.SLASH
-		).concat(
-			searchEngineId
-		);
+		return StringBundler.concat(
+			DestinationNames.SEARCH_WRITER, StringPool.SLASH, searchEngineId);
 	}
 
 	@Override
@@ -262,12 +255,12 @@ public class SearchEngineHelperImpl implements SearchEngineHelper {
 					queuingSearchEngine.invokeQueued(
 						searchEngine.getIndexWriter());
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to execute pending write events for " +
 								"engine: " + searchEngineId,
-							e);
+							exception);
 					}
 				}
 			}
@@ -282,6 +275,8 @@ public class SearchEngineHelperImpl implements SearchEngineHelper {
 		SearchEngineHelperConfiguration searchEngineHelperConfiguration =
 			ConfigurableUtil.createConfigurable(
 				SearchEngineHelperConfiguration.class, properties);
+
+		_excludedEntryClassNames.clear();
 
 		Collections.addAll(
 			_excludedEntryClassNames,

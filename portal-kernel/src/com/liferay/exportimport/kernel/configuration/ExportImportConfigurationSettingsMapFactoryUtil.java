@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.configuration;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
@@ -37,7 +35,6 @@ import javax.portlet.PortletRequest;
  * @author Akos Thurzo
  * @since  7.0
  */
-@ProviderType
 public class ExportImportConfigurationSettingsMapFactoryUtil {
 
 	public static Map<String, Serializable> buildExportLayoutSettingsMap(

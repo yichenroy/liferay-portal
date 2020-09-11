@@ -24,6 +24,7 @@ long classNameId = GetterUtil.getLong(String.valueOf(request.getAttribute("lifer
 long classPK = GetterUtil.getLong(String.valueOf(request.getAttribute("liferay-ddm:html:classPK")));
 com.liferay.dynamic.data.mapping.storage.DDMFormValues ddmFormValues = (com.liferay.dynamic.data.mapping.storage.DDMFormValues)request.getAttribute("liferay-ddm:html:ddmFormValues");
 java.util.Locale defaultEditLocale = (java.util.Locale)request.getAttribute("liferay-ddm:html:defaultEditLocale");
+java.util.Locale defaultLocale = (java.util.Locale)request.getAttribute("liferay-ddm:html:defaultLocale");
 java.lang.String documentLibrarySelectorURL = GetterUtil.getString((java.lang.String)request.getAttribute("liferay-ddm:html:documentLibrarySelectorURL"));
 java.lang.String fieldsNamespace = GetterUtil.getString((java.lang.String)request.getAttribute("liferay-ddm:html:fieldsNamespace"));
 long groupId = GetterUtil.getLong(String.valueOf(request.getAttribute("liferay-ddm:html:groupId")));
@@ -34,6 +35,7 @@ boolean readOnly = GetterUtil.getBoolean(String.valueOf(request.getAttribute("li
 boolean repeatable = GetterUtil.getBoolean(String.valueOf(request.getAttribute("liferay-ddm:html:repeatable")), true);
 java.util.Locale requestedLocale = (java.util.Locale)request.getAttribute("liferay-ddm:html:requestedLocale");
 boolean showEmptyFieldLabel = GetterUtil.getBoolean(String.valueOf(request.getAttribute("liferay-ddm:html:showEmptyFieldLabel")), true);
+boolean showLanguageSelector = GetterUtil.getBoolean(String.valueOf(request.getAttribute("liferay-ddm:html:showLanguageSelector")), true);
 boolean synchronousFormSubmission = GetterUtil.getBoolean(String.valueOf(request.getAttribute("liferay-ddm:html:synchronousFormSubmission")), true);
 Map<String, Object> dynamicAttributes = (Map<String, Object>)request.getAttribute("liferay-ddm:html:dynamicAttributes");
 %>

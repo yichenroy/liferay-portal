@@ -14,8 +14,6 @@
 
 package com.liferay.contacts.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.contacts.model.Entry;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
@@ -34,20 +32,19 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class EntryCacheModel implements CacheModel<Entry>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof EntryCacheModel)) {
+		if (!(object instanceof EntryCacheModel)) {
 			return false;
 		}
 
-		EntryCacheModel entryCacheModel = (EntryCacheModel)obj;
+		EntryCacheModel entryCacheModel = (EntryCacheModel)object;
 
 		if (entryId == entryCacheModel.entryId) {
 			return true;

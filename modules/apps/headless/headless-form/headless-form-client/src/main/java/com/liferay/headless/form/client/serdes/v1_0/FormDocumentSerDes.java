@@ -17,9 +17,11 @@ package com.liferay.headless.form.client.serdes.v1_0;
 import com.liferay.headless.form.client.dto.v1_0.FormDocument;
 import com.liferay.headless.form.client.json.BaseJSONParser;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.annotation.Generated;
 
@@ -58,11 +60,25 @@ public class FormDocumentSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"contentUrl\":");
+			sb.append("\"contentUrl\": ");
 
 			sb.append("\"");
 
 			sb.append(_escape(formDocument.getContentUrl()));
+
+			sb.append("\"");
+		}
+
+		if (formDocument.getDescription() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"description\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(formDocument.getDescription()));
 
 			sb.append("\"");
 		}
@@ -72,7 +88,7 @@ public class FormDocumentSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"encodingFormat\":");
+			sb.append("\"encodingFormat\": ");
 
 			sb.append("\"");
 
@@ -86,7 +102,7 @@ public class FormDocumentSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"fileExtension\":");
+			sb.append("\"fileExtension\": ");
 
 			sb.append("\"");
 
@@ -95,14 +111,34 @@ public class FormDocumentSerDes {
 			sb.append("\"");
 		}
 
+		if (formDocument.getFolderId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"folderId\": ");
+
+			sb.append(formDocument.getFolderId());
+		}
+
 		if (formDocument.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(formDocument.getId());
+		}
+
+		if (formDocument.getSiteId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteId\": ");
+
+			sb.append(formDocument.getSiteId());
 		}
 
 		if (formDocument.getSizeInBytes() != null) {
@@ -110,7 +146,7 @@ public class FormDocumentSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"sizeInBytes\":");
+			sb.append("\"sizeInBytes\": ");
 
 			sb.append(formDocument.getSizeInBytes());
 		}
@@ -120,7 +156,7 @@ public class FormDocumentSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"title\":");
+			sb.append("\"title\": ");
 
 			sb.append("\"");
 
@@ -134,18 +170,33 @@ public class FormDocumentSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		FormDocumentJSONParser formDocumentJSONParser =
+			new FormDocumentJSONParser();
+
+		return formDocumentJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(FormDocument formDocument) {
 		if (formDocument == null) {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		if (formDocument.getContentUrl() == null) {
 			map.put("contentUrl", null);
 		}
 		else {
 			map.put("contentUrl", String.valueOf(formDocument.getContentUrl()));
+		}
+
+		if (formDocument.getDescription() == null) {
+			map.put("description", null);
+		}
+		else {
+			map.put(
+				"description", String.valueOf(formDocument.getDescription()));
 		}
 
 		if (formDocument.getEncodingFormat() == null) {
@@ -166,11 +217,25 @@ public class FormDocumentSerDes {
 				String.valueOf(formDocument.getFileExtension()));
 		}
 
+		if (formDocument.getFolderId() == null) {
+			map.put("folderId", null);
+		}
+		else {
+			map.put("folderId", String.valueOf(formDocument.getFolderId()));
+		}
+
 		if (formDocument.getId() == null) {
 			map.put("id", null);
 		}
 		else {
 			map.put("id", String.valueOf(formDocument.getId()));
+		}
+
+		if (formDocument.getSiteId() == null) {
+			map.put("siteId", null);
+		}
+		else {
+			map.put("siteId", String.valueOf(formDocument.getSiteId()));
 		}
 
 		if (formDocument.getSizeInBytes() == null) {
@@ -191,13 +256,7 @@ public class FormDocumentSerDes {
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class FormDocumentJSONParser
+	public static class FormDocumentJSONParser
 		extends BaseJSONParser<FormDocument> {
 
 		@Override
@@ -220,6 +279,11 @@ public class FormDocumentSerDes {
 					formDocument.setContentUrl((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "description")) {
+				if (jsonParserFieldValue != null) {
+					formDocument.setDescription((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "encodingFormat")) {
 				if (jsonParserFieldValue != null) {
 					formDocument.setEncodingFormat(
@@ -231,9 +295,21 @@ public class FormDocumentSerDes {
 					formDocument.setFileExtension((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "folderId")) {
+				if (jsonParserFieldValue != null) {
+					formDocument.setFolderId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					formDocument.setId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "siteId")) {
+				if (jsonParserFieldValue != null) {
+					formDocument.setSiteId(
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
@@ -248,12 +324,80 @@ public class FormDocumentSerDes {
 					formDocument.setTitle((String)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

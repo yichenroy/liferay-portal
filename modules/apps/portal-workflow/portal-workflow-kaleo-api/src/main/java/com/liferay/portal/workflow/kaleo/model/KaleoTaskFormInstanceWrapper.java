@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see KaleoTaskFormInstance
  * @generated
  */
-@ProviderType
 public class KaleoTaskFormInstanceWrapper
 	extends BaseModelWrapper<KaleoTaskFormInstance>
 	implements KaleoTaskFormInstance, ModelWrapper<KaleoTaskFormInstance> {
@@ -55,6 +52,7 @@ public class KaleoTaskFormInstanceWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
+		attributes.put("kaleoDefinitionId", getKaleoDefinitionId());
 		attributes.put(
 			"kaleoDefinitionVersionId", getKaleoDefinitionVersionId());
 		attributes.put("kaleoInstanceId", getKaleoInstanceId());
@@ -120,6 +118,12 @@ public class KaleoTaskFormInstanceWrapper
 
 		if (modifiedDate != null) {
 			setModifiedDate(modifiedDate);
+		}
+
+		Long kaleoDefinitionId = (Long)attributes.get("kaleoDefinitionId");
+
+		if (kaleoDefinitionId != null) {
+			setKaleoDefinitionId(kaleoDefinitionId);
 		}
 
 		Long kaleoDefinitionVersionId = (Long)attributes.get(
@@ -255,6 +259,16 @@ public class KaleoTaskFormInstanceWrapper
 	@Override
 	public long getGroupId() {
 		return model.getGroupId();
+	}
+
+	/**
+	 * Returns the kaleo definition ID of this kaleo task form instance.
+	 *
+	 * @return the kaleo definition ID of this kaleo task form instance
+	 */
+	@Override
+	public long getKaleoDefinitionId() {
+		return model.getKaleoDefinitionId();
 	}
 
 	/**
@@ -460,6 +474,16 @@ public class KaleoTaskFormInstanceWrapper
 	@Override
 	public void setGroupId(long groupId) {
 		model.setGroupId(groupId);
+	}
+
+	/**
+	 * Sets the kaleo definition ID of this kaleo task form instance.
+	 *
+	 * @param kaleoDefinitionId the kaleo definition ID of this kaleo task form instance
+	 */
+	@Override
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		model.setKaleoDefinitionId(kaleoDefinitionId);
 	}
 
 	/**

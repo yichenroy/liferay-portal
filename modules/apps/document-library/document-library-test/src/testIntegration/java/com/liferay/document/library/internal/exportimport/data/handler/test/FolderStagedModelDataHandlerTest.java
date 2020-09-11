@@ -30,6 +30,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
@@ -37,14 +38,14 @@ import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.DateTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -223,13 +224,9 @@ public class FolderStagedModelDataHandlerTest
 
 		DLFolderLocalServiceUtil.updateDLFolder(dlFolder);
 
-		List<Long> dlFileEntryTypeIds = new ArrayList<>();
-
-		dlFileEntryTypeIds.add(dlFileEntryType.getFileEntryTypeId());
-
 		DLFileEntryTypeLocalServiceUtil.updateFolderFileEntryTypes(
-			dlFolder, dlFileEntryTypeIds, dlFileEntryType.getFileEntryTypeId(),
-			serviceContext);
+			dlFolder, ListUtil.fromArray(dlFileEntryType.getFileEntryTypeId()),
+			dlFileEntryType.getFileEntryTypeId(), serviceContext);
 
 		return folder;
 	}
@@ -260,17 +257,14 @@ public class FolderStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			DLFolder dlFolder =
-				DLFolderLocalServiceUtil.getDLFolderByUuidAndGroupId(
-					uuid, group.getGroupId());
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
 
-			return new LiferayFolder(dlFolder);
-		}
-		catch (Exception e) {
-			return null;
-		}
+		DLFolder dlFolder =
+			DLFolderLocalServiceUtil.getDLFolderByUuidAndGroupId(
+				uuid, group.getGroupId());
+
+		return new LiferayFolder(dlFolder);
 	}
 
 	@Override
@@ -371,12 +365,9 @@ public class FolderStagedModelDataHandlerTest
 			StagedModel stagedModel, StagedModel importedStagedModel)
 		throws Exception {
 
-		Assert.assertTrue(
-			stagedModel.getCreateDate() + " " +
-				importedStagedModel.getCreateDate(),
-			DateUtil.equals(
-				stagedModel.getCreateDate(),
-				importedStagedModel.getCreateDate()));
+		DateTestUtil.assertEquals(
+			stagedModel.getCreateDate(), importedStagedModel.getCreateDate());
+
 		Assert.assertEquals(
 			stagedModel.getUuid(), importedStagedModel.getUuid());
 

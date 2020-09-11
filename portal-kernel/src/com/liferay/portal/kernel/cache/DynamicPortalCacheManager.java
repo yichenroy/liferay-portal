@@ -50,18 +50,40 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 	}
 
 	@Override
+	public PortalCache<K, V> fetchPortalCache(String portalCacheName) {
+		return _dynamicPortalCaches.computeIfAbsent(
+			portalCacheName,
+			key -> {
+				PortalCache<K, V> portalCache =
+					_portalCacheManager.fetchPortalCache(portalCacheName);
+
+				if (portalCache == null) {
+					return null;
+				}
+
+				return new DynamicPortalCache<>(
+					this, portalCache, key, portalCache.isMVCC());
+			});
+	}
+
+	@Override
 	public PortalCache<K, V> getPortalCache(String portalCacheName)
 		throws PortalCacheException {
 
-		return getPortalCache(portalCacheName, false);
+		return getPortalCache(portalCacheName, false, false);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getPortalCache(String)}
+	 */
+	@Deprecated
 	@Override
 	public PortalCache<K, V> getPortalCache(
 			String portalCacheName, boolean blocking)
 		throws PortalCacheException {
 
-		return getPortalCache(portalCacheName, blocking, false);
+		return getPortalCache(portalCacheName);
 	}
 
 	@Override
@@ -72,8 +94,8 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 		return _dynamicPortalCaches.computeIfAbsent(
 			portalCacheName,
 			key -> new DynamicPortalCache<>(
-				this, _portalCacheManager.getPortalCache(key, blocking, mvcc),
-				key, blocking, mvcc));
+				this, _portalCacheManager.getPortalCache(key, false, mvcc), key,
+				mvcc));
 	}
 
 	@Override
@@ -202,8 +224,7 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 
 			dynamicPortalCache.setPortalCache(
 				_portalCacheManager.getPortalCache(
-					dynamicPortalCache.getPortalCacheName(),
-					dynamicPortalCache.isBlocking(),
+					dynamicPortalCache.getPortalCacheName(), false,
 					dynamicPortalCache.isMVCC()));
 		}
 	}

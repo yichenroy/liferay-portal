@@ -15,8 +15,8 @@
 package com.liferay.portal.tools;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.xml.DocUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
@@ -84,12 +84,12 @@ public class ExtInfoBuilder {
 				StringUtil.replace(file, CharPool.BACK_SLASH, CharPool.SLASH));
 		}
 
-		_fileUtil.write(
+		_fileImpl.write(
 			StringBundler.concat(
 				outputDir, "/ext-", servletContextName, ".xml"),
 			document.formattedString());
 	}
 
-	private static final FileImpl _fileUtil = FileImpl.getInstance();
+	private static final FileImpl _fileImpl = FileImpl.getInstance();
 
 }

@@ -14,19 +14,21 @@
 
 package com.liferay.fragment.renderer;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.fragment.model.FragmentEntryLink;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Jorge Ferrer
  */
 @ProviderType
 public interface FragmentRendererContext {
+
+	public Optional<Object> getDisplayObjectOptional();
 
 	public Optional<Map<String, Object>> getFieldValuesOptional();
 
@@ -36,6 +38,16 @@ public interface FragmentRendererContext {
 
 	public String getMode();
 
+	public long getPreviewClassNameId();
+
+	public long getPreviewClassPK();
+
+	public int getPreviewType();
+
+	public String getPreviewVersion();
+
 	public long[] getSegmentsExperienceIds();
+
+	public boolean isUseCachedContent();
 
 }

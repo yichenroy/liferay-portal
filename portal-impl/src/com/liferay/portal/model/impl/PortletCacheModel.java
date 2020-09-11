@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -33,21 +31,20 @@ import java.io.ObjectOutput;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class PortletCacheModel
 	implements CacheModel<Portlet>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof PortletCacheModel)) {
+		if (!(object instanceof PortletCacheModel)) {
 			return false;
 		}
 
-		PortletCacheModel portletCacheModel = (PortletCacheModel)obj;
+		PortletCacheModel portletCacheModel = (PortletCacheModel)object;
 
 		if ((id == portletCacheModel.id) &&
 			(mvccVersion == portletCacheModel.mvccVersion)) {

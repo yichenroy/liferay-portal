@@ -14,9 +14,9 @@
 
 package com.liferay.oauth2.provider.scope.liferay;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Collection;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Lists scope aliases and matching {@link LiferayOAuth2Scope}s based on a
@@ -31,6 +31,16 @@ public interface ScopeLocator {
 
 	public LiferayOAuth2Scope getLiferayOAuth2Scope(
 		long companyId, String applicationName, String scope);
+
+	/**
+	 * Returns all the application exported scopes.
+	 *
+	 * @param  companyId the ID of the portal instance containing the scopes
+	 * @return the matching scopes
+	 * @review
+	 */
+	public Collection<LiferayOAuth2Scope> getLiferayOAuth2Scopes(
+		long companyId);
 
 	/**
 	 * Returns the application exported scopes matching the given portal

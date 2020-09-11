@@ -50,28 +50,35 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
 		long themeLastModified = PortalWebResourcesUtil.getLastModified(
 			PortalWebResourceConstants.RESOURCE_TYPE_THEME_CONTRIBUTOR);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		String portalCDNURL = themeDisplay.getCDNBaseURL();
+
+		if (!_portal.isCDNDynamicResourcesEnabled(
+				themeDisplay.getCompanyId())) {
+
+			portalCDNURL = themeDisplay.getPortalURL();
+		}
 
 		if (_cssResourceURLs.length > 0) {
 			if (themeDisplay.isThemeCssFastLoad()) {
 				_renderComboCSS(
-					themeLastModified, request, portalCDNURL,
-					response.getWriter());
+					themeLastModified, httpServletRequest, portalCDNURL,
+					httpServletResponse.getWriter());
 			}
 			else {
 				_renderSimpleCSS(
-					themeLastModified, request, portalCDNURL,
-					response.getWriter(), _cssResourceURLs);
+					themeLastModified, httpServletRequest, portalCDNURL,
+					httpServletResponse.getWriter(), _cssResourceURLs);
 			}
 		}
 
@@ -81,12 +88,13 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 
 		if (themeDisplay.isThemeJsFastLoad()) {
 			_renderComboJS(
-				themeLastModified, request, portalCDNURL, response.getWriter());
+				themeLastModified, httpServletRequest, portalCDNURL,
+				httpServletResponse.getWriter());
 		}
 		else {
 			_renderSimpleJS(
-				themeLastModified, request, portalCDNURL, response.getWriter(),
-				_jsResourceURLs);
+				themeLastModified, httpServletRequest, portalCDNURL,
+				httpServletResponse.getWriter(), _jsResourceURLs);
 		}
 	}
 
@@ -108,6 +116,8 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
+
+		_rebuild();
 	}
 
 	@Reference(
@@ -139,6 +149,10 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 	}
 
 	private void _rebuild() {
+		if (_bundleContext == null) {
+			return;
+		}
+
 		Collection<String> cssResourceURLs = new ArrayList<>();
 		Collection<String> jsResourceURLs = new ArrayList<>();
 
@@ -172,10 +186,9 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 			}
 		}
 
-		_cssResourceURLs = cssResourceURLs.toArray(
-			new String[cssResourceURLs.size()]);
+		_cssResourceURLs = cssResourceURLs.toArray(new String[0]);
 
-		StringBundler sb = new StringBundler(cssResourceURLs.size() * 2 + 1);
+		StringBundler sb = new StringBundler((cssResourceURLs.size() * 2) + 1);
 
 		for (String cssResourceURL : cssResourceURLs) {
 			sb.append("&");
@@ -186,10 +199,9 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 
 		_mergedCSSResourceURLs = sb.toString();
 
-		_jsResourceURLs = jsResourceURLs.toArray(
-			new String[jsResourceURLs.size()]);
+		_jsResourceURLs = jsResourceURLs.toArray(new String[0]);
 
-		sb = new StringBundler(jsResourceURLs.size() * 2 + 1);
+		sb = new StringBundler((jsResourceURLs.size() * 2) + 1);
 
 		for (String jsResourceURL : jsResourceURLs) {
 			sb.append("&");
@@ -202,47 +214,44 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 	}
 
 	private void _renderComboCSS(
-		long themeLastModified, HttpServletRequest request, String portalURL,
-		PrintWriter printWriter) {
+		long themeLastModified, HttpServletRequest httpServletRequest,
+		String portalURL, PrintWriter printWriter) {
 
 		printWriter.write("<link data-senna-track=\"permanent\" href=\"");
 
-		printWriter.write(
-			portalURL +
-				_portal.getStaticResourceURL(
-					request, _comboContextPath, "minifierType=css",
-					themeLastModified));
+		String staticResourceURL = _portal.getStaticResourceURL(
+			httpServletRequest, _comboContextPath, "minifierType=css",
+			themeLastModified);
+
+		printWriter.write(portalURL + staticResourceURL);
 
 		printWriter.write(_mergedCSSResourceURLs);
 	}
 
 	private void _renderComboJS(
-		long themeLastModified, HttpServletRequest request, String portalURL,
-		PrintWriter printWriter) {
+		long themeLastModified, HttpServletRequest httpServletRequest,
+		String portalURL, PrintWriter printWriter) {
 
 		printWriter.write("<script data-senna-track=\"permanent\" src=\"");
 
-		printWriter.write(
-			portalURL +
-				_portal.getStaticResourceURL(
-					request, _comboContextPath, "minifierType=js",
-					themeLastModified));
+		String staticResourceURL = _portal.getStaticResourceURL(
+			httpServletRequest, _comboContextPath, "minifierType=js",
+			themeLastModified);
+
+		printWriter.write(portalURL + staticResourceURL);
 
 		printWriter.write(_mergedJSResourceURLs);
 	}
 
 	private void _renderSimpleCSS(
-		long themeLastModified, HttpServletRequest request, String portalURL,
-		PrintWriter printWriter, String[] resourceURLs) {
+		long themeLastModified, HttpServletRequest httpServletRequest,
+		String portalURL, PrintWriter printWriter, String[] resourceURLs) {
 
 		for (String resourceURL : resourceURLs) {
 			String staticResourceURL = _portal.getStaticResourceURL(
-				request,
-				portalURL.concat(
-					_portal.getPathProxy()
-				).concat(
-					resourceURL
-				),
+				httpServletRequest,
+				StringBundler.concat(
+					portalURL, _portal.getPathProxy(), resourceURL),
 				themeLastModified);
 
 			printWriter.write("<link data-senna-track=\"permanent\" href=\"");
@@ -252,17 +261,14 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 	}
 
 	private void _renderSimpleJS(
-		long themeLastModified, HttpServletRequest request, String portalURL,
-		PrintWriter printWriter, String[] resourceURLs) {
+		long themeLastModified, HttpServletRequest httpServletRequest,
+		String portalURL, PrintWriter printWriter, String[] resourceURLs) {
 
 		for (String resourceURL : resourceURLs) {
 			String staticResourceURL = _portal.getStaticResourceURL(
-				request,
-				portalURL.concat(
-					_portal.getPathProxy()
-				).concat(
-					resourceURL
-				),
+				httpServletRequest,
+				StringBundler.concat(
+					portalURL, _portal.getPathProxy(), resourceURL),
 				themeLastModified);
 
 			printWriter.write("<script data-senna-track=\"permanent\" src=\"");

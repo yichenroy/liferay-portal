@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.lists.model.DDLRecordVersion;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
@@ -35,22 +33,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class DDLRecordVersionCacheModel
 	implements CacheModel<DDLRecordVersion>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DDLRecordVersionCacheModel)) {
+		if (!(object instanceof DDLRecordVersionCacheModel)) {
 			return false;
 		}
 
 		DDLRecordVersionCacheModel ddlRecordVersionCacheModel =
-			(DDLRecordVersionCacheModel)obj;
+			(DDLRecordVersionCacheModel)object;
 
 		if ((recordVersionId == ddlRecordVersionCacheModel.recordVersionId) &&
 			(mvccVersion == ddlRecordVersionCacheModel.mvccVersion)) {

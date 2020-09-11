@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -77,26 +78,20 @@ import org.osgi.service.component.annotations.Reference;
 public class SimulationProductNavigationControlMenuEntry
 	extends BaseProductNavigationControlMenuEntry {
 
-	@Activate
-	public void activate() {
-		_portletNamespace = _portal.getPortletNamespace(
-			ProductNavigationSimulationPortletKeys.
-				PRODUCT_NAVIGATION_SIMULATION);
-	}
-
 	@Override
 	public String getLabel(Locale locale) {
 		return null;
 	}
 
 	@Override
-	public String getURL(HttpServletRequest request) {
+	public String getURL(HttpServletRequest httpServletRequest) {
 		return null;
 	}
 
 	@Override
 	public boolean includeBody(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		BodyBottomTag bodyBottomTag = new BodyBottomTag();
@@ -105,10 +100,11 @@ public class SimulationProductNavigationControlMenuEntry
 
 		try {
 			bodyBottomTag.doBodyTag(
-				request, response, this::_processBodyBottomTagBody);
+				httpServletRequest, httpServletResponse,
+				this::_processBodyBottomTagBody);
 		}
-		catch (JspException je) {
-			throw new IOException(je);
+		catch (JspException jspException) {
+			throw new IOException(jspException);
 		}
 
 		return true;
@@ -116,11 +112,12 @@ public class SimulationProductNavigationControlMenuEntry
 
 	@Override
 	public boolean includeIcon(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		PortletURL simulationPanelURL = _portletURLFactory.create(
-			request,
+			httpServletRequest,
 			ProductNavigationSimulationPortletKeys.
 				PRODUCT_NAVIGATION_SIMULATION,
 			PortletRequest.RENDER_PHASE);
@@ -128,8 +125,8 @@ public class SimulationProductNavigationControlMenuEntry
 		try {
 			simulationPanelURL.setWindowState(LiferayWindowState.EXCLUSIVE);
 		}
-		catch (WindowStateException wse) {
-			ReflectionUtil.throwException(wse);
+		catch (WindowStateException windowStateException) {
+			ReflectionUtil.throwException(windowStateException);
 		}
 
 		Map<String, String> values = new HashMap<>();
@@ -141,17 +138,21 @@ public class SimulationProductNavigationControlMenuEntry
 		iconTag.setMarkupView("lexicon");
 
 		try {
-			values.put("iconTag", iconTag.doTagAsString(request, response));
+			values.put(
+				"iconTag",
+				iconTag.doTagAsString(httpServletRequest, httpServletResponse));
 		}
-		catch (JspException je) {
-			ReflectionUtil.throwException(je);
+		catch (JspException jspException) {
+			ReflectionUtil.throwException(jspException);
 		}
 
 		values.put("portletNamespace", _portletNamespace);
 		values.put("simulationPanelURL", simulationPanelURL.toString());
-		values.put("title", _html.escape(_language.get(request, "simulation")));
+		values.put(
+			"title",
+			_html.escape(_language.get(httpServletRequest, "simulation")));
 
-		Writer writer = response.getWriter();
+		Writer writer = httpServletResponse.getWriter();
 
 		writer.write(StringUtil.replace(_ICON_TMPL_CONTENT, "${", "}", values));
 
@@ -159,9 +160,12 @@ public class SimulationProductNavigationControlMenuEntry
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest request) throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public boolean isShow(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Layout layout = themeDisplay.getLayout();
 
@@ -174,7 +178,7 @@ public class SimulationProductNavigationControlMenuEntry
 		}
 
 		String layoutMode = ParamUtil.getString(
-			request, "p_l_mode", Constants.VIEW);
+			httpServletRequest, "p_l_mode", Constants.VIEW);
 
 		if (layoutMode.equals(Constants.EDIT)) {
 			return false;
@@ -188,7 +192,7 @@ public class SimulationProductNavigationControlMenuEntry
 			return false;
 		}
 
-		return super.isShow(request);
+		return super.isShow(httpServletRequest);
 	}
 
 	@Reference(
@@ -198,6 +202,13 @@ public class SimulationProductNavigationControlMenuEntry
 	public void setPanelCategory(PanelCategory panelCategory) {
 	}
 
+	@Activate
+	protected void activate() {
+		_portletNamespace = _portal.getPortletNamespace(
+			ProductNavigationSimulationPortletKeys.
+				PRODUCT_NAVIGATION_SIMULATION);
+	}
+
 	@Reference(unbind = "-")
 	protected void setPanelAppRegistry(PanelAppRegistry panelAppRegistry) {
 		_panelAppRegistry = panelAppRegistry;
@@ -205,15 +216,22 @@ public class SimulationProductNavigationControlMenuEntry
 
 	private void _processBodyBottomTagBody(PageContext pageContext) {
 		try {
-			Map<String, String> values = new HashMap<>();
-
-			values.put("portletNamespace", _portletNamespace);
-
 			MessageTag messageTag = new MessageTag();
 
 			messageTag.setKey("simulation");
 
-			values.put("sidebarMessage", messageTag.doTagAsString(pageContext));
+			Map<String, String> values = HashMapBuilder.put(
+				"portletNamespace", _portletNamespace
+			).put(
+				"sidebarMessage", messageTag.doTagAsString(pageContext)
+			).build();
+
+			messageTag = new MessageTag();
+
+			messageTag.setKey("simulation-panel");
+
+			values.put(
+				"simulationPanel", messageTag.doTagAsString(pageContext));
 
 			IconTag iconTag = new IconTag();
 
@@ -235,8 +253,8 @@ public class SimulationProductNavigationControlMenuEntry
 
 			scriptTag.doBodyTag(pageContext, this::_processScriptTagBody);
 		}
-		catch (Exception e) {
-			ReflectionUtil.throwException(e);
+		catch (Exception exception) {
+			ReflectionUtil.throwException(exception);
 		}
 	}
 
@@ -250,8 +268,8 @@ public class SimulationProductNavigationControlMenuEntry
 					Collections.singletonMap(
 						"portletNamespace", _portletNamespace)));
 		}
-		catch (IOException ioe) {
-			ReflectionUtil.throwException(ioe);
+		catch (IOException ioException) {
+			ReflectionUtil.throwException(ioException);
 		}
 	}
 

@@ -18,6 +18,7 @@ import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.process.ProcessConfig;
 import com.liferay.petra.process.ProcessLog;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.ServerDetector;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 
@@ -57,11 +57,9 @@ public class PortalClassPathUtil {
 
 		String classpath = _buildClassPath(classes);
 
-		classpath = classpath.concat(
-			File.pathSeparator
-		).concat(
-			_portalProcessConfig.getBootstrapClassPath()
-		);
+		classpath = StringBundler.concat(
+			classpath, File.pathSeparator,
+			_portalProcessConfig.getBootstrapClassPath());
 
 		builder.setBootstrapClassPath(classpath);
 
@@ -180,7 +178,7 @@ public class PortalClassPathUtil {
 			}
 		}
 
-		File[] files = fileSet.toArray(new File[fileSet.size()]);
+		File[] files = fileSet.toArray(new File[0]);
 
 		Arrays.sort(files);
 
@@ -225,8 +223,9 @@ public class PortalClassPathUtil {
 
 				url = (URL)getLocalURLMethod.invoke(urlConnection);
 			}
-			catch (Exception e) {
-				_log.error("Unable to resolve local URL from bundle", e);
+			catch (Exception exception) {
+				_log.error(
+					"Unable to resolve local URL from bundle", exception);
 
 				return null;
 			}

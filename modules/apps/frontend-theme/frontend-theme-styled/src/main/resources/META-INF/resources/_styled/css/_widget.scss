@@ -1,5 +1,6 @@
 .widget-toolbar {
-	.btn + .btn, .widget-group + .widget-group {
+	.btn + .btn,
+	.widget-group + .widget-group {
 		margin-left: $spacer;
 	}
 }
@@ -37,6 +38,7 @@
 .widget-mode-card {
 	.card {
 		display: flex;
+		flex-direction: column;
 		height: calc(100% - 24px);
 		margin-bottom: 24px;
 	}

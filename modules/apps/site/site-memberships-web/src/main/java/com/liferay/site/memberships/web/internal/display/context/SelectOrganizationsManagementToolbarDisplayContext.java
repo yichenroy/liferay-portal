@@ -30,14 +30,14 @@ public class SelectOrganizationsManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public SelectOrganizationsManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request,
 			SelectOrganizationsDisplayContext selectOrganizationsDisplayContext)
 		throws Exception {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			selectOrganizationsDisplayContext.getOrganizationSearchContainer());
 	}
 

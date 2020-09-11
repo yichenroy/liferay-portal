@@ -14,9 +14,8 @@
 
 package com.liferay.social.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.social.kernel.model.SocialRequest;
 
 /**
  * Provides a wrapper for {@link SocialRequestService}.
@@ -25,9 +24,8 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see SocialRequestService
  * @generated
  */
-@ProviderType
 public class SocialRequestServiceWrapper
-	implements SocialRequestService, ServiceWrapper<SocialRequestService> {
+	implements ServiceWrapper<SocialRequestService>, SocialRequestService {
 
 	public SocialRequestServiceWrapper(
 		SocialRequestService socialRequestService) {
@@ -46,7 +44,7 @@ public class SocialRequestServiceWrapper
 	}
 
 	@Override
-	public com.liferay.social.kernel.model.SocialRequest updateRequest(
+	public SocialRequest updateRequest(
 			long requestId, int status,
 			com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay)
 		throws com.liferay.portal.kernel.exception.PortalException {

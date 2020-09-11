@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -35,22 +33,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class WebDAVPropsCacheModel
 	implements CacheModel<WebDAVProps>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof WebDAVPropsCacheModel)) {
+		if (!(object instanceof WebDAVPropsCacheModel)) {
 			return false;
 		}
 
 		WebDAVPropsCacheModel webDAVPropsCacheModel =
-			(WebDAVPropsCacheModel)obj;
+			(WebDAVPropsCacheModel)object;
 
 		if ((webDavPropsId == webDAVPropsCacheModel.webDavPropsId) &&
 			(mvccVersion == webDAVPropsCacheModel.mvccVersion)) {
@@ -141,7 +138,9 @@ public class WebDAVPropsCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
 
 		webDavPropsId = objectInput.readLong();
@@ -153,7 +152,7 @@ public class WebDAVPropsCacheModel
 		classNameId = objectInput.readLong();
 
 		classPK = objectInput.readLong();
-		props = objectInput.readUTF();
+		props = (String)objectInput.readObject();
 	}
 
 	@Override
@@ -171,10 +170,10 @@ public class WebDAVPropsCacheModel
 		objectOutput.writeLong(classPK);
 
 		if (props == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(props);
+			objectOutput.writeObject(props);
 		}
 	}
 

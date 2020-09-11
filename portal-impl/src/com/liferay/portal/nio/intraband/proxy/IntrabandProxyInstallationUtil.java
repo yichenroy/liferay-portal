@@ -15,6 +15,7 @@
 package com.liferay.portal.nio.intraband.proxy;
 
 import com.liferay.petra.lang.ClassLoaderPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.nio.intraband.RegistrationReference;
 import com.liferay.portal.kernel.nio.intraband.proxy.IntrabandProxySkeleton;
 import com.liferay.portal.kernel.nio.intraband.proxy.IntrabandProxySkeletonRegistryUtil;
@@ -22,7 +23,6 @@ import com.liferay.portal.kernel.nio.intraband.proxy.TargetLocator;
 import com.liferay.portal.kernel.nio.intraband.rpc.IntrabandRPCUtil;
 import com.liferay.portal.kernel.process.ProcessCallable;
 import com.liferay.portal.kernel.process.ProcessException;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.lang.reflect.Constructor;
 
@@ -79,8 +79,8 @@ public class IntrabandProxyInstallationUtil {
 			return IntrabandProxyUtil.getProxyMethodSignatures(
 				proxySkeletonClass);
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
 		}
 	}
 
@@ -116,8 +116,8 @@ public class IntrabandProxyInstallationUtil {
 					classLoader, classLoader.loadClass(_skeletonId),
 					_targetLocator);
 			}
-			catch (Exception e) {
-				throw new ProcessException(e);
+			catch (Exception exception) {
+				throw new ProcessException(exception);
 			}
 		}
 

@@ -30,6 +30,10 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class ResourceActionsUtil {
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #check(String)}
+	 */
+	@Deprecated
 	public static void check(Portlet portlet) {
 		getResourceActions().check(portlet);
 	}
@@ -38,20 +42,30 @@ public class ResourceActionsUtil {
 		getResourceActions().check(portletName);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void checkAction(String name, String actionId)
 		throws NoSuchResourceActionException {
 
 		getResourceActions().checkAction(name, actionId);
 	}
 
-	public static String getAction(HttpServletRequest request, String action) {
-		return getResourceActions().getAction(request, action);
+	public static String getAction(
+		HttpServletRequest httpServletRequest, String action) {
+
+		return getResourceActions().getAction(httpServletRequest, action);
 	}
 
 	public static String getAction(Locale locale, String action) {
 		return getResourceActions().getAction(locale, action);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static String getActionNamePrefix() {
 		return getResourceActions().getActionNamePrefix();
 	}
@@ -73,9 +87,9 @@ public class ResourceActionsUtil {
 	}
 
 	public static String getModelResource(
-		HttpServletRequest request, String name) {
+		HttpServletRequest httpServletRequest, String name) {
 
-		return getResourceActions().getModelResource(request, name);
+		return getResourceActions().getModelResource(httpServletRequest, name);
 	}
 
 	public static String getModelResource(Locale locale, String name) {
@@ -119,14 +133,26 @@ public class ResourceActionsUtil {
 		return getResourceActions().getModelResourceWeight(name);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static String[] getOrganizationModelResources() {
 		return getResourceActions().getOrganizationModelResources();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static String[] getPortalModelResources() {
 		return getResourceActions().getPortalModelResources();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static String getPortletBaseResource(String portletName) {
 		return getResourceActions().getPortletBaseResource(portletName);
 	}
@@ -139,6 +165,10 @@ public class ResourceActionsUtil {
 		return getResourceActions().getPortletNames();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static List<String> getPortletResourceActions(Portlet portlet) {
 		return getResourceActions().getPortletResourceActions(portlet);
 	}
@@ -192,6 +222,10 @@ public class ResourceActionsUtil {
 			portletResource, modelResource);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static List<String> getResourceGroupDefaultActions(String name) {
 		return getResourceActions().getResourceGroupDefaultActions(name);
 	}
@@ -210,14 +244,26 @@ public class ResourceActionsUtil {
 			companyId, group, modelResource, roleTypes);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static String[] getRootModelResources() {
 		return getResourceActions().getRootModelResources();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static boolean hasModelResourceActions(String name) {
 		return getResourceActions().hasModelResourceActions(name);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static boolean isOrganizationModelResource(String modelResource) {
 		return getResourceActions().isOrganizationModelResource(modelResource);
 	}
@@ -254,6 +300,10 @@ public class ResourceActionsUtil {
 			servletContextName, classLoader, sources);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void removePortletResource(String portletName) {
 		getResourceActions().removePortletResource(portletName);
 	}

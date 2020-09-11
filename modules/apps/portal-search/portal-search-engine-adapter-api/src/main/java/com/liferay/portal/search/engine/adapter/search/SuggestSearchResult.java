@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.engine.adapter.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +21,6 @@ import java.util.List;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class SuggestSearchResult {
 
 	public SuggestSearchResult(String name) {

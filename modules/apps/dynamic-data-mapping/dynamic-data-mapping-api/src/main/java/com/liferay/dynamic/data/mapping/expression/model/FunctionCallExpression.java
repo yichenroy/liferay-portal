@@ -14,8 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.expression.model;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.dynamic.data.mapping.expression.constants.DDMExpressionConstants;
 import com.liferay.petra.string.StringPool;
 
 import java.util.List;
@@ -25,7 +24,6 @@ import java.util.stream.Stream;
 /**
  * @author Leonardo Barros
  */
-@ProviderType
 public class FunctionCallExpression extends Expression {
 
 	public FunctionCallExpression(
@@ -50,6 +48,20 @@ public class FunctionCallExpression extends Expression {
 
 	public List<Expression> getParameterExpressions() {
 		return _parameterExpressions;
+	}
+
+	public boolean hasNestedFunctions() {
+		for (Expression parameterExpression : _parameterExpressions) {
+			String parameterExpressionString = parameterExpression.toString();
+
+			if (parameterExpressionString.matches(
+					DDMExpressionConstants.NESTED_FUNCTION_REGEX)) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override

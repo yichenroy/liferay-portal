@@ -17,6 +17,7 @@ package com.liferay.portal.service.impl;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutRevisionException;
 import com.liferay.portal.kernel.exception.NoSuchPortletPreferencesException;
@@ -34,7 +35,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.comparator.LayoutRevisionCreateDateComparator;
 import com.liferay.portal.kernel.util.comparator.LayoutRevisionModifiedDateComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -101,7 +101,7 @@ public class LayoutRevisionLocalServiceImpl
 		layoutRevision.setStatus(WorkflowConstants.STATUS_DRAFT);
 		layoutRevision.setStatusDate(serviceContext.getModifiedDate(now));
 
-		layoutRevisionPersistence.update(layoutRevision);
+		layoutRevision = layoutRevisionPersistence.update(layoutRevision);
 
 		_layoutRevisionId.set(layoutRevision.getLayoutRevisionId());
 
@@ -172,12 +172,15 @@ public class LayoutRevisionLocalServiceImpl
 				portletPreferencesLocalService.deletePortletPreferences(
 					portletPreferences.getPortletPreferencesId());
 			}
-			catch (NoSuchPortletPreferencesException nsppe) {
+			catch (NoSuchPortletPreferencesException
+						noSuchPortletPreferencesException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(nsppe, nsppe);
+					_log.debug(
+						noSuchPortletPreferencesException,
+						noSuchPortletPreferencesException);
 				}
 			}
 		}
@@ -247,12 +250,14 @@ public class LayoutRevisionLocalServiceImpl
 			return layoutRevisionPersistence.findByH_P_Last(
 				head, plid, new LayoutRevisionCreateDateComparator(true));
 		}
-		catch (NoSuchLayoutRevisionException nslre) {
+		catch (NoSuchLayoutRevisionException noSuchLayoutRevisionException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(nslre, nslre);
+				_log.debug(
+					noSuchLayoutRevisionException,
+					noSuchLayoutRevisionException);
 			}
 
 			return null;
@@ -266,18 +271,6 @@ public class LayoutRevisionLocalServiceImpl
 		return layoutRevisionPersistence.fetchByL_P_First(
 			layoutSetBranchId, plid,
 			new LayoutRevisionCreateDateComparator(false));
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public LayoutRevision fetchLayoutRevision(
-		long layoutSetBranchId, boolean head, long plid) {
-
-		return layoutRevisionPersistence.fetchByL_H_P_Collection_First(
-			layoutSetBranchId, head, plid, null);
 	}
 
 	@Override
@@ -312,19 +305,6 @@ public class LayoutRevisionLocalServiceImpl
 
 		return layoutRevisionPersistence.countByL_P_P(
 			layoutSetBranchId, parentLayoutRevision, plid);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public LayoutRevision getLayoutRevision(
-			long layoutSetBranchId, long plid, boolean head)
-		throws PortalException {
-
-		return layoutRevisionPersistence.findByL_H_P_Collection_First(
-			layoutSetBranchId, head, plid, null);
 	}
 
 	@Override
@@ -512,7 +492,7 @@ public class LayoutRevisionLocalServiceImpl
 			layoutRevision.setStatusDate(
 				serviceContext.getModifiedDate(new Date()));
 
-			layoutRevisionPersistence.update(layoutRevision);
+			layoutRevision = layoutRevisionPersistence.update(layoutRevision);
 
 			_layoutRevisionId.set(layoutRevision.getLayoutRevisionId());
 
@@ -545,7 +525,7 @@ public class LayoutRevisionLocalServiceImpl
 			layoutRevision.setColorSchemeId(colorSchemeId);
 			layoutRevision.setCss(css);
 
-			layoutRevisionPersistence.update(layoutRevision);
+			layoutRevision = layoutRevisionPersistence.update(layoutRevision);
 
 			_layoutRevisionId.set(layoutRevision.getLayoutRevisionId());
 		}
@@ -600,7 +580,7 @@ public class LayoutRevisionLocalServiceImpl
 			layoutRevision.setMajor(false);
 		}
 
-		layoutRevisionPersistence.update(layoutRevision);
+		layoutRevision = layoutRevisionPersistence.update(layoutRevision);
 
 		if (status == WorkflowConstants.STATUS_APPROVED) {
 			List<LayoutRevision> layoutRevisions =
@@ -728,7 +708,7 @@ public class LayoutRevisionLocalServiceImpl
 		layoutRevision.setParentLayoutRevisionId(parentLayoutRevisionId);
 		layoutRevision.setMajor(true);
 
-		layoutRevisionPersistence.update(layoutRevision);
+		layoutRevision = layoutRevisionPersistence.update(layoutRevision);
 
 		for (LayoutRevision parentLayoutRevision : parentLayoutRevisions) {
 			List<LayoutRevision> childrenLayoutRevisions =

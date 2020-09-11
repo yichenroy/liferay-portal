@@ -16,24 +16,8 @@
 
 <%@ include file="/adaptive_media/init.jsp" %>
 
-<clay:navigation-bar
-	inverted="<%= true %>"
-	navigationItems="<%=
-		new JSPNavigationItemList(pageContext) {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(renderResponse.createRenderURL());
-						navigationItem.setLabel(LanguageUtil.get(request, "image-resolutions"));
-					});
-			}
-		}
-	%>"
-/>
-
 <%
-AMManagementToolbarDisplayContext amManagementToolbarDisplayContext = new AMManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, currentURLObj);
+AMManagementToolbarDisplayContext amManagementToolbarDisplayContext = new AMManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, currentURLObj);
 %>
 
 <clay:management-toolbar
@@ -47,11 +31,10 @@ AMManagementToolbarDisplayContext amManagementToolbarDisplayContext = new AMMana
 	showSearch="<%= false %>"
 />
 
-<%
-PortletURL portletURL = renderResponse.createRenderURL();
-%>
-
-<div class="closed container-fluid-1280 sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
+<clay:container-fluid
+	cssClass="closed sidenav-container sidenav-right"
+	id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
+>
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/adaptive_media/info_panel" var="sidebarPanelURL" />
 
 	<liferay-frontend:sidebar-panel
@@ -103,7 +86,7 @@ PortletURL portletURL = renderResponse.createRenderURL();
 			<liferay-ui:search-container
 				emptyResultsMessage="there-are-no-image-resolutions"
 				id="imageConfigurationEntries"
-				iteratorURL="<%= portletURL %>"
+				iteratorURL="<%= renderResponse.createRenderURL() %>"
 				rowChecker="<%= new ImageConfigurationEntriesChecker(liferayPortletResponse) %>"
 				total="<%= selectedConfigurationEntries.size() %>"
 			>
@@ -155,38 +138,34 @@ PortletURL portletURL = renderResponse.createRenderURL();
 						int totalImages = AMImageEntryLocalServiceUtil.getExpectedAMImageEntriesCount(themeDisplay.getCompanyId());
 						%>
 
-						<div id="<portlet:namespace />AdaptRemaining_<%= rowId %>"></div>
+						<div id="<portlet:namespace />AdaptRemainingContainer_<%= rowId %>">
+							<portlet:resourceURL id="/adaptive_media/adapted_images_percentage" var="adaptedImagesPercentageURL">
+								<portlet:param name="entryUuid" value="<%= uuid %>" />
+							</portlet:resourceURL>
 
-						<portlet:resourceURL id="/adaptive_media/adapted_images_percentage" var="adaptedImagesPercentageURL">
-							<portlet:param name="entryUuid" value="<%= uuid %>" />
-						</portlet:resourceURL>
-
-						<aui:script require="adaptive-media-web@3.0.0/adaptive_media/js/AdaptiveMediaProgress.es as AdaptiveMediaProgress">
-							var component = Liferay.component(
-								'<portlet:namespace />AdaptRemaining<%= uuid %>',
-								new AdaptiveMediaProgress.default(
-									{
-										adaptedImages: <%= Math.min(adaptedImages, totalImages) %>,
-										disabled: <%= !amImageConfigurationEntry.isEnabled() %>,
-										namespace: '<portlet:namespace />',
-										percentageUrl: '<%= adaptedImagesPercentageURL.toString() %>',
-										spritemap: '<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg',
-										totalImages: <%= totalImages %>,
-										uuid: '<%= uuid %>'
-									},
-									<portlet:namespace />AdaptRemaining_<%= rowId %>
-								)
-							);
-
-							<c:if test="<%= ((optimizeImagesAllConfigurationsBackgroundTasksCount > 0) && amImageConfigurationEntry.isEnabled()) || currentBackgroundTaskConfigurationEntryUuids.contains(uuid) %>">
-								setTimeout(
-									function() {
-										component.startProgress();
-									},
-									0
-								);
-							</c:if>
-						</aui:script>
+							<react:component
+								module="adaptive_media/js/AdaptiveMediaProgress.es"
+								props='<%=
+									HashMapBuilder.<String, Object>put(
+										"adaptedImages", Math.min(adaptedImages, totalImages)
+									).put(
+										"adaptiveMediaProgressComponentId", liferayPortletResponse.getNamespace() + "AdaptRemaining" + uuid
+									).put(
+										"autoStartProgress", ((optimizeImagesAllConfigurationsBackgroundTasksCount > 0) && amImageConfigurationEntry.isEnabled()) || currentBackgroundTaskConfigurationEntryUuids.contains(uuid)
+									).put(
+										"disabled", !amImageConfigurationEntry.isEnabled()
+									).put(
+										"namespace", liferayPortletResponse.getNamespace()
+									).put(
+										"percentageUrl", adaptedImagesPercentageURL.toString()
+									).put(
+										"totalImages", totalImages
+									).put(
+										"uuid", uuid
+									).build()
+								%>'
+							/>
+						</div>
 					</liferay-ui:search-container-column-text>
 
 					<%
@@ -227,11 +206,13 @@ PortletURL portletURL = renderResponse.createRenderURL();
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</div>
+</clay:container-fluid>
 
 <aui:script>
 	function <portlet:namespace />adaptRemaining(uuid, backgroundTaskUrl) {
-		var component = Liferay.component('<portlet:namespace />AdaptRemaining' + uuid);
+		var component = Liferay.component(
+			'<portlet:namespace />AdaptRemaining' + uuid
+		);
 
 		component.startProgress(backgroundTaskUrl);
 	}

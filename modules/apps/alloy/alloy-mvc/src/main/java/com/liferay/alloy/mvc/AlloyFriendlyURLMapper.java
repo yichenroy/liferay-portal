@@ -15,6 +15,7 @@
 package com.liferay.alloy.mvc;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -82,13 +83,8 @@ public abstract class AlloyFriendlyURLMapper extends DefaultFriendlyURLMapper {
 
 		// Add mapping
 
-		friendlyURLPath = StringPool.SLASH.concat(
-			getMapping()
-		).concat(
-			friendlyURLPath
-		);
-
-		return friendlyURLPath;
+		return StringBundler.concat(
+			StringPool.SLASH, getMapping(), friendlyURLPath);
 	}
 
 	@Override
@@ -98,11 +94,11 @@ public abstract class AlloyFriendlyURLMapper extends DefaultFriendlyURLMapper {
 
 		// Determine lifecycle from request method
 
-		HttpServletRequest request = (HttpServletRequest)requestContext.get(
-			"request");
+		HttpServletRequest httpServletRequest =
+			(HttpServletRequest)requestContext.get("request");
 
 		friendlyURLPath =
-			request.getMethod() +
+			httpServletRequest.getMethod() +
 				friendlyURLPath.substring(getMapping().length() + 1);
 
 		if (friendlyURLPath.endsWith(StringPool.SLASH)) {
@@ -131,7 +127,8 @@ public abstract class AlloyFriendlyURLMapper extends DefaultFriendlyURLMapper {
 
 		addParameter(namespace, parameterMap, "p_p_id", portletId);
 
-		addParameter(parameterMap, "p_p_lifecycle", getLifecycle(request));
+		addParameter(
+			parameterMap, "p_p_lifecycle", getLifecycle(httpServletRequest));
 
 		String format = routeParameters.get("format");
 
@@ -142,12 +139,12 @@ public abstract class AlloyFriendlyURLMapper extends DefaultFriendlyURLMapper {
 		populateParams(parameterMap, namespace, routeParameters);
 	}
 
-	protected String getLifecycle(HttpServletRequest request) {
-		if (PortalUtil.isMultipartRequest(request)) {
+	protected String getLifecycle(HttpServletRequest httpServletRequest) {
+		if (PortalUtil.isMultipartRequest(httpServletRequest)) {
 			return "1";
 		}
 
-		return ParamUtil.getString(request, "p_p_lifecycle", "0");
+		return ParamUtil.getString(httpServletRequest, "p_p_lifecycle", "0");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

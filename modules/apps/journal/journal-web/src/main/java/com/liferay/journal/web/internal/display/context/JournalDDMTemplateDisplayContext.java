@@ -21,13 +21,13 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateServiceUtil;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.web.configuration.JournalWebConfiguration;
+import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.journal.web.internal.servlet.taglib.util.JournalDDMTemplateActionDropdownItemsProvider;
+import com.liferay.journal.web.internal.util.SiteConnectedGroupUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -54,10 +54,10 @@ public class JournalDDMTemplateDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
 		_journalWebConfiguration =
-			(JournalWebConfiguration)_request.getAttribute(
+			(JournalWebConfiguration)_httpServletRequest.getAttribute(
 				JournalWebConfiguration.class.getName());
 	}
 
@@ -66,7 +66,7 @@ public class JournalDDMTemplateDisplayContext {
 			return _classPK;
 		}
 
-		_classPK = ParamUtil.getLong(_request, "classPK");
+		_classPK = ParamUtil.getLong(_httpServletRequest, "classPK");
 
 		return _classPK;
 	}
@@ -98,15 +98,18 @@ public class JournalDDMTemplateDisplayContext {
 		return ddmTemplateActionDropdownItems.getActionDropdownItems();
 	}
 
-	public SearchContainer getDDMTemplateSearch() throws Exception {
+	public SearchContainer<DDMTemplate> getDDMTemplateSearch()
+		throws Exception {
+
 		if (_ddmTemplateSearch != null) {
 			return _ddmTemplateSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		SearchContainer ddmTemplateSearch = new SearchContainer(
+		SearchContainer<DDMTemplate> ddmTemplateSearch = new SearchContainer(
 			_renderRequest, _getPortletURL(), null, "there-are-no-templates");
 
 		if (Validator.isNotNull(_getKeywords())) {
@@ -129,27 +132,52 @@ public class JournalDDMTemplateDisplayContext {
 		long[] groupIds = {themeDisplay.getScopeGroupId()};
 
 		if (_journalWebConfiguration.showAncestorScopesByDefault()) {
-			groupIds = PortalUtil.getCurrentAndAncestorSiteGroupIds(
-				themeDisplay.getScopeGroupId());
+			groupIds =
+				SiteConnectedGroupUtil.
+					getCurrentAndAncestorSiteAndDepotGroupIds(
+						themeDisplay.getScopeGroupId(), true);
 		}
 
-		List<DDMTemplate> results = DDMTemplateServiceUtil.search(
-			themeDisplay.getCompanyId(), groupIds,
-			new long[] {PortalUtil.getClassNameId(DDMStructure.class)},
-			_getDDMTemplateClassPKs(),
-			PortalUtil.getClassNameId(JournalArticle.class), _getKeywords(),
-			StringPool.BLANK, StringPool.BLANK, WorkflowConstants.STATUS_ANY,
-			ddmTemplateSearch.getStart(), ddmTemplateSearch.getEnd(),
-			ddmTemplateSearch.getOrderByComparator());
+		List<DDMTemplate> results = null;
+		int total = 0;
+
+		if (Validator.isNotNull(_getKeywords())) {
+			results = DDMTemplateServiceUtil.search(
+				themeDisplay.getCompanyId(), groupIds,
+				new long[] {PortalUtil.getClassNameId(DDMStructure.class)},
+				_getDDMTemplateClassPKs(),
+				PortalUtil.getClassNameId(JournalArticle.class), _getKeywords(),
+				StringPool.BLANK, StringPool.BLANK,
+				WorkflowConstants.STATUS_ANY, ddmTemplateSearch.getStart(),
+				ddmTemplateSearch.getEnd(),
+				ddmTemplateSearch.getOrderByComparator());
+
+			total = DDMTemplateServiceUtil.searchCount(
+				themeDisplay.getCompanyId(), groupIds,
+				new long[] {PortalUtil.getClassNameId(DDMStructure.class)},
+				_getDDMTemplateClassPKs(),
+				PortalUtil.getClassNameId(JournalArticle.class), _getKeywords(),
+				StringPool.BLANK, StringPool.BLANK,
+				WorkflowConstants.STATUS_ANY);
+		}
+		else {
+			results = DDMTemplateServiceUtil.getTemplates(
+				themeDisplay.getCompanyId(), groupIds,
+				new long[] {PortalUtil.getClassNameId(DDMStructure.class)},
+				_getDDMTemplateClassPKs(),
+				PortalUtil.getClassNameId(JournalArticle.class),
+				ddmTemplateSearch.getStart(), ddmTemplateSearch.getEnd(),
+				ddmTemplateSearch.getOrderByComparator());
+			total = DDMTemplateServiceUtil.getTemplatesCount(
+				themeDisplay.getCompanyId(), groupIds,
+				new long[] {PortalUtil.getClassNameId(DDMStructure.class)},
+				_getDDMTemplateClassPKs(),
+				PortalUtil.getClassNameId(JournalArticle.class));
+		}
 
 		ddmTemplateSearch.setResults(results);
 
-		if (ListUtil.isNotEmpty(results)) {
-			ddmTemplateSearch.setTotal(results.size());
-		}
-		else {
-			ddmTemplateSearch.setTotal(0);
-		}
+		ddmTemplateSearch.setTotal(total);
 
 		_ddmTemplateSearch = ddmTemplateSearch;
 
@@ -161,7 +189,8 @@ public class JournalDDMTemplateDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "icon");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "icon");
 
 		return _displayStyle;
 	}
@@ -186,6 +215,10 @@ public class JournalDDMTemplateDisplayContext {
 			_renderRequest, "orderByType", "asc");
 
 		return _orderByType;
+	}
+
+	public String[] getTemplateLanguageTypes() {
+		return _journalWebConfiguration.journalDDMTemplateLanguageTypes();
 	}
 
 	public boolean isSearch() {
@@ -242,14 +275,14 @@ public class JournalDDMTemplateDisplayContext {
 
 	private Long _classPK;
 	private DDMStructure _ddmStructure;
-	private SearchContainer _ddmTemplateSearch;
+	private SearchContainer<DDMTemplate> _ddmTemplateSearch;
 	private String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private final JournalWebConfiguration _journalWebConfiguration;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

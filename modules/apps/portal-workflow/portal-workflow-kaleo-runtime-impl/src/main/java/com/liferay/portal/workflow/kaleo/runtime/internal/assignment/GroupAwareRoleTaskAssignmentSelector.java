@@ -18,7 +18,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -153,7 +153,12 @@ public class GroupAwareRoleTaskAssignmentSelector
 	protected boolean isValidAssignment(Group group, Role role)
 		throws PortalException {
 
-		if (role.getType() == RoleConstants.TYPE_REGULAR) {
+		if ((group != null) && group.isDepot() &&
+			(role.getType() == RoleConstants.TYPE_DEPOT)) {
+
+			return true;
+		}
+		else if (role.getType() == RoleConstants.TYPE_REGULAR) {
 			return true;
 		}
 		else if ((group != null) && group.isOrganization() &&

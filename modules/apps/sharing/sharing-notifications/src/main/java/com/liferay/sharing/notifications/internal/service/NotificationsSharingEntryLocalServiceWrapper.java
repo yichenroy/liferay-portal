@@ -28,8 +28,8 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.sharing.constants.SharingPortletKeys;
 import com.liferay.sharing.model.SharingEntry;
+import com.liferay.sharing.notifications.internal.helper.SharingNotificationHelper;
 import com.liferay.sharing.notifications.internal.util.SharingNotificationSubcriptionSender;
-import com.liferay.sharing.notifications.internal.util.SharingNotificationUtil;
 import com.liferay.sharing.security.permission.SharingEntryAction;
 import com.liferay.sharing.service.SharingEntryLocalService;
 import com.liferay.sharing.service.SharingEntryLocalServiceWrapper;
@@ -97,6 +97,26 @@ public class NotificationsSharingEntryLocalServiceWrapper
 		return sharingEntry;
 	}
 
+	@Override
+	public SharingEntry updateSharingEntry(
+			long userId, long sharingEntryId,
+			Collection<SharingEntryAction> sharingEntryActions,
+			boolean shareable, Date expirationDate,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		SharingEntry sharingEntry = super.updateSharingEntry(
+			userId, sharingEntryId, sharingEntryActions, shareable,
+			expirationDate, serviceContext);
+
+		_sendNotificationEvent(
+			sharingEntry,
+			UserNotificationDefinition.NOTIFICATION_TYPE_UPDATE_ENTRY,
+			serviceContext);
+
+		return sharingEntry;
+	}
+
 	private void _sendNotificationEvent(
 		SharingEntry sharingEntry, int notificationType,
 		ServiceContext serviceContext) {
@@ -109,14 +129,14 @@ public class NotificationsSharingEntryLocalServiceWrapper
 					new SharingNotificationSubcriptionSender();
 
 			sharingNotificationSubcriptionSender.setSubject(
-				_sharingNotificationUtil.getNotificationMessage(
+				_sharingNotificationHelper.getNotificationMessage(
 					sharingEntry, user.getLocale()));
 
-			String entryURL = _sharingNotificationUtil.getNotificationURL(
+			String entryURL = _sharingNotificationHelper.getNotificationURL(
 				sharingEntry, serviceContext.getLiferayPortletRequest());
 
 			sharingNotificationSubcriptionSender.setBody(
-				_sharingNotificationUtil.getNotificationEmailBody(
+				_sharingNotificationHelper.getNotificationEmailBody(
 					sharingEntry, serviceContext.getLiferayPortletRequest()));
 
 			sharingNotificationSubcriptionSender.setClassName(
@@ -152,11 +172,11 @@ public class NotificationsSharingEntryLocalServiceWrapper
 
 			sharingNotificationSubcriptionSender.flushNotificationsAsync();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				"Unable to send notification for sharing entry: " +
 					sharingEntry.getSharingEntryId(),
-				e);
+				exception);
 		}
 	}
 
@@ -169,7 +189,7 @@ public class NotificationsSharingEntryLocalServiceWrapper
 	private ResourceBundleLoader _resourceBundleLoader;
 
 	@Reference
-	private SharingNotificationUtil _sharingNotificationUtil;
+	private SharingNotificationHelper _sharingNotificationHelper;
 
 	@Reference
 	private UserLocalService _userLocalService;

@@ -47,9 +47,11 @@ public class DigestAuthenticationAuthVerifier implements AuthVerifier {
 		try {
 			AuthVerifierResult authVerifierResult = new AuthVerifierResult();
 
-			HttpServletRequest request = accessControlContext.getRequest();
+			HttpServletRequest httpServletRequest =
+				accessControlContext.getRequest();
 
-			long userId = HttpAuthManagerUtil.getDigestUserId(request);
+			long userId = HttpAuthManagerUtil.getDigestUserId(
+				httpServletRequest);
 
 			if (userId == 0) {
 				boolean forcedDigestAuth = MapUtil.getBoolean(
@@ -66,7 +68,7 @@ public class DigestAuthenticationAuthVerifier implements AuthVerifier {
 							HttpAuthorizationHeader.SCHEME_DIGEST);
 
 					HttpAuthManagerUtil.generateChallenge(
-						request, accessControlContext.getResponse(),
+						httpServletRequest, accessControlContext.getResponse(),
 						httpAuthorizationHeader);
 
 					authVerifierResult.setState(
@@ -82,11 +84,11 @@ public class DigestAuthenticationAuthVerifier implements AuthVerifier {
 
 			return authVerifierResult;
 		}
-		catch (PortalException pe) {
-			throw new AuthException(pe);
+		catch (PortalException portalException) {
+			throw new AuthException(portalException);
 		}
-		catch (SystemException se) {
-			throw new AuthException(se);
+		catch (SystemException systemException) {
+			throw new AuthException(systemException);
 		}
 	}
 

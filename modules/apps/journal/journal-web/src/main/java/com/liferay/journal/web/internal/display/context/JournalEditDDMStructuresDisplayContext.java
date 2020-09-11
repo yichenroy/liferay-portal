@@ -14,14 +14,14 @@
 
 package com.liferay.journal.web.internal.display.context;
 
+import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
-import com.liferay.journal.web.configuration.JournalWebConfiguration;
+import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,14 +32,22 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+
+import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -48,11 +56,15 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class JournalEditDDMStructuresDisplayContext {
 
-	public JournalEditDDMStructuresDisplayContext(HttpServletRequest request) {
-		_request = request;
+	public JournalEditDDMStructuresDisplayContext(
+		HttpServletRequest httpServletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
+
+		_httpServletRequest = httpServletRequest;
+		_liferayPortletResponse = liferayPortletResponse;
 
 		_journalWebConfiguration =
-			(JournalWebConfiguration)request.getAttribute(
+			(JournalWebConfiguration)httpServletRequest.getAttribute(
 				JournalWebConfiguration.class.getName());
 	}
 
@@ -62,6 +74,38 @@ public class JournalEditDDMStructuresDisplayContext {
 
 	public boolean changeableDefaultLanguage() {
 		return _journalWebConfiguration.changeableDefaultLanguage();
+	}
+
+	public List<Map<String, Object>> getAdditionalPanels(
+		String npmResolvedPackageName) {
+
+		return ListUtil.fromArray(
+			HashMapBuilder.<String, Object>put(
+				"icon", "cog"
+			).put(
+				"label", LanguageUtil.get(_httpServletRequest, "properties")
+			).put(
+				"pluginEntryPoint",
+				npmResolvedPackageName + "/js/ddm_structure/panels/index.es"
+			).put(
+				"sidebarPanelId", "properties"
+			).put(
+				"url",
+				() -> {
+					PortletURL editBasicInfoURL =
+						_liferayPortletResponse.createRenderURL();
+
+					editBasicInfoURL.setParameter(
+						"mvcPath",
+						"/ddm_structure/basic_info_data_engine_editor.jsp");
+					editBasicInfoURL.setParameter(
+						"ddmStructureId", String.valueOf(getDDMStructureId()));
+					editBasicInfoURL.setWindowState(
+						LiferayWindowState.EXCLUSIVE);
+
+					return editBasicInfoURL.toString();
+				}
+			).build());
 	}
 
 	public String getAvailableFields() {
@@ -77,8 +121,7 @@ public class JournalEditDDMStructuresDisplayContext {
 
 		Set<Locale> ddmFormAvailableLocales = ddmForm.getAvailableLocales();
 
-		return ddmFormAvailableLocales.toArray(
-			new Locale[ddmFormAvailableLocales.size()]);
+		return ddmFormAvailableLocales.toArray(new Locale[0]);
 	}
 
 	public String getAvailableLocalesJSONArrayString() {
@@ -100,7 +143,7 @@ public class JournalEditDDMStructuresDisplayContext {
 		try {
 			return DDMUtil.getDDMForm(getScript());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return null;
@@ -122,7 +165,8 @@ public class JournalEditDDMStructuresDisplayContext {
 			return _ddmStructureId;
 		}
 
-		_ddmStructureId = ParamUtil.getLong(_request, "ddmStructureId");
+		_ddmStructureId = ParamUtil.getLong(
+			_httpServletRequest, "ddmStructureId");
 
 		return _ddmStructureId;
 	}
@@ -145,8 +189,9 @@ public class JournalEditDDMStructuresDisplayContext {
 	}
 
 	public String getLocalesMap() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		JSONObject localesMapJSONObject = JSONFactoryUtil.createJSONObject();
 
@@ -177,7 +222,8 @@ public class JournalEditDDMStructuresDisplayContext {
 		}
 
 		_parentDDMStructureId = ParamUtil.getLong(
-			_request, "parentDDMStructureId", defaultParentDDMStructureId);
+			_httpServletRequest, "parentDDMStructureId",
+			defaultParentDDMStructureId);
 
 		return _parentDDMStructureId;
 	}
@@ -192,8 +238,9 @@ public class JournalEditDDMStructuresDisplayContext {
 				getParentDDMStructureId());
 
 		if (parentDDMStructure != null) {
-			ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)_httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			_parentDDMStructureName = parentDDMStructure.getName(
 				themeDisplay.getLocale());
@@ -202,18 +249,25 @@ public class JournalEditDDMStructuresDisplayContext {
 		return _parentDDMStructureName;
 	}
 
+	public String getSaveButtonLabel() throws PortalException {
+		return "save";
+	}
+
 	public String getScript() throws PortalException {
 		if (_script != null) {
-			DDMStructure ddmStructure = getDDMStructure();
-
-			_script = BeanParamUtil.getString(
-				ddmStructure.getLatestStructureVersion(), _request,
-				"definition");
-
 			return _script;
 		}
 
-		_script = ParamUtil.getString(_request, "definition");
+		DDMStructure ddmStructure = getDDMStructure();
+
+		if (ddmStructure != null) {
+			_script = BeanParamUtil.getString(
+				ddmStructure.getLatestStructureVersion(), _httpServletRequest,
+				"definition");
+		}
+		else {
+			_script = ParamUtil.getString(_httpServletRequest, "definition");
+		}
 
 		return _script;
 	}
@@ -222,20 +276,23 @@ public class JournalEditDDMStructuresDisplayContext {
 		String storageType = StorageType.JSON.getValue();
 
 		try {
-			long companyId = CompanyThreadLocal.getCompanyId();
-
 			JournalServiceConfiguration journalServiceConfiguration =
 				ConfigurationProviderUtil.getCompanyConfiguration(
-					JournalServiceConfiguration.class, companyId);
+					JournalServiceConfiguration.class,
+					CompanyThreadLocal.getCompanyId());
 
 			storageType =
 				journalServiceConfiguration.journalArticleStorageType();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return storageType;
+	}
+
+	public boolean isStructureFieldIndexableEnable() {
+		return _journalWebConfiguration.structureFieldIndexableEnable();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -243,10 +300,11 @@ public class JournalEditDDMStructuresDisplayContext {
 
 	private DDMStructure _ddmStructure;
 	private Long _ddmStructureId;
+	private final HttpServletRequest _httpServletRequest;
 	private final JournalWebConfiguration _journalWebConfiguration;
+	private final LiferayPortletResponse _liferayPortletResponse;
 	private Long _parentDDMStructureId;
 	private String _parentDDMStructureName;
-	private final HttpServletRequest _request;
 	private String _script;
 
 }

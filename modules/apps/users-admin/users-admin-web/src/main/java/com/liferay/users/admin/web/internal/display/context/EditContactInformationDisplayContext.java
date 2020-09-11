@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.service.ContactServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.users.admin.constants.UsersAdminPortletKeys;
 
 import javax.portlet.RenderResponse;
@@ -35,24 +36,25 @@ import javax.servlet.http.HttpServletRequest;
 public class EditContactInformationDisplayContext {
 
 	public EditContactInformationDisplayContext(
-		String contactInfoTypeName, RenderResponse renderResponse,
-		HttpServletRequest request) {
+		String contactInfoTypeName, HttpServletRequest httpServletRequest,
+		RenderResponse renderResponse) {
 
+		_httpServletRequest = httpServletRequest;
 		_renderResponse = renderResponse;
-		_request = request;
 
-		_className = ParamUtil.getString(request, "className");
-		_classPK = ParamUtil.getLong(request, "classPK");
-		_primaryKey = ParamUtil.getLong(request, "primaryKey", 0L);
-		_redirect = ParamUtil.getString(request, "redirect");
+		_className = ParamUtil.getString(httpServletRequest, "className");
+		_classPK = ParamUtil.getLong(httpServletRequest, "classPK");
+		_primaryKey = ParamUtil.getLong(httpServletRequest, "primaryKey");
+		_redirect = PortalUtil.escapeRedirect(
+			ParamUtil.getString(httpServletRequest, "redirect"));
 
 		if (_primaryKey > 0) {
 			_sheetTitle = LanguageUtil.get(
-				_request, "edit-" + contactInfoTypeName);
+				_httpServletRequest, "edit-" + contactInfoTypeName);
 		}
 		else {
 			_sheetTitle = LanguageUtil.get(
-				_request, "add-" + contactInfoTypeName);
+				_httpServletRequest, "add-" + contactInfoTypeName);
 		}
 	}
 
@@ -91,13 +93,15 @@ public class EditContactInformationDisplayContext {
 					OrganizationServiceUtil.getOrganization(_classPK);
 
 				portletTitle = LanguageUtil.format(
-					_request, "edit-x", organization.getName(), false);
+					_httpServletRequest, "edit-x", organization.getName(),
+					false);
 			}
 			else if (_className.equals(Contact.class.getName())) {
 				Contact contact = ContactServiceUtil.getContact(_classPK);
 
 				portletTitle = LanguageUtil.format(
-					_request, "edit-user-x", contact.getFullName(), false);
+					_httpServletRequest, "edit-user-x", contact.getFullName(),
+					false);
 			}
 
 			_renderResponse.setTitle(portletTitle);
@@ -106,10 +110,10 @@ public class EditContactInformationDisplayContext {
 
 	private final String _className;
 	private final long _classPK;
+	private final HttpServletRequest _httpServletRequest;
 	private final long _primaryKey;
 	private final String _redirect;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final String _sheetTitle;
 
 }

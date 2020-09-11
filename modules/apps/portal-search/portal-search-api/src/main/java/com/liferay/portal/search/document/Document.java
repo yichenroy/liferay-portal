@@ -14,12 +14,12 @@
 
 package com.liferay.portal.search.document;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.geolocation.GeoLocationPoint;
 
 import java.util.List;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -27,6 +27,10 @@ import java.util.Map;
  */
 @ProviderType
 public interface Document {
+
+	public Boolean getBoolean(String string);
+
+	public List<Boolean> getBooleans(String string);
 
 	public String getDate(String name);
 

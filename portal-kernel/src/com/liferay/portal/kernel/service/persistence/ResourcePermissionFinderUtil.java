@@ -14,15 +14,12 @@
 
 package com.liferay.portal.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class ResourcePermissionFinderUtil {
 
 	public static int countByR_S(long roleId, int[] scopes) {

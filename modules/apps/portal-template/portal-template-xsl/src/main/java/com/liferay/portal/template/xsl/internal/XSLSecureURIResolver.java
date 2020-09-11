@@ -14,8 +14,8 @@
 
 package com.liferay.portal.template.xsl.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.InetAddressUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.xsl.XSLURIResolver;
 
 import java.net.MalformedURLException;
@@ -65,9 +65,9 @@ public class XSLSecureURIResolver implements XSLURIResolver {
 
 			return null;
 		}
-		catch (MalformedURLException | UnknownHostException e) {
+		catch (MalformedURLException | UnknownHostException exception) {
 			throw new TransformerException(
-				"Unable to resolve URL reference", e);
+				"Unable to resolve URL reference", exception);
 		}
 	}
 

@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -27,7 +25,6 @@ import java.util.List;
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class OAuth2ScopeGrantImpl extends OAuth2ScopeGrantBaseImpl {
 
 	@Override

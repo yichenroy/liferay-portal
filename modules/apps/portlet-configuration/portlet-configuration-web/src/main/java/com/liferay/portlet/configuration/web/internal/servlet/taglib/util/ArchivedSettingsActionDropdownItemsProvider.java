@@ -15,7 +15,7 @@
 package com.liferay.portlet.configuration.web.internal.servlet.taglib.util;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.settings.ArchivedSettings;
@@ -45,19 +45,18 @@ public class ArchivedSettingsActionDropdownItemsProvider {
 		_archivedSettings = archivedSettings;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(_getRestoreArchivedSetupActionUnsafeConsumer());
-				add(_getDeleteArchivedSetupActionUnsafeConsumer());
-			}
-		};
+		return DropdownItemListBuilder.add(
+			_getRestoreArchivedSetupActionUnsafeConsumer()
+		).add(
+			_getDeleteArchivedSetupActionUnsafeConsumer()
+		).build();
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
@@ -83,7 +82,8 @@ public class ArchivedSettingsActionDropdownItemsProvider {
 			dropdownItem.putData("action", "deleteArchivedSetups");
 			dropdownItem.putData(
 				"deleteArchivedSetupsURL", deleteArchivedSetupsURL.toString());
-			dropdownItem.setLabel(LanguageUtil.get(_request, "delete"));
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "delete"));
 		};
 	}
 
@@ -92,7 +92,8 @@ public class ArchivedSettingsActionDropdownItemsProvider {
 			return _portletResource;
 		}
 
-		_portletResource = ParamUtil.getString(_request, "portletResource");
+		_portletResource = ParamUtil.getString(
+			_httpServletRequest, "portletResource");
 
 		return _portletResource;
 	}
@@ -120,14 +121,15 @@ public class ArchivedSettingsActionDropdownItemsProvider {
 			dropdownItem.putData("action", "restoreArchivedSetup");
 			dropdownItem.putData(
 				"restoreArchivedSetupURL", restoreArchivedSetupURL.toString());
-			dropdownItem.setLabel(LanguageUtil.get(_request, "apply"));
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "apply"));
 		};
 	}
 
 	private final ArchivedSettings _archivedSettings;
+	private final HttpServletRequest _httpServletRequest;
 	private String _portletResource;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final ThemeDisplay _themeDisplay;
 
 }

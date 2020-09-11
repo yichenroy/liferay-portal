@@ -26,7 +26,11 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class HoursAvailable {
+public class HoursAvailable implements Cloneable {
+
+	public static HoursAvailable toDTO(String json) {
+		return HoursAvailableSerDes.toDTO(json);
+	}
 
 	public String getCloses() {
 		return closes;
@@ -70,25 +74,6 @@ public class HoursAvailable {
 
 	protected String dayOfWeek;
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long id;
-
 	public String getOpens() {
 		return opens;
 	}
@@ -109,6 +94,11 @@ public class HoursAvailable {
 	}
 
 	protected String opens;
+
+	@Override
+	public HoursAvailable clone() throws CloneNotSupportedException {
+		return (HoursAvailable)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

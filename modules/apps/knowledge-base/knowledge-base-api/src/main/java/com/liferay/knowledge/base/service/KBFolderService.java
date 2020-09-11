@@ -14,8 +14,6 @@
 
 package com.liferay.knowledge.base.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -23,13 +21,14 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for KBFolder. Methods of this
@@ -42,13 +41,6 @@ import java.util.List;
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(
-	property = {
-		"json.web.service.context.name=kb",
-		"json.web.service.context.path=KBFolder"
-	},
-	service = KBFolderService.class
-)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -59,7 +51,7 @@ public interface KBFolderService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link KBFolderServiceUtil} to access the kb folder remote service. Add custom service methods to <code>com.liferay.knowledge.base.service.impl.KBFolderServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.knowledge.base.service.impl.KBFolderServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the kb folder remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link KBFolderServiceUtil} if injection and service tracking are not available.
 	 */
 	public KBFolder addKBFolder(
 			long groupId, long parentResourceClassNameId,
@@ -75,7 +67,8 @@ public interface KBFolderService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public KBFolder fetchFirstChildKBFolder(
-			long groupId, long kbFolderId, OrderByComparator<KBFolder> obc)
+			long groupId, long kbFolderId,
+			OrderByComparator<KBFolder> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -120,17 +113,6 @@ public interface KBFolderService extends BaseService {
 	public String getOSGiServiceIdentifier();
 
 	public void moveKBFolder(long kbFolderId, long parentKBFolderId)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 #updateKBFolder(long, long, long, String, String,
-	 ServiceContext)}
-	 */
-	@Deprecated
-	public KBFolder updateKBFolder(
-			long parentResourceClassNameId, long parentResourcePrimKey,
-			long kbFolderId, String name, String description)
 		throws PortalException;
 
 	public KBFolder updateKBFolder(

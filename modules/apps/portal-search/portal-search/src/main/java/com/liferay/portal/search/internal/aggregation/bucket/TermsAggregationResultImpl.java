@@ -14,14 +14,11 @@
 
 package com.liferay.portal.search.internal.aggregation.bucket;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.bucket.TermsAggregationResult;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class TermsAggregationResultImpl
 	extends BaseBucketAggregationResult implements TermsAggregationResult {
 

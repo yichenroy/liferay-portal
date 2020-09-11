@@ -16,8 +16,8 @@ package com.liferay.document.library.analytics.internal.servlet;
 
 import com.liferay.document.library.analytics.internal.constants.DocumentLibraryAnalyticsConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -40,7 +40,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Adolfo Pérez
  */
 @Component(
-	immediate = true,
 	property = {
 		"osgi.http.whiteboard.servlet.name=com.liferay.document.library.analytics.internal.servlet.ResolveFileEntryUUIDServlet",
 		"osgi.http.whiteboard.servlet.pattern=" + DocumentLibraryAnalyticsConstants.PATH_RESOLVE_FILE_ENTRY,
@@ -60,11 +59,11 @@ public class ResolveFileEntryUUIDServlet extends HttpServlet {
 				httpServletResponse,
 				_getFileEntryByUuidAndGroupId(httpServletRequest));
 		}
-		catch (PrincipalException pe) {
-			_sendError(httpServletResponse, 403, pe);
+		catch (PrincipalException principalException) {
+			_sendError(httpServletResponse, 403, principalException);
 		}
-		catch (Exception e) {
-			_sendError(httpServletResponse, 500, e);
+		catch (Exception exception) {
+			_sendError(httpServletResponse, 500, exception);
 		}
 	}
 
@@ -85,16 +84,15 @@ public class ResolveFileEntryUUIDServlet extends HttpServlet {
 		try {
 			PrintWriter printWriter = httpServletResponse.getWriter();
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-			jsonObject.put("error", throwable.getMessage());
+			JSONObject jsonObject = JSONUtil.put(
+				"error", throwable.getMessage());
 
 			printWriter.write(jsonObject.toString());
 
 			httpServletResponse.setStatus(status);
 		}
-		catch (IOException ioe) {
-			_log.error(ioe, ioe);
+		catch (IOException ioException) {
+			_log.error(ioException, ioException);
 
 			httpServletResponse.setStatus(500);
 		}
@@ -106,9 +104,8 @@ public class ResolveFileEntryUUIDServlet extends HttpServlet {
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("fileEntryId", fileEntry.getFileEntryId());
+		JSONObject jsonObject = JSONUtil.put(
+			"fileEntryId", fileEntry.getFileEntryId());
 
 		printWriter.write(jsonObject.toString());
 

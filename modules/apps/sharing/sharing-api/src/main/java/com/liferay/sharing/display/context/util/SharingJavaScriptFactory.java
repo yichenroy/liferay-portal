@@ -14,6 +14,7 @@
 
 package com.liferay.sharing.display.context.util;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,19 +24,39 @@ import javax.servlet.http.HttpServletRequest;
  */
 public interface SharingJavaScriptFactory {
 
-	public String createManageCollaboratorsJavaScript(
-			HttpServletRequest request)
-		throws PortalException;
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
+	public default String createManageCollaboratorsJavaScript(
+			HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		return StringPool.BLANK;
+	}
 
 	public String createManageCollaboratorsOnClickMethod(
-			String className, long classPK, HttpServletRequest request)
+			String className, long classPK,
+			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
-	public String createSharingJavaScript(HttpServletRequest request)
-		throws PortalException;
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
+	public default String createSharingJavaScript(
+			HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		return StringPool.BLANK;
+	}
 
 	public String createSharingOnClickMethod(
-			String className, long classPK, HttpServletRequest request)
+			String className, long classPK,
+			HttpServletRequest httpServletRequest)
 		throws PortalException;
+
+	public default void requestSharingJavascript() {
+	}
 
 }

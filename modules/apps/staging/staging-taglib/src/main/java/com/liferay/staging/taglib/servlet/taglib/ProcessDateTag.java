@@ -14,8 +14,6 @@
 
 package com.liferay.staging.taglib.servlet.taglib;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringPool;
 import com.liferay.staging.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.taglib.util.IncludeTag;
@@ -28,7 +26,6 @@ import javax.servlet.jsp.PageContext;
 /**
  * @author Péter Borkuti
  */
-@ProviderType
 public class ProcessDateTag extends IncludeTag {
 
 	public Date getDate() {
@@ -77,11 +74,12 @@ public class ProcessDateTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute("liferay-staging:process-date:date", _date);
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
+			"liferay-staging:process-date:date", _date);
+		httpServletRequest.setAttribute(
 			"liferay-staging:process-date:labelKey", _labelKey);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-staging:process-date:listView", _listView);
 	}
 

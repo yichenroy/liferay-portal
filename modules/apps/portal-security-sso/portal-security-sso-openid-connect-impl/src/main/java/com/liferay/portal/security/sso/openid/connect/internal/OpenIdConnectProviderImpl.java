@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.sso.openid.connect.internal;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectProvider;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceException;
 
@@ -26,7 +24,6 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
  * @author Thuong Dinh
  * @author Edward C. Han
  */
-@ProviderType
 public class OpenIdConnectProviderImpl
 	implements OpenIdConnectProvider<OIDCClientMetadata, OIDCProviderMetadata> {
 

@@ -14,6 +14,7 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,17 +24,17 @@ public abstract class BaseRemoteGitRepository
 	extends BaseGitRepository implements RemoteGitRepository {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof BaseRemoteGitRepository)) {
+		if (!(object instanceof BaseRemoteGitRepository)) {
 			return false;
 		}
 
 		BaseRemoteGitRepository baseRemoteGitRepository =
-			(BaseRemoteGitRepository)obj;
+			(BaseRemoteGitRepository)object;
 
 		if (Objects.equals(
 				getHostname(), baseRemoteGitRepository.getHostname()) &&
@@ -58,6 +59,15 @@ public abstract class BaseRemoteGitRepository
 
 	@Override
 	public String getRemoteURL() {
+		List<String> gitHubDevNodeHostnames =
+			GitHubDevSyncUtil.getGitHubDevNodeHostnames();
+
+		if (gitHubDevNodeHostnames.contains("slave-" + getHostname())) {
+			return JenkinsResultsParserUtil.combine(
+				"root@", getHostname(), ":/opt/dev/projects/github/",
+				getName());
+		}
+
 		return JenkinsResultsParserUtil.combine(
 			"git@", getHostname(), ":", getUsername(), "/", getName());
 	}

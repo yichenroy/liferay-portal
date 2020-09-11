@@ -15,17 +15,17 @@
 package com.liferay.portal.kernel.portlet.toolbar.contributor;
 
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
 import com.liferay.portal.kernel.servlet.taglib.ui.MenuItem;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -43,9 +43,11 @@ public abstract class BasePortletToolbarContributor
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Group scopeGroup = themeDisplay.getScopeGroup();
+		Layout layout = themeDisplay.getLayout();
 
-		if ((scopeGroup == null) || scopeGroup.isLayoutPrototype()) {
+		Group group = layout.getGroup();
+
+		if (group.isLayoutPrototype()) {
 			return Collections.emptyList();
 		}
 
@@ -60,11 +62,10 @@ public abstract class BasePortletToolbarContributor
 
 		Menu menu = new Menu();
 
-		Map<String, Object> data = new HashMap<>();
-
-		data.put("qa-id", "addButton");
-
-		menu.setData(data);
+		menu.setData(
+			HashMapBuilder.<String, Object>put(
+				"qa-id", "addButton"
+			).build());
 
 		menu.setDirection("right");
 		menu.setExtended(false);

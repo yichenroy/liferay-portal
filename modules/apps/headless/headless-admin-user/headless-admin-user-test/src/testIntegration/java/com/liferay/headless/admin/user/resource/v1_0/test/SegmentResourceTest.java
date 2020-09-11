@@ -16,17 +16,41 @@ package com.liferay.headless.admin.user.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.user.client.dto.v1_0.Segment;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.headless.admin.user.client.pagination.Page;
+import com.liferay.headless.admin.user.client.pagination.Pagination;
+import com.liferay.headless.admin.user.client.resource.v1_0.SegmentResource;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
+import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.segments.constants.SegmentsConstants;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.test.rule.SynchronousMailTestRule;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.model.SegmentsEntry;
-import com.liferay.segments.service.SegmentsEntryLocalServiceUtil;
+import com.liferay.segments.test.util.SegmentsTestUtil;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -35,16 +59,114 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class SegmentResourceTest extends BaseSegmentResourceTestCase {
 
+	@ClassRule
+	@Rule
+	public static final SynchronousMailTestRule synchronousMailTestRule =
+		SynchronousMailTestRule.INSTANCE;
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
-		_user = UserTestUtil.addGroupAdminUser(testGroup);
+		_adminUser = UserTestUtil.addGroupAdminUser(testGroup);
+
+		_user = UserTestUtil.addUser(
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			RandomTestUtil.randomString(),
+			RandomTestUtil.randomString() + StringPool.AT + "liferay.com",
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			ServiceContextTestUtil.getServiceContext());
+
+		UserLocalServiceUtil.updateEmailAddressVerified(
+			_user.getUserId(), true);
+
+		Role role = RoleLocalServiceUtil.getRole(
+			testCompany.getCompanyId(), RoleConstants.POWER_USER);
+
+		UserGroupRoleLocalServiceUtil.addUserGroupRoles(
+			new long[] {_user.getUserId()}, testGroup.getGroupId(),
+			role.getRoleId());
+	}
+
+	@Test
+	public void testGetSiteSegmentsPageWithDefaultPermissions()
+		throws Exception {
+
+		SegmentResource.Builder builder = SegmentResource.builder();
+
+		segmentResource = builder.authentication(
+			_user.getEmailAddress(), _user.getPasswordUnencrypted()
+		).build();
+
+		Long siteId = testGetSiteSegmentsPage_getSiteId();
+
+		Segment segment1 = testGetSiteSegmentsPage_addSegment(
+			siteId, randomSegment());
+
+		Segment segment2 = testGetSiteSegmentsPage_addSegment(
+			siteId, randomSegment());
+
+		Page<Segment> page = segmentResource.getSiteSegmentsPage(
+			siteId, Pagination.of(1, 2));
+
+		Assert.assertEquals(2, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(segment1, segment2), (List<Segment>)page.getItems());
+		assertValid(page);
+	}
+
+	@Test
+	public void testGetSiteSegmentsPageWithoutViewPermissions()
+		throws Exception {
+
+		SegmentResource.Builder builder = SegmentResource.builder();
+
+		segmentResource = builder.authentication(
+			_user.getEmailAddress(), _user.getPasswordUnencrypted()
+		).build();
+
+		Long siteId = testGetSiteSegmentsPage_getSiteId();
+
+		Segment segment = testGetSiteSegmentsPage_addSegment(
+			siteId, randomSegment());
+
+		testGetSiteSegmentsPage_addSegment(siteId, randomSegment());
+
+		List<Role> roles = RoleLocalServiceUtil.getRoles(
+			testGroup.getCompanyId());
+
+		for (Role role : roles) {
+			if (RoleConstants.OWNER.equals(role.getName())) {
+				continue;
+			}
+
+			ResourcePermissionLocalServiceUtil.removeResourcePermission(
+				testGroup.getCompanyId(),
+				"com.liferay.segments.model.SegmentsEntry",
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(segment.getId()), role.getRoleId(),
+				ActionKeys.VIEW);
+		}
+
+		Page<Segment> page = segmentResource.getSiteSegmentsPage(
+			siteId, Pagination.of(1, 2));
+
+		Assert.assertEquals(1, page.getTotalCount());
+	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	@Override
+	protected String[] getAdditionalAssertFieldNames() {
+		return new String[] {"name"};
 	}
 
 	@Override
-	protected Segment randomSegment() {
+	protected Segment randomSegment() throws Exception {
 		Segment segment = super.randomSegment();
 
 		segment.setActive(true);
@@ -63,7 +185,7 @@ public class SegmentResourceTest extends BaseSegmentResourceTestCase {
 						"typeValue", "model"
 					))
 			).toString());
-		segment.setSource(SegmentsConstants.SOURCE_DEFAULT);
+		segment.setSource(SegmentsEntryConstants.SOURCE_DEFAULT);
 
 		return segment;
 	}
@@ -73,7 +195,7 @@ public class SegmentResourceTest extends BaseSegmentResourceTestCase {
 			Long siteId, Segment segment)
 		throws Exception {
 
-		return _addSegment(siteId, _user.getUserId(), segment);
+		return _addSegment(siteId, segment);
 	}
 
 	@Override
@@ -81,7 +203,7 @@ public class SegmentResourceTest extends BaseSegmentResourceTestCase {
 			Long siteId, Long userAccountId, Segment segment)
 		throws Exception {
 
-		return _addSegment(siteId, userAccountId, segment);
+		return _addSegment(siteId, segment);
 	}
 
 	@Override
@@ -89,18 +211,20 @@ public class SegmentResourceTest extends BaseSegmentResourceTestCase {
 		return _user.getUserId();
 	}
 
-	private Segment _addSegment(
-			Long siteId, Long userAccountId, Segment segment)
-		throws PortalException {
+	@Override
+	protected Segment testGraphQLSegment_addSegment() throws Exception {
+		return testGetSiteSegmentsPage_addSegment(
+			testGroup.getGroupId(), randomSegment());
+	}
 
-		ServiceContext serviceContext = new ServiceContext();
-
-		serviceContext.setScopeGroupId(siteId);
-		serviceContext.setUserId(userAccountId);
+	private Segment _addSegment(Long siteId, Segment segment) throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				siteId, _adminUser.getUserId());
 
 		return _toSegment(
-			SegmentsEntryLocalServiceUtil.addSegmentsEntry(
-				segment.getName(), null, null, segment.getActive(),
+			SegmentsTestUtil.addSegmentsEntry(
+				segment.getName(), segment.getName(), null,
 				segment.getCriteria(), segment.getSource(),
 				User.class.getName(), serviceContext));
 	}
@@ -120,6 +244,9 @@ public class SegmentResourceTest extends BaseSegmentResourceTestCase {
 			}
 		};
 	}
+
+	@DeleteAfterTestRun
+	private User _adminUser;
 
 	@DeleteAfterTestRun
 	private User _user;

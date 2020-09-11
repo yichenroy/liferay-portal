@@ -16,6 +16,7 @@ package com.liferay.portal.security.audit.router.internal;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.audit.AuditMessage;
+import com.liferay.portal.kernel.change.tracking.CTTransactionException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.security.audit.AuditEventManager;
@@ -45,8 +46,12 @@ public class PersistentAuditMessageProcessor implements AuditMessageProcessor {
 		try {
 			doProcess(auditMessage);
 		}
-		catch (Exception e) {
-			_log.fatal("Unable to process audit message " + auditMessage, e);
+		catch (CTTransactionException ctTransactionException) {
+			throw ctTransactionException;
+		}
+		catch (Exception exception) {
+			_log.fatal(
+				"Unable to process audit message " + auditMessage, exception);
 		}
 	}
 

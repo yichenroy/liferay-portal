@@ -14,8 +14,6 @@
 
 package com.liferay.site.navigation.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalServiceUti
  * @see SiteNavigationMenuItem
  * @generated
  */
-@ProviderType
 public abstract class SiteNavigationMenuItemBaseImpl
 	extends SiteNavigationMenuItemModelImpl implements SiteNavigationMenuItem {
 

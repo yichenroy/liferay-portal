@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.service.access.policy.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,10 +31,9 @@ import java.util.Map;
  * @see SAPEntry
  * @generated
  */
-@ProviderType
 public class SAPEntryWrapper
 	extends BaseModelWrapper<SAPEntry>
-	implements SAPEntry, ModelWrapper<SAPEntry> {
+	implements ModelWrapper<SAPEntry>, SAPEntry {
 
 	public SAPEntryWrapper(SAPEntry sapEntry) {
 		super(sapEntry);

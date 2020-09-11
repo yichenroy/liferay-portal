@@ -22,10 +22,12 @@ import com.liferay.marketplace.exception.AppVersionException;
 import com.liferay.marketplace.internal.bundle.BundleManagerUtil;
 import com.liferay.marketplace.model.App;
 import com.liferay.marketplace.model.Module;
+import com.liferay.marketplace.service.ModuleLocalService;
 import com.liferay.marketplace.service.base.AppLocalServiceBaseImpl;
 import com.liferay.marketplace.util.comparator.AppTitleComparator;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.deploy.DeployManagerUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -36,7 +38,7 @@ import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -59,11 +61,17 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Ryan Park
  * @author Joan Kim
  */
+@Component(
+	property = "model.class.name=com.liferay.marketplace.model.App",
+	service = AopService.class
+)
 public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 
 	@Override
@@ -86,7 +94,7 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 		List<Module> modules = modulePersistence.findByAppId(app.getAppId());
 
 		for (Module module : modules) {
-			moduleLocalService.deleteModule(module);
+			_moduleLocalService.deleteModule(module);
 		}
 
 		// File
@@ -95,9 +103,9 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 			DLStoreUtil.deleteFile(
 				app.getCompanyId(), CompanyConstants.SYSTEM, app.getFilePath());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -137,7 +145,7 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 		coreApp.setDescription("Plugins bundled with Liferay Portal.");
 		coreApp.setVersion(ReleaseInfo.getVersion());
 
-		coreApp.addContextName(PortalUtil.getServletContextName());
+		coreApp.addContextName(_portal.getServletContextName());
 
 		installedApps.add(coreApp);
 
@@ -274,11 +282,11 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 
 			BundleManagerUtil.installLPKG(file);
 		}
-		catch (IOException ioe) {
-			throw new PortalException(ioe);
+		catch (IOException ioException) {
+			throw new PortalException(ioException);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 		finally {
 			clearInstalledAppsCache();
@@ -294,7 +302,7 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 		List<Module> modules = modulePersistence.findByAppId(app.getAppId());
 
 		for (Module module : modules) {
-			moduleLocalService.deleteModule(module.getModuleId());
+			_moduleLocalService.deleteModule(module.getModuleId());
 
 			if (module.isBundle()) {
 				BundleManagerUtil.uninstallBundle(
@@ -310,8 +318,8 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 			try {
 				DeployManagerUtil.undeploy(module.getContextName());
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 	}
@@ -378,7 +386,7 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 		app.setVersion(version);
 		app.setRequired(required);
 
-		appPersistence.update(app);
+		app = appPersistence.update(app);
 
 		// File
 
@@ -388,7 +396,7 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 					app.getCompanyId(), CompanyConstants.SYSTEM,
 					app.getFilePath());
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 
 			DLStoreUtil.addFile(
@@ -418,9 +426,9 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 				"liferay-marketplace.properties");
 
 			if (zipEntry == null) {
-				Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+				Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
 
-				ZipEntry subsystemZipEntry = zipEntries.nextElement();
+				ZipEntry subsystemZipEntry = enumeration.nextElement();
 
 				if (StringUtil.endsWith(subsystemZipEntry.getName(), ".lpkg")) {
 					File file = null;
@@ -446,7 +454,7 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 				return PropertiesUtil.load(propertiesString);
 			}
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			return null;
 		}
 	}
@@ -503,6 +511,13 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 		AppLocalServiceImpl.class);
 
 	private List<App> _installedApps;
+
+	@Reference
+	private ModuleLocalService _moduleLocalService;
+
+	@Reference
+	private Portal _portal;
+
 	private Map<String, String> _prepackagedApps;
 
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.audit.storage.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,7 +23,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see AuditEventService
  * @generated
  */
-@ProviderType
 public class AuditEventServiceWrapper
 	implements AuditEventService, ServiceWrapper<AuditEventService> {
 
@@ -48,7 +45,8 @@ public class AuditEventServiceWrapper
 				getAuditEvents(
 					long companyId, int start, int end,
 					com.liferay.portal.kernel.util.OrderByComparator
-						orderByComparator)
+						<com.liferay.portal.security.audit.storage.model.
+							AuditEvent> orderByComparator)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _auditEventService.getAuditEvents(
@@ -84,7 +82,8 @@ public class AuditEventServiceWrapper
 					int serverPort, String sessionID, boolean andSearch,
 					int start, int end,
 					com.liferay.portal.kernel.util.OrderByComparator
-						orderByComparator)
+						<com.liferay.portal.security.audit.storage.model.
+							AuditEvent> orderByComparator)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _auditEventService.getAuditEvents(

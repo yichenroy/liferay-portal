@@ -103,7 +103,7 @@ public class EditMessageAttachmentsMVCActionCommand
 
 			jsonObject.put("deleted", Boolean.TRUE);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			jsonObject.put("deleted", Boolean.FALSE);
 
 			String errorMessage = themeDisplay.translate(
@@ -150,8 +150,8 @@ public class EditMessageAttachmentsMVCActionCommand
 				sendRedirect(actionRequest, actionResponse, redirect);
 			}
 		}
-		catch (PrincipalException pe) {
-			SessionErrors.add(actionRequest, pe.getClass());
+		catch (PrincipalException principalException) {
+			SessionErrors.add(actionRequest, principalException.getClass());
 
 			actionResponse.setRenderParameter(
 				"mvcPath", "/message_boards/error.jsp");
@@ -175,11 +175,7 @@ public class EditMessageAttachmentsMVCActionCommand
 			messageId, fileName);
 	}
 
-	@Reference(unbind = "-")
-	protected void setMBMessageService(MBMessageService mbMessageService) {
-		_mbMessageService = mbMessageService;
-	}
-
+	@Reference
 	private MBMessageService _mbMessageService;
 
 	@Reference(target = "(upload.response.handler=multiple)")

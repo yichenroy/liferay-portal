@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class FormInstanceStructureIdException extends PortalException {
 
 	public FormInstanceStructureIdException() {
@@ -31,12 +28,12 @@ public class FormInstanceStructureIdException extends PortalException {
 		super(msg);
 	}
 
-	public FormInstanceStructureIdException(String msg, Throwable cause) {
-		super(msg, cause);
+	public FormInstanceStructureIdException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public FormInstanceStructureIdException(Throwable cause) {
-		super(cause);
+	public FormInstanceStructureIdException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

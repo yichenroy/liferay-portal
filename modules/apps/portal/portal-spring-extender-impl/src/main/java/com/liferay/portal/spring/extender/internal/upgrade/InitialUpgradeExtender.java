@@ -14,7 +14,6 @@
 
 package com.liferay.portal.spring.extender.internal.upgrade;
 
-import com.liferay.osgi.felix.util.AbstractExtender;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Configuration;
@@ -28,7 +27,6 @@ import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
-import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.spring.extender.internal.configuration.ConfigurationUtil;
 
@@ -37,44 +35,36 @@ import java.io.InputStream;
 
 import java.net.URL;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import java.util.Dictionary;
 
-import org.apache.felix.utils.extender.Extension;
+import javax.sql.DataSource;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 /**
  * @author Preston Crary
  */
 @Component(immediate = true, service = {})
-public class InitialUpgradeExtender extends AbstractExtender {
-
-	@Activate
-	protected void activate(BundleContext bundleContext) throws Exception {
-		start(bundleContext);
-	}
-
-	@Deactivate
-	protected void deactivate(BundleContext bundleContext) throws Exception {
-		stop(bundleContext);
-	}
+public class InitialUpgradeExtender
+	implements BundleTrackerCustomizer<ServiceRegistration<?>> {
 
 	@Override
-	protected void debug(Bundle bundle, String s) {
-		if (_log.isDebugEnabled()) {
-			_log.debug(s);
-		}
-	}
+	public ServiceRegistration<?> addingBundle(
+		Bundle bundle, BundleEvent bundleEvent) {
 
-	@Override
-	protected Extension doCreateExtension(Bundle bundle) throws Exception {
 		Dictionary<String, String> headers = bundle.getHeaders(
 			StringPool.BLANK);
 
@@ -82,28 +72,85 @@ public class InitialUpgradeExtender extends AbstractExtender {
 			return null;
 		}
 
-		return new InitialUpgradeExtension(bundle);
+		return _processInitialUpgrade(_bundleContext, bundle, _dataSource);
 	}
 
 	@Override
-	protected void error(String s, Throwable throwable) {
-		_log.error(s, throwable);
-	}
-
-	@Reference(target = "(original.bean=true)", unbind = "-")
-	protected void setInfrastructureUtil(
-		InfrastructureUtil infrastructureUtil) {
+	public void modifiedBundle(
+		Bundle bundle, BundleEvent bundleEvent,
+		ServiceRegistration<?> serviceRegistration) {
 	}
 
 	@Override
-	protected void warn(Bundle bundle, String s, Throwable throwable) {
-		if (_log.isWarnEnabled()) {
-			_log.warn(s, throwable);
+	public void removedBundle(
+		Bundle bundle, BundleEvent bundleEvent,
+		ServiceRegistration<?> serviceRegistration) {
+
+		serviceRegistration.unregister();
+	}
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
+
+		_bundleTracker = new BundleTracker<>(
+			bundleContext, Bundle.ACTIVE, this);
+
+		_bundleTracker.open();
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_bundleTracker.close();
+	}
+
+	private static ServiceRegistration<UpgradeStep> _processInitialUpgrade(
+		BundleContext bundleContext, Bundle bundle, DataSource dataSource) {
+
+		Dictionary<String, Object> properties = new HashMapDictionary<>();
+
+		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+
+		Configuration configuration = ConfigurationUtil.getConfiguration(
+			bundleWiring.getClassLoader(), "service");
+
+		if (configuration != null) {
+			String buildNumber = configuration.get("build.number");
+
+			if (buildNumber != null) {
+				properties.put("build.number", buildNumber);
+			}
 		}
+
+		properties.put("upgrade.initial.database.creation", "true");
+
+		properties.put(
+			"upgrade.bundle.symbolic.name", bundle.getSymbolicName());
+		properties.put("upgrade.db.type", "any");
+		properties.put("upgrade.from.schema.version", "0.0.0");
+
+		Dictionary<String, String> headers = bundle.getHeaders(
+			StringPool.BLANK);
+
+		String upgradeToSchemaVersion = GetterUtil.getString(
+			headers.get("Liferay-Require-SchemaVersion"),
+			headers.get("Bundle-Version"));
+
+		properties.put("upgrade.to.schema.version", upgradeToSchemaVersion);
+
+		return bundleContext.registerService(
+			UpgradeStep.class, new InitialUpgradeStep(bundle, dataSource),
+			properties);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		InitialUpgradeExtender.class);
+
+	private BundleContext _bundleContext;
+	private BundleTracker<?> _bundleTracker;
+
+	@Reference(target = "(&(bean.id=liferayDataSource)(original.bean=true))")
+	private DataSource _dataSource;
 
 	private static class InitialUpgradeStep implements UpgradeStep {
 
@@ -126,50 +173,57 @@ public class InitialUpgradeExtender extends AbstractExtender {
 			String sequencesSQL = _getSQLTemplateString("sequences.sql");
 			String indexesSQL = _getSQLTemplateString("indexes.sql");
 
-			if (tablesSQL != null) {
-				try {
-					db.runSQLTemplateString(tablesSQL, true, true);
+			try (Connection connection = _dataSource.getConnection()) {
+				if (tablesSQL != null) {
+					try {
+						db.runSQLTemplateString(connection, tablesSQL, true);
+					}
+					catch (Exception exception) {
+						throw new UpgradeException(
+							StringBundler.concat(
+								"Bundle ", _bundle,
+								" has invalid content in tables.sql:\n",
+								tablesSQL),
+							exception);
+					}
 				}
-				catch (Exception e) {
-					throw new UpgradeException(
-						StringBundler.concat(
-							"Bundle ", _bundle,
-							" has invalid content in tables.sql:\n", tablesSQL),
-						e);
+
+				if (sequencesSQL != null) {
+					try {
+						db.runSQLTemplateString(connection, sequencesSQL, true);
+					}
+					catch (Exception exception) {
+						throw new UpgradeException(
+							StringBundler.concat(
+								"Bundle ", _bundle,
+								" has invalid content in sequences.sql:\n",
+								sequencesSQL),
+							exception);
+					}
+				}
+
+				if (indexesSQL != null) {
+					try {
+						db.runSQLTemplateString(connection, indexesSQL, true);
+					}
+					catch (Exception exception) {
+						throw new UpgradeException(
+							StringBundler.concat(
+								"Bundle ", _bundle,
+								" has invalid content in indexes.sql:\n",
+								indexesSQL),
+							exception);
+					}
 				}
 			}
-
-			if (sequencesSQL != null) {
-				try {
-					db.runSQLTemplateString(sequencesSQL, true, true);
-				}
-				catch (Exception e) {
-					throw new UpgradeException(
-						StringBundler.concat(
-							"Bundle ", _bundle,
-							" has invalid content in sequences.sql:\n",
-							sequencesSQL),
-						e);
-				}
-			}
-
-			if (indexesSQL != null) {
-				try {
-					db.runSQLTemplateString(indexesSQL, true, true);
-				}
-				catch (Exception e) {
-					throw new UpgradeException(
-						StringBundler.concat(
-							"Bundle ", _bundle,
-							" has invalid content in indexes.sql:\n",
-							indexesSQL),
-						e);
-				}
+			catch (SQLException sqlException) {
+				throw new UpgradeException(sqlException);
 			}
 		}
 
-		private InitialUpgradeStep(Bundle bundle) {
+		private InitialUpgradeStep(Bundle bundle, DataSource dataSource) {
 			_bundle = bundle;
+			_dataSource = dataSource;
 		}
 
 		private String _getSQLTemplateString(String templateName)
@@ -188,77 +242,14 @@ public class InitialUpgradeExtender extends AbstractExtender {
 			try (InputStream inputStream = resource.openStream()) {
 				return StringUtil.read(inputStream);
 			}
-			catch (IOException ioe) {
+			catch (IOException ioException) {
 				throw new UpgradeException(
-					"Unable to read SQL template " + templateName, ioe);
+					"Unable to read SQL template " + templateName, ioException);
 			}
 		}
 
 		private final Bundle _bundle;
-
-	}
-
-	private class InitialUpgradeExtension implements Extension {
-
-		@Override
-		public void destroy() {
-			_serviceRegistration.unregister();
-		}
-
-		@Override
-		public void start() throws Exception {
-			BundleContext extenderBundleContext =
-				InitialUpgradeExtender.this.getBundleContext();
-
-			_serviceRegistration = _processInitialUpgrade(
-				extenderBundleContext);
-		}
-
-		private InitialUpgradeExtension(Bundle bundle) {
-			_bundle = bundle;
-		}
-
-		private ServiceRegistration<UpgradeStep> _processInitialUpgrade(
-			BundleContext bundleContext) {
-
-			Dictionary<String, String> headers = _bundle.getHeaders(
-				StringPool.BLANK);
-
-			String upgradeToSchemaVersion = GetterUtil.getString(
-				headers.get("Liferay-Require-SchemaVersion"),
-				headers.get("Bundle-Version"));
-
-			Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-			BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
-
-			ClassLoader classLoader = bundleWiring.getClassLoader();
-
-			Configuration configuration = ConfigurationUtil.getConfiguration(
-				classLoader, "service");
-
-			if (configuration != null) {
-				String buildNumber = configuration.get("build.number");
-
-				if (buildNumber != null) {
-					properties.put("build.number", buildNumber);
-				}
-			}
-
-			properties.put("upgrade.initial.database.creation", "true");
-
-			properties.put(
-				"upgrade.bundle.symbolic.name", _bundle.getSymbolicName());
-			properties.put("upgrade.db.type", "any");
-			properties.put("upgrade.from.schema.version", "0.0.0");
-			properties.put("upgrade.to.schema.version", upgradeToSchemaVersion);
-
-			return bundleContext.registerService(
-				UpgradeStep.class, new InitialUpgradeStep(_bundle), properties);
-		}
-
-		private final Bundle _bundle;
-		private ServiceRegistration<UpgradeStep> _serviceRegistration;
+		private final DataSource _dataSource;
 
 	}
 

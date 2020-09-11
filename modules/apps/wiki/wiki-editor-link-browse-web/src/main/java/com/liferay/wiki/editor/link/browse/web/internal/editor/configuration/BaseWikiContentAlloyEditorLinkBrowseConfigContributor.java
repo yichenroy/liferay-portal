@@ -122,45 +122,34 @@ public abstract class BaseWikiContentAlloyEditorLinkBrowseConfigContributor
 
 		PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(
 			requestBackedPortletURLFactory, itemSelectedEventName,
-			itemSelectorCriteria.toArray(
-				new ItemSelectorCriterion[itemSelectorCriteria.size()]));
+			itemSelectorCriteria.toArray(new ItemSelectorCriterion[0]));
 
 		jsonObject.put("documentBrowseLinkUrl", itemSelectorURL.toString());
 	}
 
 	protected abstract ItemSelectorReturnType getItemSelectorReturnType();
 
-	protected WikiAttachmentItemSelectorCriterion
-		getWikiAttachmentItemSelectorCriterion(long wikiPageResourcePrimKey) {
+	protected ItemSelectorCriterion getWikiAttachmentItemSelectorCriterion(
+		long wikiPageResourcePrimKey) {
 
-		WikiAttachmentItemSelectorCriterion itemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new WikiAttachmentItemSelectorCriterion(wikiPageResourcePrimKey);
 
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		desiredItemSelectorReturnTypes.add(new URLItemSelectorReturnType());
-
 		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
+			new URLItemSelectorReturnType());
 
 		return itemSelectorCriterion;
 	}
 
-	protected WikiPageItemSelectorCriterion getWikiPageItemSelectorCriterion(
+	protected ItemSelectorCriterion getWikiPageItemSelectorCriterion(
 		long nodeId) {
 
-		WikiPageItemSelectorCriterion itemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new WikiPageItemSelectorCriterion(
 				nodeId, WorkflowConstants.STATUS_APPROVED);
 
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		desiredItemSelectorReturnTypes.add(getItemSelectorReturnType());
-
 		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
+			getItemSelectorReturnType());
 
 		return itemSelectorCriterion;
 	}

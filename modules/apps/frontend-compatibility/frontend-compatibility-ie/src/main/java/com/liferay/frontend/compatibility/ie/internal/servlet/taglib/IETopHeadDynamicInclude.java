@@ -43,35 +43,46 @@ public class IETopHeadDynamicInclude extends BaseDynamicInclude {
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		if (_browserSniffer.isIe(request)) {
-			PrintWriter printWriter = response.getWriter();
+		if (_browserSniffer.isIe(httpServletRequest)) {
+			PrintWriter printWriter = httpServletResponse.getWriter();
 
 			AbsolutePortalURLBuilder absolutePortalURLBuilder =
 				_absolutePortalURLBuilderFactory.getAbsolutePortalURLBuilder(
-					request);
+					httpServletRequest);
 
-			for (String fileName : _FILE_NAMES) {
+			for (String jsFileName : _JS_FILE_NAMES) {
 				printWriter.print(
 					"<script data-senna-track=\"permanent\" src=\"");
 
 				printWriter.print(
 					absolutePortalURLBuilder.forModule(
-						_bundleContext.getBundle(), fileName
+						_bundleContext.getBundle(), jsFileName
 					).build());
 
 				printWriter.println("\" type=\"text/javascript\"></script>");
+			}
+
+			for (String cssFileName : _CSS_FILE_NAMES) {
+				printWriter.print(
+					"<link data-senna-track=\"permanent\" href=\"");
+
+				printWriter.print(
+					absolutePortalURLBuilder.forModule(
+						_bundleContext.getBundle(), cssFileName
+					).build());
+
+				printWriter.println("\" rel=\"stylesheet\" type=\"text/css\">");
 			}
 		}
 	}
 
 	@Override
 	public void register(DynamicIncludeRegistry dynamicIncludeRegistry) {
-		dynamicIncludeRegistry.register(
-			"/html/common/themes/top_head.jsp#post");
+		dynamicIncludeRegistry.register("/html/common/themes/top_head.jsp#pre");
 	}
 
 	@Activate
@@ -80,12 +91,12 @@ public class IETopHeadDynamicInclude extends BaseDynamicInclude {
 		_bundleContext = bundleContext;
 	}
 
-	private static final String[] _FILE_NAMES = {
-		"/array.fill.js", "/array.find.js", "/array.findindex.js",
-		"/array.from.js", "/array.includes.js", "/array.of.js", "/fetch.js",
-		"/formdata.js", "/object.assign.js", "/object.entries.js",
-		"/object.values.js", "/promise.js", "/string.endswith.js",
-		"/url.search.params.js"
+	private static final String[] _CSS_FILE_NAMES = {"css/main.css"};
+
+	private static final String[] _JS_FILE_NAMES = {
+		"closest.js", "control.menu.js", "core-js-bundle.min.js", "fetch.js",
+		"intersection-observer.js", "remove.js", "svg.contains.js",
+		"uint16array.slice.js"
 	};
 
 	@Reference

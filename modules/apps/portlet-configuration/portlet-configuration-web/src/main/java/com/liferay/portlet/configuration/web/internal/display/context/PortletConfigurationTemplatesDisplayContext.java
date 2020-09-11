@@ -47,10 +47,10 @@ import javax.servlet.http.HttpServletRequest;
 public class PortletConfigurationTemplatesDisplayContext {
 
 	public PortletConfigurationTemplatesDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
@@ -70,13 +70,16 @@ public class PortletConfigurationTemplatesDisplayContext {
 			getActionDropdownItems();
 	}
 
-	public SearchContainer getArchivedSettingsSearchContainer() {
+	public SearchContainer<ArchivedSettings>
+		getArchivedSettingsSearchContainer() {
+
 		if (_archivedSettingsSearch != null) {
 			return _archivedSettingsSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		SearchContainer<ArchivedSettings> archivedSettingsSearch =
 			new SearchContainer<>(
@@ -102,7 +105,7 @@ public class PortletConfigurationTemplatesDisplayContext {
 			orderByAsc = true;
 		}
 
-		OrderByComparator orderByComparator = null;
+		OrderByComparator<ArchivedSettings> orderByComparator = null;
 
 		if (Objects.equals(getOrderByCol(), "modified-date")) {
 			orderByComparator = new ArchivedSettingsModifiedDateComparator(
@@ -139,7 +142,8 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
@@ -153,7 +157,8 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
@@ -163,7 +168,8 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -173,7 +179,8 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _portletResource;
 		}
 
-		_portletResource = ParamUtil.getString(_request, "portletResource");
+		_portletResource = ParamUtil.getString(
+			_httpServletRequest, "portletResource");
 
 		return _portletResource;
 	}
@@ -213,7 +220,7 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _redirect;
 		}
 
-		_redirect = ParamUtil.getString(_request, "redirect");
+		_redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
 		return _redirect;
 	}
@@ -224,13 +231,14 @@ public class PortletConfigurationTemplatesDisplayContext {
 		}
 
 		_returnToFullPageURL = ParamUtil.getString(
-			_request, "returnToFullPageURL");
+			_httpServletRequest, "returnToFullPageURL");
 
 		return _returnToFullPageURL;
 	}
 
-	private SearchContainer _archivedSettingsSearch;
+	private SearchContainer<ArchivedSettings> _archivedSettingsSearch;
 	private String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private final String _moduleName;
 	private String _orderByCol;
 	private String _orderByType;
@@ -238,7 +246,6 @@ public class PortletConfigurationTemplatesDisplayContext {
 	private String _redirect;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private String _returnToFullPageURL;
 
 }

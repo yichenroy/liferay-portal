@@ -14,10 +14,7 @@
 
 package com.liferay.taglib.ui;
 
-import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.IncludeTag;
 
@@ -150,25 +147,6 @@ public class PageIteratorTag extends IncludeTag {
 		_type = type;
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #setPortletURL(PortletURL)}
-	 */
-	@Deprecated
-	public void setUrl(String url) {
-		String[] urlArray = PortalUtil.stripURLAnchor(url, StringPool.POUND);
-
-		_url = urlArray[0];
-		_urlAnchor = urlArray[1];
-
-		if (_url.indexOf(CharPool.QUESTION) == -1) {
-			_url += "?";
-		}
-		else if (!_url.endsWith("&")) {
-			_url += "&";
-		}
-	}
-
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
@@ -189,8 +167,6 @@ public class PageIteratorTag extends IncludeTag {
 		_target = "_self";
 		_total = 0;
 		_type = "regular";
-		_url = null;
-		_urlAnchor = null;
 	}
 
 	@Override
@@ -218,36 +194,38 @@ public class PageIteratorTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		_pages = (int)Math.ceil((double)_total / _delta);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:cur", String.valueOf(_cur));
-		request.setAttribute("liferay-ui:page-iterator:curParam", _curParam);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:page-iterator:curParam", _curParam);
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:delta", String.valueOf(_delta));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:deltaConfigurable",
 			String.valueOf(_deltaConfigurable));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:deltaParam", _deltaParam);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:forcePost", String.valueOf(_forcePost));
-		request.setAttribute("liferay-ui:page-iterator:formName", _formName);
-		request.setAttribute("liferay-ui:page-iterator:id", _id);
-		request.setAttribute("liferay-ui:page-iterator:jsCall", _jsCall);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:page-iterator:formName", _formName);
+		httpServletRequest.setAttribute("liferay-ui:page-iterator:id", _id);
+		httpServletRequest.setAttribute(
+			"liferay-ui:page-iterator:jsCall", _jsCall);
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:maxPages", String.valueOf(_maxPages));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:pages", String.valueOf(_pages));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:portletURL", _portletURL);
-		request.setAttribute("liferay-ui:page-iterator:target", _target);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-ui:page-iterator:target", _target);
+		httpServletRequest.setAttribute(
 			"liferay-ui:page-iterator:total", String.valueOf(_total));
-		request.setAttribute("liferay-ui:page-iterator:type", _type);
-		request.setAttribute("liferay-ui:page-iterator:url", _url);
-		request.setAttribute("liferay-ui:page-iterator:urlAnchor", _urlAnchor);
+		httpServletRequest.setAttribute("liferay-ui:page-iterator:type", _type);
 	}
 
 	private int _cur;
@@ -267,7 +245,5 @@ public class PageIteratorTag extends IncludeTag {
 	private String _target = "_self";
 	private int _total;
 	private String _type = "regular";
-	private String _url;
-	private String _urlAnchor;
 
 }

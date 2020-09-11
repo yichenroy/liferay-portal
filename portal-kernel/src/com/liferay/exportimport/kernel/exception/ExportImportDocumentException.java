@@ -14,14 +14,11 @@
 
 package com.liferay.exportimport.kernel.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Gergely Mathe
  */
-@ProviderType
 public class ExportImportDocumentException extends PortalException {
 
 	public static final int DEFAULT = 1;
@@ -35,8 +32,8 @@ public class ExportImportDocumentException extends PortalException {
 	public ExportImportDocumentException() {
 	}
 
-	public ExportImportDocumentException(Throwable cause) {
-		super(cause);
+	public ExportImportDocumentException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public String getPortletId() {

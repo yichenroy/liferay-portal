@@ -20,11 +20,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
 
@@ -40,6 +45,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Creator")
 public class Creator {
 
+	public static Creator toDTO(String json) {
+		return ObjectMapperUtil.readValue(Creator.class, json);
+	}
+
+	@Schema
 	public String getAdditionalName() {
 		return additionalName;
 	}
@@ -67,6 +77,35 @@ public class Creator {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String additionalName;
 
+	@Schema(description = "The type of the content.")
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	@JsonIgnore
+	public void setContentType(
+		UnsafeSupplier<String, Exception> contentTypeUnsafeSupplier) {
+
+		try {
+			contentType = contentTypeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The type of the content.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String contentType;
+
+	@Schema
 	public String getFamilyName() {
 		return familyName;
 	}
@@ -94,6 +133,7 @@ public class Creator {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String familyName;
 
+	@Schema
 	public String getGivenName() {
 		return givenName;
 	}
@@ -121,6 +161,7 @@ public class Creator {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String givenName;
 
+	@Schema
 	public Long getId() {
 		return id;
 	}
@@ -146,6 +187,7 @@ public class Creator {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
+	@Schema
 	public String getImage() {
 		return image;
 	}
@@ -173,6 +215,7 @@ public class Creator {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String image;
 
+	@Schema
 	public String getName() {
 		return name;
 	}
@@ -198,6 +241,7 @@ public class Creator {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
+	@Schema
 	public String getProfileURL() {
 		return profileURL;
 	}
@@ -257,11 +301,25 @@ public class Creator {
 				sb.append(", ");
 			}
 
-			sb.append("\"additionalName\":");
+			sb.append("\"additionalName\": ");
 
 			sb.append("\"");
 
 			sb.append(_escape(additionalName));
+
+			sb.append("\"");
+		}
+
+		if (contentType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"contentType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(contentType));
 
 			sb.append("\"");
 		}
@@ -271,7 +329,7 @@ public class Creator {
 				sb.append(", ");
 			}
 
-			sb.append("\"familyName\":");
+			sb.append("\"familyName\": ");
 
 			sb.append("\"");
 
@@ -285,7 +343,7 @@ public class Creator {
 				sb.append(", ");
 			}
 
-			sb.append("\"givenName\":");
+			sb.append("\"givenName\": ");
 
 			sb.append("\"");
 
@@ -299,7 +357,7 @@ public class Creator {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(id);
 		}
@@ -309,7 +367,7 @@ public class Creator {
 				sb.append(", ");
 			}
 
-			sb.append("\"image\":");
+			sb.append("\"image\": ");
 
 			sb.append("\"");
 
@@ -323,7 +381,7 @@ public class Creator {
 				sb.append(", ");
 			}
 
-			sb.append("\"name\":");
+			sb.append("\"name\": ");
 
 			sb.append("\"");
 
@@ -337,7 +395,7 @@ public class Creator {
 				sb.append(", ");
 			}
 
-			sb.append("\"profileURL\":");
+			sb.append("\"profileURL\": ");
 
 			sb.append("\"");
 
@@ -351,10 +409,88 @@ public class Creator {
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.form.dto.v1_0.Creator",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalServiceUtil;
  * @see OAuth2Application
  * @generated
  */
-@ProviderType
 public abstract class OAuth2ApplicationBaseImpl
 	extends OAuth2ApplicationModelImpl implements OAuth2Application {
 

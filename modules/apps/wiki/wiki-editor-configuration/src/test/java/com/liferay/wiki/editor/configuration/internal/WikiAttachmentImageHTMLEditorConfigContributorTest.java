@@ -16,18 +16,22 @@ package com.liferay.wiki.editor.configuration.internal;
 
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLWrapper;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.language.LanguageImpl;
 import com.liferay.registry.BasicRegistryImpl;
 import com.liferay.registry.RegistryUtil;
+import com.liferay.wiki.configuration.WikiFileUploadConfiguration;
 import com.liferay.wiki.constants.WikiPortletKeys;
 
 import java.util.HashMap;
@@ -107,15 +111,15 @@ public class WikiAttachmentImageHTMLEditorConfigContributorTest
 		wikiAttachmentImageHTMLEditorConfigContributor.populateConfigJSONObject(
 			jsonObject, _inputEditorTaglibAttributes, null, null);
 
-		JSONObject expectedJSONObject = JSONFactoryUtil.createJSONObject();
-
-		expectedJSONObject.put(
+		JSONObject expectedJSONObject = JSONUtil.put(
 			"filebrowserImageBrowseLinkUrl",
-			"itemSelectorPortletURLWithImageUrlSelectionViews");
-		expectedJSONObject.put(
+			"itemSelectorPortletURLWithImageUrlSelectionViews"
+		).put(
 			"filebrowserImageBrowseUrl",
-			"itemSelectorPortletURLWithImageUrlSelectionViews");
-		expectedJSONObject.put("removePlugins", "plugin1,ae_addimages");
+			"itemSelectorPortletURLWithImageUrlSelectionViews"
+		).put(
+			"removePlugins", "plugin1,ae_addimages"
+		);
 
 		JSONAssert.assertEquals(
 			expectedJSONObject.toJSONString(), jsonObject.toJSONString(), true);
@@ -164,20 +168,35 @@ public class WikiAttachmentImageHTMLEditorConfigContributorTest
 
 		wikiAttachmentImageHTMLEditorConfigContributor.setItemSelector(
 			_itemSelector);
+		wikiAttachmentImageHTMLEditorConfigContributor.
+			setWikiFileUploadConfiguration(
+				new WikiFileUploadConfiguration() {
+
+					@Override
+					public long attachmentMaxSize() {
+						return 0;
+					}
+
+					@Override
+					public String[] attachmentMimeTypes() {
+						return new String[] {StringPool.STAR};
+					}
+
+				});
 
 		wikiAttachmentImageHTMLEditorConfigContributor.populateConfigJSONObject(
 			jsonObject, _inputEditorTaglibAttributes, new ThemeDisplay(),
 			requestBackedPortletURLFactory);
 
-		JSONObject expectedJSONObject = JSONFactoryUtil.createJSONObject();
-
-		expectedJSONObject.put(
+		JSONObject expectedJSONObject = JSONUtil.put(
 			"filebrowserImageBrowseLinkUrl",
-			"itemSelectorPortletURLWithWikiImageUrlAndUploadSelectionViews");
-		expectedJSONObject.put(
+			"itemSelectorPortletURLWithWikiImageUrlAndUploadSelectionViews"
+		).put(
 			"filebrowserImageBrowseUrl",
-			"itemSelectorPortletURLWithWikiImageUrlAndUploadSelectionViews");
-		expectedJSONObject.put("removePlugins", "plugin1");
+			"itemSelectorPortletURLWithWikiImageUrlAndUploadSelectionViews"
+		).put(
+			"removePlugins", "plugin1"
+		);
 
 		JSONAssert.assertEquals(
 			expectedJSONObject.toJSONString(), jsonObject.toJSONString(), true);
@@ -250,15 +269,13 @@ public class WikiAttachmentImageHTMLEditorConfigContributorTest
 	protected JSONObject getJSONObjectWithDefaultItemSelectorURL()
 		throws Exception {
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put(
-			"filebrowserImageBrowseLinkUrl", "defaultItemSelectorPortletURL");
-		jsonObject.put(
-			"filebrowserImageBrowseUrl", "defaultItemSelectorPortletURL");
-		jsonObject.put("removePlugins", "plugin1");
-
-		return jsonObject;
+		return JSONUtil.put(
+			"filebrowserImageBrowseLinkUrl", "defaultItemSelectorPortletURL"
+		).put(
+			"filebrowserImageBrowseUrl", "defaultItemSelectorPortletURL"
+		).put(
+			"removePlugins", "plugin1"
+		);
 	}
 
 	protected void setAllowBrowseDocuments(boolean allowBrowseDocuments) {
@@ -268,13 +285,11 @@ public class WikiAttachmentImageHTMLEditorConfigContributorTest
 	}
 
 	protected void setWikiPageResourcePrimKey(long primKey) {
-		Map<String, String> fileBrowserParamsMap = new HashMap<>();
-
-		fileBrowserParamsMap.put(
-			"wikiPageResourcePrimKey", String.valueOf(primKey));
-
 		_inputEditorTaglibAttributes.put(
-			"liferay-ui:input-editor:fileBrowserParams", fileBrowserParamsMap);
+			"liferay-ui:input-editor:fileBrowserParams",
+			HashMapBuilder.put(
+				"wikiPageResourcePrimKey", String.valueOf(primKey)
+			).build());
 	}
 
 	private final Map<String, Object> _inputEditorTaglibAttributes =

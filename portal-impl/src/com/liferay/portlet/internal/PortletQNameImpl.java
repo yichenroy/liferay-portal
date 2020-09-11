@@ -15,11 +15,11 @@
 package com.liferay.portlet.internal;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletQName;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.Namespace;
@@ -41,11 +41,7 @@ public class PortletQNameImpl implements PortletQName {
 
 	@Override
 	public String getKey(String uri, String localPart) {
-		return uri.concat(
-			_KEY_SEPARATOR
-		).concat(
-			localPart
-		);
+		return StringBundler.concat(uri, _KEY_SEPARATOR, localPart);
 	}
 
 	@Override
@@ -171,9 +167,7 @@ public class PortletQNameImpl implements PortletQName {
 			sb.append(StringPool.UNDERLINE);
 		}
 
-		String namespaceURI = qName.getNamespaceURI();
-
-		if (!Validator.isBlank(namespaceURI)) {
+		if (!Validator.isBlank(qName.getNamespaceURI())) {
 			sb.append(qName.getNamespaceURI());
 			sb.append(StringPool.UNDERLINE);
 		}

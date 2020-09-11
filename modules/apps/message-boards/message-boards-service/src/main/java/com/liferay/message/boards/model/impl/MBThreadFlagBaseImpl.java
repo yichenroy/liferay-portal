@@ -14,8 +14,6 @@
 
 package com.liferay.message.boards.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.message.boards.model.MBThreadFlag;
 import com.liferay.message.boards.service.MBThreadFlagLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.message.boards.service.MBThreadFlagLocalServiceUtil;
  * @see MBThreadFlag
  * @generated
  */
-@ProviderType
 public abstract class MBThreadFlagBaseImpl
 	extends MBThreadFlagModelImpl implements MBThreadFlag {
 

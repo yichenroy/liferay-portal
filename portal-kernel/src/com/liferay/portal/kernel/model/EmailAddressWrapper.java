@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see EmailAddress
  * @generated
  */
-@ProviderType
 public class EmailAddressWrapper
 	extends BaseModelWrapper<EmailAddress>
 	implements EmailAddress, ModelWrapper<EmailAddress> {

@@ -14,8 +14,6 @@
 
 package com.liferay.bookmarks.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,7 +23,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see BookmarksFolderService
  * @generated
  */
-@ProviderType
 public class BookmarksFolderServiceWrapper
 	implements BookmarksFolderService, ServiceWrapper<BookmarksFolderService> {
 
@@ -162,18 +159,6 @@ public class BookmarksFolderServiceWrapper
 		return _bookmarksFolderService.getOSGiServiceIdentifier();
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 #getSubfolderIds(List, long, long, boolean)}
-	 */
-	@Deprecated
-	@Override
-	public void getSubfolderIds(
-		java.util.List<Long> folderIds, long groupId, long folderId) {
-
-		_bookmarksFolderService.getSubfolderIds(folderIds, groupId, folderId);
-	}
-
 	@Override
 	public void getSubfolderIds(
 		java.util.List<Long> folderIds, long groupId, long folderId,
@@ -242,24 +227,6 @@ public class BookmarksFolderServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_bookmarksFolderService.unsubscribeFolder(groupId, folderId);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 #updateFolder(long, long, String, String, ServiceContext)}
-	 and {@link #mergeFolders(long, long)}
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.bookmarks.model.BookmarksFolder updateFolder(
-			long folderId, long parentFolderId, String name, String description,
-			boolean mergeWithParentFolder,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _bookmarksFolderService.updateFolder(
-			folderId, parentFolderId, name, description, mergeWithParentFolder,
-			serviceContext);
 	}
 
 	@Override

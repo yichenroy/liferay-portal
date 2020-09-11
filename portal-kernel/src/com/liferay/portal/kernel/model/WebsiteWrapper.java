@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,10 +30,9 @@ import java.util.Map;
  * @see Website
  * @generated
  */
-@ProviderType
 public class WebsiteWrapper
 	extends BaseModelWrapper<Website>
-	implements Website, ModelWrapper<Website> {
+	implements ModelWrapper<Website>, Website {
 
 	public WebsiteWrapper(Website website) {
 		super(website);

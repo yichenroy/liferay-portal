@@ -86,7 +86,7 @@ public class JavadocFormatterUtil {
 			try {
 				javaProjectBuilder.addSource(new UnsyncStringReader(content));
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				continue;
 			}
 
@@ -256,8 +256,8 @@ public class JavadocFormatterUtil {
 
 			return canonicalFile.toPath();
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
@@ -302,9 +302,8 @@ public class JavadocFormatterUtil {
 				JavaExecutable javaExecutable =
 					(JavaExecutable)javaAnnotatedElement;
 
-				List<JavaType> javaTypes = javaExecutable.getParameterTypes();
-
-				String signature = javaTypes.toString();
+				String signature = String.valueOf(
+					javaExecutable.getParameterTypes());
 
 				if (!signature.equals(
 						deprecatedElement.attributeValue("signature"))) {

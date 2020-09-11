@@ -15,9 +15,9 @@
 package com.liferay.portal.kernel.plugin;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -152,19 +152,17 @@ public class Version implements Comparable<Version>, Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Version)) {
+		if (!(object instanceof Version)) {
 			return false;
 		}
 
-		Version version = (Version)obj;
-
 		String versionString1 = toString();
-		String versionString2 = version.toString();
+		String versionString2 = String.valueOf((Version)object);
 
 		if (versionString1.equals(UNKNOWN) || versionString2.equals(UNKNOWN)) {
 			return false;
@@ -336,7 +334,7 @@ public class Version implements Comparable<Version>, Serializable {
 
 				return false;
 			}
-			catch (NumberFormatException nfe) {
+			catch (NumberFormatException numberFormatException) {
 				return false;
 			}
 		}

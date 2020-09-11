@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalServiceUtil;
  * @see OAuth2Authorization
  * @generated
  */
-@ProviderType
 public abstract class OAuth2AuthorizationBaseImpl
 	extends OAuth2AuthorizationModelImpl implements OAuth2Authorization {
 

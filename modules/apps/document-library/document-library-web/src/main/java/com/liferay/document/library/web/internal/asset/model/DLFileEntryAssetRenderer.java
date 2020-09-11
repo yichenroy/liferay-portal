@@ -23,7 +23,6 @@ import com.liferay.document.library.kernel.document.conversion.DocumentConversio
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
-import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.document.library.web.internal.security.permission.resource.DLFileEntryPermission;
 import com.liferay.petra.string.CharPool;
@@ -54,7 +53,6 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.asset.DLFileEntryDDMFormValuesReader;
 import com.liferay.trash.TrashHelper;
 
-import java.util.Date;
 import java.util.Locale;
 
 import javax.portlet.ActionRequest;
@@ -74,27 +72,6 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class DLFileEntryAssetRenderer
 	extends BaseJSPAssetRenderer<FileEntry> implements TrashRenderer {
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public DLFileEntryAssetRenderer(
-		FileEntry fileEntry, FileVersion fileVersion) {
-
-		this(fileEntry, fileVersion, DLFileEntryLocalServiceUtil.getService());
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public DLFileEntryAssetRenderer(
-		FileEntry fileEntry, FileVersion fileVersion,
-		DLFileEntryLocalService dlFileEntryLocalService) {
-
-		this(fileEntry, fileVersion, dlFileEntryLocalService, null, null);
-	}
 
 	public DLFileEntryAssetRenderer(
 		FileEntry fileEntry, FileVersion fileVersion,
@@ -146,15 +123,6 @@ public class DLFileEntryAssetRenderer
 		return null;
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public Date getDisplayDate() {
-		return _fileEntry.getModifiedDate();
-	}
-
 	@Override
 	public long getGroupId() {
 		return _fileEntry.getGroupId();
@@ -166,7 +134,9 @@ public class DLFileEntryAssetRenderer
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
 		if (template.equals(TEMPLATE_ABSTRACT) ||
 			template.equals(TEMPLATE_FULL_CONTENT)) {
 
@@ -184,18 +154,11 @@ public class DLFileEntryAssetRenderer
 			return super.getNewName(oldName, token);
 		}
 
-		StringBundler sb = new StringBundler(5);
-
 		int index = oldName.lastIndexOf(CharPool.PERIOD);
 
-		sb.append(oldName.substring(0, index));
-
-		sb.append(StringPool.SPACE);
-		sb.append(token);
-		sb.append(StringPool.PERIOD);
-		sb.append(extension);
-
-		return sb.toString();
+		return StringBundler.concat(
+			oldName.substring(0, index), StringPool.SPACE, token,
+			StringPool.PERIOD, extension);
 	}
 
 	@Override
@@ -271,23 +234,10 @@ public class DLFileEntryAssetRenderer
 
 	@Override
 	public PortletURL getURLEdit(
-			LiferayPortletRequest liferayPortletRequest,
-			LiferayPortletResponse liferayPortletResponse)
-		throws Exception {
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
-		Group group = GroupLocalServiceUtil.fetchGroup(_fileEntry.getGroupId());
-
-		if (group.isCompany()) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)liferayPortletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
-			group = themeDisplay.getScopeGroup();
-		}
-
-		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			liferayPortletRequest, group, DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
-			0, 0, PortletRequest.RENDER_PHASE);
+		PortletURL portletURL = _getPortletURL(liferayPortletRequest);
 
 		portletURL.setParameter(
 			"mvcRenderCommandName", "/document_library/edit_file_entry");
@@ -299,13 +249,10 @@ public class DLFileEntryAssetRenderer
 
 	@Override
 	public PortletURL getURLExport(
-			LiferayPortletRequest liferayPortletRequest,
-			LiferayPortletResponse liferayPortletResponse)
-		throws Exception {
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
-		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			liferayPortletRequest, DLPortletKeys.DOCUMENT_LIBRARY,
-			PortletRequest.ACTION_PHASE);
+		PortletURL portletURL = _getPortletURL(liferayPortletRequest);
 
 		portletURL.setParameter(
 			ActionRequest.ACTION_NAME, "/document_library/get_file");
@@ -364,7 +311,7 @@ public class DLFileEntryAssetRenderer
 
 			String friendlyURL =
 				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-					getClassName(), getClassPK(), themeDisplay);
+					FileEntry.class.getName(), getClassPK(), themeDisplay);
 
 			if (Validator.isNotNull(friendlyURL)) {
 				return friendlyURL;
@@ -375,9 +322,9 @@ public class DLFileEntryAssetRenderer
 			(ThemeDisplay)liferayPortletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		long groupId = _fileEntry.getGroupId();
+		if (!_hasViewInContextGroupLayout(
+				themeDisplay, _fileEntry.getGroupId())) {
 
-		if (!_hasViewInContextGroupLayout(themeDisplay, groupId)) {
 			return null;
 		}
 
@@ -402,13 +349,6 @@ public class DLFileEntryAssetRenderer
 		return _fileEntry.getUuid();
 	}
 
-	public boolean hasDeletePermission(PermissionChecker permissionChecker)
-		throws PortalException {
-
-		return DLFileEntryPermission.contains(
-			permissionChecker, _fileEntry.getFileEntryId(), ActionKeys.DELETE);
-	}
-
 	@Override
 	public boolean hasEditPermission(PermissionChecker permissionChecker)
 		throws PortalException {
@@ -427,13 +367,14 @@ public class DLFileEntryAssetRenderer
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(WebKeys.DOCUMENT_LIBRARY_FILE_ENTRY, _fileEntry);
+		httpServletRequest.setAttribute(
+			WebKeys.DOCUMENT_LIBRARY_FILE_ENTRY, _fileEntry);
 
-		String version = ParamUtil.getString(request, "version");
+		String version = ParamUtil.getString(httpServletRequest, "version");
 
 		if ((getAssetRendererType() == AssetRendererFactory.TYPE_LATEST) ||
 			Validator.isNotNull(version)) {
@@ -442,24 +383,22 @@ public class DLFileEntryAssetRenderer
 				_fileVersion = _fileEntry.getFileVersion(version);
 			}
 
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				WebKeys.DOCUMENT_LIBRARY_FILE_VERSION, _fileVersion);
 		}
 		else {
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				WebKeys.DOCUMENT_LIBRARY_FILE_VERSION,
 				_fileEntry.getFileVersion());
 		}
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	@Override
 	public boolean isCategorizable(long groupId) {
-		long classPK = getClassPK();
-
 		DLFileEntry dlFileEntry = _dlFileEntryLocalService.fetchDLFileEntry(
-			classPK);
+			getClassPK());
 
 		if ((dlFileEntry == null) ||
 			(dlFileEntry.getRepositoryId() != groupId)) {
@@ -498,6 +437,24 @@ public class DLFileEntryAssetRenderer
 			assetDisplayPageFriendlyURLProvider;
 	}
 
+	private PortletURL _getPortletURL(
+		LiferayPortletRequest liferayPortletRequest) {
+
+		Group group = GroupLocalServiceUtil.fetchGroup(_fileEntry.getGroupId());
+
+		if (group.isCompany()) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)liferayPortletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			group = themeDisplay.getScopeGroup();
+		}
+
+		return PortalUtil.getControlPanelPortletURL(
+			liferayPortletRequest, group, DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
+			0, 0, PortletRequest.RENDER_PHASE);
+	}
+
 	private boolean _hasViewInContextGroupLayout(
 		ThemeDisplay themeDisplay, long groupId) {
 
@@ -505,6 +462,10 @@ public class DLFileEntryAssetRenderer
 			PortletLayoutFinder portletLayoutFinder =
 				PortletLayoutFinderRegistryUtil.getPortletLayoutFinder(
 					DLFileEntryConstants.getClassName());
+
+			if (portletLayoutFinder == null) {
+				return false;
+			}
 
 			PortletLayoutFinder.Result result = portletLayoutFinder.find(
 				themeDisplay, groupId);
@@ -515,9 +476,9 @@ public class DLFileEntryAssetRenderer
 
 			return true;
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return false;
@@ -530,7 +491,7 @@ public class DLFileEntryAssetRenderer
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
 	private final DLFileEntryLocalService _dlFileEntryLocalService;
-	private DLURLHelper _dlURLHelper;
+	private final DLURLHelper _dlURLHelper;
 	private final FileEntry _fileEntry;
 	private FileVersion _fileVersion;
 	private final TrashHelper _trashHelper;

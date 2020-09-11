@@ -16,8 +16,8 @@ package com.liferay.journal.web.internal.servlet.taglib.ui;
 
 import com.liferay.frontend.taglib.form.navigator.constants.FormNavigatorContextConstants;
 import com.liferay.frontend.taglib.form.navigator.context.FormNavigatorContextProvider;
+import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -47,12 +47,13 @@ public class JournalFormNavigatorContextProvider
 
 		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
 
-		HttpServletRequest request = themeDisplay.getRequest();
+		HttpServletRequest httpServletRequest = themeDisplay.getRequest();
 
-		String toLanguageId = ParamUtil.getString(request, "toLanguageId");
+		String toLanguageId = ParamUtil.getString(
+			httpServletRequest, "toLanguageId");
 
 		long classNameId = BeanParamUtil.getLong(
-			article, request, "classNameId");
+			article, httpServletRequest, "classNameId");
 
 		if (Validator.isNotNull(toLanguageId)) {
 			return "translate";
@@ -60,7 +61,7 @@ public class JournalFormNavigatorContextProvider
 		else if ((article != null) && (article.getId() > 0)) {
 			return "update";
 		}
-		else if (classNameId > JournalArticleConstants.CLASSNAME_ID_DEFAULT) {
+		else if (classNameId > JournalArticleConstants.CLASS_NAME_ID_DEFAULT) {
 			return "default.values";
 		}
 

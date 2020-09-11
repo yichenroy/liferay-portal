@@ -47,7 +47,7 @@ MDRRuleGroupInstance ruleGroupInstance = (MDRRuleGroupInstance)renderRequest.get
 	<aui:model-context bean="<%= action %>" model="<%= MDRAction.class %>" />
 
 	<div class="portlet-configuration-body-content">
-		<div class="container-fluid-1280">
+		<clay:container-fluid>
 			<aui:fieldset-group markupView="lexicon">
 				<aui:fieldset>
 					<c:if test="<%= action == null %>">
@@ -60,7 +60,7 @@ MDRRuleGroupInstance ruleGroupInstance = (MDRRuleGroupInstance)renderRequest.get
 
 					<aui:input name="description" placeholder="description" />
 
-					<aui:select changesContext="<%= true %>" name="type" onChange='<%= renderResponse.getNamespace() + "changeType();" %>' required="<%= true %>" showEmptyOption="<%= true %>">
+					<aui:select changesContext="<%= true %>" name="type" onChange='<%= liferayPortletResponse.getNamespace() + "changeType();" %>' required="<%= true %>" showEmptyOption="<%= true %>">
 
 						<%
 						for (ActionHandler actionHandler : ActionHandlerManagerUtil.getActionHandlers()) {
@@ -74,14 +74,14 @@ MDRRuleGroupInstance ruleGroupInstance = (MDRRuleGroupInstance)renderRequest.get
 
 					</aui:select>
 
-					<div id="<%= renderResponse.getNamespace() %>typeSettings">
+					<div id="<%= liferayPortletResponse.getNamespace() %>typeSettings">
 						<c:if test="<%= Validator.isNotNull(editorJSP) %>">
 							<liferay-util:include page="<%= editorJSP %>" servletContext="<%= application %>" />
 						</c:if>
 					</div>
 				</aui:fieldset>
 			</aui:fieldset-group>
-		</div>
+		</clay:container-fluid>
 	</div>
 
 	<aui:button-row>
@@ -93,46 +93,76 @@ MDRRuleGroupInstance ruleGroupInstance = (MDRRuleGroupInstance)renderRequest.get
 
 <aui:script>
 	function <portlet:namespace />changeDisplay() {
-		var $ = AUI.$;
-
-		var form = $(document.<portlet:namespace />fm);
-
 		<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/mobile_device_rules/site_url_layouts" var="siteURLLayoutsURL" />
 
-		$.ajax(
-			'<%= siteURLLayoutsURL.toString() %>',
+		var form = document.<portlet:namespace />fm;
+
+		var formData = new FormData();
+
+		var actionGroupId = Liferay.Util.getFormElement(form, 'groupId');
+		var actionPlid = Liferay.Util.getFormElement(form, 'actionPlid');
+
+		if (actionGroupId && actionPlid) {
+			formData.append(
+				'<portlet:namespace />actionGroupId',
+				actionGroupId.value
+			);
+			formData.append('<portlet:namespace />actionPlid', actionPlid.value);
+		}
+
+		Liferay.Util.fetch(
+			'<%= HtmlUtil.escapeJS(siteURLLayoutsURL.toString()) %>',
 			{
-				data: {
-					<portlet:namespace />actionGroupId: form.fm('groupId').val(),
-					<portlet:namespace />actionPlid: form.fm('actionPlid').val()
-				},
-				success: function(responseData) {
-					$('#<portlet:namespace />layouts').html(responseData);
-				}
+				body: formData,
+				method: 'POST',
 			}
-		);
+		)
+			.then(function (response) {
+				return response.text();
+			})
+			.then(function (response) {
+				var layouts = document.getElementById(
+					'<portlet:namespace />layouts'
+				);
+
+				if (layouts) {
+					layouts.innerHTML = response;
+				}
+			});
 	}
 
 	function <portlet:namespace />changeType() {
-		var $ = AUI.$;
-
-		var form = $(document.<portlet:namespace />fm);
-
 		<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/mobile_device_rules/edit_action" var="editorURL">
 			<portlet:param name="ajax" value="<%= Boolean.TRUE.toString() %>" />
 		</liferay-portlet:resourceURL>
 
-		$.ajax(
-			'<%= editorURL.toString() %>',
-			{
-				data: {
-					<portlet:namespace />type: form.fm('type').val(),
-					<portlet:namespace /><%= "actionId" %>: <%= actionId %>
-				},
-				success: function(responseData) {
-					$('#<portlet:namespace />typeSettings').html(responseData);
+		var form = document.<portlet:namespace />fm;
+
+		var formData = new FormData();
+
+		var type = Liferay.Util.getFormElement(form, 'type');
+
+		if (type) {
+			formData.append('<portlet:namespace />type', type.value);
+		}
+
+		formData.append('<portlet:namespace />actionId', '<%= actionId %>');
+
+		Liferay.Util.fetch('<%= HtmlUtil.escapeJS(editorURL.toString()) %>', {
+			body: formData,
+			method: 'POST',
+		})
+			.then(function (response) {
+				return response.text();
+			})
+			.then(function (response) {
+				var typeSettings = document.getElementById(
+					'<portlet:namespace />typeSettings'
+				);
+
+				if (typeSettings) {
+					typeSettings.innerHTML = response;
 				}
-			}
-		);
+			});
 	}
 </aui:script>

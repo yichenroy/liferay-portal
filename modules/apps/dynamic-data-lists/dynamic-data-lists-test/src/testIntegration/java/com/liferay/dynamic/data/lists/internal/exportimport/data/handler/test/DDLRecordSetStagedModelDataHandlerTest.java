@@ -25,10 +25,11 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.test.util.DateTestUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -102,14 +103,11 @@ public class DDLRecordSetStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return DDLRecordSetLocalServiceUtil.getDDLRecordSetByUuidAndGroupId(
-				uuid, group.getGroupId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return DDLRecordSetLocalServiceUtil.getDDLRecordSetByUuidAndGroupId(
+			uuid, group.getGroupId());
 	}
 
 	@Override
@@ -156,12 +154,9 @@ public class DDLRecordSetStagedModelDataHandlerTest
 			StagedModel stagedModel, StagedModel importedStagedModel)
 		throws Exception {
 
-		Assert.assertTrue(
-			stagedModel.getCreateDate() + " " +
-				importedStagedModel.getCreateDate(),
-			DateUtil.equals(
-				stagedModel.getCreateDate(),
-				importedStagedModel.getCreateDate()));
+		DateTestUtil.assertEquals(
+			stagedModel.getCreateDate(), importedStagedModel.getCreateDate());
+
 		Assert.assertEquals(
 			stagedModel.getUuid(), importedStagedModel.getUuid());
 

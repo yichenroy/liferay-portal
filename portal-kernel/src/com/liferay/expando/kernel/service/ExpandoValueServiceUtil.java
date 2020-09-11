@@ -14,8 +14,6 @@
 
 package com.liferay.expando.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
@@ -30,7 +28,6 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
  * @see ExpandoValueService
  * @generated
  */
-@ProviderType
 public class ExpandoValueServiceUtil {
 
 	/*

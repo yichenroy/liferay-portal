@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
@@ -30,7 +28,6 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
  * @see StagingService
  * @generated
  */
-@ProviderType
 public class StagingServiceUtil {
 
 	/*
@@ -75,20 +72,6 @@ public class StagingServiceUtil {
 			code, processFlag, processId, arguments);
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public static com.liferay.exportimport.kernel.lar.MissingReferences
-			publishStagingRequest(
-				long stagingRequestId, boolean privateLayout,
-				java.util.Map<String, String[]> parameterMap)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().publishStagingRequest(
-			stagingRequestId, privateLayout, parameterMap);
-	}
-
 	public static com.liferay.exportimport.kernel.lar.MissingReferences
 			publishStagingRequest(
 				long stagingRequestId,
@@ -105,21 +88,6 @@ public class StagingServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		getService().updateStagingRequest(stagingRequestId, fileName, bytes);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 #publishStagingRequest(long, boolean, Map)}
-	 */
-	@Deprecated
-	public static com.liferay.exportimport.kernel.lar.MissingReferences
-			validateStagingRequest(
-				long stagingRequestId, boolean privateLayout,
-				java.util.Map<String, String[]> parameterMap)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().validateStagingRequest(
-			stagingRequestId, privateLayout, parameterMap);
 	}
 
 	public static StagingService getService() {

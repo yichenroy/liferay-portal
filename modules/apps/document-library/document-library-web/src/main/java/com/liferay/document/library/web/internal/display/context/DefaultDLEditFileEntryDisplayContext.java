@@ -51,20 +51,23 @@ public class DefaultDLEditFileEntryDisplayContext
 	implements DLEditFileEntryDisplayContext {
 
 	public DefaultDLEditFileEntryDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse,
 		DLFileEntryType dlFileEntryType, DLValidator dlValidator,
 		StorageEngine storageEngine) {
 
-		this(request, dlFileEntryType, dlValidator, null, storageEngine);
+		this(
+			httpServletRequest, dlFileEntryType, dlValidator, null,
+			storageEngine);
 	}
 
 	public DefaultDLEditFileEntryDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
-		DLValidator dlValidator, FileEntry fileEntry,
-		StorageEngine storageEngine) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, DLValidator dlValidator,
+		FileEntry fileEntry, StorageEngine storageEngine) {
 
 		this(
-			request, (DLFileEntryType)null, dlValidator, fileEntry,
+			httpServletRequest, (DLFileEntryType)null, dlValidator, fileEntry,
 			storageEngine);
 	}
 
@@ -228,18 +231,19 @@ public class DefaultDLEditFileEntryDisplayContext
 	}
 
 	private DefaultDLEditFileEntryDisplayContext(
-		HttpServletRequest request, DLFileEntryType dlFileEntryType,
+		HttpServletRequest httpServletRequest, DLFileEntryType dlFileEntryType,
 		DLValidator dlValidator, FileEntry fileEntry,
 		StorageEngine storageEngine) {
 
 		try {
-			_dlRequestHelper = new DLRequestHelper(request);
+			_dlRequestHelper = new DLRequestHelper(httpServletRequest);
 			_dlValidator = dlValidator;
 			_fileEntry = fileEntry;
 			_storageEngine = storageEngine;
 
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			_fileEntryDisplayContextHelper = new FileEntryDisplayContextHelper(
 				themeDisplay.getPermissionChecker(), _fileEntry);
@@ -263,13 +267,13 @@ public class DefaultDLEditFileEntryDisplayContext
 				new FileVersionDisplayContextHelper(_fileVersion);
 
 			_showSelectFolder = ParamUtil.getBoolean(
-				request, "showSelectFolder");
+				httpServletRequest, "showSelectFolder");
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new SystemException(
 				"Unable to build DefaultDLEditFileEntryDisplayContext for " +
 					fileEntry,
-				pe);
+				portalException);
 		}
 	}
 
@@ -289,9 +293,10 @@ public class DefaultDLEditFileEntryDisplayContext
 				_dlRequestHelper.getCompanyId(),
 				_dlRequestHelper.getScopeGroupId(), folderId, fileEntryTypeId);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new SystemException(
-				"Unable to check if folder has workflow definition link", e);
+				"Unable to check if folder has workflow definition link",
+				exception);
 		}
 	}
 

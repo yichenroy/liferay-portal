@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.portlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -165,25 +165,35 @@ public class PortletURLUtil {
 	}
 
 	public static String getRefreshURL(
-		HttpServletRequest request, ThemeDisplay themeDisplay) {
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
 
-		return getRefreshURL(request, themeDisplay, true);
+		return getRefreshURL(httpServletRequest, themeDisplay, true);
 	}
 
 	public static String getRefreshURL(
-		HttpServletRequest request, ThemeDisplay themeDisplay,
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
 		boolean includeParameters) {
 
-		StringBundler sb = new StringBundler(34);
+		StringBundler sb = new StringBundler(36);
 
 		sb.append(themeDisplay.getPathMain());
 		sb.append("/portal/render_portlet?p_l_id=");
 
-		long plid = themeDisplay.getPlid();
+		sb.append(themeDisplay.getPlid());
 
-		sb.append(plid);
+		HttpServletRequest originalHttpServletRequest =
+			PortalUtil.getOriginalServletRequest(httpServletRequest);
 
-		Portlet portlet = (Portlet)request.getAttribute(WebKeys.RENDER_PORTLET);
+		String layoutMode = ParamUtil.getString(
+			originalHttpServletRequest, "p_l_mode");
+
+		if (Validator.isNotNull(layoutMode)) {
+			sb.append("&p_l_mode=");
+			sb.append(layoutMode);
+		}
+
+		Portlet portlet = (Portlet)httpServletRequest.getAttribute(
+			WebKeys.RENDER_PORTLET);
 
 		String portletId = portlet.getPortletId();
 
@@ -215,18 +225,18 @@ public class PortletURLUtil {
 
 		sb.append("&p_p_mode=view&p_p_col_id=");
 
-		String columnId = (String)request.getAttribute(
+		String columnId = (String)httpServletRequest.getAttribute(
 			WebKeys.RENDER_PORTLET_COLUMN_ID);
 
 		sb.append(columnId);
 
-		Integer columnPos = (Integer)request.getAttribute(
+		Integer columnPos = (Integer)httpServletRequest.getAttribute(
 			WebKeys.RENDER_PORTLET_COLUMN_POS);
 
 		sb.append("&p_p_col_pos=");
 		sb.append(columnPos);
 
-		Integer columnCount = (Integer)request.getAttribute(
+		Integer columnCount = (Integer)httpServletRequest.getAttribute(
 			WebKeys.RENDER_PORTLET_COLUMN_COUNT);
 
 		sb.append("&p_p_col_count=");
@@ -242,7 +252,8 @@ public class PortletURLUtil {
 
 		sb.append("&p_p_isolated=1");
 
-		long sourceGroupId = ParamUtil.getLong(request, "p_v_l_s_g_id");
+		long sourceGroupId = ParamUtil.getLong(
+			httpServletRequest, "p_v_l_s_g_id");
 
 		if (sourceGroupId > 0) {
 			sb.append("&p_v_l_s_g_id=");
@@ -256,28 +267,28 @@ public class PortletURLUtil {
 			sb.append(URLCodec.encodeURL(doAsUserId));
 		}
 
-		String currentURL = PortalUtil.getCurrentURL(request);
-
 		sb.append("&currentURL=");
-		sb.append(URLCodec.encodeURL(currentURL));
+		sb.append(
+			URLCodec.encodeURL(PortalUtil.getCurrentURL(httpServletRequest)));
 
-		String ppid = ParamUtil.getString(request, "p_p_id");
+		String ppid = ParamUtil.getString(httpServletRequest, "p_p_id");
 
 		if (!ppid.equals(portletId)) {
 			return sb.toString();
 		}
 
-		String p_p_auth = ParamUtil.getString(request, "p_p_auth");
+		String p_p_auth = ParamUtil.getString(httpServletRequest, "p_p_auth");
 
 		if (!Validator.isBlank(p_p_auth)) {
 			sb.append("&p_p_auth=");
 			sb.append(URLCodec.encodeURL(p_p_auth));
 		}
 
-		String settingsScope = (String)request.getAttribute(
+		String settingsScope = (String)httpServletRequest.getAttribute(
 			WebKeys.SETTINGS_SCOPE);
 
-		settingsScope = ParamUtil.get(request, "settingsScope", settingsScope);
+		settingsScope = ParamUtil.get(
+			httpServletRequest, "settingsScope", settingsScope);
 
 		if (Validator.isNotNull(settingsScope)) {
 			sb.append("&settingsScope=");
@@ -285,7 +296,8 @@ public class PortletURLUtil {
 		}
 
 		if (includeParameters) {
-			Map<String, String[]> parameters = getRefreshURLParameters(request);
+			Map<String, String[]> parameters = getRefreshURLParameters(
+				httpServletRequest);
 
 			for (Map.Entry<String, String[]> entry : parameters.entrySet()) {
 				String name = entry.getKey();
@@ -304,19 +316,21 @@ public class PortletURLUtil {
 	}
 
 	public static Map<String, String[]> getRefreshURLParameters(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
 		Map<String, String[]> refreshURLParameters = new HashMap<>();
 
-		String ppid = ParamUtil.getString(request, "p_p_id");
+		String ppid = ParamUtil.getString(httpServletRequest, "p_p_id");
 
-		Portlet portlet = (Portlet)request.getAttribute(WebKeys.RENDER_PORTLET);
+		Portlet portlet = (Portlet)httpServletRequest.getAttribute(
+			WebKeys.RENDER_PORTLET);
 
 		if (ppid.equals(portlet.getPortletId())) {
 			String namespace = PortalUtil.getPortletNamespace(
 				portlet.getPortletId());
 
-			Map<String, String[]> parameters = request.getParameterMap();
+			Map<String, String[]> parameters =
+				httpServletRequest.getParameterMap();
 
 			for (Map.Entry<String, String[]> entry : parameters.entrySet()) {
 				String name = entry.getKey();
@@ -372,10 +386,11 @@ public class PortletURLUtil {
 
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
-		Enumeration<String> enu = liferayPortletRequest.getParameterNames();
+		Enumeration<String> enumeration =
+			liferayPortletRequest.getParameterNames();
 
-		while (enu.hasMoreElements()) {
-			String param = enu.nextElement();
+		while (enumeration.hasMoreElements()) {
+			String param = enumeration.nextElement();
 
 			String[] values = liferayPortletRequest.getParameterValues(param);
 

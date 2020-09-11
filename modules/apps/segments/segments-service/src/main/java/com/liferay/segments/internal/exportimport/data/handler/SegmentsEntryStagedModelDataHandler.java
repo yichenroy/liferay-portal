@@ -21,6 +21,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.xml.Element;
+import com.liferay.segments.internal.exportimport.content.processor.SegmentsEntryExportImportContentProcessor;
 import com.liferay.segments.model.SegmentsEntry;
 
 import java.util.Map;
@@ -60,13 +61,21 @@ public class SegmentsEntryStagedModelDataHandler
 
 	@Override
 	public String getDisplayName(SegmentsEntry segmentsEntry) {
-		return segmentsEntry.getName();
+		return segmentsEntry.getNameCurrentValue();
 	}
 
 	@Override
 	protected void doExportStagedModel(
 			PortletDataContext portletDataContext, SegmentsEntry segmentsEntry)
 		throws Exception {
+
+		String criteria =
+			_segmentsEntryExportImportContentProcessor.
+				replaceExportContentReferences(
+					portletDataContext, segmentsEntry,
+					segmentsEntry.getCriteria(), false, false);
+
+		segmentsEntry.setCriteria(criteria);
 
 		Element segmentsEntryElement = portletDataContext.getExportDataElement(
 			segmentsEntry);
@@ -107,6 +116,14 @@ public class SegmentsEntryStagedModelDataHandler
 
 		importedSegmentsEntry.setGroupId(portletDataContext.getScopeGroupId());
 
+		String criteria =
+			_segmentsEntryExportImportContentProcessor.
+				replaceImportContentReferences(
+					portletDataContext, segmentsEntry,
+					segmentsEntry.getCriteria());
+
+		importedSegmentsEntry.setCriteria(criteria);
+
 		SegmentsEntry existingSegmentsEntry =
 			_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
 				segmentsEntry.getUuid(), portletDataContext.getScopeGroupId());
@@ -118,6 +135,8 @@ public class SegmentsEntryStagedModelDataHandler
 				portletDataContext, importedSegmentsEntry);
 		}
 		else {
+			importedSegmentsEntry.setMvccVersion(
+				existingSegmentsEntry.getMvccVersion());
 			importedSegmentsEntry.setSegmentsEntryId(
 				existingSegmentsEntry.getSegmentsEntryId());
 
@@ -133,6 +152,10 @@ public class SegmentsEntryStagedModelDataHandler
 	protected StagedModelRepository<SegmentsEntry> getStagedModelRepository() {
 		return _stagedModelRepository;
 	}
+
+	@Reference
+	private SegmentsEntryExportImportContentProcessor
+		_segmentsEntryExportImportContentProcessor;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.segments.model.SegmentsEntry)",

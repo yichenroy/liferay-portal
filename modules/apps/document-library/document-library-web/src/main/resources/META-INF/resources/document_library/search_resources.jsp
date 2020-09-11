@@ -59,12 +59,12 @@ entriesChecker.setRememberCheckBoxStateURLRegex("^(?!.*" + liferayPortletRespons
 >
 
 	<%
-	SearchContainer dlSearchContainer = dlAdminDisplayContext.getSearchContainer();
+	SearchContainer<Object> dlSearchContainer = dlAdminDisplayContext.getSearchContainer();
 	%>
 
 	<div class="document-container" id="<portlet:namespace />entriesContainer">
 		<liferay-ui:search-container
-			emptyResultsMessage='<%= LanguageUtil.format(request, "no-documents-were-found-that-matched-the-keywords-x", keywords) %>'
+			emptyResultsMessage='<%= LanguageUtil.format(request, "no-documents-were-found-that-matched-the-keywords-x", HtmlUtil.escape(keywords), false) %>'
 			id="entries"
 			searchContainer="<%= dlSearchContainer %>"
 			total="<%= dlSearchContainer.getTotal() %>"
@@ -91,8 +91,6 @@ entriesChecker.setRememberCheckBoxStateURLRegex("^(?!.*" + liferayPortletRespons
 
 						String thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, latestFileVersion, themeDisplay);
 
-						DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext = dlDisplayContextProvider.getDLViewFileVersionDisplayContext(request, response, fileEntry.getFileVersion());
-
 						row.setPrimaryKey(String.valueOf(fileEntry.getFileEntryId()));
 						%>
 
@@ -105,9 +103,9 @@ entriesChecker.setRememberCheckBoxStateURLRegex("^(?!.*" + liferayPortletRespons
 							</c:when>
 							<c:when test="<%= Validator.isNotNull(latestFileVersion.getExtension()) %>">
 								<liferay-ui:search-container-column-text>
-									<div class="sticker sticker-secondary <%= dlViewFileVersionDisplayContext.getCssClassFileMimeType() %>">
-										<%= StringUtil.shorten(StringUtil.upperCase(latestFileVersion.getExtension()), 3, StringPool.BLANK) %>
-									</div>
+									<liferay-document-library:mime-type-sticker
+										fileVersion="<%= fileEntry.getFileVersion() %>"
+									/>
 								</liferay-ui:search-container-column-text>
 							</c:when>
 							<c:otherwise>
@@ -152,9 +150,9 @@ entriesChecker.setRememberCheckBoxStateURLRegex("^(?!.*" + liferayPortletRespons
 						/>
 					</c:when>
 					<c:otherwise>
-						<div style="float: left; margin: 100px 10px 0;">
-							<i class="icon-ban-circle"></i>
-						</div>
+						<liferay-ui:search-container-column-icon
+							icon="minus-circle"
+						/>
 					</c:otherwise>
 				</c:choose>
 			</liferay-ui:search-container-row>

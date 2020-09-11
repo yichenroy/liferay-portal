@@ -18,6 +18,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,9 +91,11 @@ public class ModuleNameUtil {
 
 	/**
 	 * Resolve dependency path based on current module's path.
-	 * @param moduleName the module's name
-	 * @param dependency the dependency's name
-	 * @return the full path of the dependency if it is local, the given dependency otherwise
+	 *
+	 * @param  moduleName the module's name
+	 * @param  dependency the dependency's name
+	 * @return the full path of the dependency if it is local, the given
+	 *         dependency otherwise
 	 * @review
 	 */
 	public static String getDependencyPath(
@@ -103,6 +106,16 @@ public class ModuleNameUtil {
 		}
 
 		List<String> moduleDirNameParts = _getDirNameParts(moduleName);
+
+		if (dependency.equals(StringPool.PERIOD)) {
+			return StringUtil.merge(moduleDirNameParts, StringPool.SLASH);
+		}
+
+		if (dependency.equals("..")) {
+			return StringUtil.merge(
+				moduleDirNameParts.subList(0, moduleDirNameParts.size() - 1),
+				StringPool.SLASH);
+		}
 
 		List<String> dependencyDirNameParts = _getDirNameParts(dependency);
 
@@ -126,7 +139,7 @@ public class ModuleNameUtil {
 
 		moduleDirNameParts.add(_getFileName(dependency));
 
-		return String.join(StringPool.SLASH, moduleDirNameParts);
+		return StringUtil.merge(moduleDirNameParts, StringPool.SLASH);
 	}
 
 	/**
@@ -244,7 +257,9 @@ public class ModuleNameUtil {
 	}
 
 	public static boolean isLocalModuleName(String moduleName) {
-		if (moduleName.startsWith("./") || moduleName.startsWith("../")) {
+		if (moduleName.equals(StringPool.PERIOD) || moduleName.equals("..") ||
+			moduleName.startsWith("./") || moduleName.startsWith("../")) {
+
 			return true;
 		}
 
@@ -274,11 +289,12 @@ public class ModuleNameUtil {
 	public static String toModuleName(String fileName) {
 		String extension = FileUtil.getExtension(fileName);
 
-		if (!extension.equals("js")) {
+		if (!extension.equals("js") || extension.isEmpty()) {
 			return fileName;
 		}
 
-		return FileUtil.stripExtension(fileName);
+		return fileName.substring(
+			0, fileName.length() - extension.length() - 1);
 	}
 
 	private static List<String> _getDirNameParts(String modulePath) {

@@ -18,12 +18,12 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBus;
-import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -31,9 +31,10 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.service.test.ServiceTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.SynchronousMailTestRule;
 import com.liferay.sharing.exception.InvalidSharingEntryActionException;
 import com.liferay.sharing.exception.InvalidSharingEntryExpirationDateException;
 import com.liferay.sharing.exception.InvalidSharingEntryUserException;
@@ -51,6 +52,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,7 +70,8 @@ public class SharingEntryLocalServiceTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), SynchronousMailTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -77,7 +80,7 @@ public class SharingEntryLocalServiceTest {
 		_toUser = UserTestUtil.addUser();
 		_user = UserTestUtil.addOmniAdminUser();
 
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		UserTestUtil.setUser(TestPropsValues.getUser());
 	}
 
 	@Test
@@ -1012,7 +1015,7 @@ public class SharingEntryLocalServiceTest {
 	@Test(expected = NoSuchEntryException.class)
 	public void testUpdateNonexistingSharingEntry() throws Exception {
 		_sharingEntryLocalService.updateSharingEntry(
-			RandomTestUtil.randomLong(),
+			RandomTestUtil.randomLong(), RandomTestUtil.randomLong(),
 			Arrays.asList(
 				SharingEntryAction.ADD_DISCUSSION, SharingEntryAction.UPDATE,
 				SharingEntryAction.VIEW),
@@ -1039,7 +1042,7 @@ public class SharingEntryLocalServiceTest {
 		Assert.assertNull(sharingEntry.getExpirationDate());
 
 		sharingEntry = _sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(),
+			_fromUser.getUserId(), sharingEntry.getSharingEntryId(),
 			Arrays.asList(SharingEntryAction.UPDATE, SharingEntryAction.VIEW),
 			false, null, serviceContext);
 
@@ -1052,7 +1055,7 @@ public class SharingEntryLocalServiceTest {
 		Date expirationDate = Date.from(instant.plus(2, ChronoUnit.DAYS));
 
 		sharingEntry = _sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(),
+			_fromUser.getUserId(), sharingEntry.getSharingEntryId(),
 			Arrays.asList(
 				SharingEntryAction.ADD_DISCUSSION, SharingEntryAction.VIEW),
 			true, expirationDate, serviceContext);
@@ -1062,7 +1065,7 @@ public class SharingEntryLocalServiceTest {
 		Assert.assertEquals(expirationDate, sharingEntry.getExpirationDate());
 
 		sharingEntry = _sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(),
+			_fromUser.getUserId(), sharingEntry.getSharingEntryId(),
 			Arrays.asList(
 				SharingEntryAction.ADD_DISCUSSION, SharingEntryAction.UPDATE,
 				SharingEntryAction.VIEW),
@@ -1090,8 +1093,8 @@ public class SharingEntryLocalServiceTest {
 			null, serviceContext);
 
 		_sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(), Collections.emptyList(), true,
-			null, serviceContext);
+			_fromUser.getUserId(), sharingEntry.getSharingEntryId(),
+			Collections.emptyList(), true, null, serviceContext);
 	}
 
 	@Test(expected = InvalidSharingEntryExpirationDateException.class)
@@ -1115,7 +1118,7 @@ public class SharingEntryLocalServiceTest {
 		Date expirationDate = Date.from(instant.minus(2, ChronoUnit.DAYS));
 
 		_sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(),
+			_fromUser.getUserId(), sharingEntry.getSharingEntryId(),
 			Arrays.asList(SharingEntryAction.VIEW), true, expirationDate,
 			serviceContext);
 	}
@@ -1137,7 +1140,7 @@ public class SharingEntryLocalServiceTest {
 			null, serviceContext);
 
 		_sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(),
+			_fromUser.getUserId(), sharingEntry.getSharingEntryId(),
 			Arrays.asList(SharingEntryAction.UPDATE), true, null,
 			serviceContext);
 	}
@@ -1164,8 +1167,8 @@ public class SharingEntryLocalServiceTest {
 		sharingEntryActions.add(null);
 
 		_sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(), sharingEntryActions, true, null,
-			serviceContext);
+			_fromUser.getUserId(), sharingEntry.getSharingEntryId(),
+			sharingEntryActions, true, null, serviceContext);
 	}
 
 	@Test(expected = InvalidSharingEntryActionException.class)
@@ -1184,12 +1187,9 @@ public class SharingEntryLocalServiceTest {
 			_group.getGroupId(), true, Arrays.asList(SharingEntryAction.VIEW),
 			null, serviceContext);
 
-		List<SharingEntryAction> sharingEntryActions = new ArrayList<>();
-
-		sharingEntryActions.add(null);
-
 		_sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(), sharingEntryActions, true, null,
+			_fromUser.getUserId(), sharingEntry.getSharingEntryId(),
+			ListUtil.fromArray((SharingEntryAction[])null), true, null,
 			serviceContext);
 	}
 
@@ -1216,6 +1216,9 @@ public class SharingEntryLocalServiceTest {
 	private GroupLocalService _groupLocalService;
 
 	@Inject
+	private MessageBus _messageBus;
+
+	@Inject
 	private SharingEntryLocalService _sharingEntryLocalService;
 
 	@DeleteAfterTestRun
@@ -1224,22 +1227,24 @@ public class SharingEntryLocalServiceTest {
 	@DeleteAfterTestRun
 	private User _user;
 
-	private static final class DisableSchedulerDestination
-		implements AutoCloseable {
+	private final class DisableSchedulerDestination implements AutoCloseable {
 
 		public DisableSchedulerDestination() {
-			MessageBus messageBus = MessageBusUtil.getMessageBus();
+			_destinations = ReflectionTestUtil.getFieldValue(
+				_messageBus, "_destinations");
 
-			_destination = messageBus.removeDestination(
-				DestinationNames.SCHEDULER_DISPATCH, false);
+			_destination = _destinations.remove(
+				DestinationNames.SCHEDULER_DISPATCH);
 		}
 
 		@Override
 		public void close() {
-			MessageBusUtil.addDestination(_destination);
+			_destinations.put(
+				DestinationNames.SCHEDULER_DISPATCH, _destination);
 		}
 
 		private final Destination _destination;
+		private final Map<String, Destination> _destinations;
 
 	}
 

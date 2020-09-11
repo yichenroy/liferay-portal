@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.control.menu.BaseProductNavigationControlMenuEntry;
@@ -30,6 +31,7 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
@@ -47,12 +49,12 @@ public class LayoutBackLinkProductNavigationControlMenuEntry
 	implements ProductNavigationControlMenuEntry {
 
 	@Override
-	public String getIcon(HttpServletRequest request) {
+	public String getIcon(HttpServletRequest httpServletRequest) {
 		return "angle-left";
 	}
 
 	@Override
-	public String getIconCssClass(HttpServletRequest request) {
+	public String getIconCssClass(HttpServletRequest httpServletRequest) {
 		return "icon-monospaced";
 	}
 
@@ -62,14 +64,18 @@ public class LayoutBackLinkProductNavigationControlMenuEntry
 	}
 
 	@Override
-	public String getURL(HttpServletRequest request) {
-		return ParamUtil.getString(request, "p_l_back_url");
+	public String getURL(HttpServletRequest httpServletRequest) {
+		return _portal.escapeRedirect(
+			ParamUtil.getString(httpServletRequest, "p_l_back_url"));
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest request) throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public boolean isShow(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Layout layout = themeDisplay.getLayout();
 
@@ -77,13 +83,17 @@ public class LayoutBackLinkProductNavigationControlMenuEntry
 			return false;
 		}
 
-		String layoutBackURL = ParamUtil.getString(request, "p_l_back_url");
+		String layoutBackURL = _portal.escapeRedirect(
+			ParamUtil.getString(httpServletRequest, "p_l_back_url"));
 
 		if (Validator.isNull(layoutBackURL)) {
 			return false;
 		}
 
-		return super.isShow(request);
+		return super.isShow(httpServletRequest);
 	}
+
+	@Reference
+	private Portal _portal;
 
 }

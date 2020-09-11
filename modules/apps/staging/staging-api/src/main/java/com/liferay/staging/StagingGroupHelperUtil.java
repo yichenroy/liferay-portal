@@ -14,12 +14,9 @@
 
 package com.liferay.staging;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Máté Thurzó
  */
-@ProviderType
 public class StagingGroupHelperUtil {
 
 	public static StagingGroupHelper getStagingGroupHelper() {

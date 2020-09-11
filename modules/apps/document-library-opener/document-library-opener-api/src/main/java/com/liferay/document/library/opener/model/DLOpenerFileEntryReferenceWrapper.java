@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.opener.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see DLOpenerFileEntryReference
  * @generated
  */
-@ProviderType
 public class DLOpenerFileEntryReferenceWrapper
 	extends BaseModelWrapper<DLOpenerFileEntryReference>
 	implements DLOpenerFileEntryReference,
@@ -57,6 +54,7 @@ public class DLOpenerFileEntryReferenceWrapper
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("referenceKey", getReferenceKey());
+		attributes.put("referenceType", getReferenceType());
 		attributes.put("fileEntryId", getFileEntryId());
 		attributes.put("type", getType());
 
@@ -112,6 +110,12 @@ public class DLOpenerFileEntryReferenceWrapper
 
 		if (referenceKey != null) {
 			setReferenceKey(referenceKey);
+		}
+
+		String referenceType = (String)attributes.get("referenceType");
+
+		if (referenceType != null) {
+			setReferenceType(referenceType);
 		}
 
 		Long fileEntryId = (Long)attributes.get("fileEntryId");
@@ -205,6 +209,16 @@ public class DLOpenerFileEntryReferenceWrapper
 	@Override
 	public String getReferenceKey() {
 		return model.getReferenceKey();
+	}
+
+	/**
+	 * Returns the reference type of this dl opener file entry reference.
+	 *
+	 * @return the reference type of this dl opener file entry reference
+	 */
+	@Override
+	public String getReferenceType() {
+		return model.getReferenceType();
 	}
 
 	/**
@@ -332,6 +346,16 @@ public class DLOpenerFileEntryReferenceWrapper
 	@Override
 	public void setReferenceKey(String referenceKey) {
 		model.setReferenceKey(referenceKey);
+	}
+
+	/**
+	 * Sets the reference type of this dl opener file entry reference.
+	 *
+	 * @param referenceType the reference type of this dl opener file entry reference
+	 */
+	@Override
+	public void setReferenceType(String referenceType) {
+		model.setReferenceType(referenceType);
 	}
 
 	/**

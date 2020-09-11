@@ -14,12 +14,12 @@
 
 package com.liferay.portlet.documentlibrary.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import com.xuggle.xuggler.Configuration;
 import com.xuggle.xuggler.IAudioResampler;
@@ -105,7 +105,7 @@ public class LiferayVideoConverter extends LiferayConverter {
 				tempFile.renameTo(videoFile);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn("Unable to move MOOV atom to front of MP4 file");
 			}
@@ -180,7 +180,7 @@ public class LiferayVideoConverter extends LiferayConverter {
 		}
 
 		boolean keyPacketFound = false;
-		int nonKeyAfterKeyCount = 0;
+		int nonkeyAfterKeyCount = 0;
 		boolean onlyDecodeKeyPackets = false;
 		int previousPacketSize = -1;
 
@@ -194,8 +194,6 @@ public class LiferayVideoConverter extends LiferayConverter {
 
 			int streamIndex = inputIPacket.getStreamIndex();
 
-			IStreamCoder inputIStreamCoder = inputIStreamCoders[streamIndex];
-
 			IStreamCoder outputIStreamCoder = outputIStreamCoders[streamIndex];
 
 			if (outputIStreamCoder == null) {
@@ -205,6 +203,8 @@ public class LiferayVideoConverter extends LiferayConverter {
 			IStream iStream = _inputIContainer.getStream(streamIndex);
 
 			long timeStampOffset = getStreamTimeStampOffset(iStream);
+
+			IStreamCoder inputIStreamCoder = inputIStreamCoders[streamIndex];
 
 			if (inputIStreamCoder.getCodecType() ==
 					ICodec.Type.CODEC_TYPE_AUDIO) {
@@ -222,12 +222,12 @@ public class LiferayVideoConverter extends LiferayConverter {
 
 				keyPacketFound = isKeyPacketFound(inputIPacket, keyPacketFound);
 
-				nonKeyAfterKeyCount = countNonKeyAfterKey(
-					inputIPacket, keyPacketFound, nonKeyAfterKeyCount);
+				nonkeyAfterKeyCount = countNonKeyAfterKey(
+					inputIPacket, keyPacketFound, nonkeyAfterKeyCount);
 
 				if (isStartDecoding(
 						inputIPacket, inputIStreamCoder, keyPacketFound,
-						nonKeyAfterKeyCount, onlyDecodeKeyPackets)) {
+						nonkeyAfterKeyCount, onlyDecodeKeyPackets)) {
 
 					int value = decodeVideo(
 						iVideoResamplers[streamIndex],
@@ -332,9 +332,8 @@ public class LiferayVideoConverter extends LiferayConverter {
 				_log.info(
 					StringBundler.concat(
 						"Default frame rate for ", _videoContainer,
-						" configured to ",
-						String.valueOf(_videoFrameRate.getNumerator()), "/",
-						String.valueOf(_videoFrameRate.getDenominator())));
+						" configured to ", _videoFrameRate.getNumerator(), "/",
+						_videoFrameRate.getDenominator()));
 			}
 		}
 	}
@@ -353,8 +352,8 @@ public class LiferayVideoConverter extends LiferayConverter {
 		if (iCodec == null) {
 			throw new RuntimeException(
 				StringBundler.concat(
-					"Unable to determine ", String.valueOf(inputICodecType),
-					" encoder for ", outputURL));
+					"Unable to determine ", inputICodecType, " encoder for ",
+					outputURL));
 		}
 
 		IStream outputIStream = outputIContainer.addNewStream(iCodec);
@@ -384,9 +383,8 @@ public class LiferayVideoConverter extends LiferayConverter {
 		if (_log.isInfoEnabled()) {
 			_log.info(
 				StringBundler.concat(
-					"Original frame rate ",
-					String.valueOf(iRational.getNumerator()), "/",
-					String.valueOf(iRational.getDenominator())));
+					"Original frame rate ", iRational.getNumerator(), "/",
+					iRational.getDenominator()));
 		}
 
 		iRational = getVideoFrameRate(iRational);
@@ -394,9 +392,8 @@ public class LiferayVideoConverter extends LiferayConverter {
 		if (_log.isInfoEnabled()) {
 			_log.info(
 				StringBundler.concat(
-					"Modified frame rate ",
-					String.valueOf(iRational.getNumerator()), "/",
-					String.valueOf(iRational.getDenominator())));
+					"Modified frame rate ", iRational.getNumerator(), "/",
+					iRational.getDenominator()));
 		}
 
 		outputIStreamCoder.setFrameRate(iRational);

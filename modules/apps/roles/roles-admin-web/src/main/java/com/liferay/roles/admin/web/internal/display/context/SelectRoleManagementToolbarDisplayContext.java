@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -35,6 +34,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.rolesadmin.search.RoleSearch;
 import com.liferay.portlet.rolesadmin.search.RoleSearchTerms;
+import com.liferay.roles.admin.role.type.contributor.RoleTypeContributor;
+import com.liferay.roles.admin.web.internal.role.type.contributor.util.RoleTypeContributorRetrieverUtil;
 import com.liferay.users.admin.kernel.util.UsersAdminUtil;
 
 import java.util.List;
@@ -51,16 +52,17 @@ import javax.servlet.http.HttpServletRequest;
 public class SelectRoleManagementToolbarDisplayContext {
 
 	public SelectRoleManagementToolbarDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse, String eventName) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_eventName = eventName;
 
-		_roleType = ParamUtil.getInteger(
-			_request, "roleType", RoleConstants.TYPE_REGULAR);
+		_currentRoleTypeContributor =
+			RoleTypeContributorRetrieverUtil.getCurrentRoleTypeContributor(
+				renderRequest);
 	}
 
 	public String getClearResultsURL() {
@@ -74,10 +76,6 @@ public class SelectRoleManagementToolbarDisplayContext {
 	public PortletURL getPortletURL() {
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
-		portletURL.setParameter("mvcPath", "/select_role.jsp");
-
-		portletURL.setParameter("roleType", String.valueOf(_roleType));
-
 		User selUser = _getSelectedUser();
 
 		if (selUser != null) {
@@ -85,41 +83,55 @@ public class SelectRoleManagementToolbarDisplayContext {
 				"p_u_i_d", String.valueOf(selUser.getUserId()));
 		}
 
+		portletURL.setParameter("mvcPath", "/select_role.jsp");
+		portletURL.setParameter(
+			"roleType", String.valueOf(_currentRoleTypeContributor.getType()));
+
 		portletURL.setParameter("eventName", _eventName);
 
-		String[] keywords = ParamUtil.getStringValues(_request, "keywords");
+		String[] keywords = ParamUtil.getStringValues(
+			_httpServletRequest, "keywords");
 
 		if (ArrayUtil.isNotEmpty(keywords)) {
 			portletURL.setParameter("keywords", keywords[keywords.length - 1]);
 		}
 
-		long groupId = ParamUtil.getLong(_request, "groupId");
+		long groupId = ParamUtil.getLong(_httpServletRequest, "groupId");
 
 		if (groupId != 0) {
 			portletURL.setParameter("groupId", String.valueOf(groupId));
 		}
 
-		String organizationId = ParamUtil.getString(_request, "organizationId");
+		String organizationId = ParamUtil.getString(
+			_httpServletRequest, "organizationId");
 
 		if (Validator.isNotNull(organizationId)) {
 			portletURL.setParameter("organizationId", organizationId);
 		}
 
 		String organizationIds = ParamUtil.getString(
-			_request, "organizationIds");
+			_httpServletRequest, "organizationIds");
 
 		if (Validator.isNotNull(organizationIds)) {
 			portletURL.setParameter("organizationIds", organizationIds);
 		}
 
-		int step = ParamUtil.getInteger(_request, "step", 1);
+		int step = ParamUtil.getInteger(_httpServletRequest, "step", 1);
 
 		portletURL.setParameter("step", String.valueOf(step));
 
 		return portletURL;
 	}
 
-	public SearchContainer getRoleSearchContainer(boolean filterManageableRoles)
+	public SearchContainer<Role> getRoleSearchContainer(
+			boolean filterManageableRoles)
+		throws Exception {
+
+		return getRoleSearchContainer(filterManageableRoles, 0);
+	}
+
+	public SearchContainer<Role> getRoleSearchContainer(
+			boolean filterManageableRoles, long groupId)
 		throws Exception {
 
 		if (_roleSearch != null) {
@@ -128,8 +140,9 @@ public class SelectRoleManagementToolbarDisplayContext {
 
 		RoleSearch roleSearch = new RoleSearch(_renderRequest, getPortletURL());
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		RoleSearchTerms roleSearchTerms =
 			(RoleSearchTerms)roleSearch.getSearchTerms();
@@ -140,11 +153,18 @@ public class SelectRoleManagementToolbarDisplayContext {
 		if (filterManageableRoles) {
 			results = RoleLocalServiceUtil.search(
 				themeDisplay.getCompanyId(), roleSearchTerms.getKeywords(),
-				new Integer[] {_roleType}, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				new Integer[] {_currentRoleTypeContributor.getType()},
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				roleSearch.getOrderByComparator());
 
-			results = UsersAdminUtil.filterRoles(
-				themeDisplay.getPermissionChecker(), results);
+			if (groupId == 0) {
+				results = UsersAdminUtil.filterRoles(
+					themeDisplay.getPermissionChecker(), results);
+			}
+			else {
+				results = UsersAdminUtil.filterGroupRoles(
+					themeDisplay.getPermissionChecker(), groupId, results);
+			}
 
 			total = results.size();
 
@@ -154,12 +174,13 @@ public class SelectRoleManagementToolbarDisplayContext {
 		else {
 			total = RoleLocalServiceUtil.searchCount(
 				themeDisplay.getCompanyId(), roleSearchTerms.getKeywords(),
-				new Integer[] {_roleType});
+				new Integer[] {_currentRoleTypeContributor.getType()});
 
 			results = RoleLocalServiceUtil.search(
 				themeDisplay.getCompanyId(), roleSearchTerms.getKeywords(),
-				new Integer[] {_roleType}, roleSearch.getStart(),
-				roleSearch.getEnd(), roleSearch.getOrderByComparator());
+				new Integer[] {_currentRoleTypeContributor.getType()},
+				roleSearch.getStart(), roleSearch.getEnd(),
+				roleSearch.getOrderByComparator());
 		}
 
 		roleSearch.setResults(results);
@@ -186,10 +207,10 @@ public class SelectRoleManagementToolbarDisplayContext {
 
 	private User _getSelectedUser() {
 		try {
-			return PortalUtil.getSelectedUser(_request);
+			return PortalUtil.getSelectedUser(_httpServletRequest);
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return null;
 		}
@@ -198,11 +219,11 @@ public class SelectRoleManagementToolbarDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		SelectRoleManagementToolbarDisplayContext.class);
 
+	private final RoleTypeContributor _currentRoleTypeContributor;
 	private final String _eventName;
+	private final HttpServletRequest _httpServletRequest;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private RoleSearch _roleSearch;
-	private final int _roleType;
 
 }

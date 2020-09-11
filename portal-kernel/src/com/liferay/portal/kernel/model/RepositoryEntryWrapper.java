@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,10 +30,9 @@ import java.util.Map;
  * @see RepositoryEntry
  * @generated
  */
-@ProviderType
 public class RepositoryEntryWrapper
 	extends BaseModelWrapper<RepositoryEntry>
-	implements RepositoryEntry, ModelWrapper<RepositoryEntry> {
+	implements ModelWrapper<RepositoryEntry>, RepositoryEntry {
 
 	public RepositoryEntryWrapper(RepositoryEntry repositoryEntry) {
 		super(repositoryEntry);

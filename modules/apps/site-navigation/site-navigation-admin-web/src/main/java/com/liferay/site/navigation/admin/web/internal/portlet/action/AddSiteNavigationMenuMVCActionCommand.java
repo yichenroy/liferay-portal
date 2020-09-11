@@ -15,8 +15,9 @@
 package com.liferay.site.navigation.admin.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -28,6 +29,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.admin.constants.SiteNavigationAdminPortletKeys;
 import com.liferay.site.navigation.admin.web.internal.handler.SiteNavigationMenuExceptionRequestHandler;
+import com.liferay.site.navigation.constants.SiteNavigationConstants;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.service.SiteNavigationMenuService;
 
@@ -57,19 +59,24 @@ public class AddSiteNavigationMenuMVCActionCommand
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		String name = ParamUtil.getString(actionRequest, "name");
 
 		try {
+			Group scopeGroup = themeDisplay.getScopeGroup();
+
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
 				actionRequest);
 
 			SiteNavigationMenu siteNavigationMenu =
 				_siteNavigationMenuService.addSiteNavigationMenu(
-					serviceContext.getScopeGroupId(), name, serviceContext);
+					serviceContext.getScopeGroupId(), name,
+					SiteNavigationConstants.TYPE_DEFAULT,
+					!scopeGroup.isCompany(), serviceContext);
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-			jsonObject.put(
+			JSONObject jsonObject = JSONUtil.put(
 				"redirectURL",
 				_getRedirectURL(
 					actionRequest,
@@ -78,11 +85,11 @@ public class AddSiteNavigationMenuMVCActionCommand
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			hideDefaultSuccessMessage(actionRequest);
 
 			_siteNavigationMenuExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, pe);
+				actionRequest, actionResponse, portalException);
 		}
 	}
 

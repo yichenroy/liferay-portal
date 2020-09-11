@@ -56,21 +56,22 @@ public class LinkedInSocialBookmark implements SocialBookmark {
 	@Override
 	public String getPostURL(String title, String url) {
 		return String.format(
-			"http://www.linkedin.com/shareArticle?&title=%s&mini=true&url=%s" +
+			"http://www.linkedin.com/shareArticle?title=%s&mini=true&url=%s" +
 				"&summary=",
-			URLCodec.encodeURL(title), url);
+			URLCodec.encodeURL(title), URLCodec.encodeURL(url));
 	}
 
 	@Override
 	public void render(
-			String target, String title, String url, HttpServletRequest request,
-			HttpServletResponse response)
+			String target, String title, String url,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher("/page.jsp");
 
-		requestDispatcher.include(request, response);
+		requestDispatcher.include(httpServletRequest, httpServletResponse);
 	}
 
 	@Reference(

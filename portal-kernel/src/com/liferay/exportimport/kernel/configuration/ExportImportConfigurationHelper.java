@@ -14,8 +14,7 @@
 
 package com.liferay.exportimport.kernel.configuration;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalServiceUtil;
@@ -35,9 +34,11 @@ import java.util.Map;
 import javax.portlet.PortletRequest;
 
 /**
- * @author Levente Hudák
+ * @author     Levente Hudák
+ * @deprecated As of Athanasius (7.3.x), replaced by {@link
+ *             ExportImportConfigurationUtil}
  */
-@ProviderType
+@Deprecated
 public class ExportImportConfigurationHelper {
 
 	public static ExportImportConfiguration

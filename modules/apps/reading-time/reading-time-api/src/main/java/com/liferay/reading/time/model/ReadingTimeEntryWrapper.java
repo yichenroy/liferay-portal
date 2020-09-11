@@ -14,8 +14,6 @@
 
 package com.liferay.reading.time.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,10 +31,9 @@ import java.util.Map;
  * @see ReadingTimeEntry
  * @generated
  */
-@ProviderType
 public class ReadingTimeEntryWrapper
 	extends BaseModelWrapper<ReadingTimeEntry>
-	implements ReadingTimeEntry, ModelWrapper<ReadingTimeEntry> {
+	implements ModelWrapper<ReadingTimeEntry>, ReadingTimeEntry {
 
 	public ReadingTimeEntryWrapper(ReadingTimeEntry readingTimeEntry) {
 		super(readingTimeEntry);

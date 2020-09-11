@@ -14,8 +14,6 @@
 
 package com.liferay.trash.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.service.TrashEntryLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.trash.service.TrashEntryLocalServiceUtil;
  * @see TrashEntry
  * @generated
  */
-@ProviderType
 public abstract class TrashEntryBaseImpl
 	extends TrashEntryModelImpl implements TrashEntry {
 

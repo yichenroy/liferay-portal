@@ -30,14 +30,14 @@ public class SiteNavigationMenuItemSelectorViewManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public SiteNavigationMenuItemSelectorViewManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request,
 		SiteNavigationMenuItemSelectorViewDisplayContext
 			siteNavigationMenuItemSelectorViewDisplayContext) {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			siteNavigationMenuItemSelectorViewDisplayContext.
 				getSearchContainer());
 	}

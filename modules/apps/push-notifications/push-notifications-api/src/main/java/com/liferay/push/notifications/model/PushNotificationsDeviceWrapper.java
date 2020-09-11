@@ -14,8 +14,6 @@
 
 package com.liferay.push.notifications.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,10 +30,9 @@ import java.util.Map;
  * @see PushNotificationsDevice
  * @generated
  */
-@ProviderType
 public class PushNotificationsDeviceWrapper
 	extends BaseModelWrapper<PushNotificationsDevice>
-	implements PushNotificationsDevice, ModelWrapper<PushNotificationsDevice> {
+	implements ModelWrapper<PushNotificationsDevice>, PushNotificationsDevice {
 
 	public PushNotificationsDeviceWrapper(
 		PushNotificationsDevice pushNotificationsDevice) {

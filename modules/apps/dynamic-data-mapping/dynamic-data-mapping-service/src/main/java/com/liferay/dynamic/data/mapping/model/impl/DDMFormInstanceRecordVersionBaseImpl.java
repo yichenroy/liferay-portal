@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLoca
  * @see DDMFormInstanceRecordVersion
  * @generated
  */
-@ProviderType
 public abstract class DDMFormInstanceRecordVersionBaseImpl
 	extends DDMFormInstanceRecordVersionModelImpl
 	implements DDMFormInstanceRecordVersion {

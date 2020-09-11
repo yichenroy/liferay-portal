@@ -14,9 +14,9 @@
 
 package com.liferay.util.poi;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.InputStream;
 
@@ -34,13 +34,13 @@ import org.apache.poi.ss.usermodel.Row;
  */
 public class XLSTextStripper {
 
-	public XLSTextStripper(InputStream is) {
+	public XLSTextStripper(InputStream inputStream) {
 		String text = null;
 
 		try {
 			StringBundler sb = new StringBundler();
 
-			HSSFWorkbook workbook = new HSSFWorkbook(is);
+			HSSFWorkbook workbook = new HSSFWorkbook(inputStream);
 
 			int numOfSheets = workbook.getNumberOfSheets();
 
@@ -88,8 +88,8 @@ public class XLSTextStripper {
 
 			text = sb.toString();
 		}
-		catch (Exception e) {
-			_log.error(e.getMessage());
+		catch (Exception exception) {
+			_log.error(exception.getMessage());
 		}
 
 		_text = text;

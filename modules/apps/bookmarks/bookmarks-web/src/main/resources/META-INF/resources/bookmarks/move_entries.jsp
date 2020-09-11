@@ -79,7 +79,7 @@ if (portletTitleBasedNavigation) {
 		<portlet:param name="mvcRenderCommandName" value="/bookmarks/move_entry" />
 	</portlet:actionURL>
 
-	<aui:form action="<%= moveEntryURL %>" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveEntry(false);" %>'>
+	<aui:form action="<%= moveEntryURL %>" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveEntry(false);" %>'>
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.MOVE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 		<aui:input name="newFolderId" type="hidden" value="<%= newFolderId %>" />
@@ -279,48 +279,47 @@ if (portletTitleBasedNavigation) {
 		}
 	}
 
-	var <portlet:namespace />selectFolderButton = document.getElementById('<portlet:namespace />selectFolderButton');
+	var <portlet:namespace />selectFolderButton = document.getElementById(
+		'<portlet:namespace />selectFolderButton'
+	);
 
 	if (<portlet:namespace />selectFolderButton) {
-		<portlet:namespace />selectFolderButton.addEventListener(
-			'click',
-			function(event) {
-				var folderName = document.getElementById('<portlet:namespace />folderName');
+		<portlet:namespace />selectFolderButton.addEventListener('click', function (
+			event
+		) {
+			var folderName = document.getElementById(
+				'<portlet:namespace />folderName'
+			);
 
-				if (folderName) {
-					Liferay.Util.selectEntity(
-						{
-							dialog: {
-								constrain: true,
-								destroyOnHide: true,
-								modal: true,
-								width: 680
-							},
-							id: '<portlet:namespace />selectFolder',
-							selectedData: [folderName.value],
-							title: '<liferay-ui:message arguments="folder" key="select-x" />',
+			if (folderName) {
+				Liferay.Util.openSelectionModal({
+					onSelect: function (event) {
+						var folderData = {
+							idString: 'newFolderId',
+							idValue: event.entityid,
+							nameString: 'folderName',
+							nameValue: event.entityname,
+						};
 
-							<portlet:renderURL var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-								<portlet:param name="mvcRenderCommandName" value="/bookmarks/select_folder" />
-								<portlet:param name="folderId" value="<%= String.valueOf(newFolderId) %>" />
-							</portlet:renderURL>
+						Liferay.Util.selectFolder(
+							folderData,
+							'<portlet:namespace />'
+						);
+					},
+					selectedData: [folderName.value],
+					selectEventName: '<portlet:namespace />selectFolder',
+					title:
+						'<liferay-ui:message arguments="folder" key="select-x" />',
 
-							uri: '<%= selectFolderURL.toString() %>'
-						},
-						function(event) {
-							var folderData = {
-								idString: 'newFolderId',
-								idValue: event.entityid,
-								nameString: 'folderName',
-								nameValue: event.entityname
-							};
+					<portlet:renderURL var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+						<portlet:param name="mvcRenderCommandName" value="/bookmarks/select_folder" />
+						<portlet:param name="folderId" value="<%= String.valueOf(newFolderId) %>" />
+					</portlet:renderURL>
 
-							Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
-						}
-					);
-				}
+					url: '<%= selectFolderURL.toString() %>',
+				});
 			}
-		);
+		});
 	}
 </aui:script>
 

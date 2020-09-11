@@ -24,12 +24,15 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -51,18 +54,42 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class PersonalApplicationURLUtil {
 
-	public static String getPersonalApplicationURL(
-			HttpServletRequest request, String portletId)
+	public static Layout getOrAddEmbeddedPersonalApplicationLayout(
+			User user, Group group, boolean privateLayout)
 		throws PortalException {
 
-		User user = PortalUtil.getUser(request);
+		try {
+			return LayoutLocalServiceUtil.getFriendlyURLLayout(
+				group.getGroupId(), privateLayout,
+				PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL);
+		}
+		catch (NoSuchLayoutException noSuchLayoutException) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchLayoutException, noSuchLayoutException);
+			}
+
+			return _addEmbeddedPersonalApplicationLayout(
+				user.getUserId(), group.getGroupId(), privateLayout);
+		}
+	}
+
+	public static String getPersonalApplicationURL(
+			HttpServletRequest httpServletRequest, String portletId)
+		throws PortalException {
+
+		User user = PortalUtil.getUser(httpServletRequest);
 
 		Group group = user.getGroup();
 
+		boolean controlPanelLayout = false;
 		boolean privateLayout = true;
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PersonalMenuConfiguration personalMenuConfiguration =
 			_getPersonalMenuConfigurationTracker().
@@ -73,40 +100,46 @@ public class PersonalApplicationURLUtil {
 			personalMenuConfiguration.personalApplicationsLookAndFeel();
 
 		if (personalApplicationsLookAndFeel.equals("current-site")) {
-			user = UserLocalServiceUtil.getDefaultUser(
-				themeDisplay.getCompanyId());
-
 			group = GroupLocalServiceUtil.getGroup(
-				PortalUtil.getScopeGroupId(request));
+				PortalUtil.getScopeGroupId(httpServletRequest));
+
+			if (group.isStagingGroup()) {
+				group = group.getLiveGroup();
+			}
 
 			Layout currentLayout = themeDisplay.getLayout();
+
+			if (currentLayout.isTypeControlPanel()) {
+				controlPanelLayout = true;
+			}
 
 			if (currentLayout.isPublicLayout()) {
 				privateLayout = false;
 			}
+
+			user = UserLocalServiceUtil.getDefaultUser(
+				themeDisplay.getCompanyId());
 		}
 
-		Layout layout = null;
+		Layout layout = getOrAddEmbeddedPersonalApplicationLayout(
+			user, group, privateLayout);
 
-		try {
-			layout = LayoutLocalServiceUtil.getFriendlyURLLayout(
-				group.getGroupId(), privateLayout,
-				PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL);
-		}
-		catch (NoSuchLayoutException nsle) {
+		if ((controlPanelLayout && !group.isControlPanel()) ||
+			!LayoutPermissionUtil.contains(
+				themeDisplay.getPermissionChecker(), layout, true,
+				ActionKeys.VIEW)) {
 
-			// LPS-52675
+			Group controlPanelGroup = themeDisplay.getControlPanelGroup();
 
-			if (_log.isDebugEnabled()) {
-				_log.debug(nsle, nsle);
-			}
-
-			layout = _addEmbeddedPersonalApplicationLayout(
-				user.getUserId(), group.getGroupId(), privateLayout);
+			layout = new VirtualLayout(
+				LayoutLocalServiceUtil.getFriendlyURLLayout(
+					controlPanelGroup.getGroupId(), privateLayout,
+					PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL),
+				themeDisplay.getScopeGroup());
 		}
 
 		LiferayPortletURL liferayPortletURL = PortletURLFactoryUtil.create(
-			request, portletId, layout, PortletRequest.RENDER_PHASE);
+			httpServletRequest, portletId, layout, PortletRequest.RENDER_PHASE);
 
 		return liferayPortletURL.toString();
 	}

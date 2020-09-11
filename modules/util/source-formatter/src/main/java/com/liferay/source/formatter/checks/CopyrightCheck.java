@@ -29,16 +29,12 @@ import java.io.IOException;
  */
 public class CopyrightCheck extends BaseFileCheck {
 
-	public void setCopyrightFileName(String copyrightFileName) {
-		_copyrightFileName = copyrightFileName;
-	}
-
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, String content)
 		throws IOException {
 
-		String copyright = _getCopyright();
+		String copyright = _getCopyright(absolutePath);
 
 		if (Validator.isNull(copyright)) {
 			return content;
@@ -114,20 +110,25 @@ public class CopyrightCheck extends BaseFileCheck {
 				classLoader.getResourceAsStream(
 					"dependencies/copyright-commercial.txt"));
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_commercialCopyright = StringPool.BLANK;
 		}
 
 		return _commercialCopyright;
 	}
 
-	private synchronized String _getCopyright() throws IOException {
+	private synchronized String _getCopyright(String absolutePath)
+		throws IOException {
+
 		if (_copyright != null) {
 			return _copyright;
 		}
 
+		String copyRightFileName = getAttributeValue(
+			_COPYRIGHT_FILE_NAME_KEY, "copyright.txt", absolutePath);
+
 		_copyright = getContent(
-			_copyrightFileName, ToolsUtil.PORTAL_MAX_DIR_LEVEL);
+			copyRightFileName, ToolsUtil.PORTAL_MAX_DIR_LEVEL);
 
 		if (Validator.isNotNull(_copyright)) {
 			return _copyright;
@@ -141,7 +142,7 @@ public class CopyrightCheck extends BaseFileCheck {
 			_copyright = StringUtil.read(
 				classLoader.getResourceAsStream("dependencies/copyright.txt"));
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_copyright = StringPool.BLANK;
 		}
 
@@ -169,8 +170,9 @@ public class CopyrightCheck extends BaseFileCheck {
 		return null;
 	}
 
+	private static final String _COPYRIGHT_FILE_NAME_KEY = "copyrightFileName";
+
 	private String _commercialCopyright;
 	private String _copyright;
-	private String _copyrightFileName = "copyright.txt";
 
 }

@@ -14,11 +14,11 @@
 
 package com.liferay.expando.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the ExpandoValue service. Represents a row in the &quot;ExpandoValue&quot; database table, with each column mapped to a property of this class.
@@ -166,7 +166,7 @@ public interface ExpandoValue extends ExpandoValueModel, PersistedModel {
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public void setGeolocationJSONObject(
-			com.liferay.portal.kernel.json.JSONObject data)
+			com.liferay.portal.kernel.json.JSONObject dataJSONObject)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public void setInteger(int data)

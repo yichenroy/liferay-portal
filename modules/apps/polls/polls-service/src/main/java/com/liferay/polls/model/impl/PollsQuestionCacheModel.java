@@ -14,12 +14,11 @@
 
 package com.liferay.polls.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.polls.model.PollsQuestion;
 import com.liferay.portal.kernel.model.CacheModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,24 +33,25 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class PollsQuestionCacheModel
-	implements CacheModel<PollsQuestion>, Externalizable {
+	implements CacheModel<PollsQuestion>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof PollsQuestionCacheModel)) {
+		if (!(object instanceof PollsQuestionCacheModel)) {
 			return false;
 		}
 
 		PollsQuestionCacheModel pollsQuestionCacheModel =
-			(PollsQuestionCacheModel)obj;
+			(PollsQuestionCacheModel)object;
 
-		if (questionId == pollsQuestionCacheModel.questionId) {
+		if ((questionId == pollsQuestionCacheModel.questionId) &&
+			(mvccVersion == pollsQuestionCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -60,14 +60,28 @@ public class PollsQuestionCacheModel
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, questionId);
+		int hashCode = HashUtil.hash(0, questionId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(27);
+		StringBundler sb = new StringBundler(29);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", questionId=");
 		sb.append(questionId);
@@ -101,6 +115,8 @@ public class PollsQuestionCacheModel
 	@Override
 	public PollsQuestion toEntityModel() {
 		PollsQuestionImpl pollsQuestionImpl = new PollsQuestionImpl();
+
+		pollsQuestionImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			pollsQuestionImpl.setUuid("");
@@ -177,6 +193,7 @@ public class PollsQuestionCacheModel
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		questionId = objectInput.readLong();
@@ -198,6 +215,8 @@ public class PollsQuestionCacheModel
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -242,6 +261,7 @@ public class PollsQuestionCacheModel
 		objectOutput.writeLong(lastVoteDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long questionId;
 	public long groupId;

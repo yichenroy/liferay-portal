@@ -18,11 +18,10 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureServiceUtil;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.web.configuration.JournalWebConfiguration;
+import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -49,22 +48,25 @@ public class JournalDDMStructuresDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
 		_journalWebConfiguration =
-			(JournalWebConfiguration)_request.getAttribute(
+			(JournalWebConfiguration)_httpServletRequest.getAttribute(
 				JournalWebConfiguration.class.getName());
 	}
 
-	public SearchContainer getDDMStructureSearch() throws Exception {
+	public SearchContainer<DDMStructure> getDDMStructureSearch()
+		throws Exception {
+
 		if (_ddmStructureSearch != null) {
 			return _ddmStructureSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		SearchContainer ddmStructureSearch = new SearchContainer(
+		SearchContainer<DDMStructure> ddmStructureSearch = new SearchContainer(
 			_renderRequest, _getPortletURL(), null, "there-are-no-structures");
 
 		if (Validator.isNotNull(_getKeywords())) {
@@ -102,6 +104,10 @@ public class JournalDDMStructuresDisplayContext {
 				_getKeywords(), WorkflowConstants.STATUS_ANY,
 				ddmStructureSearch.getStart(), ddmStructureSearch.getEnd(),
 				ddmStructureSearch.getOrderByComparator());
+			total = DDMStructureServiceUtil.searchCount(
+				themeDisplay.getCompanyId(), groupIds,
+				PortalUtil.getClassNameId(JournalArticle.class.getName()),
+				_getKeywords(), WorkflowConstants.STATUS_ANY);
 		}
 		else {
 			results = DDMStructureServiceUtil.getStructures(
@@ -109,10 +115,9 @@ public class JournalDDMStructuresDisplayContext {
 				PortalUtil.getClassNameId(JournalArticle.class.getName()),
 				ddmStructureSearch.getStart(), ddmStructureSearch.getEnd(),
 				ddmStructureSearch.getOrderByComparator());
-		}
-
-		if (ListUtil.isNotEmpty(results)) {
-			total = results.size();
+			total = DDMStructureServiceUtil.getStructuresCount(
+				themeDisplay.getCompanyId(), groupIds,
+				PortalUtil.getClassNameId(JournalArticle.class.getName()));
 		}
 
 		ddmStructureSearch.setResults(results);
@@ -189,13 +194,13 @@ public class JournalDDMStructuresDisplayContext {
 		return portletURL;
 	}
 
-	private SearchContainer _ddmStructureSearch;
+	private SearchContainer<DDMStructure> _ddmStructureSearch;
+	private final HttpServletRequest _httpServletRequest;
 	private final JournalWebConfiguration _journalWebConfiguration;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

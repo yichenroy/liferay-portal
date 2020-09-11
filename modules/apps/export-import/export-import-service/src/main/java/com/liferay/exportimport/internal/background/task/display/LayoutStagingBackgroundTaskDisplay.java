@@ -14,7 +14,7 @@
 
 package com.liferay.exportimport.internal.background.task.display;
 
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalServiceUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
@@ -39,16 +39,15 @@ public class LayoutStagingBackgroundTaskDisplay
 	public LayoutStagingBackgroundTaskDisplay(BackgroundTask backgroundTask) {
 		super(backgroundTask);
 
-		try {
-			Map<String, Serializable> taskContextMap =
-				backgroundTask.getTaskContextMap();
+		Map<String, Serializable> contextMap =
+			backgroundTask.getTaskContextMap();
 
-			ExportImportConfiguration exportImportConfiguration =
-				ExportImportConfigurationLocalServiceUtil.
-					getExportImportConfiguration(
-						MapUtil.getLong(
-							taskContextMap, "exportImportConfigurationId"));
+		ExportImportConfiguration exportImportConfiguration =
+			ExportImportConfigurationLocalServiceUtil.
+				fetchExportImportConfiguration(
+					MapUtil.getLong(contextMap, "exportImportConfigurationId"));
 
+		if (exportImportConfiguration != null) {
 			if ((exportImportConfiguration.getType() !=
 					ExportImportConfigurationConstants.
 						TYPE_PUBLISH_LAYOUT_LOCAL) &&
@@ -59,28 +58,24 @@ public class LayoutStagingBackgroundTaskDisplay
 				return;
 			}
 
-			Map<String, Serializable> settingsMap =
-				exportImportConfiguration.getSettingsMap();
-
-			long sourceGroupId = MapUtil.getLong(settingsMap, "sourceGroupId");
-
-			sourceGroup = GroupLocalServiceUtil.getGroup(sourceGroupId);
+			contextMap = exportImportConfiguration.getSettingsMap();
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+
+		long sourceGroupId = MapUtil.getLong(contextMap, "sourceGroupId");
+
+		sourceGroup = GroupLocalServiceUtil.fetchGroup(sourceGroupId);
 	}
 
 	@Override
-	public String getDisplayName(HttpServletRequest request) {
+	public String getDisplayName(HttpServletRequest httpServletRequest) {
 		if ((sourceGroup != null) && !sourceGroup.isStagingGroup() &&
 			(backgroundTask.getGroupId() == sourceGroup.getGroupId())) {
 
-			return LanguageUtil.get(request, "initial-publication");
+			return LanguageUtil.get(httpServletRequest, "initial-publication");
 		}
 
 		if (Validator.isNull(backgroundTask.getName())) {
-			return LanguageUtil.get(request, "untitled");
+			return LanguageUtil.get(httpServletRequest, "untitled");
 		}
 
 		return backgroundTask.getName();

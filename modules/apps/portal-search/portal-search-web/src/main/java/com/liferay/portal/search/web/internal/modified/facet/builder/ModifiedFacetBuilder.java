@@ -108,12 +108,15 @@ public class ModifiedFacetBuilder {
 
 		map.forEach(
 			(key, value) -> {
-				JSONObject range = _jsonFactory.createJSONObject();
+				JSONObject rangeJSONObject = _jsonFactory.createJSONObject();
 
-				range.put("label", key);
-				range.put("range", value);
+				rangeJSONObject.put(
+					"label", key
+				).put(
+					"range", value
+				);
 
-				rangesJSONArray.put(range);
+				rangesJSONArray.put(rangeJSONObject);
 			});
 
 		return rangesJSONArray;

@@ -14,15 +14,12 @@
 
 package com.liferay.portal.search.engine.adapter.snapshot;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class GetSnapshotRepositoriesResponse implements SnapshotResponse {
 
 	public void addSnapshotRepositoryMetadata(

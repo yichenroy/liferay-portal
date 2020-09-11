@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.engine.adapter.snapshot;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class DeleteSnapshotResponse implements SnapshotResponse {
 
 	public DeleteSnapshotResponse(boolean acknowledged) {

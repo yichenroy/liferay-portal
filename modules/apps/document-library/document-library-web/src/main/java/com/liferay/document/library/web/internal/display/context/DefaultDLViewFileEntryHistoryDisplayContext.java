@@ -20,7 +20,7 @@ import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.document.library.web.internal.display.context.logic.DLPortletInstanceSettingsHelper;
 import com.liferay.document.library.web.internal.display.context.logic.UIItemsBuilder;
 import com.liferay.document.library.web.internal.display.context.util.DLRequestHelper;
-import com.liferay.document.library.web.internal.util.DLTrashUtil;
+import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
@@ -40,19 +40,20 @@ public class DefaultDLViewFileEntryHistoryDisplayContext
 	implements DLViewFileEntryHistoryDisplayContext {
 
 	public DefaultDLViewFileEntryHistoryDisplayContext(
-		HttpServletRequest request, FileVersion fileVersion,
-		ResourceBundle resourceBundle, DLTrashUtil dlTrashUtil,
+		HttpServletRequest httpServletRequest, FileVersion fileVersion,
+		ResourceBundle resourceBundle, DLTrashHelper dlTrashHelper,
 		VersioningStrategy versioningStrategy, DLURLHelper dlURLHelper) {
 
 		_resourceBundle = resourceBundle;
 
-		DLRequestHelper dlRequestHelper = new DLRequestHelper(request);
+		DLRequestHelper dlRequestHelper = new DLRequestHelper(
+			httpServletRequest);
 
 		_dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(
 			dlRequestHelper);
 
 		_uiItemsBuilder = new UIItemsBuilder(
-			request, fileVersion, _resourceBundle, dlTrashUtil,
+			httpServletRequest, fileVersion, _resourceBundle, dlTrashHelper,
 			versioningStrategy, dlURLHelper);
 	}
 
@@ -65,7 +66,6 @@ public class DefaultDLViewFileEntryHistoryDisplayContext
 		menu.setMenuItems(_getMenuItems());
 		menu.setScroll(false);
 		menu.setShowWhenSingleIcon(true);
-		menu.setTriggerCssClass("component-action");
 
 		return menu;
 	}

@@ -55,7 +55,7 @@ if (selLayout != null) {
 <c:choose>
 	<c:when test='<%= Objects.equals(id, "portlet") %>'>
 		<div class="layout-type">
-			<p class="small text-muted">
+			<p class="small text-secondary">
 				<liferay-ui:message key="empty-page-description" />
 			</p>
 
@@ -64,17 +64,6 @@ if (selLayout != null) {
 				layoutTemplateIdPrefix="addLayout"
 				layoutTemplates="<%= LayoutTemplateLocalServiceUtil.getLayoutTemplates(selTheme.getThemeId()) %>"
 			/>
-		</div>
-	</c:when>
-	<c:when test='<%= Objects.equals(id, "copy") %>'>
-		<div class="layout-type">
-			<p class="small text-muted">
-				<liferay-ui:message key="copy-of-a-page-description" />
-			</p>
-
-			<liferay-util:include page="/html/portal/layout/edit/portlet_applications.jsp">
-				<liferay-util:param name="copyLayoutIdPrefix" value="addLayout" />
-			</liferay-util:include>
 		</div>
 	</c:when>
 	<c:when test='<%= Objects.equals(id, "layout-prototype") %>'>

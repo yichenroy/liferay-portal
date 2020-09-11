@@ -56,18 +56,19 @@ public class FiftyOneDegreesEngineProxy {
 		return _provider.dataSet;
 	}
 
-	public Device getDevice(HttpServletRequest request) {
-		String userAgent = request.getHeader("User-Agent");
+	public Device getDevice(HttpServletRequest httpServletRequest) {
+		String userAgent = httpServletRequest.getHeader("User-Agent");
 
 		try {
 			Match match = _provider.match(userAgent);
 
 			return new FiftyOneDegreesDevice(match);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"Unable to get match for user agent: " + userAgent, ioe);
+					"Unable to get match for user agent: " + userAgent,
+					ioException);
 			}
 
 			return UnknownDevice.getInstance();
@@ -88,12 +89,13 @@ public class FiftyOneDegreesEngineProxy {
 			_provider = new Provider(
 				_dataset, _fiftyOneDegreesConfiguration.cacheSize());
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to load 51Degrees provider data", ioe);
+				_log.warn(
+					"Unable to load 51Degrees provider data", ioException);
 			}
 
-			throw new IllegalStateException(ioe);
+			throw new IllegalStateException(ioException);
 		}
 	}
 

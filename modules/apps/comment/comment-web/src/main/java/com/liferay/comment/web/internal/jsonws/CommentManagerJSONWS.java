@@ -112,10 +112,7 @@ public class CommentManagerJSONWS extends BaseServiceImpl {
 			getUserId(), groupId, className, classPK,
 			createServiceContextFunction());
 
-		DiscussionComment rootDiscussionComment =
-			discussion.getRootDiscussionComment();
-
-		return getComments(rootDiscussionComment, start, end);
+		return getComments(discussion.getRootDiscussionComment(), start, end);
 	}
 
 	public int getCommentsCount(long groupId, String className, long classPK)
@@ -290,17 +287,10 @@ public class CommentManagerJSONWS extends BaseServiceImpl {
 		return user.getFullName();
 	}
 
-	@Reference(unbind = "-")
-	protected void setCommentManager(CommentManager commentManager) {
-		_commentManager = commentManager;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
+	@Reference
 	private CommentManager _commentManager;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 }

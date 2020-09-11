@@ -14,14 +14,11 @@
 
 package com.liferay.fragment.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class FragmentCollectionNameException extends PortalException {
 
 	public FragmentCollectionNameException() {
@@ -31,12 +28,12 @@ public class FragmentCollectionNameException extends PortalException {
 		super(msg);
 	}
 
-	public FragmentCollectionNameException(String msg, Throwable cause) {
-		super(msg, cause);
+	public FragmentCollectionNameException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public FragmentCollectionNameException(Throwable cause) {
-		super(cause);
+	public FragmentCollectionNameException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

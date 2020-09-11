@@ -14,11 +14,11 @@
 
 package com.liferay.portal.kernel.upgrade.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.StagnantRowException;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 /**
@@ -65,9 +65,9 @@ public class IdReplacer {
 				try {
 					newValue = (Long)valueMapper.getNewValue(oldValue);
 				}
-				catch (StagnantRowException sre) {
+				catch (StagnantRowException stagnantRowException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(sre, sre);
+						_log.warn(stagnantRowException, stagnantRowException);
 					}
 				}
 
@@ -119,9 +119,9 @@ public class IdReplacer {
 			try {
 				newValue = (Long)valueMapper.getNewValue(oldValue);
 			}
-			catch (StagnantRowException sre) {
+			catch (StagnantRowException stagnantRowException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(sre, sre);
+					_log.warn(stagnantRowException, stagnantRowException);
 				}
 			}
 

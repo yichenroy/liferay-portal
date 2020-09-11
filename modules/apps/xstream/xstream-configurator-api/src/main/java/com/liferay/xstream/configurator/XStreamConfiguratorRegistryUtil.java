@@ -14,8 +14,6 @@
 
 package com.liferay.xstream.configurator;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.xstream.XStreamAliasRegistryUtil;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 
@@ -38,7 +36,6 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * @author Máté Thurzó
  */
 @Component(immediate = true, service = {})
-@ProviderType
 public class XStreamConfiguratorRegistryUtil {
 
 	public static ClassLoader getConfiguratorsClassLoader(
@@ -65,8 +62,7 @@ public class XStreamConfiguratorRegistryUtil {
 		}
 
 		return AggregateClassLoader.getAggregateClassLoader(
-			masterClassLoader,
-			classLoaders.toArray(new ClassLoader[classLoaders.size()]));
+			masterClassLoader, classLoaders.toArray(new ClassLoader[0]));
 	}
 
 	public static long getModifiedCount() {

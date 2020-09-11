@@ -14,10 +14,15 @@
 
 package com.liferay.portal.security.sso.opensso.internal.auto.login;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.ContactNameException;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.exception.UserEmailAddressException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
@@ -25,6 +30,7 @@ import com.liferay.portal.kernel.security.auth.ScreenNameGenerator;
 import com.liferay.portal.kernel.security.auto.login.AutoLogin;
 import com.liferay.portal.kernel.security.auto.login.BaseAutoLogin;
 import com.liferay.portal.kernel.security.sso.OpenSSO;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
@@ -34,12 +40,13 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.exportimport.UserImporter;
 import com.liferay.portal.security.sso.opensso.configuration.OpenSSOConfiguration;
 import com.liferay.portal.security.sso.opensso.constants.OpenSSOConstants;
+import com.liferay.portal.security.sso.opensso.constants.OpenSSOWebKeys;
+import com.liferay.portal.security.sso.opensso.exception.StrangersNotAllowedException;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.Calendar;
@@ -82,15 +89,13 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 	protected User addUser(
 			long companyId, String firstName, String lastName,
 			String emailAddress, String screenName, Locale locale)
-		throws Exception {
+		throws PortalException {
 
 		long creatorUserId = 0;
 		boolean autoPassword = true;
 		String password1 = null;
 		String password2 = null;
 		boolean autoScreenName = false;
-		long facebookId = 0;
-		String openId = StringPool.BLANK;
 		String middleName = StringPool.BLANK;
 		long prefixId = 0;
 		long suffixId = 0;
@@ -108,18 +113,36 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 
 		return _userLocalService.addUser(
 			creatorUserId, companyId, autoPassword, password1, password2,
-			autoScreenName, screenName, emailAddress, facebookId, openId,
-			locale, firstName, middleName, lastName, prefixId, suffixId, male,
-			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
-			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
+			autoScreenName, screenName, emailAddress, locale, firstName,
+			middleName, lastName, prefixId, suffixId, male, birthdayMonth,
+			birthdayDay, birthdayYear, jobTitle, groupIds, organizationIds,
+			roleIds, userGroupIds, sendEmail, serviceContext);
+	}
+
+	protected void checkAddUser(long companyId, String emailAddress)
+		throws PortalException {
+
+		Company company = _companyLocalService.getCompany(companyId);
+
+		if (!company.isStrangers()) {
+			throw new StrangersNotAllowedException(companyId);
+		}
+
+		if (!company.isStrangersWithMx() &&
+			company.hasCompanyMx(emailAddress)) {
+
+			throw new UserEmailAddressException.MustNotUseCompanyMx(
+				emailAddress);
+		}
 	}
 
 	@Override
 	protected String[] doLogin(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		long companyId = _portal.getCompanyId(request);
+		long companyId = _portal.getCompanyId(httpServletRequest);
 
 		OpenSSOConfiguration openSSOConfiguration = getOpenSSOConfiguration(
 			companyId);
@@ -129,15 +152,15 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 		}
 
 		if (!_openSSO.isAuthenticated(
-				request, openSSOConfiguration.serviceURL())) {
+				httpServletRequest, openSSOConfiguration.serviceURL())) {
 
 			return null;
 		}
 
 		Map<String, String> nameValues = _openSSO.getAttributes(
-			request, openSSOConfiguration.serviceURL());
+			httpServletRequest, openSSOConfiguration.serviceURL());
 
-		String screenName = nameValues.get(
+		String openSSOScreenName = nameValues.get(
 			openSSOConfiguration.screenNameAttr());
 		String emailAddress = nameValues.get(
 			openSSOConfiguration.emailAddressAttr());
@@ -148,11 +171,13 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 			_log.debug(
 				StringBundler.concat(
 					"Validating user information for ", firstName, " ",
-					lastName, " with screen name ", screenName,
+					lastName, " with screen name ", openSSOScreenName,
 					" and email address ", emailAddress));
 		}
 
 		User user = null;
+
+		String screenName = openSSOScreenName;
 
 		if (PrefsPropsUtil.getBoolean(
 				companyId, PropsKeys.USERS_SCREEN_NAME_ALWAYS_AUTOGENERATE)) {
@@ -181,19 +206,20 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 						companyId, emailAddress, StringPool.BLANK);
 				}
 			}
-			catch (SystemException se) {
+			catch (SystemException systemException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(se, se);
+					_log.debug(systemException, systemException);
 				}
 			}
 		}
 		else {
 			if (Validator.isNull(emailAddress)) {
-				return handleException(
-					request, response, new Exception("Email address is null"));
+				return doHandleException(
+					httpServletRequest, httpServletResponse,
+					new Exception("Email address is null"));
 			}
 		}
 
@@ -203,8 +229,9 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 		}
 
 		if (user == null) {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			Locale locale = LocaleUtil.getDefault();
 
@@ -216,19 +243,52 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 				locale = themeDisplay.getLocale();
 			}
 
-			if (_log.isDebugEnabled()) {
-				_log.debug("Adding user " + screenName);
-			}
+			try {
+				checkAddUser(companyId, emailAddress);
 
-			user = addUser(
-				companyId, firstName, lastName, emailAddress, screenName,
-				locale);
+				if (_log.isDebugEnabled()) {
+					_log.debug("Adding user " + screenName);
+				}
+
+				user = addUser(
+					companyId, firstName, lastName, emailAddress, screenName,
+					locale);
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						StringBundler.concat(
+							"Failed to import OpenSSO user '",
+							openSSOScreenName, "': ",
+							portalException.getMessage()),
+						portalException);
+				}
+
+				if (portalException instanceof ContactNameException) {
+					httpServletRequest.setAttribute(
+						OpenSSOWebKeys.OPEN_SSO_ERROR,
+						ContactNameException.class.getSimpleName());
+				}
+				else {
+					Class<?> clazz = portalException.getClass();
+
+					httpServletRequest.setAttribute(
+						OpenSSOWebKeys.OPEN_SSO_ERROR, clazz.getSimpleName());
+				}
+
+				httpServletRequest.setAttribute(
+					OpenSSOWebKeys.OPEN_SSO_SUBJECT_SCREEN_NAME,
+					openSSOScreenName);
+
+				return null;
+			}
 		}
 
-		String currentURL = _portal.getCurrentURL(request);
+		String currentURL = _portal.getCurrentURL(httpServletRequest);
 
 		if (currentURL.contains("/portal/login")) {
-			String redirect = ParamUtil.getString(request, "redirect");
+			String redirect = ParamUtil.getString(
+				httpServletRequest, "redirect");
 
 			if (Validator.isNotNull(redirect)) {
 				redirect = _portal.escapeRedirect(redirect);
@@ -237,7 +297,8 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 				redirect = _portal.getPathMain();
 			}
 
-			request.setAttribute(AutoLogin.AUTO_LOGIN_REDIRECT, redirect);
+			httpServletRequest.setAttribute(
+				AutoLogin.AUTO_LOGIN_REDIRECT, redirect);
 		}
 
 		String[] credentials = new String[3];
@@ -260,6 +321,9 @@ public class OpenSSOAutoLogin extends BaseAutoLogin {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		OpenSSOAutoLogin.class);
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

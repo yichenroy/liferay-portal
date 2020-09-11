@@ -14,19 +14,20 @@
 
 package com.liferay.mobile.device.rules.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the MDRAction service. Represents a row in the &quot;MDRAction&quot; database table, with each column mapped to a property of this class.
@@ -41,8 +42,8 @@ import java.util.Map;
  */
 @ProviderType
 public interface MDRActionModel
-	extends AttachedModel, BaseModel<MDRAction>, LocalizedModel, ShardedModel,
-			StagedGroupedModel {
+	extends AttachedModel, BaseModel<MDRAction>, LocalizedModel, MVCCModel,
+			ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -63,6 +64,22 @@ public interface MDRActionModel
 	 * @param primaryKey the primary key of this mdr action
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this mdr action.
+	 *
+	 * @return the mvcc version of this mdr action
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this mdr action.
+	 *
+	 * @param mvccVersion the mvcc version of this mdr action
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this mdr action.

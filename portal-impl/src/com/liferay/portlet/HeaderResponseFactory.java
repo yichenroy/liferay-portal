@@ -14,8 +14,6 @@
 
 package com.liferay.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.portlet.LiferayHeaderResponse;
 import com.liferay.portlet.internal.HeaderRequestImpl;
 import com.liferay.portlet.internal.HeaderResponseImpl;
@@ -28,19 +26,22 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * @author Neil Griffin
  */
-@ProviderType
 public class HeaderResponseFactory {
 
 	public static LiferayHeaderResponse create(
-		HeaderRequest headerRequest, HttpServletResponse response) {
+		HeaderRequest headerRequest, HttpServletResponse httpServletResponse) {
 
 		while (headerRequest instanceof HeaderRequestWrapper) {
-			headerRequest = ((HeaderRequestWrapper)headerRequest).getRequest();
+			HeaderRequestWrapper headerRequestWrapper =
+				(HeaderRequestWrapper)headerRequest;
+
+			headerRequest = headerRequestWrapper.getRequest();
 		}
 
 		HeaderResponseImpl headerResponseImpl = new HeaderResponseImpl();
 
-		headerResponseImpl.init((HeaderRequestImpl)headerRequest, response);
+		headerResponseImpl.init(
+			(HeaderRequestImpl)headerRequest, httpServletResponse);
 
 		return headerResponseImpl;
 	}

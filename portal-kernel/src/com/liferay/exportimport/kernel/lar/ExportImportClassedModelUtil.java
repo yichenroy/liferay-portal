@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.ResourcedModel;
 import com.liferay.portal.kernel.model.StagedModel;
@@ -27,7 +25,6 @@ import java.io.Serializable;
 /**
  * @author Máté Thurzó
  */
-@ProviderType
 public class ExportImportClassedModelUtil {
 
 	public static String getClassName(ClassedModel classedModel) {

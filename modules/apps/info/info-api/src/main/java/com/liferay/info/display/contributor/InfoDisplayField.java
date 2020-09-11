@@ -14,9 +14,9 @@
 
 package com.liferay.info.display.contributor;
 
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
 
 import java.util.Objects;
 
@@ -36,16 +36,16 @@ public class InfoDisplayField {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof InfoDisplayField)) {
+		if (!(object instanceof InfoDisplayField)) {
 			return false;
 		}
 
-		InfoDisplayField infoDisplayField = (InfoDisplayField)obj;
+		InfoDisplayField infoDisplayField = (InfoDisplayField)object;
 
 		if (Objects.equals(_key, infoDisplayField._key) &&
 			Objects.equals(_label, infoDisplayField._label) &&
@@ -79,13 +79,13 @@ public class InfoDisplayField {
 	}
 
 	public JSONObject toJSONObject() {
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("key", getKey());
-		jsonObject.put("label", getLabel());
-		jsonObject.put("type", getType());
-
-		return jsonObject;
+		return JSONUtil.put(
+			"key", getKey()
+		).put(
+			"label", getLabel()
+		).put(
+			"type", getType()
+		);
 	}
 
 	private static final String _TYPE = "text";

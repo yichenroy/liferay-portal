@@ -1,5 +1,6 @@
 @component-name = "portal-wcm"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Look And Feel";
@@ -21,14 +22,28 @@ definition {
 
 	@priority = "5"
 	test ConfigureCustomStylesViaLookAndFeelPG {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
-		Portlet.addPG(portletName = "Sign In");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page Name");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page Name",
+			widgetName = "Sign In");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page Name",
+			widgetName = "Web Content Display");
+
+		Navigator.gotoPage(pageName = "Test Page Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "Sign In",
-			portletOption = "Look and Feel Configuration"
-		);
+			portletOption = "Look and Feel Configuration");
 
 		IFrame.selectConfigurationFrame();
 
@@ -36,33 +51,27 @@ definition {
 
 		PortletEntry.save();
 
-		Navigator.openURL();
+		Navigator.gotoPage(pageName = "Test Page Name");
 
 		Portlet.viewCustomStylesViaLookandfeelPG();
 
-		Portlet.addPG(portletName = "Web Content Display");
-
 		Portlet.gotoPortletOptions(
 			portletName = "Web Content Display",
-			portletOption = "Look and Feel Configuration"
-		);
+			portletOption = "Look and Feel Configuration");
 
 		IFrame.selectConfigurationFrame();
 
-		Portlet.configureApplicationDecoratorViaLookandfeelPG(
-			applicationDecorator = "Decorate"
-		);
+		Portlet.configureApplicationDecoratorViaLookandfeelPG(applicationDecorator = "Decorate");
 
 		Button.clickCancel();
 
-		Navigator.openURL();
+		Navigator.gotoPage(pageName = "Test Page Name");
 
 		Portlet.viewApplicationDecorator(decorator = "Borderless");
 
 		Portlet.gotoPortletOptions(
 			portletName = "Web Content Display",
-			portletOption = "Look and Feel Configuration"
-		);
+			portletOption = "Look and Feel Configuration");
 
 		IFrame.selectConfigurationFrame();
 
@@ -70,14 +79,13 @@ definition {
 
 		PortletEntry.save();
 
-		Navigator.openURL();
+		Navigator.gotoPage(pageName = "Test Page Name");
 
 		Portlet.viewApplicationDecorator(decorator = "Decorate");
 
 		Portlet.gotoPortletOptions(
 			portletName = "Web Content Display",
-			portletOption = "Look and Feel Configuration"
-		);
+			portletOption = "Look and Feel Configuration");
 
 		IFrame.selectConfigurationFrame();
 
@@ -85,8 +93,9 @@ definition {
 
 		PortletEntry.save();
 
-		Navigator.openURL();
+		Navigator.gotoPage(pageName = "Test Page Name");
 
 		Portlet.viewApplicationDecorator(decorator = "Barebone");
 	}
+
 }

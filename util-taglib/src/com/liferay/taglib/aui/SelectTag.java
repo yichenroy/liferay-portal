@@ -38,35 +38,6 @@ import javax.servlet.jsp.tagext.BodyTag;
  */
 public class SelectTag extends BaseSelectTag implements BodyTag {
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void addRequiredValidatorTag() {
-		super.addRequiredValidatorTag();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void addValidatorTag(
-		String validatorName, ValidatorTag validatorTag) {
-
-		super.addValidatorTag(validatorName, validatorTag);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public int doEndTag() throws JspException {
-		return super.doEndTag();
-	}
-
 	@Override
 	public int doStartTag() throws JspException {
 		addModelValidatorTags();
@@ -142,8 +113,8 @@ public class SelectTag extends BaseSelectTag implements BodyTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		super.setAttributes(request);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		super.setAttributes(httpServletRequest);
 
 		Object bean = getBean();
 
@@ -202,22 +173,24 @@ public class SelectTag extends BaseSelectTag implements BodyTag {
 			}
 
 			if (!getIgnoreRequestValue()) {
-				value = ParamUtil.getString(request, name, value);
+				value = ParamUtil.getString(httpServletRequest, name, value);
 			}
 		}
 
-		setNamespacedAttribute(request, "bean", bean);
-		setNamespacedAttribute(request, "field", field);
-		setNamespacedAttribute(request, "id", id);
-		setNamespacedAttribute(request, "label", label);
-		setNamespacedAttribute(request, "listTypeFieldName", listTypeFieldName);
-		setNamespacedAttribute(request, "model", model);
-		setNamespacedAttribute(request, "title", String.valueOf(title));
-		setNamespacedAttribute(request, "value", value);
+		setNamespacedAttribute(httpServletRequest, "bean", bean);
+		setNamespacedAttribute(httpServletRequest, "field", field);
+		setNamespacedAttribute(httpServletRequest, "id", id);
+		setNamespacedAttribute(httpServletRequest, "label", label);
+		setNamespacedAttribute(
+			httpServletRequest, "listTypeFieldName", listTypeFieldName);
+		setNamespacedAttribute(httpServletRequest, "model", model);
+		setNamespacedAttribute(
+			httpServletRequest, "title", String.valueOf(title));
+		setNamespacedAttribute(httpServletRequest, "value", value);
 
 		if (Validator.isNotNull(bodyContent)) {
 			setNamespacedAttribute(
-				request, "bodyContent", bodyContent.getString());
+				httpServletRequest, "bodyContent", bodyContent.getString());
 		}
 
 		Map<String, ValidatorTag> validatorTags = getValidatorTags();
@@ -226,16 +199,8 @@ public class SelectTag extends BaseSelectTag implements BodyTag {
 			(validatorTags.get("required") != null)) {
 
 			setNamespacedAttribute(
-				request, "required", Boolean.TRUE.toString());
+				httpServletRequest, "required", Boolean.TRUE.toString());
 		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected void updateFormValidators() {
-		super.updateFormValidatorTags();
 	}
 
 	private static final boolean _CLEAN_UP_SET_ATTRIBUTES = true;

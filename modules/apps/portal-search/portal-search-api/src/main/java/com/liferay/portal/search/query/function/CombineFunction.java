@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.query.function;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum CombineFunction {
 
 	AVG, MAX, MIN, MULTIPLY, REPLACE, SUM

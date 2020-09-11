@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,7 +29,6 @@ import java.util.Map;
  * @see LayoutRevision
  * @generated
  */
-@ProviderType
 public class LayoutRevisionWrapper
 	extends BaseModelWrapper<LayoutRevision>
 	implements LayoutRevision, ModelWrapper<LayoutRevision> {
@@ -712,10 +709,11 @@ public class LayoutRevisionWrapper
 	}
 
 	@Override
-	public String getRegularURL(javax.servlet.http.HttpServletRequest request)
+	public String getRegularURL(
+			javax.servlet.http.HttpServletRequest httpServletRequest)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return model.getRegularURL(request);
+		return model.getRegularURL(httpServletRequest);
 	}
 
 	/**
@@ -1022,6 +1020,13 @@ public class LayoutRevisionWrapper
 	@Override
 	public boolean isContentDisplayPage() {
 		return model.isContentDisplayPage();
+	}
+
+	@Override
+	public boolean isCustomizable()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.isCustomizable();
 	}
 
 	/**
@@ -1721,9 +1726,9 @@ public class LayoutRevisionWrapper
 	@Override
 	public void setTypeSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties
-			typeSettingsProperties) {
+			typeSettingsUnicodeProperties) {
 
-		model.setTypeSettingsProperties(typeSettingsProperties);
+		model.setTypeSettingsProperties(typeSettingsUnicodeProperties);
 	}
 
 	/**

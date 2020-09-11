@@ -14,8 +14,6 @@
 
 package com.liferay.asset.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,11 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portlet.asset.service.http.AssetCategoryPropertyServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @deprecated
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
 @Deprecated
-@ProviderType
 public class AssetCategoryPropertySoap implements Serializable {
 
 	public static AssetCategoryPropertySoap toSoapModel(
@@ -38,6 +35,8 @@ public class AssetCategoryPropertySoap implements Serializable {
 
 		AssetCategoryPropertySoap soapModel = new AssetCategoryPropertySoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setCategoryPropertyId(model.getCategoryPropertyId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
@@ -107,6 +106,22 @@ public class AssetCategoryPropertySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setCategoryPropertyId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public long getCategoryPropertyId() {
@@ -181,6 +196,8 @@ public class AssetCategoryPropertySoap implements Serializable {
 		_value = value;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _categoryPropertyId;
 	private long _companyId;
 	private long _userId;

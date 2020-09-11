@@ -34,22 +34,22 @@ public class PublishChangesetTag extends IncludeTag {
 
 	@Override
 	public int doStartTag() throws JspException {
-		Object themeDisplayObj = pageContext.getAttribute("themeDisplay");
+		Object themeDisplayObject = pageContext.getAttribute("themeDisplay");
 
 		ThemeDisplay themeDisplay = null;
 
-		if ((themeDisplayObj != null) &&
-			(themeDisplayObj instanceof ThemeDisplay)) {
+		if ((themeDisplayObject != null) &&
+			(themeDisplayObject instanceof ThemeDisplay)) {
 
-			themeDisplay = (ThemeDisplay)themeDisplayObj;
+			themeDisplay = (ThemeDisplay)themeDisplayObject;
 		}
 
 		long groupId = _groupId;
 
 		if ((groupId <= 0) && (themeDisplay == null)) {
-			Object groupIdObj = pageContext.getAttribute("groupId");
+			Object groupIdObject = pageContext.getAttribute("groupId");
 
-			groupId = GetterUtil.getLong(groupIdObj);
+			groupId = GetterUtil.getLong(groupIdObject);
 		}
 		else if (groupId <= 0) {
 			groupId = themeDisplay.getScopeGroupId();
@@ -104,11 +104,11 @@ public class PublishChangesetTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:publish-changeset:changesetUuid",
 			_changesetUuid);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:publish-changeset:groupId",
 			_groupId);
 	}

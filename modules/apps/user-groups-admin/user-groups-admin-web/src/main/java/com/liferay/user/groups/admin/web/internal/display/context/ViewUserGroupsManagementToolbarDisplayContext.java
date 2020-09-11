@@ -15,8 +15,9 @@
 package com.liferay.user.groups.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.petra.string.StringBundler;
@@ -52,34 +53,29 @@ import javax.servlet.http.HttpServletRequest;
 public class ViewUserGroupsManagementToolbarDisplayContext {
 
 	public ViewUserGroupsManagementToolbarDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse, String displayStyle) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_displayStyle = displayStyle;
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				if (_hasAddUserGroupPermission()) {
-					add(
-						dropdownItem -> {
-							dropdownItem.setHref(
-								StringBundler.concat(
-									"javascript:",
-									_renderResponse.getNamespace(),
-									"deleteUserGroups()"));
-							dropdownItem.setIcon("trash");
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "delete"));
-							dropdownItem.setQuickAction(true);
-						});
-				}
+		return DropdownItemListBuilder.add(
+			() -> _hasAddUserGroupPermission(),
+			dropdownItem -> {
+				dropdownItem.setHref(
+					StringBundler.concat(
+						"javascript:", _renderResponse.getNamespace(),
+						"deleteUserGroups()"));
+				dropdownItem.setIcon("trash");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	public String getClearResultsURL() {
@@ -91,46 +87,39 @@ public class ViewUserGroupsManagementToolbarDisplayContext {
 	}
 
 	public CreationMenu getCreationMenu() throws PortalException {
-		return new CreationMenu() {
-			{
-				addDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							_renderResponse.createRenderURL(), "mvcPath",
-							"/edit_user_group.jsp", "redirect",
-							_renderResponse.createRenderURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "add"));
-					});
+		return CreationMenuBuilder.addDropdownItem(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					_renderResponse.createRenderURL(), "mvcPath",
+					"/edit_user_group.jsp", "redirect",
+					_renderResponse.createRenderURL());
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "add"));
 			}
-		};
+		).build();
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public String getKeywords() {
 		if (Validator.isNull(_keywords)) {
-			_keywords = ParamUtil.getString(_request, "keywords");
+			_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 		}
 
 		return _keywords;
@@ -138,7 +127,8 @@ public class ViewUserGroupsManagementToolbarDisplayContext {
 
 	public String getOrderByCol() {
 		if (Validator.isNull(_orderByCol)) {
-			_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+			_orderByCol = ParamUtil.getString(
+				_httpServletRequest, "orderByCol", "name");
 		}
 
 		return _orderByCol;
@@ -146,7 +136,8 @@ public class ViewUserGroupsManagementToolbarDisplayContext {
 
 	public String getOrderByType() {
 		if (Validator.isNull(_orderByType)) {
-			_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+			_orderByType = ParamUtil.getString(
+				_httpServletRequest, "orderByType", "asc");
 		}
 
 		return _orderByType;
@@ -158,7 +149,7 @@ public class ViewUserGroupsManagementToolbarDisplayContext {
 		portletURL.setParameter("mvcPath", "/view.jsp");
 
 		String viewUserGroupsRedirect = ParamUtil.getString(
-			_request, "viewUserGroupsRedirect");
+			_httpServletRequest, "viewUserGroupsRedirect");
 
 		if (Validator.isNotNull(viewUserGroupsRedirect)) {
 			portletURL.setParameter(
@@ -192,7 +183,7 @@ public class ViewUserGroupsManagementToolbarDisplayContext {
 		return searchActionURL.toString();
 	}
 
-	public SearchContainer getSearchContainer() throws Exception {
+	public SearchContainer<UserGroup> getSearchContainer() throws Exception {
 		if (_userGroupSearch != null) {
 			return _userGroupSearch;
 		}
@@ -202,8 +193,9 @@ public class ViewUserGroupsManagementToolbarDisplayContext {
 
 		userGroupSearch.setRowChecker(new UserGroupChecker(_renderResponse));
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		UserGroupDisplayTerms userGroupSearchTerms =
 			(UserGroupDisplayTerms)userGroupSearch.getSearchTerms();
@@ -256,50 +248,43 @@ public class ViewUserGroupsManagementToolbarDisplayContext {
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(StringPool.BLANK);
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(true);
+				dropdownItem.setHref(StringPool.BLANK);
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-		};
+		).build();
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(Objects.equals(getOrderByCol(), "name"));
+				dropdownItem.setHref(getPortletURL(), "orderByCol", "name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "name"));
 			}
-		};
+		).build();
 	}
 
 	private boolean _hasAddUserGroupPermission() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return PortalPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), ActionKeys.ADD_USER_GROUP);
 	}
 
 	private final String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private UserGroupSearch _userGroupSearch;
 
 }

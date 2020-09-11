@@ -20,9 +20,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -30,9 +30,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
+
+import javax.validation.Valid;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -46,8 +51,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Role")
 public class Role {
 
+	public static Role toDTO(String json) {
+		return ObjectMapperUtil.readValue(Role.class, json);
+	}
+
 	@Schema(
-		description = "A list of languages the content has a translation for."
+		description = "A list of languages for which the role has a translation."
 	)
 	public String[] getAvailableLanguages() {
 		return availableLanguages;
@@ -72,11 +81,14 @@ public class Role {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of languages for which the role has a translation."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String[] availableLanguages;
 
-	@Schema(description = "The creator of the Role")
+	@Schema(description = "The role's creator.")
+	@Valid
 	public Creator getCreator() {
 		return creator;
 	}
@@ -100,11 +112,11 @@ public class Role {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The role's creator.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema(description = "The creation date of the Role.")
+	@Schema(description = "The role's creation date.")
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -128,11 +140,13 @@ public class Role {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The role's creation date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
-	@Schema(description = "The last time a field of the Role changed.")
+	@Schema(
+		description = "The last time any of the role's fields were changed."
+	)
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -156,11 +170,13 @@ public class Role {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The last time any of the role's fields were changed."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
-	@Schema(description = "The description of the Role")
+	@Schema(description = "The role's description.")
 	public String getDescription() {
 		return description;
 	}
@@ -184,11 +200,41 @@ public class Role {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The role's description.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String description;
 
-	@Schema(description = "The identifier of the resource.")
+	@Schema
+	@Valid
+	public Map<String, String> getDescription_i18n() {
+		return description_i18n;
+	}
+
+	public void setDescription_i18n(Map<String, String> description_i18n) {
+		this.description_i18n = description_i18n;
+	}
+
+	@JsonIgnore
+	public void setDescription_i18n(
+		UnsafeSupplier<Map<String, String>, Exception>
+			description_i18nUnsafeSupplier) {
+
+		try {
+			description_i18n = description_i18nUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, String> description_i18n;
+
+	@Schema(description = "The role's ID.")
 	public Long getId() {
 		return id;
 	}
@@ -210,11 +256,11 @@ public class Role {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The role's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema(description = "The name of the Role.")
+	@Schema(description = "The role's name.")
 	public String getName() {
 		return name;
 	}
@@ -236,11 +282,41 @@ public class Role {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The role's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String name;
 
-	@Schema(description = "The type of the Role.")
+	@Schema
+	@Valid
+	public Map<String, String> getName_i18n() {
+		return name_i18n;
+	}
+
+	public void setName_i18n(Map<String, String> name_i18n) {
+		this.name_i18n = name_i18n;
+	}
+
+	@JsonIgnore
+	public void setName_i18n(
+		UnsafeSupplier<Map<String, String>, Exception>
+			name_i18nUnsafeSupplier) {
+
+		try {
+			name_i18n = name_i18nUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, String> name_i18n;
+
+	@Schema(description = "The role's type.")
 	public String getRoleType() {
 		return roleType;
 	}
@@ -264,7 +340,7 @@ public class Role {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The role's type.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String roleType;
 
@@ -303,7 +379,7 @@ public class Role {
 				sb.append(", ");
 			}
 
-			sb.append("\"availableLanguages\":");
+			sb.append("\"availableLanguages\": ");
 
 			sb.append("[");
 
@@ -327,7 +403,7 @@ public class Role {
 				sb.append(", ");
 			}
 
-			sb.append("\"creator\":");
+			sb.append("\"creator\": ");
 
 			sb.append(String.valueOf(creator));
 		}
@@ -337,7 +413,7 @@ public class Role {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -351,7 +427,7 @@ public class Role {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateModified\":");
+			sb.append("\"dateModified\": ");
 
 			sb.append("\"");
 
@@ -365,7 +441,7 @@ public class Role {
 				sb.append(", ");
 			}
 
-			sb.append("\"description\":");
+			sb.append("\"description\": ");
 
 			sb.append("\"");
 
@@ -374,12 +450,22 @@ public class Role {
 			sb.append("\"");
 		}
 
+		if (description_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"description_i18n\": ");
+
+			sb.append(_toJSON(description_i18n));
+		}
+
 		if (id != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(id);
 		}
@@ -389,7 +475,7 @@ public class Role {
 				sb.append(", ");
 			}
 
-			sb.append("\"name\":");
+			sb.append("\"name\": ");
 
 			sb.append("\"");
 
@@ -398,12 +484,22 @@ public class Role {
 			sb.append("\"");
 		}
 
+		if (name_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name_i18n\": ");
+
+			sb.append(_toJSON(name_i18n));
+		}
+
 		if (roleType != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"roleType\":");
+			sb.append("\"roleType\": ");
 
 			sb.append("\"");
 
@@ -417,10 +513,88 @@ public class Role {
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.Role",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

@@ -1,10 +1,10 @@
 package ${apiPackagePath}.model;
 
+import ${serviceBuilder.getCompatJavaClassName("ProviderType")};
+
 <#if entity.hasCompoundPK()>
 	import ${apiPackagePath}.service.persistence.${entity.name}PK;
 </#if>
-
-import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.model.TypedModel;
 import com.liferay.portal.kernel.model.WorkflowedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.model.version.VersionModel;
 import com.liferay.portal.kernel.model.version.VersionedModel;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -191,9 +192,9 @@ public interface ${entity.name}Model extends ${entity.getModelBaseInterfaceNames
 			public String get${entityColumn.methodName}CurrentValue();
 
 			/**
-			 * Returns a map of the locales and localized ${entityColumn.humanNames} of this ${entity.humanName}.
+			 * Returns a map of the locales and localized ${entityColumn.pluralHumanName} of this ${entity.humanName}.
 			 *
-			 * @return the locales and localized ${entityColumn.humanNames} of this ${entity.humanName}
+			 * @return the locales and localized ${entityColumn.pluralHumanName} of this ${entity.humanName}
 			 */
 			public Map<Locale, String> get${entityColumn.methodName}Map();
 		</#if>
@@ -242,16 +243,16 @@ public interface ${entity.name}Model extends ${entity.getModelBaseInterfaceNames
 			public void set${entityColumn.methodName}CurrentLanguageId(String languageId);
 
 			/**
-			 * Sets the localized ${entityColumn.humanNames} of this ${entity.humanName} from the map of locales and localized ${entityColumn.humanNames}.
+			 * Sets the localized ${entityColumn.pluralHumanName} of this ${entity.humanName} from the map of locales and localized ${entityColumn.pluralHumanName}.
 			 *
-			 * @param ${entityColumn.name}Map the locales and localized ${entityColumn.humanNames} of this ${entity.humanName}
+			 * @param ${entityColumn.name}Map the locales and localized ${entityColumn.pluralHumanName} of this ${entity.humanName}
 			 */
 			public void set${entityColumn.methodName}Map(Map<Locale, String> ${entityColumn.name}Map);
 
 			/**
-			 * Sets the localized ${entityColumn.humanNames} of this ${entity.humanName} from the map of locales and localized ${entityColumn.humanNames}, and sets the default locale.
+			 * Sets the localized ${entityColumn.pluralHumanName} of this ${entity.humanName} from the map of locales and localized ${entityColumn.pluralHumanName}, and sets the default locale.
 			 *
-			 * @param ${entityColumn.name}Map the locales and localized ${entityColumn.humanNames} of this ${entity.humanName}
+			 * @param ${entityColumn.name}Map the locales and localized ${entityColumn.pluralHumanName} of this ${entity.humanName}
 			 * @param defaultLocale the default locale
 			 */
 			public void set${entityColumn.methodName}Map(Map<Locale, String> ${entityColumn.name}Map, Locale defaultLocale);
@@ -537,7 +538,7 @@ public interface ${entity.name}Model extends ${entity.getModelBaseInterfaceNames
 		public Object clone();
 
 		@Override
-		public int compareTo(${apiPackagePath}.model.${entity.name} ${entity.varName});
+		public int compareTo(${apiPackagePath}.model.${entity.name} ${entity.variableName});
 
 		@Override
 		public int hashCode();

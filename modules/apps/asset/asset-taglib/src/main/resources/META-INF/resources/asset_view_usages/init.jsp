@@ -23,20 +23,13 @@ taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
-<%@ page import="com.liferay.asset.constants.AssetEntryUsageConstants" %><%@
-page import="com.liferay.asset.kernel.model.AssetEntry" %><%@
-page import="com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil" %><%@
-page import="com.liferay.asset.model.AssetEntryUsage" %><%@
-page import="com.liferay.asset.service.AssetEntryUsageLocalServiceUtil" %><%@
-page import="com.liferay.petra.string.StringPool" %><%@
+<%@ page import="com.liferay.asset.taglib.internal.display.context.AssetEntryUsagesDisplayContext" %><%@
+page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Layout" %><%@
 page import="com.liferay.portal.kernel.service.LayoutLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
-page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
-page import="com.liferay.portal.kernel.util.PortalUtil" %>
-
-<%@ page import="java.util.HashMap" %><%@
-page import="java.util.List" %><%@
-page import="java.util.Map" %>
+page import="com.liferay.portal.kernel.util.HtmlUtil" %>
 
 <liferay-theme:defineObjects />
+
+<portlet:defineObjects />

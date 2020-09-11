@@ -16,15 +16,20 @@ package com.liferay.site.memberships.web.internal.display.context;
 
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.OrganizationSearch;
 import com.liferay.portlet.usersadmin.search.OrganizationSearchTerms;
+import com.liferay.site.memberships.web.internal.util.GroupUtil;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,10 +46,10 @@ import javax.servlet.http.HttpServletRequest;
 public class OrganizationsDisplayContext {
 
 	public OrganizationsDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 	}
@@ -54,7 +59,8 @@ public class OrganizationsDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
@@ -64,11 +70,13 @@ public class OrganizationsDisplayContext {
 			return _groupId;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_groupId = ParamUtil.getLong(
-			_request, "groupId", themeDisplay.getSiteGroupIdOrLiveGroupId());
+			_httpServletRequest, "groupId",
+			themeDisplay.getSiteGroupIdOrLiveGroupId());
 
 		return _groupId;
 	}
@@ -104,19 +112,28 @@ public class OrganizationsDisplayContext {
 		return _orderByType;
 	}
 
-	public SearchContainer getOrganizationSearchContainer() {
+	public SearchContainer<Organization> getOrganizationSearchContainer() {
 		if (_organizationSearch != null) {
 			return _organizationSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		OrganizationSearch organizationSearch = new OrganizationSearch(
 			_renderRequest, getPortletURL());
 
 		organizationSearch.setEmptyResultsMessage(
-			"no-organization-was-found-that-is-a-member-of-this-site");
+			LanguageUtil.format(
+				ResourceBundleUtil.getBundle(
+					themeDisplay.getLocale(), getClass()),
+				"no-organization-was-found-that-is-a-member-of-this-x",
+				StringUtil.toLowerCase(
+					GroupUtil.getGroupTypeLabel(
+						_groupId, themeDisplay.getLocale())),
+				false));
+
 		organizationSearch.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
 
@@ -124,11 +141,11 @@ public class OrganizationsDisplayContext {
 			(OrganizationSearchTerms)organizationSearch.getSearchTerms();
 
 		LinkedHashMap<String, Object> organizationParams =
-			new LinkedHashMap<>();
-
-		organizationParams.put("groupOrganization", Long.valueOf(getGroupId()));
-		organizationParams.put(
-			"organizationsGroups", Long.valueOf(getGroupId()));
+			LinkedHashMapBuilder.<String, Object>put(
+				"groupOrganization", Long.valueOf(getGroupId())
+			).put(
+				"organizationsGroups", Long.valueOf(getGroupId())
+			).build();
 
 		int organizationsCount = OrganizationLocalServiceUtil.searchCount(
 			themeDisplay.getCompanyId(),
@@ -156,8 +173,9 @@ public class OrganizationsDisplayContext {
 	}
 
 	public PortletURL getPortletURL() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
@@ -195,12 +213,12 @@ public class OrganizationsDisplayContext {
 
 	private String _displayStyle;
 	private Long _groupId;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private OrganizationSearch _organizationSearch;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

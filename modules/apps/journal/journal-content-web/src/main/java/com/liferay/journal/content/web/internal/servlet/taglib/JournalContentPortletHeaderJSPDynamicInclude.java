@@ -41,12 +41,12 @@ public class JournalContentPortletHeaderJSPDynamicInclude
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
 		JournalContentDisplayContext journalContentDisplayContext =
-			(JournalContentDisplayContext)request.getAttribute(
+			(JournalContentDisplayContext)httpServletRequest.getAttribute(
 				JournalContentWebKeys.JOURNAL_CONTENT_DISPLAY_CONTEXT);
 
 		try {
@@ -56,15 +56,15 @@ public class JournalContentPortletHeaderJSPDynamicInclude
 				return;
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return;
 		}
 
-		super.include(request, response, key);
+		super.include(httpServletRequest, httpServletResponse, key);
 	}
 
 	@Override

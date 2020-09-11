@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,11 +28,10 @@ import java.util.Map;
  * @see UserNotificationDelivery
  * @generated
  */
-@ProviderType
 public class UserNotificationDeliveryWrapper
 	extends BaseModelWrapper<UserNotificationDelivery>
-	implements UserNotificationDelivery,
-			   ModelWrapper<UserNotificationDelivery> {
+	implements ModelWrapper<UserNotificationDelivery>,
+			   UserNotificationDelivery {
 
 	public UserNotificationDeliveryWrapper(
 		UserNotificationDelivery userNotificationDelivery) {

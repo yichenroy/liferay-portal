@@ -41,14 +41,14 @@ public class AxisCleanUpFilter extends BaseFilter {
 
 	@Override
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
 		try {
 			processFilter(
-				AxisCleanUpFilter.class.getName(), request, response,
-				filterChain);
+				AxisCleanUpFilter.class.getName(), httpServletRequest,
+				httpServletResponse, filterChain);
 		}
 		finally {
 			try {
@@ -59,8 +59,8 @@ public class AxisCleanUpFilter extends BaseFilter {
 					cacheThreadLocal.remove();
 				}
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 	}
@@ -75,8 +75,8 @@ public class AxisCleanUpFilter extends BaseFilter {
 			_CACHE_FIELD = ReflectionUtil.getDeclaredField(
 				MethodCache.class, "cache");
 		}
-		catch (Exception e) {
-			throw new LoggedExceptionInInitializerError(e);
+		catch (Exception exception) {
+			throw new LoggedExceptionInInitializerError(exception);
 		}
 	}
 

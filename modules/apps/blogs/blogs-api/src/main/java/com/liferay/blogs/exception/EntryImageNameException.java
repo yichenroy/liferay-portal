@@ -14,14 +14,11 @@
 
 package com.liferay.blogs.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class EntryImageNameException extends PortalException {
 
 	public EntryImageNameException() {
@@ -31,12 +28,12 @@ public class EntryImageNameException extends PortalException {
 		super(msg);
 	}
 
-	public EntryImageNameException(String msg, Throwable cause) {
-		super(msg, cause);
+	public EntryImageNameException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public EntryImageNameException(Throwable cause) {
-		super(cause);
+	public EntryImageNameException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

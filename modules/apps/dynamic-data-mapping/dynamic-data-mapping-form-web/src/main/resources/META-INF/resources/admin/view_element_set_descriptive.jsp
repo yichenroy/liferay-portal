@@ -24,19 +24,17 @@ DDMStructure ddmStructure = (DDMStructure)row.getObject();
 DateSearchEntry dateSearchEntry = new DateSearchEntry();
 
 dateSearchEntry.setDate(ddmStructure.getModifiedDate());
-
-String href = (String)request.getAttribute(WebKeys.SEARCH_ENTRY_HREF);
 %>
 
 <div class="clamp-container">
-	<h4 class="truncate-text">
-		<aui:a cssClass="form-instance-name" href="<%= href %>">
+	<h4 class="text-truncate">
+		<aui:a cssClass="form-instance-name" href="<%= (String)request.getAttribute(WebKeys.SEARCH_ENTRY_HREF) %>">
 			<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>
 		</aui:a>
 	</h4>
 
 	<h5 class="text-default">
-		<div class="form-instance-description truncate-text">
+		<div class="form-instance-description text-truncate">
 			<%= HtmlUtil.escape(ddmStructure.getDescription(locale)) %>
 		</div>
 	</h5>

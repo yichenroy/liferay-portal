@@ -60,27 +60,30 @@ public class MentionsSitesFormNavigatorEntry
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		Group liveGroup = (Group)request.getAttribute("site.liveGroup");
+		Group liveGroup = (Group)httpServletRequest.getAttribute(
+			"site.liveGroup");
 
-		UnicodeProperties typeSettingsProperties = null;
+		UnicodeProperties typeSettingsUnicodeProperties = null;
 
 		if (liveGroup != null) {
-			typeSettingsProperties = liveGroup.getTypeSettingsProperties();
+			typeSettingsUnicodeProperties =
+				liveGroup.getTypeSettingsProperties();
 		}
 		else {
-			typeSettingsProperties = new UnicodeProperties();
+			typeSettingsUnicodeProperties = new UnicodeProperties();
 		}
 
 		boolean groupMentionsEnabled = GetterUtil.getBoolean(
-			typeSettingsProperties.getProperty("mentionsEnabled"), true);
+			typeSettingsUnicodeProperties.getProperty("mentionsEnabled"), true);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			MentionsWebKeys.GROUP_MENTIONS_ENABLED, groupMentionsEnabled);
 
-		super.include(request, response);
+		super.include(httpServletRequest, httpServletResponse);
 	}
 
 	@Override
@@ -90,13 +93,14 @@ public class MentionsSitesFormNavigatorEntry
 
 		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
 
-		HttpServletRequest request = themeDisplay.getRequest();
+		HttpServletRequest httpServletRequest = themeDisplay.getRequest();
 
 		PortletPreferences companyPortletPreferences =
 			PrefsPropsUtil.getPreferences(themeDisplay.getCompanyId(), true);
 
 		return PrefsParamUtil.getBoolean(
-			companyPortletPreferences, request, "mentionsEnabled", true);
+			companyPortletPreferences, httpServletRequest, "mentionsEnabled",
+			true);
 	}
 
 	@Override

@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchFormInstanceRecordVersionException
 	extends NoSuchModelException {
 
@@ -33,13 +30,13 @@ public class NoSuchFormInstanceRecordVersionException
 	}
 
 	public NoSuchFormInstanceRecordVersionException(
-		String msg, Throwable cause) {
+		String msg, Throwable throwable) {
 
-		super(msg, cause);
+		super(msg, throwable);
 	}
 
-	public NoSuchFormInstanceRecordVersionException(Throwable cause) {
-		super(cause);
+	public NoSuchFormInstanceRecordVersionException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

@@ -45,6 +45,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portletmvc4spring.test.mock.web.portlet.MockRenderResponse;
 
 import java.lang.reflect.Field;
 
@@ -74,7 +75,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.mock.web.portlet.MockRenderResponse;
 
 /**
  * @author Pedro Queiroz
@@ -83,15 +83,7 @@ import org.springframework.mock.web.portlet.MockRenderResponse;
 	{DDMFormInstancePermission.class, DDMFormTaglibUtil.class, LocaleUtil.class}
 )
 @RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor(
-	{
-		"com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceModelImpl",
-		"com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordModelImpl",
-		"com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordVersionModelImpl",
-		"com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceVersionModelImpl",
-		"com.liferay.taglib.util.IncludeTag"
-	}
-)
+@SuppressStaticInitializationFor("com.liferay.taglib.util.IncludeTag")
 public class DDMFormRendererTagTest extends PowerMockito {
 
 	@Before
@@ -139,7 +131,8 @@ public class DDMFormRendererTagTest extends PowerMockito {
 
 		ddmForm.setDefaultLocale(LocaleUtil.BRAZIL);
 
-		Locale locale = _ddmFormRendererTag.getLocale(_request, ddmForm);
+		Locale locale = _ddmFormRendererTag.getLocale(
+			_httpServletRequest, ddmForm);
 
 		Assert.assertEquals(LocaleUtil.BRAZIL, locale);
 	}
@@ -216,7 +209,8 @@ public class DDMFormRendererTagTest extends PowerMockito {
 
 	@Test
 	public void testGetLocaleFromRequestWhenDDMFormIsNull() {
-		Locale locale = _ddmFormRendererTag.getLocale(_request, null);
+		Locale locale = _ddmFormRendererTag.getLocale(
+			_httpServletRequest, null);
 
 		Assert.assertEquals(LocaleUtil.US, locale);
 	}
@@ -229,7 +223,8 @@ public class DDMFormRendererTagTest extends PowerMockito {
 		ddmForm.setAvailableLocales(
 			createAvailableLocales(LocaleUtil.BRAZIL, LocaleUtil.US));
 
-		Locale locale = _ddmFormRendererTag.getLocale(_request, ddmForm);
+		Locale locale = _ddmFormRendererTag.getLocale(
+			_httpServletRequest, ddmForm);
 
 		Assert.assertEquals(LocaleUtil.US, locale);
 	}
@@ -238,9 +233,8 @@ public class DDMFormRendererTagTest extends PowerMockito {
 	public void testGetRedirectURLWhenFormInstanceIsNull() {
 		setDDMFormRendererTagInputs(null, null, null, null);
 
-		String redirectURL = _ddmFormRendererTag.getRedirectURL();
-
-		Assert.assertEquals(StringPool.BLANK, redirectURL);
+		Assert.assertEquals(
+			StringPool.BLANK, _ddmFormRendererTag.getRedirectURL());
 	}
 
 	protected Set<Locale> createAvailableLocales(Locale... locales) {
@@ -254,15 +248,15 @@ public class DDMFormRendererTagTest extends PowerMockito {
 	}
 
 	protected void mockDDMFormInstance(long ddmFormInstanceId) {
-		DDMFormInstanceImpl ddmFormInstance = new DDMFormInstanceImpl();
+		DDMFormInstanceImpl ddmFormInstanceImpl = new DDMFormInstanceImpl();
 
-		ddmFormInstance.setFormInstanceId(ddmFormInstanceId);
+		ddmFormInstanceImpl.setFormInstanceId(ddmFormInstanceId);
 
 		Mockito.when(
 			_ddmFormInstanceLocalService.fetchFormInstance(
 				Matchers.eq(ddmFormInstanceId))
 		).thenReturn(
-			ddmFormInstance
+			ddmFormInstanceImpl
 		);
 	}
 
@@ -396,20 +390,20 @@ public class DDMFormRendererTagTest extends PowerMockito {
 	protected void setUpHttpServletRequest() throws IllegalAccessException {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
-		_request.setAttribute(
+		_httpServletRequest.setAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE, new MockRenderResponse());
-		_request.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
+		_httpServletRequest.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
 
 		MemberMatcher.field(
 			DDMFormRendererTag.class, "request"
 		).set(
-			_ddmFormRendererTag, _request
+			_ddmFormRendererTag, _httpServletRequest
 		);
 	}
 
 	protected void setUpLanguageUtil() {
 		when(
-			_language.getLanguageId(Matchers.eq(_request))
+			_language.getLanguageId(Matchers.eq(_httpServletRequest))
 		).thenReturn(
 			"en_US"
 		);
@@ -437,7 +431,7 @@ public class DDMFormRendererTagTest extends PowerMockito {
 		when(
 			PortalUtil.getHttpServletRequest(Matchers.any(RenderRequest.class))
 		).thenReturn(
-			_request
+			_httpServletRequest
 		);
 
 		when(
@@ -482,9 +476,10 @@ public class DDMFormRendererTagTest extends PowerMockito {
 	@Mock
 	private DDMFormValuesFactory _ddmFormValuesFactory;
 
+	private final HttpServletRequest _httpServletRequest =
+		new MockHttpServletRequest();
+
 	@Mock
 	private Language _language;
-
-	private final HttpServletRequest _request = new MockHttpServletRequest();
 
 }

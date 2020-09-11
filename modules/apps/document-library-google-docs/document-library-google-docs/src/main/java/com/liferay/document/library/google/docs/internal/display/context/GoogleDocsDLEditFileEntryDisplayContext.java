@@ -17,7 +17,7 @@ package com.liferay.document.library.google.docs.internal.display.context;
 import com.liferay.document.library.display.context.BaseDLEditFileEntryDisplayContext;
 import com.liferay.document.library.display.context.DLEditFileEntryDisplayContext;
 import com.liferay.document.library.display.context.DLFilePicker;
-import com.liferay.document.library.google.docs.internal.util.GoogleDocsConstants;
+import com.liferay.document.library.google.docs.internal.util.constants.GoogleDocsConstants;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -39,22 +39,23 @@ public class GoogleDocsDLEditFileEntryDisplayContext
 
 	public GoogleDocsDLEditFileEntryDisplayContext(
 		DLEditFileEntryDisplayContext parentDLEditFileEntryDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse,
 		DLFileEntryType dlFileEntryType) {
 
 		super(
-			_UUID, parentDLEditFileEntryDisplayContext, request, response,
-			dlFileEntryType);
+			_UUID, parentDLEditFileEntryDisplayContext, httpServletRequest,
+			httpServletResponse, dlFileEntryType);
 	}
 
 	public GoogleDocsDLEditFileEntryDisplayContext(
 		DLEditFileEntryDisplayContext parentDLEditFileEntryDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileEntry fileEntry) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileEntry fileEntry) {
 
 		super(
-			_UUID, parentDLEditFileEntryDisplayContext, request, response,
-			fileEntry);
+			_UUID, parentDLEditFileEntryDisplayContext, httpServletRequest,
+			httpServletResponse, fileEntry);
 	}
 
 	@Override

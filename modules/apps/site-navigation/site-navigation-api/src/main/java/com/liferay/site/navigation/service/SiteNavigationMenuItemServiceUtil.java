@@ -14,8 +14,6 @@
 
 package com.liferay.site.navigation.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -32,7 +30,6 @@ import org.osgi.util.tracker.ServiceTracker;
  * @see SiteNavigationMenuItemService
  * @generated
  */
-@ProviderType
 public class SiteNavigationMenuItemServiceUtil {
 
 	/*
@@ -81,6 +78,17 @@ public class SiteNavigationMenuItemServiceUtil {
 			getSiteNavigationMenuItems(long siteNavigationMenuId) {
 
 		return getService().getSiteNavigationMenuItems(siteNavigationMenuId);
+	}
+
+	public static java.util.List
+		<com.liferay.site.navigation.model.SiteNavigationMenuItem>
+				getSiteNavigationMenuItems(
+					long siteNavigationMenuId,
+					long parentSiteNavigationMenuItemId)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().getSiteNavigationMenuItems(
+			siteNavigationMenuId, parentSiteNavigationMenuItemId);
 	}
 
 	public static com.liferay.site.navigation.model.SiteNavigationMenuItem

@@ -1,74 +1,105 @@
-import ClayButton from '../shared/ClayButton.es';
-import ClaySpinner from '../shared/ClaySpinner.es';
-import ClayToggle from '../shared/ClayToggle.es';
-import ContributorBuilder from '../criteria_builder/ContributorBuilder.es';
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
+import ClayButton from '@clayui/button';
+import ClayLayout from '@clayui/layout';
+import {FieldArray, withFormik} from 'formik';
+import {debounce, fetch, openModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
+
 import ThemeContext from '../../ThemeContext.es';
-import TitleEditor from '../title_editor/TitleEditor.es';
-import {debounce} from 'metal-debounce';
-import {FieldArray, withFormik} from 'formik';
-import {getPluralMessage, sub} from '../../utils/utils.es';
 import {
 	SOURCES,
 	SUPPORTED_CONJUNCTIONS,
 	SUPPORTED_OPERATORS,
-	SUPPORTED_PROPERTY_TYPES
+	SUPPORTED_PROPERTY_TYPES,
 } from '../../utils/constants.es';
-
-const DEFAULT_SEGMENT_NAME = Liferay.Language.get('unnamed-segment');
+import {
+	applyConjunctionChangeToContributor,
+	applyCriteriaChangeToContributors,
+	initialContributorsToContributors,
+} from '../../utils/contributors.es';
+import {initialContributorShape} from '../../utils/types.es';
+import {sub} from '../../utils/utils.es';
+import ContributorInputs from '../criteria_builder/ContributorInputs.es';
+import ContributorsBuilder from '../criteria_builder/ContributorsBuilder.es';
+import ClayToggle from '../shared/ClayToggle.es';
+import LocalizedInput from '../title_editor/LocalizedInput.es';
 
 class SegmentEdit extends Component {
 	static contextType = ThemeContext;
 
 	static propTypes = {
-		contributors: PropTypes.arrayOf(
-			PropTypes.shape(
-				{
-					conjunctionId: PropTypes.string,
-					conjunctionInputId: PropTypes.string,
-					initialQuery: PropTypes.string,
-					inputId: PropTypes.string,
-					propertyKey: PropTypes.string
-				}
-			)
-		),
+		availableLocales: PropTypes.object.isRequired,
+		contributors: PropTypes.arrayOf(initialContributorShape),
+		defaultLanguageId: PropTypes.string.isRequired,
 		errors: PropTypes.object,
 		formId: PropTypes.string,
 		handleBlur: PropTypes.func,
 		handleChange: PropTypes.func,
+		hasUpdatePermission: PropTypes.bool,
 		initialMembersCount: PropTypes.number,
 		initialSegmentActive: PropTypes.bool,
-		initialSegmentName: PropTypes.string,
+		initialSegmentName: PropTypes.object,
 		locale: PropTypes.string.isRequired,
 		portletNamespace: PropTypes.string,
 		previewMembersURL: PropTypes.string,
 		propertyGroups: PropTypes.array,
 		redirect: PropTypes.string.isRequired,
 		requestMembersCountURL: PropTypes.string,
+		setFieldValue: PropTypes.func,
 		setValues: PropTypes.func,
 		showInEditMode: PropTypes.bool,
 		source: PropTypes.string,
 		validateForm: PropTypes.func,
-		values: PropTypes.object
+		values: PropTypes.object,
 	};
 
 	static defaultProps = {
 		contributors: [],
-		initialMembersCount: 0,
+		handleBlur: () => {},
 		initialSegmentActive: true,
-		portletNamespace: ''
-	};
-
-	state = {
-		changesUnsaved: false,
-		editing: this.props.showInEditMode,
-		membersCount: this.props.initialMembersCount,
-		membersCountLoading: false
+		initialSegmentName: {},
+		portletNamespace: '',
+		showInEditMode: false,
 	};
 
 	constructor(props) {
 		super(props);
+
+		const {
+			contributors: initialContributors,
+			initialMembersCount,
+			propertyGroups,
+			showInEditMode,
+			values,
+		} = props;
+
+		const contributors = initialContributorsToContributors(
+			initialContributors,
+			propertyGroups
+		);
+
+		this.state = {
+			contributors,
+			disabledSave: this._isQueryEmpty(contributors),
+			editing: showInEditMode,
+			hasChanged: false,
+			membersCount: initialMembersCount,
+			validTitle: !!values.name[props.defaultLanguageId],
+		};
 
 		this._debouncedFetchMembersCount = debounce(
 			this._fetchMembersCount,
@@ -76,125 +107,184 @@ class SegmentEdit extends Component {
 		);
 	}
 
+	_handleCriteriaEdit = () => {
+		this.setState({
+			editing: !this.state.editing,
+		});
+	};
+
+	_handleLocalizedInputChange = (event, newValues, invalid) => {
+		this.props.setFieldValue('name', newValues);
+		this.setState({
+			hasChanged: true,
+			validTitle: !invalid,
+		});
+	};
+
 	_fetchMembersCount = () => {
 		const formElement = document.getElementById(this.props.formId);
 
 		const formData = new FormData(formElement);
 
-		fetch(
-			this.props.requestMembersCountURL,
-			{
-				body: formData,
-				method: 'POST'
-			}
-		).then(
-			response => response.json()
-		).then(
-			membersCount => {
-				this.setState(
-					{
-						membersCount,
-						membersCountLoading: false
-					}
-				);
-			}
-		).catch(
-			() => {
+		fetch(this.props.requestMembersCountURL, {
+			body: formData,
+			method: 'POST',
+		})
+			.then((response) => response.json())
+			.then((membersCount) => {
+				this.setState({
+					membersCount,
+					membersCountLoading: false,
+				});
+			})
+			.catch(() => {
 				this.setState({membersCountLoading: false});
 
-				Liferay.Util.openToast(
-					{
-						message: Liferay.Language.get('an-unexpected-error-occurred'),
-						title: Liferay.Language.get('error'),
-						type: 'danger'
-					}
-				);
-			}
-		);
+				Liferay.Util.openToast({
+					message: Liferay.Language.get(
+						'an-unexpected-error-occurred'
+					),
+					type: 'danger',
+				});
+			});
 	};
 
-	_handleQueryChange = () => {
-		this.setState(
-			{
-				changesUnsaved: true,
-				membersCountLoading: true
-			},
-			this._debouncedFetchMembersCount
-		);
+	_handleQueryChange = (criteriaChange, index) => {
+		this.setState((prevState) => {
+			const contributors = applyCriteriaChangeToContributors(
+				prevState.contributors,
+				{
+					criteriaChange,
+					propertyKey: index,
+				}
+			);
 
+			return {
+				contributors,
+				disabledSave: this._isQueryEmpty(contributors),
+				hasChanged: true,
+				membersCountLoading: true,
+			};
+		}, this._debouncedFetchMembersCount);
 	};
 
-	_handleCriteriaEdit = () => {
-		this.setState(
-			{
-				editing: !this.state.editing
-			}
-		);
-	}
-
-	_handleSegmentNameBlur = event => {
-		const {
-			handleBlur
-		} = this.props;
+	_handleSegmentNameBlur = (event) => {
+		const {handleBlur} = this.props;
 
 		handleBlur(event);
 	};
 
-	_handleSourceIconMouseOver = event => {
-		const message = this.props.source === SOURCES.ASAH_FARO_BACKEND.name ?
-			SOURCES.ASAH_FARO_BACKEND.label :
-			SOURCES.DEFAULT.label;
+	_handleConjunctionChange = (conjunctionName) => {
+		this.setState((prevState) => {
+			const contributors = applyConjunctionChangeToContributor(
+				prevState.contributors,
+				conjunctionName
+			);
 
-		Liferay.Portal.ToolTip.show(event.currentTarget, message);
+			return {
+				contributors,
+				hasChanged: true,
+				membersCountLoading: true,
+			};
+		}, this._debouncedFetchMembersCount);
 	};
 
 	/**
 	 * Checks if every query in each contributor has a value.
 	 * @return {boolean} True if none of the contributor's queries have a value.
 	 */
-	_isQueryEmpty = () => this.props.contributors.every(
-		({initialQuery, inputId}) => {
-			const input = document.getElementById(inputId);
-
-			return input ? !input.value : !initialQuery;
-		}
-	);
+	_isQueryEmpty = (contributors) =>
+		contributors.every((contributor) => !contributor.query);
 
 	_renderContributors = () => {
-		const {contributors, propertyGroups} = this.props;
+		const {
+			locale,
+			propertyGroups,
+			requestMembersCountURL,
+			values,
+		} = this.props;
 
-		const {editing} = this.state;
+		const {
+			contributors,
+			editing,
+			membersCount,
+			membersCountLoading,
+		} = this.state;
 
-		const emptyContributors = this._isQueryEmpty();
+		const emptyContributors = this._isQueryEmpty(contributors);
 
-		return (
-			(propertyGroups && contributors) ?
-				<ContributorBuilder
-					editing={editing}
-					emptyContributors={emptyContributors}
-					initialContributors={contributors}
-					onQueryChange={this._handleQueryChange}
-					propertyGroups={propertyGroups}
-					supportedConjunctions={SUPPORTED_CONJUNCTIONS}
-					supportedOperators={SUPPORTED_OPERATORS}
-					supportedPropertyTypes={SUPPORTED_PROPERTY_TYPES}
-				/> :
-				null
-		);
+		const segmentName = values.name[locale];
+
+		return propertyGroups && contributors ? (
+			<ContributorsBuilder
+				contributors={contributors}
+				editing={editing}
+				emptyContributors={emptyContributors}
+				membersCount={membersCount}
+				membersCountLoading={membersCountLoading}
+				onConjunctionChange={this._handleConjunctionChange}
+				onPreviewMembers={this._handlePreviewMembers}
+				onQueryChange={this._handleQueryChange}
+				propertyGroups={propertyGroups}
+				requestMembersCountURL={requestMembersCountURL}
+				segmentName={segmentName}
+				supportedConjunctions={SUPPORTED_CONJUNCTIONS}
+				supportedOperators={SUPPORTED_OPERATORS}
+				supportedPropertyTypes={SUPPORTED_PROPERTY_TYPES}
+			/>
+		) : null;
 	};
 
-	_handlePreviewClick = url => () => {
-		Liferay.Util.openWindow(
-			{
-				dialog: {
-					destroyOnHide: true
-				},
-				id: 'segment-members-dialog',
-				title: sub(Liferay.Language.get('x-members'), [this.props.values.name]),
-				uri: url
+	/**
+	 * Decides wether to redirect the user or warn
+	 *
+	 * @memberof SegmentEdit
+	 */
+	_handleCancelButton = () => {
+		const {hasChanged} = this.state;
+
+		if (hasChanged) {
+			const confirmed = confirm(
+				Liferay.Language.get('criteria-cancel-confirmation-message')
+			);
+
+			if (confirmed) {
+				this._redirect();
 			}
-		);
-	}
+		}
+		else {
+			this._redirect();
+		}
+	};
+
+	/**
+	 * This redirects to the `redirect` prop.
+	 *
+	 * @memberof SegmentEdit
+	 */
+	_redirect = () => {
+		Liferay.Util.navigate(this.props.redirect);
+	};
+
+	/**
+	 * Opens a modal from to show the view from `this.props.previewMembersURL`
+	 *
+	 * @memberof SegmentEdit
+	 */
+	_handlePreviewMembers = () => {
+		const {locale, previewMembersURL, values} = this.props;
+		const {name} = values;
+		const segmentLocalizedName = name[locale];
+
+		openModal({
+			id: 'segment-members-dialog',
+			size: 'full-screen',
+			title: sub(Liferay.Language.get('x-members'), [
+				Liferay.Util.escape(segmentLocalizedName),
+			]),
+			url: previewMembersURL,
+		});
+	};
 
 	/**
 	 * Validates fields with validation and prevents the default form submission
@@ -207,73 +297,97 @@ class SegmentEdit extends Component {
 	 * from being called.
 	 * @param {Class} event Event to prevent a form submission from occurring.
 	 */
-	_handleValidate = event => {
+	_handleValidate = (event) => {
 		const {validateForm} = this.props;
 
 		event.persist();
 
-		validateForm().then(
-			errors => {
-				const errorMessages = Object.values(errors);
+		validateForm().then((errors) => {
+			const errorMessages = Object.values(errors);
 
-				if (errorMessages.length) {
-					event.preventDefault();
+			if (errorMessages.length) {
+				event.preventDefault();
 
-					errorMessages.forEach(
-						message => {
-							Liferay.Util.openToast(
-								{
-									message,
-									title: Liferay.Language.get('error'),
-									type: 'danger'
-								}
-							);
-						}
-					);
-				}
+				errorMessages.forEach((message) => {
+					Liferay.Util.openToast({
+						message,
+						type: 'danger',
+					});
+				});
 			}
-		);
+		});
+	};
+
+	_renderLocalizedInputs = () => {
+		const {defaultLanguageId, portletNamespace, values} = this.props;
+
+		const langs = Object.keys(values.name);
+
+		return langs.map((key) => {
+			let returnVal;
+			const value = values.name[key];
+
+			if (key === defaultLanguageId) {
+				returnVal = (
+					<React.Fragment key={key}>
+						<input
+							name={`${portletNamespace}name_${key}`}
+							readOnly
+							type="hidden"
+							value={value}
+						/>
+						<input
+							name={`${portletNamespace}key`}
+							readOnly
+							type="hidden"
+							value={value}
+						/>
+						<input
+							name={`${portletNamespace}name`}
+							readOnly
+							type="hidden"
+							value={value}
+						/>
+					</React.Fragment>
+				);
+			}
+			else {
+				returnVal = (
+					<React.Fragment key={key}>
+						<input
+							name={`${portletNamespace}name_${key}`}
+							readOnly
+							type="hidden"
+							value={value}
+						/>
+					</React.Fragment>
+				);
+			}
+
+			return returnVal;
+		});
 	};
 
 	render() {
 		const {
-			handleChange,
-			locale,
+			availableLocales,
+			defaultLanguageId,
+			hasUpdatePermission,
 			portletNamespace,
-			previewMembersURL,
-			redirect,
 			source,
-			values
+			values,
 		} = this.props;
 
-		const {changesUnsaved, editing, membersCount, membersCountLoading} = this.state;
+		const {contributors, disabledSave, editing, validTitle} = this.state;
 
 		const {assetsPath} = this.context;
 
-		const disabledCancel = !editing;
-		const disabledSave = !editing || this._isQueryEmpty();
-		const editingToggleDisabled = changesUnsaved;
+		const disabledSaveButton = disabledSave || !validTitle;
+
+		const placeholder = Liferay.Language.get('untitled-segment');
 
 		return (
 			<div className="segment-edit-page-root">
-				<input
-					name={`${portletNamespace}name`}
-					type="hidden"
-					value={values.name}
-				/>
-
-				<input
-					name={`${portletNamespace}name_${locale}`}
-					type="hidden"
-					value={values.name}
-				/>
-
-				<input
-					name={`${portletNamespace}key`}
-					type="hidden"
-					value={values.name}
-				/>
-
 				<input
 					name={`${portletNamespace}active`}
 					type="hidden"
@@ -281,82 +395,87 @@ class SegmentEdit extends Component {
 				/>
 
 				<div className="form-header">
-					<div className="container-fluid container-fluid-max-xl form-header-container">
+					<ClayLayout.ContainerFluid className="form-header-container">
 						<div className="form-header-section-left">
-							<TitleEditor
-								inputName="name"
-								onBlur={this._handleSegmentNameBlur}
-								onChange={handleChange}
-								placeholder={DEFAULT_SEGMENT_NAME}
-								value={values.name}
+							<FieldArray
+								name="values.name"
+								render={this._renderLocalizedInputs}
 							/>
 
-							<img
-								className="source-icon"
-								data-testid="source-icon"
-								onMouseOver={this._handleSourceIconMouseOver}
-								src={source === SOURCES.ASAH_FARO_BACKEND.name ?
-									`${assetsPath}${SOURCES.ASAH_FARO_BACKEND.icon}` :
-									`${assetsPath}${SOURCES.DEFAULT.icon}`
-								}
+							<LocalizedInput
+								availableLanguages={availableLocales}
+								defaultLang={defaultLanguageId}
+								initialLanguageId={defaultLanguageId}
+								initialOpen={false}
+								initialValues={values.name}
+								onChange={this._handleLocalizedInputChange}
+								placeholder={placeholder}
+								portletNamespace={portletNamespace}
+								readOnly={!editing}
 							/>
-						</div>
 
-						<div className="form-header-section-right">
-							<div className="btn-group">
-								<div className="btn-group-item">
-									<ClaySpinner
-										className="mr-4"
-										loading={membersCountLoading}
-										size="sm"
-									/>
-
-									<ClayButton
-										label={getPluralMessage(
-											Liferay.Language.get('x-member'),
-											Liferay.Language.get('x-members'),
-											membersCount
-										)}
-										onClick={this._handlePreviewClick(previewMembersURL)}
-										size="sm"
-										type="button"
-									/>
-								</div>
-								<div className="btn-group-item mr-2">
-									<ClayToggle
-										checked={editing}
-										className="toggle-editing"
-										disabled={editingToggleDisabled}
-										iconOff="view"
-										iconOn="pencil"
-										onChange={this._handleCriteriaEdit}
-									/>
-								</div>
-							</div>
-
-							<div className="btn-group">
-								<div className="btn-group-item">
-									<ClayButton
-										disabled={disabledCancel}
-										href={redirect}
-										label={Liferay.Language.get('cancel')}
-										size="sm"
-									/>
-								</div>
-
-								<div className="btn-group-item">
-									<ClayButton
-										disabled={disabledSave}
-										label={Liferay.Language.get('save')}
-										onClick={this._handleValidate}
-										size="sm"
-										style="primary"
-										type="submit"
-									/>
-								</div>
+							<div className="align-self-center">
+								<img
+									className="lfr-portal-tooltip source-icon"
+									data-testid="source-icon"
+									src={
+										source ===
+										SOURCES.ASAH_FARO_BACKEND.name
+											? `${assetsPath}${SOURCES.ASAH_FARO_BACKEND.icon}`
+											: `${assetsPath}${SOURCES.DEFAULT.icon}`
+									}
+									title={
+										source ===
+										SOURCES.ASAH_FARO_BACKEND.name
+											? SOURCES.ASAH_FARO_BACKEND.label
+											: SOURCES.DEFAULT.label
+									}
+								/>
 							</div>
 						</div>
-					</div>
+
+						{hasUpdatePermission && (
+							<div className="form-header-section-right">
+								<div className="btn-group">
+									<div className="btn-group-item mr-2">
+										<ClayToggle
+											checked={editing}
+											className="toggle-editing"
+											iconOff="pencil"
+											iconOn="pencil"
+											onChange={this._handleCriteriaEdit}
+										/>
+									</div>
+								</div>
+
+								<div className="btn-group">
+									<div className="btn-group-item">
+										<ClayButton
+											className="text-capitalize"
+											displayType="secondary"
+											onClick={this._handleCancelButton}
+											small
+										>
+											{Liferay.Language.get('cancel')}
+										</ClayButton>
+									</div>
+
+									<div className="btn-group-item">
+										<ClayButton
+											className="text-capitalize"
+											disabled={disabledSaveButton}
+											displayType="primary"
+											onClick={this._handleValidate}
+											small={true}
+											type="submit"
+										>
+											{Liferay.Language.get('save')}
+										</ClayButton>
+									</div>
+								</div>
+							</div>
+						)}
+					</ClayLayout.ContainerFluid>
 				</div>
 
 				<div className="form-body">
@@ -364,29 +483,26 @@ class SegmentEdit extends Component {
 						name="contributors"
 						render={this._renderContributors}
 					/>
+					<ContributorInputs contributors={contributors} />
 				</div>
 			</div>
 		);
 	}
 }
 
-export default withFormik(
-	{
-		mapPropsToValues: props => (
-			{
-				active: props.initialSegmentActive || true,
-				contributors: props.contributors || [],
-				name: props.initialSegmentName
-			}
-		),
-		validate: values => {
-			const errors = {};
+export default withFormik({
+	mapPropsToValues: (props) => ({
+		active: props.initialSegmentActive || true,
+		contributors: props.contributors || [],
+		name: props.initialSegmentName || {},
+	}),
+	validate: (values) => {
+		const errors = {};
 
-			if (!values.name) {
-				errors.name = Liferay.Language.get('segment-name-is-required');
-			}
-
-			return errors;
+		if (!values.name) {
+			errors.name = Liferay.Language.get('segment-name-is-required');
 		}
-	}
-)(SegmentEdit);
+
+		return errors;
+	},
+})(SegmentEdit);

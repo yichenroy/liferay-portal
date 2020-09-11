@@ -14,12 +14,9 @@
 
 package com.liferay.layout.page.template.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class LayoutPageTemplateCollectionImpl
 	extends LayoutPageTemplateCollectionBaseImpl {
 

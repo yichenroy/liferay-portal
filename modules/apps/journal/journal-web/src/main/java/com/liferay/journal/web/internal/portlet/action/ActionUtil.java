@@ -15,14 +15,17 @@
 package com.liferay.journal.web.internal.portlet.action;
 
 import com.liferay.dynamic.data.mapping.exception.TemplateScriptException;
+import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureServiceUtil;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.exception.InvalidDDMStructureFieldNameException;
 import com.liferay.journal.exception.NoSuchArticleException;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFeedServiceUtil;
@@ -31,7 +34,7 @@ import com.liferay.journal.util.comparator.ArticleVersionComparator;
 import com.liferay.journal.web.internal.portlet.JournalPortlet;
 import com.liferay.journal.web.internal.security.permission.resource.JournalPermission;
 import com.liferay.journal.web.internal.util.JournalHelperUtil;
-import com.liferay.journal.web.util.JournalUtil;
+import com.liferay.journal.web.internal.util.JournalUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.diff.CompareVersionsException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -65,6 +68,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.portlet.ActionRequest;
@@ -153,8 +157,9 @@ public class ActionUtil {
 				new PortletRequestModel(renderRequest, renderResponse),
 				themeDisplay);
 		}
-		catch (CompareVersionsException cve) {
-			renderRequest.setAttribute(WebKeys.DIFF_VERSION, cve.getVersion());
+		catch (CompareVersionsException compareVersionsException) {
+			renderRequest.setAttribute(
+				WebKeys.DIFF_VERSION, compareVersionsException.getVersion());
 		}
 
 		renderRequest.setAttribute(WebKeys.DIFF_HTML_RESULTS, diffHtmlResults);
@@ -244,40 +249,47 @@ public class ActionUtil {
 		}
 	}
 
-	public static JournalArticle getArticle(HttpServletRequest request)
+	public static JournalArticle getArticle(
+			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
 		String actionName = ParamUtil.getString(
-			request, ActionRequest.ACTION_NAME);
+			httpServletRequest, ActionRequest.ACTION_NAME);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		long resourcePrimKey = ParamUtil.getLong(request, "resourcePrimKey");
+		long resourcePrimKey = ParamUtil.getLong(
+			httpServletRequest, "resourcePrimKey");
 		long groupId = ParamUtil.getLong(
-			request, "groupId", themeDisplay.getScopeGroupId());
-		long classNameId = ParamUtil.getLong(request, "classNameId");
-		long classPK = ParamUtil.getLong(request, "classPK");
-		String articleId = ParamUtil.getString(request, "articleId");
+			httpServletRequest, "groupId", themeDisplay.getScopeGroupId());
+		long classNameId = ParamUtil.getLong(httpServletRequest, "classNameId");
+		long classPK = ParamUtil.getLong(httpServletRequest, "classPK");
+		String articleId = ParamUtil.getString(httpServletRequest, "articleId");
+		long ddmStructureId = ParamUtil.getLong(
+			httpServletRequest, "ddmStructureId");
 		String ddmStructureKey = ParamUtil.getString(
-			request, "ddmStructureKey");
+			httpServletRequest, "ddmStructureKey");
 		int status = ParamUtil.getInteger(
-			request, "status", WorkflowConstants.STATUS_ANY);
+			httpServletRequest, "status", WorkflowConstants.STATUS_ANY);
 
 		JournalArticle article = null;
 
-		if (actionName.equals("addArticle") && (resourcePrimKey != 0)) {
+		if (actionName.equals("/journal/add_article") &&
+			(resourcePrimKey != 0)) {
+
 			article = JournalArticleLocalServiceUtil.getLatestArticle(
 				resourcePrimKey, status, false);
 		}
-		else if (!actionName.equals("addArticle") &&
+		else if (!actionName.equals("/journal/add_article") &&
 				 Validator.isNotNull(articleId)) {
 
 			article = JournalArticleServiceUtil.getLatestArticle(
 				groupId, articleId, status);
 		}
 		else if ((classNameId > 0) &&
-				 (classPK > JournalArticleConstants.CLASSNAME_ID_DEFAULT)) {
+				 (classPK > JournalArticleConstants.CLASS_NAME_ID_DEFAULT)) {
 
 			String className = PortalUtil.getClassName(classNameId);
 
@@ -285,14 +297,26 @@ public class ActionUtil {
 				article = JournalArticleServiceUtil.getLatestArticle(
 					groupId, className, classPK);
 			}
-			catch (NoSuchArticleException nsae) {
+			catch (NoSuchArticleException noSuchArticleException) {
 				return null;
 			}
 		}
 		else {
-			DDMStructure ddmStructure = DDMStructureServiceUtil.fetchStructure(
-				groupId, PortalUtil.getClassNameId(JournalArticle.class),
-				ddmStructureKey, true);
+			DDMStructure ddmStructure = null;
+
+			if (Validator.isNotNull(ddmStructureKey)) {
+				ddmStructure = DDMStructureServiceUtil.fetchStructure(
+					groupId, PortalUtil.getClassNameId(JournalArticle.class),
+					ddmStructureKey, true);
+			}
+			else if (ddmStructureId > 0) {
+				try {
+					ddmStructure = DDMStructureServiceUtil.getStructure(
+						ddmStructureId);
+				}
+				catch (Exception exception) {
+				}
+			}
 
 			if (ddmStructure == null) {
 				return null;
@@ -310,12 +334,12 @@ public class ActionUtil {
 				article.setId(0);
 				article.setGroupId(groupId);
 				article.setClassNameId(
-					JournalArticleConstants.CLASSNAME_ID_DEFAULT);
+					JournalArticleConstants.CLASS_NAME_ID_DEFAULT);
 				article.setClassPK(0);
 				article.setArticleId(null);
 				article.setVersion(0);
 			}
-			catch (NoSuchArticleException nsae) {
+			catch (NoSuchArticleException noSuchArticleException) {
 				return null;
 			}
 		}
@@ -326,10 +350,8 @@ public class ActionUtil {
 	public static JournalArticle getArticle(PortletRequest portletRequest)
 		throws Exception {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			portletRequest);
-
-		JournalArticle article = getArticle(request);
+		JournalArticle article = getArticle(
+			PortalUtil.getHttpServletRequest(portletRequest));
 
 		JournalUtil.addRecentArticle(portletRequest, article);
 
@@ -356,15 +378,16 @@ public class ActionUtil {
 		return articles;
 	}
 
-	public static JournalFeed getFeed(HttpServletRequest request)
+	public static JournalFeed getFeed(HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		long groupId = ParamUtil.getLong(request, "groupId");
-		String feedId = ParamUtil.getString(request, "feedId");
+		String feedId = ParamUtil.getString(httpServletRequest, "feedId");
 
 		JournalFeed feed = null;
 
 		if (Validator.isNotNull(feedId)) {
+			long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
+
 			feed = JournalFeedServiceUtil.getFeed(groupId, feedId);
 		}
 
@@ -374,19 +397,17 @@ public class ActionUtil {
 	public static JournalFeed getFeed(PortletRequest portletRequest)
 		throws Exception {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			portletRequest);
-
-		return getFeed(request);
+		return getFeed(PortalUtil.getHttpServletRequest(portletRequest));
 	}
 
-	public static JournalFolder getFolder(HttpServletRequest request)
+	public static JournalFolder getFolder(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		long folderId = ParamUtil.getLong(request, "folderId");
+		long folderId = ParamUtil.getLong(httpServletRequest, "folderId");
 
 		JournalFolder folder = null;
 
@@ -407,10 +428,7 @@ public class ActionUtil {
 	public static JournalFolder getFolder(PortletRequest portletRequest)
 		throws PortalException {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			portletRequest);
-
-		return getFolder(request);
+		return getFolder(PortalUtil.getHttpServletRequest(portletRequest));
 	}
 
 	public static List<JournalFolder> getFolders(ResourceRequest request)
@@ -422,9 +440,7 @@ public class ActionUtil {
 		List<JournalFolder> folders = new ArrayList<>();
 
 		for (long folderId : folderIds) {
-			JournalFolder folder = JournalFolderServiceUtil.getFolder(folderId);
-
-			folders.add(folder);
+			folders.add(JournalFolderServiceUtil.getFolder(folderId));
 		}
 
 		return folders;
@@ -492,6 +508,20 @@ public class ActionUtil {
 		}
 
 		return true;
+	}
+
+	public static void validateFieldNames(DDMForm ddmForm) throws Exception {
+		Map<String, DDMFormField> ddmFormFieldsMap =
+			ddmForm.getDDMFormFieldsMap(true);
+
+		for (String reservedFieldName : _RESERVED_FIELD_NAMES) {
+			if (ddmFormFieldsMap.containsKey(reservedFieldName)) {
+				throw new InvalidDDMStructureFieldNameException(
+					"Dynamic data mapping structure field name " +
+						reservedFieldName + " is a reserved name",
+					reservedFieldName);
+			}
+		}
 	}
 
 	protected static String getElementInstanceId(
@@ -588,5 +618,9 @@ public class ActionUtil {
 
 		return false;
 	}
+
+	private static final String[] _RESERVED_FIELD_NAMES = {
+		"attributes", "data", "name", "options", "optionsMap", "type"
+	};
 
 }

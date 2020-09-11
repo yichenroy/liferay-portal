@@ -22,29 +22,31 @@ import com.liferay.item.selector.ItemSelectorReturnTypeResolver;
 import com.liferay.item.selector.taglib.ItemSelectorRepositoryEntryBrowserReturnTypeUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.WebKeys;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import javax.portlet.PortletException;
+import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -56,74 +58,97 @@ import javax.servlet.http.HttpServletRequest;
 public class ItemSelectorRepositoryEntryBrowserUtil {
 
 	public static void addPortletBreadcrumbEntries(
-			long folderId, String displayStyle, HttpServletRequest request,
+			long folderId, String displayStyle,
+			HttpServletRequest httpServletRequest,
+			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
 			PortletURL portletURL)
 		throws Exception {
 
-		addGroupSelectorBreadcrumbEntry(
-			request, liferayPortletResponse, portletURL);
+		_addGroupSelectorBreadcrumbEntry(
+			httpServletRequest, liferayPortletResponse, portletURL);
 
 		portletURL.setParameter("displayStyle", displayStyle);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		Group scopeGroup = themeDisplay.getScopeGroup();
-
-		addPortletBreadcrumbEntry(
-			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, request,
-			scopeGroup.getDescriptiveName(request.getLocale()), portletURL);
+		Folder folder = null;
 
 		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			Folder folder = DLAppServiceUtil.getFolder(folderId);
+			folder = DLAppServiceUtil.getFolder(folderId);
+		}
 
+		Group group = themeDisplay.getScopeGroup();
+
+		if (folder != null) {
+			group = GroupServiceUtil.getGroup(folder.getGroupId());
+		}
+
+		_addPortletBreadcrumbEntry(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, httpServletRequest,
+			group.getDescriptiveName(httpServletRequest.getLocale()),
+			EntryURLUtil.getGroupPortletURL(group, liferayPortletRequest));
+
+		if (folder != null) {
 			List<Folder> ancestorFolders = folder.getAncestors();
 
 			Collections.reverse(ancestorFolders);
 
 			for (Folder ancestorFolder : ancestorFolders) {
-				addPortletBreadcrumbEntry(
-					ancestorFolder.getFolderId(), request,
+				_addPortletBreadcrumbEntry(
+					ancestorFolder.getFolderId(), httpServletRequest,
 					ancestorFolder.getName(), portletURL);
 			}
 
-			addPortletBreadcrumbEntry(
-				folder.getFolderId(), request, folder.getName(), portletURL);
+			_addPortletBreadcrumbEntry(
+				folder.getFolderId(), httpServletRequest, folder.getName(),
+				portletURL);
 		}
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #addPortletBreadcrumbEntries(long, String,
+	 *             HttpServletRequest, LiferayPortletRequest,
+	 *             LiferayPortletResponse, PortletURL)}
+	 */
+	@Deprecated
+	public static void addPortletBreadcrumbEntries(
+			long folderId, String displayStyle,
+			HttpServletRequest httpServletRequest,
+			LiferayPortletResponse liferayPortletResponse,
+			PortletURL portletURL)
+		throws Exception {
+
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
+
+		addPortletBreadcrumbEntries(
+			folderId, displayStyle, httpServletRequest,
+			PortalUtil.getLiferayPortletRequest(portletRequest),
+			liferayPortletResponse, portletURL);
 	}
 
 	public static JSONObject getItemMetadataJSONObject(
 			FileEntry fileEntry, Locale locale)
 		throws PortalException {
 
-		JSONObject itemMetadataJSONObject = JSONFactoryUtil.createJSONObject();
-
-		JSONArray groupsJSONArray = JSONFactoryUtil.createJSONArray();
-
-		JSONObject firstTabJSONObject = JSONFactoryUtil.createJSONObject();
-
-		JSONArray firstTabDataJSONArray = JSONFactoryUtil.createJSONArray();
-
 		FileVersion latestFileVersion = fileEntry.getLatestFileVersion();
-
-		firstTabDataJSONArray.put(
-			_createJSONObject(
-				LanguageUtil.get(locale, "format"),
-				HtmlUtil.escape(latestFileVersion.getExtension())));
-
-		firstTabDataJSONArray.put(
-			_createJSONObject(
-				LanguageUtil.get(locale, "size"),
-				TextFormatter.formatStorageSize(fileEntry.getSize(), locale)));
-		firstTabDataJSONArray.put(
-			_createJSONObject(
-				LanguageUtil.get(locale, "name"),
-				HtmlUtil.escape(DLUtil.getTitleWithExtension(fileEntry))));
-
 		Date modifiedDate = fileEntry.getModifiedDate();
 
-		firstTabDataJSONArray.put(
+		JSONArray firstTabDataJSONArray = JSONUtil.putAll(
+			_createJSONObject(
+				LanguageUtil.get(locale, "format"),
+				HtmlUtil.escape(latestFileVersion.getExtension())),
+			_createJSONObject(
+				LanguageUtil.get(locale, "size"),
+				LanguageUtil.formatStorageSize(fileEntry.getSize(), locale)),
+			_createJSONObject(
+				LanguageUtil.get(locale, "name"),
+				HtmlUtil.escape(DLUtil.getTitleWithExtension(fileEntry))),
 			_createJSONObject(
 				LanguageUtil.get(locale, "modified"),
 				LanguageUtil.format(
@@ -136,43 +161,36 @@ public class ItemSelectorRepositoryEntryBrowserUtil {
 						HtmlUtil.escape(fileEntry.getUserName())
 					})));
 
-		firstTabJSONObject.put("data", firstTabDataJSONArray);
+		JSONArray groupsJSONArray = JSONUtil.put(
+			JSONUtil.put(
+				"data", firstTabDataJSONArray
+			).put(
+				"title", LanguageUtil.get(locale, "file-info")
+			));
 
-		firstTabJSONObject.put("title", LanguageUtil.get(locale, "file-info"));
+		groupsJSONArray.put(
+			JSONUtil.put(
+				"data",
+				JSONUtil.putAll(
+					_createJSONObject(
+						LanguageUtil.get(locale, "version"),
+						HtmlUtil.escape(latestFileVersion.getVersion())),
+					_createJSONObject(
+						LanguageUtil.get(locale, "status"),
+						WorkflowConstants.getStatusLabel(
+							latestFileVersion.getStatus())))
+			).put(
+				"title", LanguageUtil.get(locale, "version")
+			));
 
-		groupsJSONArray.put(firstTabJSONObject);
-
-		JSONObject secondTabJSONObject = JSONFactoryUtil.createJSONObject();
-
-		JSONArray secondTabDataJSONArray = JSONFactoryUtil.createJSONArray();
-
-		secondTabDataJSONArray.put(
-			_createJSONObject(
-				LanguageUtil.get(locale, "version"),
-				HtmlUtil.escape(latestFileVersion.getVersion())));
-		secondTabDataJSONArray.put(
-			_createJSONObject(
-				LanguageUtil.get(locale, "status"),
-				WorkflowConstants.getStatusLabel(
-					latestFileVersion.getStatus())));
-
-		secondTabJSONObject.put("data", secondTabDataJSONArray);
-
-		secondTabJSONObject.put("title", LanguageUtil.get(locale, "version"));
-
-		groupsJSONArray.put(secondTabJSONObject);
-
-		itemMetadataJSONObject.put("groups", groupsJSONArray);
-
-		return itemMetadataJSONObject;
+		return JSONUtil.put("groups", groupsJSONArray);
 	}
 
 	public static String getItemSelectorReturnTypeClassName(
-			ItemSelectorReturnTypeResolver
-				<? extends ItemSelectorReturnType, FileEntry>
-					itemSelectorReturnTypeResolver,
-			ItemSelectorReturnType itemSelectorReturnType)
-		throws Exception {
+		ItemSelectorReturnTypeResolver
+			<? extends ItemSelectorReturnType, FileEntry>
+				itemSelectorReturnTypeResolver,
+		ItemSelectorReturnType itemSelectorReturnType) {
 
 		if (itemSelectorReturnTypeResolver != null) {
 			Class<? extends ItemSelectorReturnType>
@@ -203,39 +221,41 @@ public class ItemSelectorRepositoryEntryBrowserUtil {
 			itemSelectorReturnType, fileEntry, themeDisplay);
 	}
 
-	protected static void addGroupSelectorBreadcrumbEntry(
-			HttpServletRequest request,
+	private static void _addGroupSelectorBreadcrumbEntry(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletResponse liferayPortletResponse,
 			PortletURL portletURL)
-		throws PortalException, PortletException {
+		throws Exception {
 
 		PortletURL viewGroupSelectorURL = PortletURLUtil.clone(
 			portletURL, liferayPortletResponse);
 
+		viewGroupSelectorURL.setParameter("groupType", "site");
 		viewGroupSelectorURL.setParameter(
 			"showGroupSelector", Boolean.TRUE.toString());
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, "sites", viewGroupSelectorURL.toString());
+			httpServletRequest,
+			LanguageUtil.get(httpServletRequest, "sites-and-libraries"),
+			viewGroupSelectorURL.toString());
 	}
 
-	protected static void addPortletBreadcrumbEntry(
-		long folderId, HttpServletRequest request, String title,
+	private static void _addPortletBreadcrumbEntry(
+		long folderId, HttpServletRequest httpServletRequest, String title,
 		PortletURL portletURL) {
 
 		portletURL.setParameter("folderId", String.valueOf(folderId));
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, title, portletURL.toString());
+			httpServletRequest, title, portletURL.toString());
 	}
 
 	private static JSONObject _createJSONObject(String key, String value) {
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("key", key);
-		jsonObject.put("value", value);
-
-		return jsonObject;
+		return JSONUtil.put(
+			"key", key
+		).put(
+			"value", value
+		);
 	}
 
 }

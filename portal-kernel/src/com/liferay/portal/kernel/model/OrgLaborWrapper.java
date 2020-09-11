@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,10 +28,9 @@ import java.util.Map;
  * @see OrgLabor
  * @generated
  */
-@ProviderType
 public class OrgLaborWrapper
 	extends BaseModelWrapper<OrgLabor>
-	implements OrgLabor, ModelWrapper<OrgLabor> {
+	implements ModelWrapper<OrgLabor>, OrgLabor {
 
 	public OrgLaborWrapper(OrgLabor orgLabor) {
 		super(orgLabor);

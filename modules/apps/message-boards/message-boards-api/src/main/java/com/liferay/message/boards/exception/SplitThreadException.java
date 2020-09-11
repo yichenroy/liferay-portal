@@ -14,14 +14,11 @@
 
 package com.liferay.message.boards.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class SplitThreadException extends PortalException {
 
 	public SplitThreadException() {
@@ -31,12 +28,12 @@ public class SplitThreadException extends PortalException {
 		super(msg);
 	}
 
-	public SplitThreadException(String msg, Throwable cause) {
-		super(msg, cause);
+	public SplitThreadException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public SplitThreadException(Throwable cause) {
-		super(cause);
+	public SplitThreadException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

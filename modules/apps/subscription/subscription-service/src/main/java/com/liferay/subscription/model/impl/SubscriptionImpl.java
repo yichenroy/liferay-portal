@@ -14,12 +14,9 @@
 
 package com.liferay.subscription.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class SubscriptionImpl extends SubscriptionBaseImpl {
 
 	public SubscriptionImpl() {

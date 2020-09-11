@@ -14,9 +14,6 @@
 
 package com.liferay.portal.search.solr7.internal.connection;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-
 import java.io.IOException;
 
 import org.apache.solr.client.solrj.SolrClient;
@@ -31,8 +28,9 @@ import org.apache.solr.common.util.NamedList;
 public class ReadWriteSolrClient extends SolrClient {
 
 	public ReadWriteSolrClient(SolrClient writeSolrClient) {
-		_readSolrClient = null;
 		_writeSolrClient = writeSolrClient;
+
+		_readSolrClient = null;
 	}
 
 	public ReadWriteSolrClient(
@@ -44,6 +42,13 @@ public class ReadWriteSolrClient extends SolrClient {
 
 	@Override
 	public void close() throws IOException {
+		if (_readSolrClient != null) {
+			_readSolrClient.close();
+		}
+
+		if (_writeSolrClient != null) {
+			_writeSolrClient.close();
+		}
 	}
 
 	@Override
@@ -58,24 +63,6 @@ public class ReadWriteSolrClient extends SolrClient {
 
 		return _writeSolrClient.request(solrRequest, collection);
 	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	public void shutdown() {
-		try {
-			close();
-		}
-		catch (IOException ioe) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to close client", ioe);
-			}
-		}
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		ReadWriteSolrClient.class);
 
 	private final SolrClient _readSolrClient;
 	private final SolrClient _writeSolrClient;

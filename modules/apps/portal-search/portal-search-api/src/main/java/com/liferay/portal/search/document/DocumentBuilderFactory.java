@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.document;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Wade Cao
@@ -24,5 +24,7 @@ import aQute.bnd.annotation.ProviderType;
 public interface DocumentBuilderFactory {
 
 	public DocumentBuilder builder();
+
+	public DocumentBuilder builder(Document document);
 
 }

@@ -19,15 +19,7 @@
 <%
 EditSegmentsEntryDisplayContext editSegmentsEntryDisplayContext = (EditSegmentsEntryDisplayContext)request.getAttribute(SegmentsWebKeys.EDIT_SEGMENTS_ENTRY_DISPLAY_CONTEXT);
 
-String redirect = ParamUtil.getString(request, "redirect", editSegmentsEntryDisplayContext.getRedirect());
-
-String backURL = ParamUtil.getString(request, "backURL", redirect);
-
-SegmentsEntry segmentsEntry = editSegmentsEntryDisplayContext.getSegmentsEntry();
-
-long segmentsEntryId = editSegmentsEntryDisplayContext.getSegmentsEntryId();
-
-String type = editSegmentsEntryDisplayContext.getType();
+String backURL = editSegmentsEntryDisplayContext.getBackURL();
 
 if (Validator.isNotNull(backURL)) {
 	portletDisplay.setShowBackIcon(true);
@@ -39,59 +31,28 @@ renderResponse.setTitle(editSegmentsEntryDisplayContext.getTitle(locale));
 
 <liferay-ui:error embed="<%= false %>" exception="<%= SegmentsEntryCriteriaException.class %>" message="invalid-criteria" />
 <liferay-ui:error embed="<%= false %>" exception="<%= SegmentsEntryKeyException.class %>" message="key-is-already-used" />
+<liferay-ui:error embed="<%= false %>" exception="<%= SegmentsEntryNameException.class %>" message="please-enter-a-valid-name" />
 
 <portlet:actionURL name="updateSegmentsEntry" var="updateSegmentsEntryActionURL" />
 
-<aui:form action="<%= updateSegmentsEntryActionURL %>" method="post" name="editSegmentFm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveSegmentsEntry();" %>'>
-	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
-	<aui:input name="segmentsEntryId" type="hidden" value="<%= segmentsEntryId %>" />
-	<aui:input name="type" type="hidden" value="<%= type %>" />
+<aui:form action="<%= updateSegmentsEntryActionURL %>" method="post" name="editSegmentFm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveSegmentsEntry();" %>'>
+	<aui:input name="redirect" type="hidden" value="<%= editSegmentsEntryDisplayContext.getRedirect() %>" />
+	<aui:input name="segmentsEntryId" type="hidden" value="<%= editSegmentsEntryDisplayContext.getSegmentsEntryId() %>" />
+	<aui:input name="groupId" type="hidden" value="<%= editSegmentsEntryDisplayContext.getGroupId() %>" />
+	<aui:input name="segmentsEntryKey" type="hidden" value="<%= editSegmentsEntryDisplayContext.getSegmentsEntryKey() %>" />
+	<aui:input name="type" type="hidden" value="<%= editSegmentsEntryDisplayContext.getType() %>" />
 	<aui:input name="dynamic" type="hidden" value="<%= true %>" />
 
-	<%
-	String segmentEditRootElementId = renderResponse.getNamespace() + "-segment-edit-root";
-	%>
-
-	<div id="<%= segmentEditRootElementId %>">
+	<div id="<%= liferayPortletResponse.getNamespace() + "-segment-edit-root" %>">
 		<div class="inline-item my-5 p-5 w-100">
 			<span aria-hidden="true" class="loading-animation"></span>
 		</div>
+
+		<react:component
+			module="js/SegmentsApp.es"
+			props="<%= editSegmentsEntryDisplayContext.getData() %>"
+		/>
 	</div>
-
-	<portlet:renderURL var="previewMembersURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-		<portlet:param name="mvcRenderCommandName" value="previewSegmentsEntryUsers" />
-		<portlet:param name="segmentsEntryId" value="<%= String.valueOf(segmentsEntryId) %>" />
-	</portlet:renderURL>
-
-	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="getSegmentsEntryClassPKsCount" var="getSegmentsEntryClassPKsCountURL" />
-	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="getSegmentsFieldValueName" var="getSegmentsFieldValueNameURL" />
-
-	<aui:script require='<%= npmResolvedPackageName + "/js/index.es as SegmentEdit" %>'>
-		SegmentEdit.default(
-			'<%= segmentEditRootElementId %>',
-			{
-				contributors: <%= editSegmentsEntryDisplayContext.getContributorsJSONArray() %>,
-				formId: '<portlet:namespace />editSegmentFm',
-				initialMembersCount: <%= editSegmentsEntryDisplayContext.getSegmentsEntryClassPKsCount() %>,
-				initialSegmentActive: <%= (segmentsEntry == null) ? false : segmentsEntry.isActive() %>,
-				initialSegmentName: '<%= (segmentsEntry != null) ? HtmlUtil.escapeJS(segmentsEntry.getName(locale)) : StringPool.BLANK %>',
-				locale: '<%= locale %>',
-				portletNamespace: '<portlet:namespace />',
-				previewMembersURL: '<%= previewMembersURL %>',
-				propertyGroups: <%= editSegmentsEntryDisplayContext.getPropertyGroupsJSONArray(locale) %>,
-				redirect: '<%= HtmlUtil.escape(redirect) %>',
-				requestMembersCountURL: '<%= getSegmentsEntryClassPKsCountURL %>',
-				showInEditMode: <%= editSegmentsEntryDisplayContext.isShowInEditMode() %>,
-				source: '<%= editSegmentsEntryDisplayContext.getSource() %>'
-			},
-			{
-				assetsPath: '<%= PortalUtil.getPathContext(request) + "/assets" %>',
-				namespace: '<portlet:namespace />',
-				requestFieldValueNameURL: '<%= getSegmentsFieldValueNameURL %>',
-				spritemap: '<%= themeDisplay.getPathThemeImages() + "/lexicon/icons.svg" %>'
-			}
-		);
-	</aui:script>
 </aui:form>
 
 <aui:script>

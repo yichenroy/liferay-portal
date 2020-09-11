@@ -14,11 +14,8 @@
 
 package com.liferay.message.boards.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class MBThreadFlagImpl extends MBThreadFlagBaseImpl {
 }

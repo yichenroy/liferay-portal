@@ -77,20 +77,22 @@ public class UserConnectedAppScreenNavigationEntry
 	}
 
 	@Override
-	public void render(HttpServletRequest request, HttpServletResponse response)
+	public void render(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher("/connected_apps.jsp");
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			ConnectedAppManager.class.getName(), _connectedAppManager);
 
 		try {
-			requestDispatcher.include(request, response);
+			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
-		catch (ServletException se) {
-			throw new IOException(se);
+		catch (ServletException servletException) {
+			throw new IOException(servletException);
 		}
 	}
 

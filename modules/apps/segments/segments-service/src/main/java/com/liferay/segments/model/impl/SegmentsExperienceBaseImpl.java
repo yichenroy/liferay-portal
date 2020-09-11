@@ -14,8 +14,6 @@
 
 package com.liferay.segments.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
  * @see SegmentsExperience
  * @generated
  */
-@ProviderType
 public abstract class SegmentsExperienceBaseImpl
 	extends SegmentsExperienceModelImpl implements SegmentsExperience {
 

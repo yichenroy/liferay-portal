@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.rss.util.RSSUtil;
@@ -34,7 +35,6 @@ import com.sun.syndication.feed.synd.SyndEnclosure;
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndFeed;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -157,11 +157,7 @@ public class RSSFeedEntry {
 			return _syndEntry.getContents();
 		}
 
-		List<SyndContent> syndContents = new ArrayList<>();
-
-		syndContents.add(syndContent);
-
-		return syndContents;
+		return ListUtil.fromArray(syndContent);
 	}
 
 	private String _sanitize(String value, String baseURL) {
@@ -176,12 +172,12 @@ public class RSSFeedEntry {
 				null, 0, ContentTypes.TEXT_HTML, Sanitizer.MODE_XSS, value,
 				null);
 		}
-		catch (SanitizerException se) {
+		catch (SanitizerException sanitizerException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(se, se);
+				_log.debug(sanitizerException, sanitizerException);
 			}
 		}
 

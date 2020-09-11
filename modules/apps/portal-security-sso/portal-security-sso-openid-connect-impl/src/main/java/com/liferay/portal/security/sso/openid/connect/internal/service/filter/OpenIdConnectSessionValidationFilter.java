@@ -50,11 +50,11 @@ public class OpenIdConnectSessionValidationFilter extends BaseFilter {
 
 	@Override
 	public boolean isFilterEnabled(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		long companyId = _portal.getCompanyId(request);
-
-		return _openIdConnect.isEnabled(companyId);
+		return _openIdConnect.isEnabled(
+			_portal.getCompanyId(httpServletRequest));
 	}
 
 	protected boolean checkEndSession(HttpSession httpSession)
@@ -88,8 +88,11 @@ public class OpenIdConnectSessionValidationFilter extends BaseFilter {
 				endSession = true;
 			}
 		}
-		catch (PortalException pe) {
-			_log.error("Unable to validate OpenId session", pe);
+		catch (PortalException portalException) {
+			_log.error(
+				"Unable to validate OpenId Connect session: " +
+					portalException.getMessage(),
+				portalException);
 
 			endSession = true;
 		}
@@ -104,25 +107,24 @@ public class OpenIdConnectSessionValidationFilter extends BaseFilter {
 
 	@Override
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		HttpSession httpSession = request.getSession(false);
+		HttpSession httpSession = httpServletRequest.getSession(false);
 
-		if (httpSession != null) {
-			if (checkEndSession(httpSession)) {
-				httpSession.invalidate();
+		if ((httpSession != null) && checkEndSession(httpSession)) {
+			httpSession.invalidate();
 
-				response.sendRedirect(_portal.getHomeURL(request));
+			httpServletResponse.sendRedirect(
+				_portal.getHomeURL(httpServletRequest));
 
-				return;
-			}
+			return;
 		}
 
 		processFilter(
-			OpenIdConnectSessionValidationFilter.class.getName(), request,
-			response, filterChain);
+			OpenIdConnectSessionValidationFilter.class.getName(),
+			httpServletRequest, httpServletResponse, filterChain);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

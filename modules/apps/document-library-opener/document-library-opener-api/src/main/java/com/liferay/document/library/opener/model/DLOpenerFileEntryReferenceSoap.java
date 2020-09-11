@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.opener.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,9 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class DLOpenerFileEntryReferenceSoap implements Serializable {
 
 	public static DLOpenerFileEntryReferenceSoap toSoapModel(
@@ -46,6 +45,7 @@ public class DLOpenerFileEntryReferenceSoap implements Serializable {
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setReferenceKey(model.getReferenceKey());
+		soapModel.setReferenceType(model.getReferenceType());
 		soapModel.setFileEntryId(model.getFileEntryId());
 		soapModel.setType(model.getType());
 
@@ -177,6 +177,14 @@ public class DLOpenerFileEntryReferenceSoap implements Serializable {
 		_referenceKey = referenceKey;
 	}
 
+	public String getReferenceType() {
+		return _referenceType;
+	}
+
+	public void setReferenceType(String referenceType) {
+		_referenceType = referenceType;
+	}
+
 	public long getFileEntryId() {
 		return _fileEntryId;
 	}
@@ -201,6 +209,7 @@ public class DLOpenerFileEntryReferenceSoap implements Serializable {
 	private Date _createDate;
 	private Date _modifiedDate;
 	private String _referenceKey;
+	private String _referenceType;
 	private long _fileEntryId;
 	private int _type;
 

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * Provides a wrapper for {@link UserGroupGroupRoleService}.
  *
@@ -23,10 +21,9 @@ import aQute.bnd.annotation.ProviderType;
  * @see UserGroupGroupRoleService
  * @generated
  */
-@ProviderType
 public class UserGroupGroupRoleServiceWrapper
-	implements UserGroupGroupRoleService,
-			   ServiceWrapper<UserGroupGroupRoleService> {
+	implements ServiceWrapper<UserGroupGroupRoleService>,
+			   UserGroupGroupRoleService {
 
 	public UserGroupGroupRoleServiceWrapper(
 		UserGroupGroupRoleService userGroupGroupRoleService) {
@@ -76,7 +73,7 @@ public class UserGroupGroupRoleServiceWrapper
 	 * @return the OSGi service identifier
 	 */
 	@Override
-	public String getOSGiServiceIdentifier() {
+	public java.lang.String getOSGiServiceIdentifier() {
 		return _userGroupGroupRoleService.getOSGiServiceIdentifier();
 	}
 

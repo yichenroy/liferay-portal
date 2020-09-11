@@ -14,8 +14,6 @@
 
 package com.liferay.portal.lock.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -35,21 +33,20 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class LockCacheModel
 	implements CacheModel<Lock>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof LockCacheModel)) {
+		if (!(object instanceof LockCacheModel)) {
 			return false;
 		}
 
-		LockCacheModel lockCacheModel = (LockCacheModel)obj;
+		LockCacheModel lockCacheModel = (LockCacheModel)object;
 
 		if ((lockId == lockCacheModel.lockId) &&
 			(mvccVersion == lockCacheModel.mvccVersion)) {

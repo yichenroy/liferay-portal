@@ -18,8 +18,10 @@ import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvide
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.BaseVerticalCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.service.JournalArticleLocalServiceUtil;
+import com.liferay.journal.util.comparator.ArticleVersionComparator;
 import com.liferay.journal.web.internal.constants.JournalWebConstants;
 import com.liferay.journal.web.internal.security.permission.resource.JournalArticlePermission;
 import com.liferay.journal.web.internal.servlet.taglib.util.JournalArticleActionDropdownItemsProvider;
@@ -27,15 +29,16 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.taglib.util.LexiconUtil;
 import com.liferay.trash.TrashHelper;
 
 import java.util.Date;
@@ -67,27 +70,23 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 		_trashHelper = trashHelper;
 
 		_article = (JournalArticle)baseModel;
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 	}
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		LiferayPortletRequest liferayPortletRequest =
-			PortalUtil.getLiferayPortletRequest(renderRequest);
-
-		LiferayPortletResponse liferayPortletResponse =
-			PortalUtil.getLiferayPortletResponse(_renderResponse);
-
 		JournalArticleActionDropdownItemsProvider
 			articleActionDropdownItemsProvider =
 				new JournalArticleActionDropdownItemsProvider(
-					_article, liferayPortletRequest, liferayPortletResponse,
+					_article,
+					PortalUtil.getLiferayPortletRequest(renderRequest),
+					PortalUtil.getLiferayPortletResponse(_renderResponse),
 					_assetDisplayPageFriendlyURLProvider, _trashHelper);
 
 		try {
 			return articleActionDropdownItemsProvider.getActionDropdownItems();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return null;
@@ -109,7 +108,7 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 			}
 
 			String referringPortletResource = ParamUtil.getString(
-				_request, "referringPortletResource");
+				_httpServletRequest, "referringPortletResource");
 
 			PortletURL editArticleURL = _renderResponse.createRenderURL();
 
@@ -128,7 +127,7 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 
 			return editArticleURL.toString();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return null;
@@ -156,22 +155,58 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 
 	@Override
 	public List<LabelItem> getLabels() {
-		return new LabelItemList() {
-			{
-				if (!_article.isApproved() && _article.hasApprovedVersion()) {
-					add(
-						labelItem -> {
-							labelItem.setStatus(
-								WorkflowConstants.STATUS_APPROVED);
-						});
-				}
+		return LabelItemListBuilder.add(
+			() -> !_article.isApproved() && _article.hasApprovedVersion(),
+			labelItem -> labelItem.setStatus(WorkflowConstants.STATUS_APPROVED)
+		).add(
+			labelItem -> labelItem.setStatus(_article.getStatus())
+		).build();
+	}
 
-				add(
-					labelItem -> {
-						labelItem.setStatus(_article.getStatus());
-					});
+	@Override
+	public String getStickerCssClass() {
+		User user = _getOriginalAuthorUser();
+
+		if (user == null) {
+			return StringPool.BLANK;
+		}
+
+		return "sticker-user-icon " + LexiconUtil.getUserColorCssClass(user);
+	}
+
+	@Override
+	public String getStickerIcon() {
+		User user = _getOriginalAuthorUser();
+
+		if (user == null) {
+			return StringPool.BLANK;
+		}
+
+		if (user.getPortraitId() == 0) {
+			return "user";
+		}
+
+		return StringPool.BLANK;
+	}
+
+	@Override
+	public String getStickerImageSrc() {
+		try {
+			User user = _getOriginalAuthorUser();
+
+			if (user == null) {
+				return StringPool.BLANK;
 			}
-		};
+
+			if (user.getPortraitId() <= 0) {
+				return null;
+			}
+
+			return user.getPortraitURL(themeDisplay);
+		}
+		catch (Exception exception) {
+			return StringPool.BLANK;
+		}
 	}
 
 	@Override
@@ -179,10 +214,14 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 		Date createDate = _article.getModifiedDate();
 
 		String modifiedDateDescription = LanguageUtil.getTimeDescription(
-			_request, System.currentTimeMillis() - createDate.getTime(), true);
+			_httpServletRequest,
+			System.currentTimeMillis() - createDate.getTime(), true);
 
 		return LanguageUtil.format(
-			_request, "modified-x-ago", modifiedDateDescription);
+			_httpServletRequest, "modified-x-ago-by-x",
+			new String[] {
+				modifiedDateDescription, HtmlUtil.escape(_article.getUserName())
+			});
 	}
 
 	@Override
@@ -199,11 +238,22 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 		return HtmlUtil.escape(_article.getTitle(defaultLanguage));
 	}
 
+	private User _getOriginalAuthorUser() {
+		List<JournalArticle> articles =
+			JournalArticleLocalServiceUtil.getArticles(
+				_article.getGroupId(), _article.getArticleId(), 0, 1,
+				new ArticleVersionComparator(true));
+
+		JournalArticle article = articles.get(0);
+
+		return UserLocalServiceUtil.fetchUser(article.getUserId());
+	}
+
 	private final JournalArticle _article;
 	private final AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+	private final HttpServletRequest _httpServletRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final TrashHelper _trashHelper;
 
 }

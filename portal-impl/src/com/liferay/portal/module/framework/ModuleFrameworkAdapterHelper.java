@@ -32,6 +32,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,17 +54,63 @@ public class ModuleFrameworkAdapterHelper {
 				fileUtil.setFile(new FileImpl());
 			}
 
+			File coreDir = new File(
+				PropsValues.MODULE_FRAMEWORK_BASE_DIR, "core");
+
+			File[] files = coreDir.listFiles();
+
+			if (files == null) {
+				throw new IllegalStateException(
+					"Missing " + coreDir.getCanonicalPath());
+			}
+
+			URL[] urls = new URL[files.length];
+			String[] packageNames = new String[files.length + 4];
+
+			for (int i = 0; i < urls.length; i++) {
+				File file = files[i];
+
+				URI uri = file.toURI();
+
+				urls[i] = uri.toURL();
+
+				String name = file.getName();
+
+				if (name.endsWith(".jar")) {
+					name = name.substring(0, name.length() - 3);
+				}
+
+				if (name.endsWith(".api.")) {
+					name = name.substring(0, name.length() - 4);
+				}
+
+				if (name.endsWith(".impl.")) {
+					name = name.substring(0, name.length() - 5);
+
+					name = name.concat("internal.");
+				}
+
+				packageNames[i] = name;
+			}
+
+			packageNames[files.length] = "org.apache.felix.resolver.";
+			packageNames[files.length + 1] = "org.eclipse.core.";
+			packageNames[files.length + 2] = "org.eclipse.equinox.";
+			packageNames[files.length + 3] = "org.osgi.";
+
+			Arrays.sort(packageNames);
+
 			_classLoader = new ModuleFrameworkClassLoader(
-				_getClassPathURLs(), PortalClassLoaderUtil.getClassLoader());
+				urls, PortalClassLoaderUtil.getClassLoader(), packageNames);
 
 			return _classLoader;
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			_log.error(
 				"Unable to configure the class loader for the module framework",
-				ioe);
+				ioException);
 
-			return ReflectionUtil.throwException(ioe);
+			return ReflectionUtil.throwException(ioException);
 		}
 	}
 
@@ -72,10 +119,10 @@ public class ModuleFrameworkAdapterHelper {
 			_adaptedObject = InstanceFactory.newInstance(
 				getClassLoader(), className);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error("Unable to load the module framework");
 
-			throw new RuntimeException(e);
+			throw new RuntimeException(exception);
 		}
 	}
 
@@ -87,58 +134,11 @@ public class ModuleFrameworkAdapterHelper {
 
 			return method.invoke(_adaptedObject, parameters);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RuntimeException(e);
+			throw new RuntimeException(exception);
 		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public Object execute(String methodName, Object... parameters) {
-		if (parameters == null) {
-			return exec(methodName, null, parameters);
-		}
-
-		Class<?>[] parameterTypes = new Class<?>[parameters.length];
-
-		for (int i = 0; i < parameters.length; i++) {
-			if (parameters[i] == null) {
-				parameterTypes[i] = null;
-			}
-			else if (parameters[i] instanceof Boolean) {
-				parameterTypes[i] = Boolean.TYPE;
-			}
-			else if (parameters[i] instanceof Byte) {
-				parameterTypes[i] = Byte.TYPE;
-			}
-			else if (parameters[i] instanceof Character) {
-				parameterTypes[i] = Character.TYPE;
-			}
-			else if (parameters[i] instanceof Double) {
-				parameterTypes[i] = Double.TYPE;
-			}
-			else if (parameters[i] instanceof Float) {
-				parameterTypes[i] = Float.TYPE;
-			}
-			else if (parameters[i] instanceof Integer) {
-				parameterTypes[i] = Integer.TYPE;
-			}
-			else if (parameters[i] instanceof Long) {
-				parameterTypes[i] = Long.TYPE;
-			}
-			else if (parameters[i] instanceof Short) {
-				parameterTypes[i] = Short.TYPE;
-			}
-			else {
-				parameterTypes[i] = parameters[i].getClass();
-			}
-		}
-
-		return exec(methodName, parameterTypes, parameters);
 	}
 
 	protected Method searchMethod(String methodName, Class<?>[] parameterTypes)
@@ -157,27 +157,6 @@ public class ModuleFrameworkAdapterHelper {
 		_methods.put(methodKey, method);
 
 		return method;
-	}
-
-	private static URL[] _getClassPathURLs() throws IOException {
-		File coreDir = new File(PropsValues.MODULE_FRAMEWORK_BASE_DIR, "core");
-
-		File[] files = coreDir.listFiles();
-
-		if (files == null) {
-			throw new IllegalStateException(
-				"Missing " + coreDir.getCanonicalPath());
-		}
-
-		URL[] urls = new URL[files.length];
-
-		for (int i = 0; i < urls.length; i++) {
-			URI uri = files[i].toURI();
-
-			urls[i] = uri.toURL();
-		}
-
-		return urls;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

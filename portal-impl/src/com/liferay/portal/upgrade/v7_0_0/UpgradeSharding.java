@@ -14,6 +14,7 @@
 
 package com.liferay.portal.upgrade.v7_0_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.jdbc.spring.DataSourceFactoryBean;
 import com.liferay.portal.kernel.log.Log;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.upgrade.util.UpgradeTableFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.upgrade.v7_0_0.util.ClassNameTable;
 import com.liferay.portal.upgrade.v7_0_0.util.ClusterGroupTable;
 import com.liferay.portal.upgrade.v7_0_0.util.CompanyTable;
@@ -64,10 +64,8 @@ public class UpgradeSharding extends UpgradeProcess {
 			sourceConnection, targetConnection, CompanyTable.TABLE_NAME,
 			CompanyTable.TABLE_COLUMNS, CompanyTable.TABLE_SQL_CREATE);
 
-		List<Long> companyIds = getCompanyIds(shardName);
-
 		String companyIdsString = ListUtil.toString(
-			companyIds, StringPool.NULL, StringPool.COMMA);
+			getCompanyIds(shardName), StringPool.NULL, StringPool.COMMA);
 
 		runSQL(
 			sourceConnection,
@@ -97,7 +95,7 @@ public class UpgradeSharding extends UpgradeProcess {
 
 			dropTable(targetConnection, tableName);
 		}
-		catch (SQLException sqle) {
+		catch (SQLException sqlException) {
 			if (_log.isInfoEnabled()) {
 				_log.info(
 					"Unable to drop control table " + tableName +
@@ -184,8 +182,8 @@ public class UpgradeSharding extends UpgradeProcess {
 				VirtualHostTable.TABLE_COLUMNS,
 				VirtualHostTable.TABLE_SQL_CREATE);
 		}
-		catch (Exception e) {
-			_log.error("Unable to copy control tables", e);
+		catch (Exception exception) {
+			_log.error("Unable to copy control tables", exception);
 		}
 	}
 

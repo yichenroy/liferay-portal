@@ -14,8 +14,6 @@
 
 package com.liferay.reading.time.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -34,22 +32,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class ReadingTimeEntryCacheModel
 	implements CacheModel<ReadingTimeEntry>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof ReadingTimeEntryCacheModel)) {
+		if (!(object instanceof ReadingTimeEntryCacheModel)) {
 			return false;
 		}
 
 		ReadingTimeEntryCacheModel readingTimeEntryCacheModel =
-			(ReadingTimeEntryCacheModel)obj;
+			(ReadingTimeEntryCacheModel)object;
 
 		if (readingTimeEntryId ==
 				readingTimeEntryCacheModel.readingTimeEntryId) {

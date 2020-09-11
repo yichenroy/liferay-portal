@@ -14,8 +14,6 @@
 
 package com.liferay.sharing.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.service.SharingEntryLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.sharing.service.SharingEntryLocalServiceUtil;
  * @see SharingEntry
  * @generated
  */
-@ProviderType
 public abstract class SharingEntryBaseImpl
 	extends SharingEntryModelImpl implements SharingEntry {
 

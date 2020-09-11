@@ -74,8 +74,12 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
-		if (template.equals(TEMPLATE_FULL_CONTENT)) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
+		if (template.equals(TEMPLATE_ABSTRACT) ||
+			template.equals(TEMPLATE_FULL_CONTENT)) {
+
 			return "/admin/asset/" + template + ".jsp";
 		}
 
@@ -181,13 +185,14 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(KBWebKeys.KNOWLEDGE_BASE_KB_ARTICLE, _kbArticle);
+		httpServletRequest.setAttribute(
+			KBWebKeys.KNOWLEDGE_BASE_KB_ARTICLE, _kbArticle);
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	@Override

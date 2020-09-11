@@ -33,14 +33,26 @@ public class FTLWhitespaceCheck extends WhitespaceCheck {
 
 		content = StringUtil.replace(content, " >\n", ">\n");
 
-		content = _formatWhitespace(fileName, content);
+		content = _formatWhitespace(fileName, absolutePath, content);
 
 		content = StringUtil.replace(content, "\n\n\n", "\n\n");
 
 		return content;
 	}
 
-	private String _formatWhitespace(String fileName, String content)
+	@Override
+	protected String formatDoubleSpace(String line) {
+		String trimmedLine = StringUtil.trim(line);
+
+		if (trimmedLine.startsWith("*")) {
+			return line;
+		}
+
+		return super.formatDoubleSpace(line);
+	}
+
+	private String _formatWhitespace(
+			String fileName, String absolutePath, String content)
 		throws IOException {
 
 		StringBundler sb = new StringBundler();
@@ -51,7 +63,7 @@ public class FTLWhitespaceCheck extends WhitespaceCheck {
 			String line = null;
 
 			while ((line = unsyncBufferedReader.readLine()) != null) {
-				line = trimLine(fileName, line);
+				line = trimLine(fileName, absolutePath, line);
 
 				String trimmedLine = StringUtil.trimLeading(line);
 

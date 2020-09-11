@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
@@ -30,7 +28,6 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
  * @see ExportImportLocalService
  * @generated
  */
-@ProviderType
 public class ExportImportLocalServiceUtil {
 
 	/*
@@ -44,19 +41,6 @@ public class ExportImportLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().exportLayoutsAsFile(exportImportConfiguration);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public static java.io.File exportLayoutsAsFile(
-			long userId, long groupId, boolean privateLayout,
-			java.util.Map<String, String[]> parameterMap)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().exportLayoutsAsFile(
-			userId, groupId, privateLayout, parameterMap);
 	}
 
 	public static long exportLayoutsAsFileInBackground(
@@ -128,19 +112,6 @@ public class ExportImportLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		getService().importLayouts(exportImportConfiguration, inputStream);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public static void importLayouts(
-			long userId, long groupId, boolean privateLayout,
-			java.util.Map<String, String[]> parameterMap, java.io.File file)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		getService().importLayouts(
-			userId, groupId, privateLayout, parameterMap, file);
 	}
 
 	public static void importLayoutsDataDeletions(

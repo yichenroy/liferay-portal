@@ -40,12 +40,20 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetTagsSelectorDisplayContext {
 
 	public AssetTagsSelectorDisplayContext(
-		RenderRequest renderRequest, RenderResponse renderResponse,
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse) {
 
+		this(httpServletRequest, renderRequest, renderResponse, true);
+	}
+
+	public AssetTagsSelectorDisplayContext(
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse, boolean rowChecker) {
+
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-		_request = request;
+		_rowChecker = rowChecker;
 	}
 
 	public String getEventName() {
@@ -54,7 +62,7 @@ public class AssetTagsSelectorDisplayContext {
 		}
 
 		_eventName = ParamUtil.getString(
-			_request, "eventName",
+			_httpServletRequest, "eventName",
 			_renderResponse.getNamespace() + "selectTag");
 
 		return _eventName;
@@ -65,9 +73,22 @@ public class AssetTagsSelectorDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
+	}
+
+	public PortletURL getPortletURL() {
+		PortletURL portletURL = _renderResponse.createRenderURL();
+
+		portletURL.setParameter("mvcPath", _getMvcPath());
+		portletURL.setParameter("groupIds", StringUtil.merge(_getGroupIds()));
+		portletURL.setParameter("eventName", getEventName());
+		portletURL.setParameter(
+			"selectedTagNames", StringUtil.merge(getSelectedTagNames()));
+
+		return portletURL;
 	}
 
 	public String[] getSelectedTagNames() {
@@ -81,16 +102,13 @@ public class AssetTagsSelectorDisplayContext {
 		return _selectedTagNames;
 	}
 
-	public SearchContainer getTagsSearchContainer() {
+	public SearchContainer<AssetTag> getTagsSearchContainer() {
 		if (_tagsSearchContainer != null) {
 			return _tagsSearchContainer;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		SearchContainer tagsSearchContainer = new SearchContainer(
-			_renderRequest, _getPortletURL(), null, "there-are-no-tags");
+		SearchContainer<AssetTag> tagsSearchContainer = new SearchContainer(
+			_renderRequest, getPortletURL(), null, "there-are-no-tags");
 
 		String orderByCol = _getOrderByCol();
 
@@ -109,11 +127,13 @@ public class AssetTagsSelectorDisplayContext {
 
 		tagsSearchContainer.setOrderByType(orderByType);
 
-		tagsSearchContainer.setRowChecker(
-			new EntriesChecker(_renderRequest, _renderResponse));
+		if (_rowChecker) {
+			tagsSearchContainer.setRowChecker(
+				new EntriesChecker(_renderRequest, _renderResponse));
+		}
 
 		int tagsCount = AssetTagServiceUtil.getTagsCount(
-			themeDisplay.getScopeGroupId(), _getKeywords());
+			_getGroupIds(), _getKeywords());
 
 		tagsSearchContainer.setTotal(tagsCount);
 
@@ -134,13 +154,14 @@ public class AssetTagsSelectorDisplayContext {
 			return _groupIds;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		_groupIds = StringUtil.split(
-			ParamUtil.getString(_request, "groupIds"), 0L);
+			ParamUtil.getString(_httpServletRequest, "groupIds"), 0L);
 
 		if (ArrayUtil.isEmpty(_groupIds)) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)_httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
 			_groupIds = new long[] {themeDisplay.getScopeGroupId()};
 		}
 
@@ -152,9 +173,20 @@ public class AssetTagsSelectorDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords", null);
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords", null);
 
 		return _keywords;
+	}
+
+	private String _getMvcPath() {
+		if (Validator.isNotNull(_mvcPath)) {
+			return _mvcPath;
+		}
+
+		_mvcPath = ParamUtil.getString(
+			_httpServletRequest, "mvcPath", "/view.jsp");
+
+		return _mvcPath;
 	}
 
 	private String _getOrderByCol() {
@@ -162,30 +194,23 @@ public class AssetTagsSelectorDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
 
-	private PortletURL _getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter("eventName", getEventName());
-		portletURL.setParameter(
-			"selectedTagNames", StringUtil.merge(getSelectedTagNames()));
-
-		return portletURL;
-	}
-
 	private String _eventName;
 	private long[] _groupIds;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
+	private String _mvcPath;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
+	private final boolean _rowChecker;
 	private String[] _selectedTagNames;
-	private SearchContainer _tagsSearchContainer;
+	private SearchContainer<AssetTag> _tagsSearchContainer;
 
 }

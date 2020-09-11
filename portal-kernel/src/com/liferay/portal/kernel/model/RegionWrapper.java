@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,9 +28,8 @@ import java.util.Map;
  * @see Region
  * @generated
  */
-@ProviderType
 public class RegionWrapper
-	extends BaseModelWrapper<Region> implements Region, ModelWrapper<Region> {
+	extends BaseModelWrapper<Region> implements ModelWrapper<Region>, Region {
 
 	public RegionWrapper(Region region) {
 		super(region);

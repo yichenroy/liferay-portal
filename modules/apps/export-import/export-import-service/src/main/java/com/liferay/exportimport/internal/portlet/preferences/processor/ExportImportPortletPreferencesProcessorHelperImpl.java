@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.portlet.preferences.processor;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortletPreferencesProcessorHelper;
 import com.liferay.petra.string.StringBundler;
@@ -39,7 +37,6 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	service = ExportImportPortletPreferencesProcessorHelper.class
 )
-@ProviderType
 public class ExportImportPortletPreferencesProcessorHelperImpl
 	implements ExportImportPortletPreferencesProcessorHelper {
 

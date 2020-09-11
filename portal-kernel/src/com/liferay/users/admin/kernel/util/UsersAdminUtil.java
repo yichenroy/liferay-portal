@@ -14,8 +14,6 @@
 
 package com.liferay.users.admin.kernel.util;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.EmailAddress;
@@ -47,23 +45,15 @@ import javax.servlet.http.HttpServletRequest;
  * @author Jorge Ferrer
  * @author Julio Camarero
  */
-@ProviderType
 public class UsersAdminUtil {
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             UsersAdmin#CUSTOM_QUESTION}
-	 */
-	@Deprecated
-	public static final String CUSTOM_QUESTION = "write-my-own-question";
-
 	public static void addPortletBreadcrumbEntries(
-			Organization organization, HttpServletRequest request,
+			Organization organization, HttpServletRequest httpServletRequest,
 			RenderResponse renderResponse)
 		throws Exception {
 
 		getUsersAdmin().addPortletBreadcrumbEntries(
-			organization, request, renderResponse);
+			organization, httpServletRequest, renderResponse);
 	}
 
 	public static long[] addRequiredRoles(long userId, long[] roleIds)

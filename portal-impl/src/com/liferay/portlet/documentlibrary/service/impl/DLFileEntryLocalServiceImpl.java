@@ -28,19 +28,20 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.kernel.util.DL;
-import com.liferay.document.library.kernel.util.DLFileVersionPolicy;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.kernel.util.DLValidatorUtil;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelModifiedDateComparator;
 import com.liferay.document.library.kernel.versioning.VersioningStrategy;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
+import com.liferay.dynamic.data.mapping.kernel.DDMStructureLinkManagerUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
 import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
 import com.liferay.expando.kernel.model.ExpandoBridge;
@@ -49,8 +50,8 @@ import com.liferay.expando.kernel.model.ExpandoRow;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.util.ExpandoBridgeUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.comment.CommentManagerUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
@@ -63,15 +64,11 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.image.ImageBag;
 import com.liferay.portal.kernel.image.ImageToolUtil;
-import com.liferay.portal.kernel.increment.BufferedIncrement;
-import com.liferay.portal.kernel.increment.NumberIncrement;
 import com.liferay.portal.kernel.interval.IntervalActionProcessor;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.lock.ExpiredLockException;
 import com.liferay.portal.kernel.lock.InvalidLockException;
 import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.lock.LockManagerUtil;
-import com.liferay.portal.kernel.lock.NoSuchLockException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -84,7 +81,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.event.RepositoryEventTrigger;
 import com.liferay.portal.kernel.repository.event.RepositoryEventType;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexable;
@@ -97,20 +93,21 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.DateRange;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.view.count.ViewCountManager;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileVersion;
@@ -165,7 +162,7 @@ public class DLFileEntryLocalServiceImpl
 			String sourceFileName, String mimeType, String title,
 			String description, String changeLog, long fileEntryTypeId,
 			Map<String, DDMFormValues> ddmFormValuesMap, File file,
-			InputStream is, long size, ServiceContext serviceContext)
+			InputStream inputStream, long size, ServiceContext serviceContext)
 		throws PortalException {
 
 		if (Validator.isNull(title)) {
@@ -179,8 +176,8 @@ public class DLFileEntryLocalServiceImpl
 
 		User user = userPersistence.findByPrimaryKey(userId);
 
-		folderId = dlFolderLocalService.getFolderId(
-			user.getCompanyId(), folderId);
+		folderId = DLFolderLocalServiceImpl.getFolderId(
+			dlFolderPersistence, user.getCompanyId(), folderId);
 
 		String name = String.valueOf(
 			counterLocalService.increment(DLFileEntry.class.getName()));
@@ -214,7 +211,7 @@ public class DLFileEntryLocalServiceImpl
 		DLFolder repositoryDLFolder = null;
 
 		if (repositoryId != groupId) {
-			Repository repository = repositoryLocalService.getRepository(
+			Repository repository = repositoryPersistence.findByPrimaryKey(
 				repositoryId);
 
 			repositoryDLFolder = dlFolderPersistence.findByPrimaryKey(
@@ -244,9 +241,8 @@ public class DLFileEntryLocalServiceImpl
 		dlFileEntry.setFileEntryTypeId(fileEntryTypeId);
 		dlFileEntry.setVersion(DLFileEntryConstants.VERSION_DEFAULT);
 		dlFileEntry.setSize(size);
-		dlFileEntry.setReadCount(DLFileEntryConstants.DEFAULT_READ_COUNT);
 
-		dlFileEntryPersistence.update(dlFileEntry);
+		dlFileEntry = dlFileEntryPersistence.update(dlFileEntry);
 
 		// Resources
 
@@ -277,7 +273,7 @@ public class DLFileEntryLocalServiceImpl
 		else {
 			DLStoreUtil.addFile(
 				user.getCompanyId(), dlFileEntry.getDataRepositoryId(), name,
-				false, is);
+				false, inputStream);
 		}
 
 		return dlFileEntry;
@@ -300,22 +296,6 @@ public class DLFileEntryLocalServiceImpl
 		removeFileVersion(dlFileEntry, dlFileVersion);
 
 		return dlFileVersion;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #checkInFileEntry(long, long, DLVersionNumberIncrease, String, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public void checkInFileEntry(
-			long userId, long fileEntryId, boolean majorVersion,
-			String changeLog, ServiceContext serviceContext)
-		throws PortalException {
-
-		dlFileEntryLocalService.checkInFileEntry(
-			userId, fileEntryId,
-			DLVersionNumberIncrease.fromMajorVersion(majorVersion), changeLog,
-			serviceContext);
 	}
 
 	@Override
@@ -342,7 +322,7 @@ public class DLFileEntryLocalServiceImpl
 		if (!webDAVCheckInMode && manualCheckInRequired) {
 			dlFileEntry.setManualCheckInRequired(false);
 
-			dlFileEntryPersistence.update(dlFileEntry);
+			dlFileEntry = dlFileEntryPersistence.update(dlFileEntry);
 		}
 
 		DLFileVersion lastDLFileVersion =
@@ -371,11 +351,15 @@ public class DLFileEntryLocalServiceImpl
 		String version = getNextVersion(
 			dlFileEntry, computedDLVersionNumberIncrease);
 
+		latestDLFileVersion = dlFileVersionPersistence.fetchByPrimaryKey(
+			latestDLFileVersion.getFileVersionId());
+
 		latestDLFileVersion.setVersion(version);
 
 		latestDLFileVersion.setChangeLog(changeLog);
 
-		dlFileVersionPersistence.update(latestDLFileVersion);
+		latestDLFileVersion = dlFileVersionPersistence.update(
+			latestDLFileVersion);
 
 		// Folder
 
@@ -389,7 +373,7 @@ public class DLFileEntryLocalServiceImpl
 
 		// File
 
-		DLStoreUtil.updateFileVersion(
+		DLStoreUtil.copyFileVersion(
 			user.getCompanyId(), dlFileEntry.getDataRepositoryId(),
 			dlFileEntry.getName(),
 			DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION, version);
@@ -404,18 +388,11 @@ public class DLFileEntryLocalServiceImpl
 		throws PortalException {
 
 		if (Validator.isNotNull(lockUuid)) {
-			try {
-				Lock lock = LockManagerUtil.getLock(
-					DLFileEntry.class.getName(), fileEntryId);
+			Lock lock = LockManagerUtil.fetchLock(
+				DLFileEntry.class.getName(), fileEntryId);
 
-				if (!Objects.equals(lock.getUuid(), lockUuid)) {
-					throw new InvalidLockException("UUIDs do not match");
-				}
-			}
-			catch (ExpiredLockException | NoSuchLockException e) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
-				}
+			if ((lock != null) && !Objects.equals(lock.getUuid(), lockUuid)) {
+				throw new InvalidLockException("UUIDs do not match");
 			}
 		}
 
@@ -694,6 +671,13 @@ public class DLFileEntryLocalServiceImpl
 		ratingsStatsLocalService.deleteStats(
 			DLFileEntry.class.getName(), dlFileEntry.getFileEntryId());
 
+		// View count
+
+		_viewCountManager.deleteViewCount(
+			dlFileEntry.getCompanyId(),
+			classNameLocalService.getClassNameId(DLFileEntry.class),
+			dlFileEntry.getFileEntryId());
+
 		// Lock
 
 		unlockFileEntry(dlFileEntry.getFileEntryId());
@@ -705,9 +689,9 @@ public class DLFileEntryLocalServiceImpl
 				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
 				dlFileEntry.getName());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -750,16 +734,15 @@ public class DLFileEntryLocalServiceImpl
 		if (!_isValidFileVersionNumber(version)) {
 			throw new InvalidFileVersionException(
 				StringBundler.concat(
-					"Unable to delete version for file entry ",
-					String.valueOf(fileEntryId), " because version number ",
-					version, " is invalid"));
+					"Unable to delete version for file entry ", fileEntryId,
+					" because version number ", version, " is invalid"));
 		}
 
 		if (version.equals(DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION)) {
 			throw new InvalidFileVersionException(
 				StringBundler.concat(
 					"Unable to delete a private working copy file version ",
-					version, " for file entry ", String.valueOf(fileEntryId)));
+					version, " for file entry ", fileEntryId));
 		}
 
 		if (!hasFileEntryLock(userId, fileEntryId)) {
@@ -778,8 +761,7 @@ public class DLFileEntryLocalServiceImpl
 				throw new InvalidFileVersionException(
 					StringBundler.concat(
 						"Unable to delete the unapproved file version ",
-						version, " for file entry ",
-						String.valueOf(fileEntryId)));
+						version, " for file entry ", fileEntryId));
 			}
 
 			int count = dlFileVersionPersistence.countByF_S(
@@ -789,8 +771,7 @@ public class DLFileEntryLocalServiceImpl
 				throw new InvalidFileVersionException(
 					StringBundler.concat(
 						"Unable to delete the only approved file version ",
-						version, " for file entry ",
-						String.valueOf(fileEntryId)));
+						version, " for file entry ", fileEntryId));
 			}
 
 			dlFileVersionPersistence.remove(dlFileVersion);
@@ -822,7 +803,8 @@ public class DLFileEntryLocalServiceImpl
 					dlLatestFileVersion.setFileEntryTypeId(fileEntryTypeId);
 					dlLatestFileVersion.setStatusDate(new Date());
 
-					dlFileVersionPersistence.update(dlLatestFileVersion);
+					dlLatestFileVersion = dlFileVersionPersistence.update(
+						dlLatestFileVersion);
 
 					dlFileEntry.setModifiedDate(new Date());
 					dlFileEntry.setFileName(dlLatestFileVersion.getFileName());
@@ -1023,103 +1005,6 @@ public class DLFileEntryLocalServiceImpl
 		return dlFileEntryFinder.countByExtraSettings();
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #getFile(long,
-	 *             String, boolean)}
-	 */
-	@Deprecated
-	@Override
-	public File getFile(
-			long userId, long fileEntryId, String version,
-			boolean incrementCounter)
-		throws PortalException {
-
-		return getFile(fileEntryId, version, incrementCounter, 1);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #getFile(long,
-	 *             String, boolean, int)}
-	 */
-	@Deprecated
-	@Override
-	public File getFile(
-			long userId, long fileEntryId, String version,
-			boolean incrementCounter, int increment)
-		throws PortalException {
-
-		return getFile(fileEntryId, version, incrementCounter, increment);
-	}
-
-	@Override
-	public File getFile(
-			long fileEntryId, String version, boolean incrementCounter)
-		throws PortalException {
-
-		return getFile(fileEntryId, version, incrementCounter, 1);
-	}
-
-	@Override
-	public File getFile(
-			long fileEntryId, String version, boolean incrementCounter,
-			int increment)
-		throws PortalException {
-
-		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
-			fileEntryId);
-
-		if (incrementCounter) {
-			dlFileEntryLocalService.incrementViewCounter(
-				dlFileEntry, increment);
-		}
-
-		return DLStoreUtil.getFile(
-			dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-			dlFileEntry.getName(), version);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getFileAsStream(long, String)}
-	 */
-	@Deprecated
-	@Override
-	public InputStream getFileAsStream(
-			long userId, long fileEntryId, String version)
-		throws PortalException {
-
-		return getFileAsStream(fileEntryId, version, true, 1);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getFileAsStream(long, String, boolean)}
-	 */
-	@Deprecated
-	@Override
-	public InputStream getFileAsStream(
-			long userId, long fileEntryId, String version,
-			boolean incrementCounter)
-		throws PortalException {
-
-		return getFileAsStream(fileEntryId, version, incrementCounter, 1);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getFileAsStream(long, String, boolean, int)}
-	 */
-	@Deprecated
-	@Override
-	public InputStream getFileAsStream(
-			long userId, long fileEntryId, String version,
-			boolean incrementCounter, int increment)
-		throws PortalException {
-
-		return getFileAsStream(
-			fileEntryId, version, incrementCounter, increment);
-	}
-
 	@Override
 	public InputStream getFileAsStream(long fileEntryId, String version)
 		throws PortalException {
@@ -1167,14 +1052,14 @@ public class DLFileEntryLocalServiceImpl
 	@Override
 	public List<DLFileEntry> getFileEntries(
 		long groupId, long folderId, int status, int start, int end,
-		OrderByComparator<DLFileEntry> obc) {
+		OrderByComparator<DLFileEntry> orderByComparator) {
 
 		List<Long> folderIds = new ArrayList<>();
 
 		folderIds.add(folderId);
 
 		QueryDefinition<DLFileEntry> queryDefinition = new QueryDefinition<>(
-			status, false, start, end, obc);
+			status, false, start, end, orderByComparator);
 
 		return dlFileEntryFinder.findByG_F(groupId, folderIds, queryDefinition);
 	}
@@ -1182,10 +1067,10 @@ public class DLFileEntryLocalServiceImpl
 	@Override
 	public List<DLFileEntry> getFileEntries(
 		long groupId, long folderId, int start, int end,
-		OrderByComparator<DLFileEntry> obc) {
+		OrderByComparator<DLFileEntry> orderByComparator) {
 
 		return dlFileEntryPersistence.findByG_F(
-			groupId, folderId, start, end, obc);
+			groupId, folderId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -1218,18 +1103,6 @@ public class DLFileEntryLocalServiceImpl
 		return dlFileEntryPersistence.countAll();
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public int getFileEntriesCount(
-		long groupId, DateRange dateRange, long repositoryId,
-		QueryDefinition<DLFileEntry> queryDefinition) {
-
-		return 0;
-	}
-
 	@Override
 	public int getFileEntriesCount(long groupId, long folderId) {
 		return dlFileEntryPersistence.countByG_F(groupId, folderId);
@@ -1237,12 +1110,9 @@ public class DLFileEntryLocalServiceImpl
 
 	@Override
 	public int getFileEntriesCount(long groupId, long folderId, int status) {
-		List<Long> folderIds = new ArrayList<>();
-
-		folderIds.add(folderId);
-
 		return dlFileEntryFinder.countByG_F(
-			groupId, folderIds, new QueryDefinition<>(status));
+			groupId, ListUtil.fromArray(folderId),
+			new QueryDefinition<>(status));
 	}
 
 	@Override
@@ -1289,16 +1159,18 @@ public class DLFileEntryLocalServiceImpl
 		long userId = PrincipalThreadLocal.getUserId();
 
 		for (DLFileVersion dlFileVersion : dlFileVersions) {
-			if (hasFileEntryLock(userId, dlFileVersion.getFileEntryId())) {
+			if (hasFileEntryLock(
+					userId, dlFileVersion.getFileEntryId(),
+					dlFileVersion.getFolderId())) {
+
 				return dlFileVersion.getFileEntry();
 			}
 		}
 
 		throw new NoSuchFileEntryException(
 			StringBundler.concat(
-				"No DLFileEntry exists with the key {groupId=",
-				String.valueOf(groupId), ", folderId=",
-				String.valueOf(folderId), ", title=", title,
+				"No DLFileEntry exists with the key {groupId=", groupId,
+				", folderId=", folderId, ", title=", title,
 				StringPool.CLOSE_CURLY_BRACE));
 	}
 
@@ -1327,9 +1199,11 @@ public class DLFileEntryLocalServiceImpl
 
 	@Override
 	public List<DLFileEntry> getGroupFileEntries(
-		long groupId, int start, int end, OrderByComparator<DLFileEntry> obc) {
+		long groupId, int start, int end,
+		OrderByComparator<DLFileEntry> orderByComparator) {
 
-		return dlFileEntryPersistence.findByGroupId(groupId, start, end, obc);
+		return dlFileEntryPersistence.findByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -1344,30 +1218,30 @@ public class DLFileEntryLocalServiceImpl
 	@Override
 	public List<DLFileEntry> getGroupFileEntries(
 		long groupId, long userId, int start, int end,
-		OrderByComparator<DLFileEntry> obc) {
+		OrderByComparator<DLFileEntry> orderByComparator) {
 
 		if (userId <= 0) {
 			return dlFileEntryPersistence.findByGroupId(
-				groupId, start, end, obc);
+				groupId, start, end, orderByComparator);
 		}
 
 		return dlFileEntryPersistence.findByG_U(
-			groupId, userId, start, end, obc);
+			groupId, userId, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<DLFileEntry> getGroupFileEntries(
 		long groupId, long userId, long rootFolderId, int start, int end,
-		OrderByComparator<DLFileEntry> obc) {
+		OrderByComparator<DLFileEntry> orderByComparator) {
 
 		return getGroupFileEntries(
-			groupId, userId, 0, rootFolderId, start, end, obc);
+			groupId, userId, 0, rootFolderId, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<DLFileEntry> getGroupFileEntries(
 		long groupId, long userId, long repositoryId, long rootFolderId,
-		int start, int end, OrderByComparator<DLFileEntry> obc) {
+		int start, int end, OrderByComparator<DLFileEntry> orderByComparator) {
 
 		List<Long> folderIds;
 
@@ -1385,7 +1259,7 @@ public class DLFileEntryLocalServiceImpl
 		}
 
 		QueryDefinition<DLFileEntry> queryDefinition = new QueryDefinition<>(
-			WorkflowConstants.STATUS_ANY, start, end, obc);
+			WorkflowConstants.STATUS_ANY, start, end, orderByComparator);
 
 		if (repositoryId == 0) {
 			if (userId <= 0) {
@@ -1424,27 +1298,9 @@ public class DLFileEntryLocalServiceImpl
 		return dlFileEntryPersistence.countByG_U(groupId, userId);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public List<DLFileEntry> getMisversionedFileEntries() {
-		return dlFileEntryFinder.findByMisversioned();
-	}
-
 	@Override
 	public List<DLFileEntry> getNoAssetFileEntries() {
 		return dlFileEntryFinder.findByNoAssets();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public List<DLFileEntry> getOrphanedFileEntries() {
-		return dlFileEntryFinder.findByOrphanedFileEntries();
 	}
 
 	@Override
@@ -1480,10 +1336,10 @@ public class DLFileEntryLocalServiceImpl
 				return uniqueTitle;
 			}
 			catch (DuplicateFileEntryException | DuplicateFolderNameException
-						e) {
+						exception) {
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
+					_log.debug(exception, exception);
 				}
 			}
 
@@ -1507,7 +1363,12 @@ public class DLFileEntryLocalServiceImpl
 
 		DLFileEntry dlFileEntry = getFileEntry(fileEntryId);
 
-		long folderId = dlFileEntry.getFolderId();
+		return hasFileEntryLock(userId, fileEntryId, dlFileEntry.getFolderId());
+	}
+
+	@Override
+	public boolean hasFileEntryLock(
+		long userId, long fileEntryId, long folderId) {
 
 		boolean hasLock = LockManagerUtil.hasLock(
 			userId, DLFileEntry.class.getName(), fileEntryId);
@@ -1521,86 +1382,34 @@ public class DLFileEntryLocalServiceImpl
 		return dlFolderLocalService.hasInheritableLock(folderId);
 	}
 
-	@BufferedIncrement(
-		configuration = "DLFileEntry", incrementClass = NumberIncrement.class
-	)
 	@Override
+	@Transactional(enabled = false)
 	public void incrementViewCounter(DLFileEntry dlFileEntry, int increment) {
 		if (ExportImportThreadLocal.isImportInProcess()) {
 			return;
 		}
 
-		dlFileEntry = dlFileEntryPersistence.fetchByPrimaryKey(
-			dlFileEntry.getFileEntryId());
-
-		if (dlFileEntry == null) {
-			return;
-		}
-
-		dlFileEntry.setModifiedDate(dlFileEntry.getModifiedDate());
-		dlFileEntry.setReadCount(dlFileEntry.getReadCount() + increment);
-
-		dlFileEntryPersistence.update(dlFileEntry);
+		_viewCountManager.incrementViewCount(
+			dlFileEntry.getCompanyId(),
+			classNameLocalService.getClassNameId(DLFileEntry.class),
+			dlFileEntry.getFileEntryId(), increment);
 	}
 
 	@Override
 	public boolean isFileEntryCheckedOut(long fileEntryId) {
-		DLFileVersion dlFileVersion = dlFileVersionPersistence.fetchByF_V(
+		int count = dlFileVersionPersistence.countByF_V(
 			fileEntryId, DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION);
 
-		if (dlFileVersion == null) {
-			return false;
+		if (count > 0) {
+			return true;
 		}
 
-		return true;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public boolean isKeepFileVersionLabel(
-			long fileEntryId, boolean majorVersion,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
-			fileEntryId);
-
-		DLFileVersion lastDLFileVersion =
-			dlFileVersionLocalService.getFileVersion(
-				dlFileEntry.getFileEntryId(), dlFileEntry.getVersion());
-
-		DLFileVersion latestDLFileVersion =
-			dlFileVersionLocalService.getLatestFileVersion(fileEntryId, false);
-
-		return dlFileVersionPolicy.isKeepFileVersionLabel(
-			lastDLFileVersion, latestDLFileVersion, majorVersion,
-			serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #isKeepFileVersionLabel(long, boolean, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public boolean isKeepFileVersionLabel(
-			long fileEntryId, ServiceContext serviceContext)
-		throws PortalException {
-
-		return isKeepFileVersionLabel(fileEntryId, false, serviceContext);
+		return false;
 	}
 
 	@Override
 	public Lock lockFileEntry(long userId, long fileEntryId)
 		throws PortalException {
-
-		if (hasFileEntryLock(userId, fileEntryId)) {
-			return LockManagerUtil.getLock(
-				DLFileEntry.class.getName(), fileEntryId);
-		}
 
 		return LockManagerUtil.lock(
 			userId, DLFileEntry.class.getName(), fileEntryId, null, false,
@@ -1646,8 +1455,8 @@ public class DLFileEntryLocalServiceImpl
 		if (!_isValidFileVersionNumber(version)) {
 			throw new InvalidFileVersionException(
 				StringBundler.concat(
-					"Unable to revert file entry ", String.valueOf(fileEntryId),
-					" to version ", version, " because it is invalid"));
+					"Unable to revert file entry ", fileEntryId, " to version ",
+					version, " because it is invalid"));
 		}
 
 		if (version.equals(DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION)) {
@@ -1682,7 +1491,7 @@ public class DLFileEntryLocalServiceImpl
 			DLVersionNumberIncrease.MAJOR;
 		String extraSettings = dlFileVersion.getExtraSettings();
 		Map<String, DDMFormValues> ddmFormValuesMap = null;
-		InputStream is = getFileAsStream(fileEntryId, version, false);
+		InputStream inputStream = getFileAsStream(fileEntryId, version, false);
 		long size = dlFileVersion.getSize();
 
 		serviceContext.setCommand(Constants.REVERT);
@@ -1696,7 +1505,8 @@ public class DLFileEntryLocalServiceImpl
 		updateFileEntry(
 			userId, fileEntryId, sourceFileName, extension, mimeType, title,
 			description, changeLog, dlVersionNumberIncrease, extraSettings,
-			fileEntryTypeId, ddmFormValuesMap, null, is, size, serviceContext);
+			fileEntryTypeId, ddmFormValuesMap, null, inputStream, size,
+			serviceContext);
 
 		DLFileVersion newDLFileVersion =
 			dlFileVersionLocalService.getLatestFileVersion(fileEntryId, false);
@@ -1798,9 +1608,8 @@ public class DLFileEntryLocalServiceImpl
 					return;
 				}
 
-				Document document = indexer.getDocument(dlFileEntry);
-
-				indexableActionableDynamicQuery.addDocuments(document);
+				indexableActionableDynamicQuery.addDocuments(
+					indexer.getDocument(dlFileEntry));
 			});
 
 		indexableActionableDynamicQuery.performActions();
@@ -1811,32 +1620,14 @@ public class DLFileEntryLocalServiceImpl
 		LockManagerUtil.unlock(DLFileEntry.class.getName(), fileEntryId);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateFileEntry(long, long, String, String, String, String, String, DLVersionNumberIncrease, long, Map, File, InputStream, long, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DLFileEntry updateFileEntry(
-			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			boolean majorVersion, long fileEntryTypeId,
-			Map<String, DDMFormValues> ddmFormValuesMap, File file,
-			InputStream is, long size, ServiceContext serviceContext)
-		throws PortalException {
-
-		return dlFileEntryLocalService.updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, DLVersionNumberIncrease.fromMajorVersion(majorVersion),
-			fileEntryTypeId, ddmFormValuesMap, file, is, size, serviceContext);
-	}
-
 	@Override
 	public DLFileEntry updateFileEntry(
 			long userId, long fileEntryId, String sourceFileName,
 			String mimeType, String title, String description, String changeLog,
 			DLVersionNumberIncrease dlVersionNumberIncrease,
 			long fileEntryTypeId, Map<String, DDMFormValues> ddmFormValuesMap,
-			File file, InputStream is, long size, ServiceContext serviceContext)
+			File file, InputStream inputStream, long size,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
@@ -1844,7 +1635,7 @@ public class DLFileEntryLocalServiceImpl
 
 		String extension = DLAppUtil.getExtension(title, sourceFileName);
 
-		if ((file == null) && (is == null)) {
+		if ((file == null) && (inputStream == null)) {
 			extension = dlFileEntry.getExtension();
 			mimeType = dlFileEntry.getMimeType();
 		}
@@ -1860,10 +1651,31 @@ public class DLFileEntryLocalServiceImpl
 				dlFileEntry.getGroupId()),
 			dlFileEntry.getFolderId(), fileEntryTypeId);
 
+		if ((fileEntryTypeId != dlFileEntry.getFileEntryTypeId()) &&
+			(dlFileEntry.getFileEntryTypeId() !=
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT)) {
+
+			DLFileEntryMetadata dlFileEntryMetadata =
+				dlFileEntryMetadataPersistence.fetchByFileEntryId_Last(
+					fileEntryId, null);
+
+			DDMStructure ddmStructure = DDMStructureManagerUtil.fetchStructure(
+				dlFileEntryMetadata.getDDMStructureId());
+
+			if (ddmStructure != null) {
+				DDMStructureLinkManagerUtil.deleteStructureLink(
+					classNameLocalService.getClassNameId(
+						DLFileEntryMetadata.class),
+					dlFileEntryMetadata.getFileEntryMetadataId(),
+					ddmStructure.getStructureId());
+			}
+		}
+
 		return updateFileEntry(
 			userId, fileEntryId, sourceFileName, extension, mimeType, title,
 			description, changeLog, dlVersionNumberIncrease, extraSettings,
-			fileEntryTypeId, ddmFormValuesMap, file, is, size, serviceContext);
+			fileEntryTypeId, ddmFormValuesMap, file, inputStream, size,
+			serviceContext);
 	}
 
 	@Override
@@ -1928,29 +1740,25 @@ public class DLFileEntryLocalServiceImpl
 				ImageToolUtil.getBytes(
 					thumbnailRenderedImage, largeImage.getType()));
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new ImageSizeException(
 				StringBundler.concat(
 					"Unable to update small image with smallImageId ",
-					String.valueOf(smallImageId), ", largeImageId ",
-					String.valueOf(largeImageId)),
-				ioe);
+					smallImageId, ", largeImageId ", largeImageId),
+				ioException);
 		}
 	}
 
 	@Override
 	public DLFileEntry updateStatus(
-			long userId, long fileVersionId, int status,
-			ServiceContext serviceContext,
+			long userId, DLFileEntry dlFileEntry, DLFileVersion dlFileVersion,
+			int status, ServiceContext serviceContext,
 			Map<String, Serializable> workflowContext)
 		throws PortalException {
 
 		// File version
 
 		User user = userPersistence.findByPrimaryKey(userId);
-
-		DLFileVersion dlFileVersion = dlFileVersionPersistence.findByPrimaryKey(
-			fileVersionId);
 
 		int oldStatus = dlFileVersion.getStatus();
 
@@ -1959,18 +1767,15 @@ public class DLFileEntryLocalServiceImpl
 		dlFileVersion.setStatusByUserName(user.getFullName());
 		dlFileVersion.setStatusDate(new Date());
 
-		dlFileVersionPersistence.update(dlFileVersion);
+		dlFileVersion = dlFileVersionPersistence.update(dlFileVersion);
 
 		// File entry
 
-		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
-			dlFileVersion.getFileEntryId());
-
 		if (status == WorkflowConstants.STATUS_APPROVED) {
-			if (DLUtil.compareVersions(
-					dlFileEntry.getVersion(), dlFileVersion.getVersion()) <=
-						0) {
+			int compare = DLUtil.compareVersions(
+				dlFileEntry.getVersion(), dlFileVersion.getVersion());
 
+			if (compare <= 0) {
 				dlFileEntry.setModifiedDate(dlFileVersion.getModifiedDate());
 				dlFileEntry.setFileName(dlFileVersion.getFileName());
 				dlFileEntry.setExtension(dlFileVersion.getExtension());
@@ -1983,7 +1788,7 @@ public class DLFileEntryLocalServiceImpl
 				dlFileEntry.setVersion(dlFileVersion.getVersion());
 				dlFileEntry.setSize(dlFileVersion.getSize());
 
-				dlFileEntryPersistence.update(dlFileEntry);
+				dlFileEntry = dlFileEntryPersistence.update(dlFileEntry);
 			}
 		}
 		else {
@@ -2010,7 +1815,7 @@ public class DLFileEntryLocalServiceImpl
 
 				dlFileEntry.setVersion(newVersion);
 
-				dlFileEntryPersistence.update(dlFileEntry);
+				dlFileEntry = dlFileEntryPersistence.update(dlFileEntry);
 			}
 
 			// Indexer
@@ -2058,27 +1863,30 @@ public class DLFileEntryLocalServiceImpl
 	}
 
 	@Override
+	public DLFileEntry updateStatus(
+			long userId, long fileVersionId, int status,
+			ServiceContext serviceContext,
+			Map<String, Serializable> workflowContext)
+		throws PortalException {
+
+		DLFileVersion dlFileVersion = dlFileVersionPersistence.findByPrimaryKey(
+			fileVersionId);
+
+		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
+			dlFileVersion.getFileEntryId());
+
+		return updateStatus(
+			userId, dlFileEntry, dlFileVersion, status, serviceContext,
+			workflowContext);
+	}
+
+	@Override
 	public void validateFile(
 			long groupId, long folderId, long fileEntryId, String fileName,
 			String title)
 		throws PortalException {
 
-		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			DLFolder parentDLFolder = dlFolderPersistence.findByPrimaryKey(
-				folderId);
-
-			if (groupId != parentDLFolder.getGroupId()) {
-				throw new NoSuchFolderException();
-			}
-		}
-
-		DLFolder dlFolder = dlFolderPersistence.fetchByG_P_N(
-			groupId, folderId, title);
-
-		if (dlFolder != null) {
-			throw new DuplicateFolderNameException(
-				"A folder already exists with name " + title);
-		}
+		_validateFolder(groupId, folderId, title);
 
 		DLFileEntry dlFileEntry = dlFileEntryPersistence.fetchByG_F_T(
 			groupId, folderId, title);
@@ -2118,23 +1926,22 @@ public class DLFileEntryLocalServiceImpl
 	public boolean verifyFileEntryLock(long fileEntryId, String lockUuid)
 		throws PortalException {
 
-		try {
-			Lock lock = LockManagerUtil.getLock(
-				DLFileEntry.class.getName(), fileEntryId);
+		Lock lock = LockManagerUtil.fetchLock(
+			DLFileEntry.class.getName(), fileEntryId);
 
+		if (lock != null) {
 			if (Objects.equals(lock.getUuid(), lockUuid)) {
 				return true;
 			}
 
 			return false;
 		}
-		catch (ExpiredLockException | NoSuchLockException e) {
-			DLFileEntry dlFileEntry = dlFileEntryLocalService.getFileEntry(
-				fileEntryId);
 
-			return dlFolderLocalService.verifyInheritableLock(
-				dlFileEntry.getFolderId(), lockUuid);
-		}
+		DLFileEntry dlFileEntry = dlFileEntryLocalService.getFileEntry(
+			fileEntryId);
+
+		return dlFolderLocalService.verifyInheritableLock(
+			dlFileEntry.getFolderId(), lockUuid);
 	}
 
 	protected void addFileEntryResources(
@@ -2220,7 +2027,7 @@ public class DLFileEntryLocalServiceImpl
 		ExpandoBridgeUtil.setExpandoBridgeAttributes(
 			oldExpandoBridge, dlFileVersion.getExpandoBridge(), serviceContext);
 
-		dlFileVersionPersistence.update(dlFileVersion);
+		dlFileVersion = dlFileVersionPersistence.update(dlFileVersion);
 
 		if ((fileEntryTypeId > 0) && (ddmFormValuesMap != null)) {
 			dlFileEntryMetadataLocalService.updateFileEntryMetadata(
@@ -2235,40 +2042,43 @@ public class DLFileEntryLocalServiceImpl
 			DLFileEntry dlFileEntry, DLFileVersion dlFileVersion, String[] keys)
 		throws PortalException {
 
-		UnicodeProperties extraSettingsProperties =
+		UnicodeProperties extraSettingsUnicodeProperties =
 			dlFileVersion.getExtraSettingsProperties();
 
-		ExpandoBridge expandoBridge = dlFileVersion.getExpandoBridge();
+		convertExtraSettings(
+			extraSettingsUnicodeProperties, dlFileVersion.getExpandoBridge(),
+			keys);
 
-		convertExtraSettings(extraSettingsProperties, expandoBridge, keys);
+		dlFileVersion.setExtraSettingsProperties(
+			extraSettingsUnicodeProperties);
 
-		dlFileVersion.setExtraSettingsProperties(extraSettingsProperties);
-
-		dlFileVersionPersistence.update(dlFileVersion);
+		dlFileVersion = dlFileVersionPersistence.update(dlFileVersion);
 
 		int status = dlFileVersion.getStatus();
 
-		if ((status == WorkflowConstants.STATUS_APPROVED) &&
-			(DLUtil.compareVersions(
-				dlFileEntry.getVersion(), dlFileVersion.getVersion()) <= 0)) {
+		if (status == WorkflowConstants.STATUS_APPROVED) {
+			int compare = DLUtil.compareVersions(
+				dlFileEntry.getVersion(), dlFileVersion.getVersion());
 
-			reindex(dlFileEntry);
+			if (compare <= 0) {
+				reindex(dlFileEntry);
+			}
 		}
 	}
 
 	protected void convertExtraSettings(DLFileEntry dlFileEntry, String[] keys)
 		throws PortalException {
 
-		UnicodeProperties extraSettingsProperties =
+		UnicodeProperties extraSettingsUnicodeProperties =
 			dlFileEntry.getExtraSettingsProperties();
 
-		ExpandoBridge expandoBridge = dlFileEntry.getExpandoBridge();
+		convertExtraSettings(
+			extraSettingsUnicodeProperties, dlFileEntry.getExpandoBridge(),
+			keys);
 
-		convertExtraSettings(extraSettingsProperties, expandoBridge, keys);
+		dlFileEntry.setExtraSettingsProperties(extraSettingsUnicodeProperties);
 
-		dlFileEntry.setExtraSettingsProperties(extraSettingsProperties);
-
-		dlFileEntryPersistence.update(dlFileEntry);
+		dlFileEntry = dlFileEntryPersistence.update(dlFileEntry);
 
 		List<DLFileVersion> dlFileVersions =
 			dlFileVersionLocalService.getFileVersions(
@@ -2280,11 +2090,11 @@ public class DLFileEntryLocalServiceImpl
 	}
 
 	protected void convertExtraSettings(
-		UnicodeProperties extraSettingsProperties, ExpandoBridge expandoBridge,
-		String[] keys) {
+		UnicodeProperties extraSettingsUnicodeProperties,
+		ExpandoBridge expandoBridge, String[] keys) {
 
 		for (String key : keys) {
-			String value = extraSettingsProperties.remove(key);
+			String value = extraSettingsUnicodeProperties.remove(key);
 
 			if (Validator.isNull(value)) {
 				continue;
@@ -2390,7 +2200,7 @@ public class DLFileEntryLocalServiceImpl
 			throw new InvalidFileVersionException(
 				StringBundler.concat(
 					"Unable to increase version number for file entry ",
-					String.valueOf(dlFileEntry.getFileEntryId()),
+					dlFileEntry.getFileEntryId(),
 					" because original version number ", version,
 					" is invalid"));
 		}
@@ -2420,12 +2230,14 @@ public class DLFileEntryLocalServiceImpl
 
 			return fileEntryTypeId;
 		}
-		catch (InvalidFileEntryTypeException ifete) {
+		catch (InvalidFileEntryTypeException invalidFileEntryTypeException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(ifete, ifete);
+				_log.debug(
+					invalidFileEntryTypeException,
+					invalidFileEntryTypeException);
 			}
 
 			return dlFileEntryTypeLocalService.getDefaultFileEntryTypeId(
@@ -2451,10 +2263,12 @@ public class DLFileEntryLocalServiceImpl
 			dlFileEntry.getGroupId(), newFolderId, dlFileEntry.getFileEntryId(),
 			dlFileEntry.getFileName(), dlFileEntry.getTitle());
 
+		dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(fileEntryId);
+
 		dlFileEntry.setFolderId(newFolderId);
 		dlFileEntry.setTreePath(dlFileEntry.buildTreePath());
 
-		dlFileEntryPersistence.update(dlFileEntry);
+		dlFileEntry = dlFileEntryPersistence.update(dlFileEntry);
 
 		// File version
 
@@ -2519,7 +2333,7 @@ public class DLFileEntryLocalServiceImpl
 			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
 			String extraSettings, long fileEntryTypeId,
 			Map<String, DDMFormValues> ddmFormValuesMap, File file,
-			InputStream is, long size, ServiceContext serviceContext)
+			InputStream inputStream, long size, ServiceContext serviceContext)
 		throws PortalException {
 
 		User user = userPersistence.findByPrimaryKey(userId);
@@ -2544,7 +2358,7 @@ public class DLFileEntryLocalServiceImpl
 		}
 
 		if (autoCheckIn) {
-			if ((file != null) || (is != null)) {
+			if ((file != null) || (inputStream != null)) {
 				dlFileEntry = _checkOutDLFileEntryModel(
 					userId, fileEntryId, fileEntryTypeId, serviceContext);
 			}
@@ -2553,11 +2367,8 @@ public class DLFileEntryLocalServiceImpl
 					userId, fileEntryId, fileEntryTypeId, serviceContext);
 			}
 		}
-		else if (!checkedOut) {
-			lockFileEntry(userId, fileEntryId);
-		}
 
-		if (!hasFileEntryLock(userId, fileEntryId)) {
+		if (!hasFileEntryLock(userId, fileEntryId, dlFileEntry.getFolderId())) {
 			lockFileEntry(userId, fileEntryId);
 		}
 
@@ -2620,7 +2431,7 @@ public class DLFileEntryLocalServiceImpl
 
 			// File
 
-			if ((file != null) || (is != null)) {
+			if ((file != null) || (inputStream != null)) {
 				DLStoreUtil.deleteFile(
 					user.getCompanyId(), dlFileEntry.getDataRepositoryId(),
 					dlFileEntry.getName(), version);
@@ -2635,7 +2446,7 @@ public class DLFileEntryLocalServiceImpl
 					DLStoreUtil.updateFile(
 						user.getCompanyId(), dlFileEntry.getDataRepositoryId(),
 						dlFileEntry.getName(), dlFileEntry.getExtension(),
-						false, version, sourceFileName, is);
+						false, version, sourceFileName, inputStream);
 				}
 			}
 
@@ -2645,17 +2456,17 @@ public class DLFileEntryLocalServiceImpl
 					serviceContext);
 			}
 		}
-		catch (PortalException | SystemException e) {
+		catch (PortalException | SystemException exception1) {
 			if (autoCheckIn) {
 				try {
 					cancelCheckOut(userId, fileEntryId);
 				}
-				catch (Exception e2) {
-					_log.error(e2, e2);
+				catch (Exception exception2) {
+					_log.error(exception2, exception2);
 				}
 			}
 
-			throw e;
+			throw exception1;
 		}
 		finally {
 			if (!autoCheckIn && !checkedOut) {
@@ -2742,29 +2553,8 @@ public class DLFileEntryLocalServiceImpl
 
 		throw new InvalidFileEntryTypeException(
 			StringBundler.concat(
-				"Invalid file entry type ", String.valueOf(fileEntryTypeId),
-				" for folder ", String.valueOf(folderId)));
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #validateFileExtension(String, String)}
-	 */
-	@Deprecated
-	protected void validateFileExtension(String extension)
-		throws PortalException {
-
-		if (Validator.isNull(extension)) {
-			return;
-		}
-
-		int maxLength = ModelHintsUtil.getMaxLength(
-			DLFileEntry.class.getName(), "extension");
-
-		if (extension.length() > maxLength) {
-			throw new FileExtensionException(
-				extension + " exceeds max length of " + maxLength);
-		}
+				"Invalid file entry type ", fileEntryTypeId, " for folder ",
+				folderId));
 	}
 
 	protected void validateFileExtension(String fileName, String extension)
@@ -2781,12 +2571,9 @@ public class DLFileEntryLocalServiceImpl
 			throw new FileExtensionException(
 				StringBundler.concat(
 					extension, " of file ", fileName, " exceeds max length of ",
-					String.valueOf(maxLength)));
+					maxLength));
 		}
 	}
-
-	@BeanReference(type = DLFileVersionPolicy.class)
-	protected DLFileVersionPolicy dlFileVersionPolicy;
 
 	private DLFileEntry _checkOutDLFileEntryModel(
 			long userId, long fileEntryId, long fileEntryTypeId,
@@ -2806,7 +2593,8 @@ public class DLFileEntryLocalServiceImpl
 		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
 			fileEntryId);
 
-		boolean hasLock = hasFileEntryLock(userId, fileEntryId);
+		boolean hasLock = hasFileEntryLock(
+			userId, fileEntryId, dlFileEntry.getFolderId());
 
 		if (!hasLock) {
 			if ((expirationTime <= 0) ||
@@ -2835,7 +2623,7 @@ public class DLFileEntryLocalServiceImpl
 		if (dlFileEntry.isManualCheckInRequired() ^ manualCheckinRequired) {
 			dlFileEntry.setManualCheckInRequired(manualCheckinRequired);
 
-			dlFileEntryPersistence.update(dlFileEntry);
+			dlFileEntry = dlFileEntryPersistence.update(dlFileEntry);
 		}
 
 		String version = dlFileVersion.getVersion();
@@ -2977,7 +2765,7 @@ public class DLFileEntryLocalServiceImpl
 			latestDLFileVersion.getFileEntryTypeId());
 		dlFileEntry.setSize(latestDLFileVersion.getSize());
 
-		dlFileEntryPersistence.update(dlFileEntry);
+		dlFileEntry = dlFileEntryPersistence.update(dlFileEntry);
 
 		// File version
 
@@ -3001,7 +2789,7 @@ public class DLFileEntryLocalServiceImpl
 			lastDLFileVersion.getExpandoBridge(),
 			latestDLFileVersion.getExpandoBridge());
 
-		dlFileVersionPersistence.update(lastDLFileVersion);
+		lastDLFileVersion = dlFileVersionPersistence.update(lastDLFileVersion);
 
 		// Metadata
 
@@ -3055,6 +2843,27 @@ public class DLFileEntryLocalServiceImpl
 		removeFileVersion(dlFileEntry, latestDLFileVersion);
 	}
 
+	private void _validateFolder(long groupId, long folderId, String title)
+		throws PortalException {
+
+		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+			DLFolder parentDLFolder = dlFolderPersistence.findByPrimaryKey(
+				folderId);
+
+			if (groupId != parentDLFolder.getGroupId()) {
+				throw new NoSuchFolderException();
+			}
+		}
+
+		DLFolder dlFolder = dlFolderPersistence.fetchByG_P_N(
+			groupId, folderId, title);
+
+		if (dlFolder != null) {
+			throw new DuplicateFolderNameException(
+				"A folder already exists with name " + title);
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		DLFileEntryLocalServiceImpl.class);
 
@@ -3064,5 +2873,9 @@ public class DLFileEntryLocalServiceImpl
 		ServiceProxyFactory.newServiceTrackedInstance(
 			VersioningStrategy.class, DLFileEntryLocalServiceImpl.class,
 			"_versioningStrategy", false, true);
+	private static volatile ViewCountManager _viewCountManager =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			ViewCountManager.class, DLFileEntryLocalServiceImpl.class,
+			"_viewCountManager", false, true);
 
 }

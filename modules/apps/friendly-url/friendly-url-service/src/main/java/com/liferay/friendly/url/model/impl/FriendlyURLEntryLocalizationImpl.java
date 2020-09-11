@@ -14,12 +14,9 @@
 
 package com.liferay.friendly.url.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class FriendlyURLEntryLocalizationImpl
 	extends FriendlyURLEntryLocalizationBaseImpl {
 

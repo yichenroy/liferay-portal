@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.TrashHelper;
 
-import java.util.Date;
 import java.util.Locale;
 
 import javax.portlet.PortletRequest;
@@ -51,14 +50,6 @@ public class DLFolderAssetRenderer
 	extends BaseJSPAssetRenderer<Folder> implements TrashRenderer {
 
 	public static final String TYPE = "folder";
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public DLFolderAssetRenderer(Folder folder) {
-		this(folder, null);
-	}
 
 	public DLFolderAssetRenderer(Folder folder, TrashHelper trashHelper) {
 		_folder = folder;
@@ -80,22 +71,15 @@ public class DLFolderAssetRenderer
 		return _folder.getPrimaryKey();
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public Date getDisplayDate() {
-		return _folder.getModifiedDate();
-	}
-
 	@Override
 	public long getGroupId() {
 		return _folder.getGroupId();
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
 		if (template.equals(TEMPLATE_ABSTRACT) ||
 			template.equals(TEMPLATE_FULL_CONTENT)) {
 
@@ -132,9 +116,8 @@ public class DLFolderAssetRenderer
 
 	@Override
 	public PortletURL getURLEdit(
-			LiferayPortletRequest liferayPortletRequest,
-			LiferayPortletResponse liferayPortletResponse)
-		throws Exception {
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
 		Group group = GroupLocalServiceUtil.fetchGroup(_folder.getGroupId());
 
@@ -223,13 +206,14 @@ public class DLFolderAssetRenderer
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(WebKeys.DOCUMENT_LIBRARY_FOLDER, _folder);
+		httpServletRequest.setAttribute(
+			WebKeys.DOCUMENT_LIBRARY_FOLDER, _folder);
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	@Override

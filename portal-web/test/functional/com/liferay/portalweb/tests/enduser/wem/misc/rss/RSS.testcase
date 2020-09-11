@@ -1,5 +1,6 @@
 @component-name = "portal-rss"
 definition {
+
 	property osgi.module.configuration.file.names = "com.liferay.rss.web.internal.configuration.RSSWebCacheConfiguration.config";
 	property osgi.module.configurations = "com.liferay.portlet.display-category=&quot;category.cms&quot;";
 	property portal.release = "true";
@@ -11,21 +12,11 @@ definition {
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites"
-		);
+		JSONGroup.addGroup(groupName = "Site Name");
 
-		Site.addBlankCP(siteName = "Site Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
-
-		SitePages.addPublicPage(pageName = "Site Page Name");
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name");
 	}
 
 	tearDown {
@@ -37,7 +28,7 @@ definition {
 		else {
 			Page.tearDownCP(site = "Liferay");
 
-			Site.tearDownCP();
+			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
 	}
 
@@ -45,61 +36,66 @@ definition {
 	test AddFeedBetweenFeeds {
 		property testray.component.names = "RSS";
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
 
-		Portlet.addPG(portletName = "RSS Publisher");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
 			feedTitle = "Technology",
 			feedType = "file",
-			feedUrlLink = "Technology.xml"
-		);
+			feedUrlLink = "Technology.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			buttonRowIndexNumber = "1",
 			feedRowIndexNumber = "1",
-			feedTitle = "Latimes &gt; Technology News",
+			feedTitle = "Latimes : Technology News",
 			feedType = "file",
-			feedUrlLink = "rss2.0.xml"
-		);
+			feedUrlLink = "rss2.0.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			buttonRowIndexNumber = "1",
 			feedRowIndexNumber = "2",
-			feedTitle = "Reuters &gt; Sports News",
+			feedTitle = "Reuters : Sports News",
 			feedType = "file",
-			feedUrlLink = "reuters_sports_news.xml"
-		);
+			feedUrlLink = "reuters_sports_news.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
-		for (var feedTitle : list "Technology,Reuters > Sports News,Latimes > Technology News") {
+		for (var feedTitle : list "Technology,Reuters : Sports News,Latimes : Technology News") {
 			RSSPortlet.viewDisplayFeedTitle(feedTitle = "${feedTitle}");
 		}
 	}
@@ -108,44 +104,47 @@ definition {
 	test AddFeedWithWrongUrl {
 		property testray.component.names = "RSS";
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
 
-		Portlet.addPG(portletName = "RSS Publisher");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
 			feedTitle = "General Announcement",
-			feedUrlLink = "www.theverge.com/rss/index.xml"
-		);
+			feedUrlLink = "www.theverge.com/rss/index.xml");
 
-		RSSPortlet.viewWarningMessageDisplay(
-			errorMessage = "The following are invalid URLs: www.theverge.com/rss/index.xml."
-		);
+		RSSPortlet.viewWarningMessageDisplay(errorMessage = "The following are invalid URLs: www.theverge.com/rss/index.xml.");
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		RSSPortlet.viewDeleteFeed(feedTitle = "General Announcement");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
 			feedTitle = "General Announcement",
 			feedType = "file",
-			feedUrlLink = "theverge.xml"
-		);
+			feedUrlLink = "theverge.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		RSSPortlet.viewDisplayFeedTitle(feedTitle = "General Announcement");
 	}
@@ -155,205 +154,331 @@ definition {
 		property portal.acceptance = "true";
 		property testray.component.names = "RSS";
 
-		Navigator.gotoPage(pageName = "Home");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
-
-		SitePages.addPublicPage(pageName = "Page Name");
-
-		Navigator.gotoPage(pageName = "Page Name");
-
-		Portlet.addPG(portletName = "RSS Publisher");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		RSSPortlet.viewPortletConfigurationInfo();
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
-			feedTitle = "Latimes &gt; Technology News",
+			feedTitle = "Latimes : Technology News",
 			feedType = "file",
-			feedUrlLink = "rss2.0.xml"
-		);
+			feedUrlLink = "rss2.0.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoPage(pageName = "Page Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
-		RSSPortlet.viewDisplayFeedTitle(feedTitle = "Latimes &gt; Technology News");
+		RSSPortlet.viewDisplayFeedTitle(feedTitle = "Latimes : Technology News");
+	}
+
+	@description = "This is a use case for LPS-107942. The input field of Entries Per Feed shouldn't allow 0 value, negative value, decimal value, letters and symbols."
+	@priority = "4"
+	test CannotChangeNumberOfEntriesPerFeedToInvalidValue {
+		property testray.component.names = "RSS";
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
+
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
+
+		task ("Assert the input field of Entries Per Feed shouldn't allow 0 value and negative value") {
+			for (var numberOfEntries : list "0,-1") {
+				Navigator.gotoSitePage(
+					pageName = "Site Page Name",
+					siteName = "Site Name");
+
+				Portlet.gotoPortletOptions(
+					portletName = "RSS Publisher",
+					portletOption = "Configuration");
+
+				RSSPortlet.changeNumberOfEntriesPerFeed(numberOfEntries = "${numberOfEntries}");
+
+				Click(
+					key_fieldLabel = "# of Entries Per Feed",
+					locator1 = "FormFields#LABEL");
+
+				AssertTextEquals(
+					key_fieldLabel = "# of Entries Per Feed",
+					locator1 = "FormFields#NUMBER_FIELD",
+					value1 = "${numberOfEntries}");
+
+				AssertTextEquals(
+					key_alertMessage = "Only integers greater than or equal to 1 are allowed.",
+					locator1 = "Message#ERROR_ENTER_A_VALID_VALUE",
+					value1 = "Only integers greater than or equal to 1 are allowed.");
+
+				Button.clickSave();
+
+				AssertElementNotPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
+			}
+		}
+
+		task ("Assert the input field of Entries Per Feed shouldn't allow decimal value") {
+			Navigator.gotoSitePage(
+				pageName = "Site Page Name",
+				siteName = "Site Name");
+
+			Portlet.gotoPortletOptions(
+				portletName = "RSS Publisher",
+				portletOption = "Configuration");
+
+			RSSPortlet.changeNumberOfEntriesPerFeed(numberOfEntries = "2.5");
+
+			Click(
+				key_fieldLabel = "# of Entries Per Feed",
+				locator1 = "FormFields#LABEL");
+
+			AssertTextEquals(
+				key_fieldLabel = "# of Entries Per Feed",
+				locator1 = "FormFields#NUMBER_FIELD",
+				value1 = "2.5");
+
+			AssertTextEquals(
+				key_alertMessage = "Only integers are allowed.",
+				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE",
+				value1 = "Only integers are allowed.");
+
+			Button.clickSave();
+
+			AssertElementNotPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
+		}
+
+		task ("Assert the input field of Entries Per Feed shouldn't allow letters and symbols") {
+			Navigator.gotoSitePage(
+				pageName = "Site Page Name",
+				siteName = "Site Name");
+
+			Portlet.gotoPortletOptions(
+				portletName = "RSS Publisher",
+				portletOption = "Configuration");
+
+			RSSPortlet.changeNumberOfEntriesPerFeed(numberOfEntries = "test@liferay.com");
+
+			Click(
+				key_fieldLabel = "# of Entries Per Feed",
+				locator1 = "FormFields#LABEL");
+
+			AssertTextEquals(
+				key_fieldLabel = "# of Entries Per Feed",
+				locator1 = "FormFields#NUMBER_FIELD",
+				value1 = "");
+
+			Button.clickSave();
+
+			AssertVisible(locator1 = "Message#ERROR");
+		}
 	}
 
 	@priority = "3"
 	test ChangeDefaultToNavigationDisplay {
 		property testray.component.names = "RSS";
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
 
-		Portlet.addPG(portletName = "RSS Publisher");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
 			feedTitle = "Technology",
 			feedType = "file",
-			feedUrlLink = "Technology.xml"
-		);
+			feedUrlLink = "Technology.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.configureFeedDisplayStyle(feedDisplayStyle = "Navigation");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		RSSPortlet.viewNavigationDisplayFeedTitle(feedTitle = "Technology");
+	}
+
+	@description = "This is a use case for LPS-107942.The input field of Entries Per Feed allows integer numbers greater than 10."
+	@priority = "5"
+	test ChangeNumberOfEntriesPerFeedToEleven {
+		property portal.acceptance = "true";
+		property testray.component.names = "RSS";
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
+
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
+
+		Portlet.gotoPortletOptions(
+			portletName = "RSS Publisher",
+			portletOption = "Configuration");
+
+		RSSPortlet.changeNumberOfEntriesPerFeed(numberOfEntries = "11");
+
+		AssertTextEquals(
+			key_fieldLabel = "# of Entries Per Feed",
+			locator1 = "FormFields#NUMBER_FIELD",
+			value1 = "11");
+
+		PortletEntry.save();
 	}
 
 	@priority = "3"
 	test ChangeOrderOfRSSFeeds {
 		property testray.component.names = "RSS";
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
 
-		Portlet.addPG(portletName = "RSS Publisher");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
 			feedTitle = "Technology",
 			feedType = "file",
-			feedUrlLink = "Technology.xml"
-		);
+			feedUrlLink = "Technology.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			buttonRowIndexNumber = "1",
 			feedRowIndexNumber = "1",
 			feedTitle = "NBA",
 			feedType = "file",
-			feedUrlLink = "nba.xml"
-		);
+			feedUrlLink = "nba.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.viewPG(
 			feedRowIndexNumber = "0",
 			feedTitle = "Technology",
-			rowIndexNumber = "1"
-		);
+			rowIndexNumber = "1");
 
 		RSSPortlet.viewPG(
 			feedRowIndexNumber = "1",
 			feedTitle = "NBA",
-			rowIndexNumber = "2"
-		);
+			rowIndexNumber = "2");
 
 		RSSPortlet.changeFeedsOrder(
 			fromRowNumber = "1",
 			rowLocation = "Title",
-			toRowNumber = "2"
-		);
+			toRowNumber = "2");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.viewPG(
 			feedRowIndexNumber = "0",
 			feedTitle = "NBA",
-			rowIndexNumber = "1"
-		);
+			rowIndexNumber = "1");
 
 		RSSPortlet.viewPG(
 			feedRowIndexNumber = "1",
 			feedTitle = "Technology",
-			rowIndexNumber = "2"
-		);
+			rowIndexNumber = "2");
 	}
 
 	@priority = "4"
 	test DeleteFeedFromRSS {
 		property testray.component.names = "RSS";
 
-		Navigator.gotoPage(pageName = "Home");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Page Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
-
-		SitePages.addPublicPage(pageName = "Page Name");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Page Name",
+			widgetName = "RSS Publisher");
 
 		Navigator.gotoPage(pageName = "Page Name");
 
-		Portlet.addPG(portletName = "RSS Publisher");
-
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
-			feedTitle = "Latimes &gt; Technology News",
+			feedTitle = "Latimes : Technology News",
 			feedType = "file",
-			feedUrlLink = "rss2.0.xml"
-		);
+			feedUrlLink = "rss2.0.xml");
 
 		PortletEntry.save();
 
 		Navigator.gotoPage(pageName = "Page Name");
 
-		RSSPortlet.viewDisplayFeedTitle(feedTitle = "Latimes &gt; Technology News");
+		RSSPortlet.viewDisplayFeedTitle(feedTitle = "Latimes : Technology News");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.deleteFeed(buttonRowIndexNumber = "1");
 
@@ -361,140 +486,71 @@ definition {
 
 		Navigator.gotoPage(pageName = "Page Name");
 
-		RSSPortlet.viewDeleteFeed(feedTitle = "Latimes &gt; Technology News");
+		RSSPortlet.viewDeleteFeed(feedTitle = "Latimes : Technology News");
 	}
 
 	@priority = "3"
 	test DisabledFeedTitle {
 		property testray.component.names = "RSS";
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
 
-		Portlet.addPG(portletName = "RSS Publisher");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.viewSpecificPG(portletName = "RSS Publisher");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
 			feedTitle = "Technology",
 			feedType = "file",
-			feedUrlLink = "Technology.xml"
-		);
+			feedUrlLink = "Technology.xml");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		RSSPortlet.viewDisplayFeedTitle(feedTitle = "Technology");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.disableShowFeedTitle();
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		RSSPortlet.viewNoFeedTitle(feedTitle = "Technology");
-	}
-
-	@ignore = "true"
-	@priority = "3"
-	test EnableRSSFeedFromAssetpublisher {
-		property test.name.skip.portal.instance = "RSS#EnableRSSFeedFromAssetpublisher";
-		property testray.component.names = "Asset Publisher,RSS";
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
-
-		SitePages.addPublicPage(pageName = "Site Page Name 2");
-
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
-
-		Portlet.addPG(portletName = "RSS Publisher");
-
-		Navigator.gotoSitePage(pageName = "Site Page Name 2", siteName = "Site Name");
-
-		Portlet.addPG(portletName = "Asset Publisher");
-
-		WebContent.addPGViaAP(
-			webContentContent = "This is the web content test for rss feed",
-			webContentTitle = "Web Content Title"
-		);
-
-		Portlet.gotoPortletOptions(
-			portletName = "Asset Publisher",
-			portletOption = "Configuration"
-		);
-
-		AssetPublisherPortlet.enableRSSSubscription();
-
-		Button.clickSave();
-
-		IFrame.selectTopFrame();
-
-		Navigator.gotoSitePage(pageName = "Site Page Name 2", siteName = "Site Name");
-
-		var rssFeedUrl = selenium.getAttribute("//div[@class='subscribe-action']/span/a[contains(@href,'asset_publisher')]@href");
-		var rssFeedUrl = StringUtil.replace("${rssFeedUrl}", "localhost", "127.0.0.1");
-
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
-
-		Portlet.gotoPortletOptions(
-			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
-
-		RSSPortlet.addFeed(
-			feedRowIndexNumber = "0",
-			feedTitle = "Web Asset Publisher",
-			feedUrlLink = "${rssFeedUrl}"
-		);
-
-		PortletEntry.save();
-
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
-
-		RSSPortlet.viewDisplayFeedTitle(feedTitle = "Web Asset Publisher");
-
-		RSSPortlet.openFeed(feedTitle = "Asset Publisher", siteName = "${siteName}");
-
-		AssetPublisherPortlet.viewAssetPG(
-			assetContent = "This is the web content test for rss feed",
-			assetTitle = "Web Content Title"
-		);
 	}
 
 	@priority = "4"
 	test RemoveRSSPortlet {
 		property testray.component.names = "RSS";
 
-		Navigator.gotoPage(pageName = "Home");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Page Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
-
-		SitePages.addPublicPage(pageName = "Page Name");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Page Name",
+			widgetName = "RSS Publisher");
 
 		Navigator.gotoPage(pageName = "Page Name");
-
-		Portlet.addPG(portletName = "RSS Publisher");
 
 		Portlet.viewSpecificPG(portletName = "RSS Publisher");
 
@@ -512,50 +568,45 @@ definition {
 		property test.name.skip.portal.instance = "RSS#UpdateRSSFeedViaAssetpublisher";
 		property testray.component.names = "Asset Publisher,RSS";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
-			portlet = "System Settings"
-		);
+			portlet = "System Settings");
 
 		SystemSettings.gotoConfiguration(
 			configurationCategory = "RSS",
 			configurationName = "Cache",
-			configurationScope = "System Scope"
-		);
+			configurationScope = "System Scope");
 
 		RSSPortlet.updateFeedTime(feedTime = "1");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Asset Publisher Page");
 
-		SitePages.addPublicPage(pageName = "Asset Publisher Page");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page Name",
+			widgetName = "RSS Publisher");
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
-
-		Portlet.addPG(portletName = "RSS Publisher");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Asset Publisher Page",
+			widgetName = "Asset Publisher");
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
-			siteName = "Site Name"
-		);
+			siteName = "Site Name");
 
-		Portlet.addPG(portletName = "Asset Publisher");
-
-		WebContent.addPGViaAP(
+		WebContent.addPGViaAPWithoutAsserts(
 			webContentContent = "This is the web content test for rss feed",
-			webContentTitle = "Web Content Title"
-		);
+			webContentTitle = "Web Content Title");
 
-		Portlet.gotoPortletOptions(
-			portletName = "Asset Publisher",
-			portletOption = "Configuration"
-		);
+		Navigator.gotoSitePage(
+			pageName = "Asset Publisher Page",
+			siteName = "Site Name");
+
+		AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Subscribe");
 
 		AssetPublisherPortlet.enableRSSSubscription();
 
@@ -565,27 +616,28 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
-			siteName = "Site Name"
-		);
+			siteName = "Site Name");
 
-		var rssFeedUrl = selenium.getAttribute("//div[@class='subscribe-action']/span/a[contains(@href,'asset_publisher')]@href");
+		var rssFeedUrl = selenium.getAttribute("//div[contains(@class,'subscribe-action')]//a[contains(@href,'asset-publisher') and contains(.,'RSS')]@href");
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
-			portletOption = "Configuration"
-		);
+			portletOption = "Configuration");
 
 		RSSPortlet.addFeed(
 			feedRowIndexNumber = "0",
 			feedTitle = "Web Asset Publisher",
-			feedUrlLink = "${rssFeedUrl}"
-		);
+			feedUrlLink = "${rssFeedUrl}");
 
 		PortletEntry.save();
 
-		Navigator.gotoSitePage(pageName = "Site Page Name", siteName = "Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
 
 		RSSPortlet.viewDisplayFeedTitle(feedTitle = "Web Asset Publisher");
 
@@ -593,15 +645,13 @@ definition {
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
-			siteName = "Site Name"
-		);
+			siteName = "Site Name");
 
 		AssetPublisherPortlet.gotoEditAssetPG(assetTitle = "Web Content Title");
 
 		WebContent.addCP(
 			webContentContent = "This is the updated version of web content test for rss feed",
-			webContentTitle = "Web Content Title Updated Feed"
-		);
+			webContentTitle = "Web Content Title Updated Feed");
 
 		Button.clickPublish();
 
@@ -610,9 +660,9 @@ definition {
 		RSSPortlet.viewUpdateFeedTitle(
 			feedHeading = "Web Content Title Updated Feed",
 			pageName = "Site Page Name",
-			updateFeed = "true"
-		);
+			updateFeed = "true");
 
 		RSSPortlet.viewDisplayFeedTitle(feedTitle = "Web Asset Publisher");
 	}
+
 }

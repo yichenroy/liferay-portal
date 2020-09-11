@@ -1,5 +1,6 @@
 @component-name = "portal-collaboration"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Wiki";
@@ -11,24 +12,17 @@ definition {
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Wiki Test Page");
 
-		SitePages.addPublicPage(pageName = "Wiki Test Page");
-
-		SitePages.configurePage(
-			columnName = "1 Column",
-			pageName = "Wiki Test Page",
-			privacy = "Public Pages",
-			sitePageType = "Widget Page"
-		);
+		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
+			groupName = "Guest",
+			layoutName = "Wiki Test Page",
+			widgetName = "Wiki");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		Portlet.addPG(portletName = "Wiki");
 	}
 
 	tearDown {
@@ -51,56 +45,38 @@ definition {
 		property testray.component.names = "Training";
 		var portalURL = PropsUtil.get("portal.url");
 
-		ProductMenu.gotoPortlet(
+		JSONGroup.addGroup(groupName = "Site Name");
+
+		SitePages.openPagesAdmin(siteURLKey = "Site Name");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
-		Site.addBlankCP(siteName = "Site Name");
+		Site.addBlankCP(
+			parentSiteName = "Site Name",
+			siteName = "Child SiteName");
 
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites"
-		);
-
-		Site.addBlankCP(parentSiteName = "Site Name", siteName = "Child SiteName");
-
-		ProductMenu.gotoSite(site = "Child SiteName");
+		SitePages.openPagesAdmin(siteURLKey = "Child SiteName");
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Wiki"
-		);
+			portlet = "Wiki");
 
 		WikiNavigator.gotoNode(wikiNodeName = "Main");
 
 		WikiNavigator.gotoCP(wikiPageTitle = "FrontPage");
 
-		AssertClick(
-			locator1 = "Wiki#FRONTPAGE_DEFAULT_MESSAGE",
-			value1 = "This page is empty. Edit it to add some text."
-		);
+		WikiPage.addFrontPagePG(
+			htmlSource = "true",
+			wikiPageContent = "${wikiPageContent}");
 
-		WikiEntry.selectPageFormat(pageFormat = "HTML");
-
-		WikiEntry.confirmHTML();
-
-		AlloyEditor.addContent(
-			content = '''<!DOCTYPE html> <html lang="en"> <body> <h1>My First Heading</h1> <p>My first paragraph.</p> </body> </html>'''
-		);
-
-		PortletEntry.publish();
-
-		ProductMenu.gotoSite(site = "Child SiteName");
+		SitePages.openPagesAdmin(siteURLKey = "Child SiteName");
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+			portlet = "Pages");
 
 		SitePages.addPrivatePage(pageName = "Child Site Page");
 
@@ -108,156 +84,41 @@ definition {
 			columnName = "1 Column",
 			pageName = "Child Site Page",
 			privacy = "Private Pages",
-			sitePageType = "Widget Page"
-		);
+			sitePageType = "Widget Page");
 
-		Page.view(pageName = "Child Site Page", privacy = "Private Pages");
+		Page.view(
+			pageName = "Child Site Page",
+			privacy = "Private Pages");
 
 		Navigator.gotoSpecificURLPage(
 			pageName = "Child Site Page",
-			url = "${portalURL}/group/child-sitename/child-site-page"
-		);
+			url = "${portalURL}/group/child-sitename/child-site-page");
 
 		Portlet.addPG(portletName = "Wiki");
 
-		AssertClick(locator1 = "Link#EDIT", value1 = "Edit");
+		AssertClick(
+			locator1 = "Link#EDIT",
+			value1 = "Edit");
 
-		AlloyEditor.addContent(
-			content = '''<!DOCTYPE html> <html lang="en"> <body> <h1>Edited My First Heading</h1> <p>Edited My first paragraph.</p> </body> </html>'''
-		);
+		var wikiPageContent = '''<!DOCTYPE html> <html lang="en"> <body> <h1>Edited My First Heading</h1> <p>Edited My first paragraph.</p> </body> </html>''';
+
+		CKEditor.addSourceContent(content = "${wikiPageContent}");
+
+		SelectFrame(value1 = "relative=top");
 
 		PortletEntry.publish();
 
 		Navigator.gotoSpecificURLPage(
 			pageName = "Child Site Page",
-			url = "${portalURL}/group/child-sitename/child-site-page"
-		);
+			url = "${portalURL}/group/child-sitename/child-site-page");
 
 		WikiPage.viewFrontPagePG(
 			wikiNodeName = "FrontPage",
-			wikiPageContent = "Edited My first paragraph."
-		);
+			wikiPageContent = "Edited My first paragraph.");
 	}
 
 	@priority = "4"
-	test AddWikiFrontPage {
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiPage.addFrontPagePG(wikiPageContent = "Wiki FrontPage Content");
-	}
-
-	@priority = "4"
-	test AddWikiFrontPageAttachment {
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiPage.addFrontPagePG(wikiPageContent = "Wiki FrontPage Content");
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addAttachmentViaPageEdit(
-			attachmentFileName = "Document_1.jpg",
-			wikiPageTitle = "FrontPage"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.viewAttachmentPGViaEdit(
-			attachmentFileName = "Document_1.jpg",
-			attachmentFileSize = "13 KB",
-			wikiPageTitle = "FrontPage"
-		);
-	}
-
-	@priority = "4"
-	test AddWikiFrontPageAttachments {
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiPage.addFrontPagePG(wikiPageContent = "Wiki FrontPage Content");
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		for (var attachmentFileName : list "Document_1.jpg,Document_2.mp3,Document_3.doc") {
-			WikiPage.addAttachmentViaPageEdit(
-				attachmentFileName = "${attachmentFileName}",
-				wikiPageTitle = "FrontPage"
-			);
-
-			Navigator.gotoPage(pageName = "Wiki Test Page");
-
-			WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-		}
-
-		WikiPage.viewAttachmentPGViaEdit(
-			attachmentFileName = "Document_1.jpg",
-			attachmentFileSize = "13 KB",
-			numberOfAttachments = "3",
-			wikiPageTitle = "FrontPage"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.viewAttachmentPGViaEdit(
-			attachmentFileName = "Document_2.mp3",
-			attachmentFileSize = "864 B",
-			numberOfAttachments = "3",
-			wikiPageTitle = "FrontPage"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.viewAttachmentPGViaEdit(
-			attachmentFileName = "Document_3.doc",
-			attachmentFileSize = "24 KB",
-			numberOfAttachments = "3",
-			wikiPageTitle = "FrontPage"
-		);
-	}
-
-	@priority = "5"
-	test AddWikiFrontPageChildPage {
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiPage.addFrontPagePG(
-			wikiPageContent = "Wiki FrontPage Content",
-			wikiPageTitle = "FrontPage"
-		);
-
-		WikiPage.viewViewCount(viewCountNumber = "2");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addChildPagePG(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageTitle = "Wiki FrontPage Child Page Title",
-			wikiPageTitle = "FrontPage"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiNavigator.gotoChildPagePG(
-			wikiChildPageTitle = "Wiki FrontPage Child Page Title"
-		);
-
-		WikiPage.viewChildPagePG(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageTitle = "Wiki FrontPage Child Page Title"
-		);
-	}
-
-	@priority = "4"
-	test AddWikiFrontPageChildPageFormatHTML {
+	test AddFrontPageChildPageFormatHTML {
 
 		var welcomeToLiferay = '''
 				<p><a href="http://www.liferay.com">Welcome to LIFERAY</a></p>
@@ -271,33 +132,203 @@ definition {
 
 		AssertClick.assertTextClickAtAndPause(
 			locator1 = "Link#ADD_CHILD_PAGE",
-			value1 = "Add Child Page"
-		);
-
-		WikiEntry.selectPageFormat(pageFormat = "HTML");
-
-		WikiEntry.confirmHTML();
+			value1 = "Add Child Page");
 
 		WikiEntry.addPageTitle(wikiPageTitle = "Wiki FrontPage Child Page Title");
 
-		AlloyEditor.addSourceContent(content = "${welcomeToLiferay}");
+		Panel.expandPanel(panel = "Configuration");
+
+		SelectNoError(
+			locator1 = "Wiki#ADD_PAGE_FORMAT_DROPDOWN",
+			value1 = "HTML");
+
+		AssertConfirm(value1 = "You may lose some formatting when switching from Creole to HTML. Do you want to continue?");
+
+		CKEditor.addSourceContent(content = "${welcomeToLiferay}");
+
+		SelectFrame(value1 = "relative=top");
 
 		PortletEntry.publish();
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
-		WikiNavigator.gotoChildPagePG(
-			wikiChildPageTitle = "Wiki FrontPage Child Page Title"
-		);
+		WikiNavigator.gotoChildPagePG(wikiChildPageTitle = "Wiki FrontPage Child Page Title");
 
 		WikiPage.viewChildPagePG(
 			wikiChildPageContent = "Welcome to LIFERAY",
-			wikiChildPageTitle = "Wiki FrontPage Child Page Title"
-		);
+			wikiChildPageTitle = "Wiki FrontPage Child Page Title");
 	}
 
 	@priority = "4"
-	test AddWikiFrontPageChildPages {
+	test AddFrontPageChildPageWithInvalidTitle {
+		WikiPage.addFrontPagePG(
+			wikiNodeName = "Main",
+			wikiPageContent = "Wiki FrontPage Content",
+			wikiPageTitle = "FrontPage");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.addFrontPageChildPageInvalidTitle(
+			wikiChildPageContent = "Wiki FrontPage Child Page Content",
+			wikiChildPageInvalidTitle = "true",
+			wikiChildPageTitle = "Wiki\ Front\ Page\ Child\ Page\ Title\");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.addFrontPageChildPageInvalidTitle(
+			wikiChildPageContent = "Wiki FrontPage Child Page Content",
+			wikiChildPageInvalidTitle = "true",
+			wikiChildPageTitle = "Wiki] Front] Page] Child] Page] Title]");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.addFrontPageChildPageInvalidTitle(
+			wikiChildPageContent = "Wiki FrontPage Child Page Content",
+			wikiChildPageInvalidTitle = "true",
+			wikiChildPageTitle = "Wiki[ Front[ Page[ Child[ Page[ Title[");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.addFrontPageChildPageInvalidTitle(
+			wikiChildPageContent = "Wiki FrontPage Child Page Content",
+			wikiChildPageInvalidTitle = "true",
+			wikiChildPageTitle = "Wiki; Front; Page; Child; Page; Title;");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.addFrontPageChildPageInvalidTitle(
+			wikiChildPageContent = "Wiki FrontPage Child Page Content",
+			wikiChildPageInvalidTitle = "true",
+			wikiChildPageTitle = "Wiki: Front: Page: Child: Page: Title:");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.addFrontPageChildPageInvalidTitle(
+			wikiChildPageContent = "Wiki FrontPage Child Page Content",
+			wikiChildPageInvalidTitle = "true",
+			wikiChildPageTitle = "Wiki| Front| Page| Child| Page| Title|");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.addFrontPageChildPageInvalidTitle(
+			wikiChildPageContent = "Wiki FrontPage Child Page Content",
+			wikiChildPageInvalidTitle = "true",
+			wikiChildPageTitle = "Wiki&lt; Front&lt; Page&lt; Child&lt; Page&lt; Title&lt;");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.addFrontPageChildPageInvalidTitle(
+			wikiChildPageContent = "Wiki FrontPage Child Page Content",
+			wikiChildPageInvalidTitle = "true",
+			wikiChildPageTitle = "Wiki&gt; Front&gt; Page&gt; Child&gt; Page&gt; Title&gt;");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(
+			wikiPageContent = "Wiki FrontPage Content",
+			wikiPageRevision = "1.1",
+			wikiPageTitle = "FrontPage",
+			wikiPageUsername = "Test Test");
+
+		WikiPage.viewPG(
+			wikiPageContent = "Wiki FrontPage Content",
+			wikiPageTitle = "FrontPage");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoAllPagesPG();
+
+		WikiPage.viewNoChildPagePGViaAllPages(
+			wikiChildPageTitle = "Wiki FrontPage Child Page Title",
+			wikiPageRevision = "1.1",
+			wikiPageTitle = "FrontPage",
+			wikiPageUsername = "Test Test");
+	}
+
+	@priority = "4"
+	test AddFrontPageContentWithNoJavascript {
+		var wikiPageContent = '''<p id='demo'>PASS</p> <script type='text/javascript'>document.getElementById('demo').innerHTML = 'this code should not be read by the client';</script>''';
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiPage.addFrontPagePG(
+			htmlSource = "true",
+			wikiPageContent = "${wikiPageContent}");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoFrontPagePG();
+
+		WikiPage.viewFrontPagePG(
+			wikiPageContent = "PASS",
+			wikiPageTitle = "FrontPage");
+	}
+
+	@priority = "4"
+	test AddFrontPageWithAttachments {
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiPage.addFrontPagePG(wikiPageContent = "Wiki FrontPage Content");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		for (var attachmentFileName : list "Document_1.jpg,Document_2.mp3,Document_3.doc") {
+			WikiPage.addAttachmentViaPageEdit(
+				attachmentFileName = "${attachmentFileName}",
+				wikiPageTitle = "FrontPage");
+
+			Navigator.gotoPage(pageName = "Wiki Test Page");
+
+			WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+		}
+
+		WikiPage.viewAttachmentPGViaEdit(
+			attachmentFileName = "Document_1.jpg",
+			attachmentFileSize = "13 KB",
+			numberOfAttachments = "3",
+			wikiPageTitle = "FrontPage");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.viewAttachmentPGViaEdit(
+			attachmentFileName = "Document_2.mp3",
+			attachmentFileSize = "864 B",
+			numberOfAttachments = "3",
+			wikiPageTitle = "FrontPage");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
+
+		WikiPage.viewAttachmentPGViaEdit(
+			attachmentFileName = "Document_3.doc",
+			attachmentFileSize = "24 KB",
+			numberOfAttachments = "3",
+			wikiPageTitle = "FrontPage");
+	}
+
+	@priority = "5"
+	test AddFrontPageWithChildPages {
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiPage.addFrontPagePG(wikiPageContent = "Wiki FrontPage Content");
@@ -308,8 +339,7 @@ definition {
 			WikiPage.addChildPagePG(
 				wikiChildPageContent = "Wiki FrontPage Child Page${childPageCount} Content",
 				wikiChildPageTitle = "Wiki FrontPage Child Page${childPageCount} Title",
-				wikiPageTitle = "FrontPage"
-			);
+				wikiPageTitle = "FrontPage");
 		}
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
@@ -317,168 +347,22 @@ definition {
 		for (var childPageCount : list "1,2,3") {
 			WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
 
-			WikiNavigator.gotoChildPagePG(
-				wikiChildPageTitle = "Wiki FrontPage Child Page${childPageCount} Title"
-			);
+			WikiNavigator.gotoChildPagePG(wikiChildPageTitle = "Wiki FrontPage Child Page${childPageCount} Title");
 
 			WikiPage.viewChildPagePG(
 				wikiChildPageContent = "Wiki FrontPage Child Page${childPageCount} Content",
-				wikiChildPageTitle = "Wiki FrontPage Child Page${childPageCount} Title"
-			);
+				wikiChildPageTitle = "Wiki FrontPage Child Page${childPageCount} Title");
 		}
 	}
 
 	@priority = "4"
-	test AddWikiFrontPageChildPageWithInvalidTitle {
-		WikiPage.addFrontPagePG(
-			wikiNodeName = "Main",
-			wikiPageContent = "Wiki FrontPage Content",
-			wikiPageTitle = "FrontPage"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addFrontPageChildPageInvalidTitle(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageInvalidTitle = "true",
-			wikiChildPageTitle = "Wiki\ Front\ Page\ Child\ Page\ Title\"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addFrontPageChildPageInvalidTitle(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageInvalidTitle = "true",
-			wikiChildPageTitle = "Wiki] Front] Page] Child] Page] Title]"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addFrontPageChildPageInvalidTitle(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageInvalidTitle = "true",
-			wikiChildPageTitle = "Wiki[ Front[ Page[ Child[ Page[ Title["
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addFrontPageChildPageInvalidTitle(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageInvalidTitle = "true",
-			wikiChildPageTitle = "Wiki; Front; Page; Child; Page; Title;"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addFrontPageChildPageInvalidTitle(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageInvalidTitle = "true",
-			wikiChildPageTitle = "Wiki: Front: Page: Child: Page: Title:"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addFrontPageChildPageInvalidTitle(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageInvalidTitle = "true",
-			wikiChildPageTitle = "Wiki| Front| Page| Child| Page| Title|"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addFrontPageChildPageInvalidTitle(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageInvalidTitle = "true",
-			wikiChildPageTitle = "Wiki&lt; Front&lt; Page&lt; Child&lt; Page&lt; Title&lt;"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(wikiPageTitle = "FrontPage");
-
-		WikiPage.addFrontPageChildPageInvalidTitle(
-			wikiChildPageContent = "Wiki FrontPage Child Page Content",
-			wikiChildPageInvalidTitle = "true",
-			wikiChildPageTitle = "Wiki&gt; Front&gt; Page&gt; Child&gt; Page&gt; Title&gt;"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(
-			wikiPageContent = "Wiki FrontPage Content",
-			wikiPageRevision = "1.1",
-			wikiPageTitle = "FrontPage",
-			wikiPageUsername = "Test Test"
-		);
-
-		WikiPage.viewPG(
-			wikiPageContent = "Wiki FrontPage Content",
-			wikiPageTitle = "FrontPage"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoAllPagesPG();
-
-		WikiPage.viewNoChildPagePGViaAllPages(
-			wikiChildPageTitle = "Wiki FrontPage Child Page Title",
-			wikiPageRevision = "1.1",
-			wikiPageTitle = "FrontPage",
-			wikiPageUsername = "Test Test"
-		);
-	}
-
-	@priority = "4"
-	test AddWikiFrontPageContentNoJavascript {
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		AssertClick(
-			locator1 = "Wiki#FRONTPAGE_DEFAULT_MESSAGE",
-			value1 = "This page is empty. Edit it to add some text."
-		);
-
-		WikiEntry.selectPageFormat(pageFormat = "HTML");
-
-		WikiEntry.confirmHTML();
-
-		AlloyEditor.addSourceContent(
-			content = '''
-				<p id="demo">PASS</p><script type="text/javascript">document.getElementById('demo').innerHTML="this code should not be read by the client";</script>
-			'''
-		);
-
-		PortletEntry.publish();
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoFrontPagePG();
-
-		WikiPage.viewFrontPagePG(wikiPageContent = "PASS", wikiPageTitle = "FrontPage");
-	}
-
-	@priority = "4"
-	test AddWikiFrontPageFormatCreole {
+	test AddFrontPageWithCreoleFormat {
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiPage.addFrontPagePG(
 			creoleSource = "true",
 			wikiPageContent = "**Wiki FrontPage Content**",
-			wikiPageText = "Wiki FrontPage Content"
-		);
+			wikiPageText = "Wiki FrontPage Content");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -486,17 +370,15 @@ definition {
 			wikiPageContent = "Wiki FrontPage Content",
 			wikiPageRevision = "1.1",
 			wikiPageTitle = "FrontPage",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki FrontPage Content",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 	}
 
 	@priority = "5"
-	test AddWikiFrontPageFormatHTML {
+	test AddFrontPageWithHTMLFormat {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
@@ -505,12 +387,13 @@ definition {
 		WikiPage.addFrontPagePG(
 			htmlSource = "true",
 			wikiPageContent = '''<p><a href="/">Home</a></p>
-			'''
-		);
+			''');
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
-		WikiNavigator.gotoPG(isOrphanPage = "true", wikiPageTitle = "FrontPage");
+		WikiNavigator.gotoPG(
+			isOrphanPage = "true",
+			wikiPageTitle = "FrontPage");
 
 		WikiPage.viewPG(
 			isOrphanPage = "true",
@@ -518,46 +401,20 @@ definition {
 			wikiPageContentLink = "true",
 			wikiPageRevision = "1.1",
 			wikiPageTitle = "FrontPage",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 	}
 
 	@priority = "5"
-	test AddWikiPage {
+	test AddPageWithChildPage {
+		property portal.acceptance = "true";
+
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiNavigator.gotoAllPagesPG();
 
 		WikiPage.addPG(
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageRevision = "1.0",
-			wikiPageTitle = "Wiki Page Title",
-			wikiPageUsername = "Test Test"
-		);
-
-		WikiPage.viewPG(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
-	}
-
-	@priority = "5"
-	test AddWikiPageChildPage {
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoAllPagesPG();
-
-		WikiPage.addPG(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
+			wikiPageTitle = "Wiki Page Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -566,8 +423,7 @@ definition {
 		WikiPage.addChildPagePG(
 			wikiChildPageContent = "Wiki Child Page Content",
 			wikiChildPageTitle = "Wiki Child Page Title",
-			wikiPageTitle = "Wiki Page Title"
-		);
+			wikiPageTitle = "Wiki Page Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -577,12 +433,12 @@ definition {
 
 		WikiPage.viewChildPagePG(
 			wikiChildPageContent = "Wiki Child Page Content",
-			wikiChildPageTitle = "Wiki Child Page Title"
-		);
+			wikiChildPageTitle = "Wiki Child Page Title");
 	}
 
 	@priority = "5"
-	test AddWikiPageFormatHTML {
+	test AddPageWithHTMLFormat {
+		property portal.acceptance = "true";
 
 		var welcomeToLiferay = '''
 				<p><a href="http://www.liferay.com">Welcome to LIFERAY</a></p>
@@ -594,13 +450,23 @@ definition {
 
 		WikiNavigator.gotoAddPageViaPG();
 
-		WikiEntry.selectPageFormat(pageFormat = "HTML");
-
-		WikiEntry.confirmHTML();
-
 		WikiEntry.addPageTitle(wikiPageTitle = "Wiki Page Title");
 
-		AlloyEditor.addSourceContent(content = "${welcomeToLiferay}");
+		Panel.expandPanel(panel = "Configuration");
+
+		SelectNoError(
+			locator1 = "Wiki#ADD_PAGE_FORMAT_DROPDOWN",
+			value1 = "HTML");
+
+		AssertConfirm(value1 = "You may lose some formatting when switching from Creole to HTML. Do you want to continue?");
+
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
+
+		Type.typeCodeMirrorEditorNoError(
+			locator1 = "CKEditor#BODY_FIELD_SOURCE_ON",
+			value1 = "${welcomeToLiferay}");
+
+		SelectFrame(value1 = "relative=top");
 
 		PortletEntry.publish();
 
@@ -610,15 +476,96 @@ definition {
 			wikiPageContent = "Welcome to LIFERAY",
 			wikiPageRevision = "1.0",
 			wikiPageTitle = "Wiki Page Title",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 
 		Pause(locator1 = "1000");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Welcome to LIFERAY",
-			wikiPageTitle = "Wiki Page Title"
-		);
+			wikiPageTitle = "Wiki Page Title");
+	}
+
+	@description = "This test covers LPS-95711. It ensures that an image can be added to the front page via URL."
+	@priority = "4"
+	test AddPageWithImageViaURL {
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoFrontPagePG();
+
+		WikiNavigator.gotoBodyLinkPG(wikiPageContent = "This page is empty. Edit it to add some text.");
+
+		ItemSelector.gotoItemSelectorViaCKEditor();
+
+		ItemSelector.addFromURL(
+			imageSourceURL = "https://raw.githubusercontent.com/liferay/liferay-portal/master/portal-web/test/functional/com/liferay/portalweb/dependencies/Document_1.jpg",
+			navTab = "URL");
+
+		CKEditor.viewEntryContentImage(contentImageName = "Document_1.jpg");
+
+		PortletEntry.publish();
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		AssertElementPresent(
+			key_contentImageName = "Document_1.jpg",
+			locator1 = "Wiki#CONTENT_IMAGE_NAME");
+	}
+
+	@priority = "4"
+	test AddPageWithInlineImage {
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			portlet = "Pages");
+
+		SitePages.configurePage(
+			columnName = "1 Column",
+			pageName = "Wiki Test Page",
+			privacy = "Public Pages",
+			sitePageType = "Widget Page");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoAllPagesPG();
+
+		WikiPage.addPG(
+			wikiPageContent = "Wiki Page Content",
+			wikiPageTitle = "Wiki Page Title");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoPG(
+			wikiPageContent = "Wiki Page Content",
+			wikiPageRevision = "1.0",
+			wikiPageTitle = "Wiki Page Title",
+			wikiPageUsername = "Test Test");
+
+		WikiPage.viewPG(
+			wikiPageContent = "Wiki Page Content",
+			wikiPageTitle = "Wiki Page Title");
+
+		Navigator.gotoPage(pageName = "Wiki Test Page");
+
+		WikiNavigator.gotoAllPagesPG();
+
+		WikiNavigator.gotoEntryEditViaPGTable(wikiPageTitle = "Wiki Page Title");
+
+		WikiPage.addInlineImageViaEdit(
+			navTab = "Upload Image",
+			uploadFileName = "Document_1.jpg");
+
+		PortletEntry.publish();
+
+		WikiNavigator.gotoPG(
+			wikiPageContent = "Wiki Page Content",
+			wikiPageRevision = "1.0",
+			wikiPageTitle = "Wiki Page Title",
+			wikiPageUsername = "Test Test");
+
+		WikiPage.viewPageWithAttachment(
+			attachmentFileName = "Document_1.jpg",
+			inlineImage = "true",
+			wikiPageContent = "Wiki Page Content",
+			wikiPageTitle = "Wiki Page Title");
 	}
 
 	@priority = "5"
@@ -632,10 +579,7 @@ definition {
 		for (var entryCount : list "1,2,3") {
 			WikiPage.addPG(
 				wikiPageContent = "Wiki Page${entryCount} Content",
-				wikiPageTitle = "Wiki Page${entryCount} Title"
-			);
-
-			Refresh();
+				wikiPageTitle = "Wiki Page${entryCount} Title");
 		}
 
 		for (var entryCount : list "1,2,3") {
@@ -645,66 +589,12 @@ definition {
 				wikiPageContent = "Wiki Page${entryCount} Content",
 				wikiPageRevision = "1.0",
 				wikiPageTitle = "Wiki Page${entryCount} Title",
-				wikiPageUsername = "Test Test"
-			);
+				wikiPageUsername = "Test Test");
 
 			WikiPage.viewPG(
 				wikiPageContent = "Wiki Page${entryCount} Content",
-				wikiPageTitle = "Wiki Page${entryCount} Title"
-			);
+				wikiPageTitle = "Wiki Page${entryCount} Title");
 		}
-	}
-
-	@priority = "4"
-	test AddWikiPageWithInlineImage {
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoAllPagesPG();
-
-		WikiPage.addPG(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoPG(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageRevision = "1.0",
-			wikiPageTitle = "Wiki Page Title",
-			wikiPageUsername = "Test Test"
-		);
-
-		WikiPage.viewPG(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoAllPagesPG();
-
-		WikiNavigator.gotoEntryEditViaPGTable(wikiPageTitle = "Wiki Page Title");
-
-		WikiPage.addInlineImageViaEdit(
-			navTab = "Upload Image",
-			uploadFileName = "Document_1.jpg"
-		);
-
-		PortletEntry.publish();
-
-		WikiNavigator.gotoPG(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageRevision = "1.0",
-			wikiPageTitle = "Wiki Page Title",
-			wikiPageUsername = "Test Test"
-		);
-
-		WikiPage.viewPageWithAttachment(
-			attachmentFileName = "Document_1.jpg",
-			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
 	}
 
 	@priority = "5"
@@ -718,6 +608,8 @@ definition {
 		WikiEntry.addPageTitle(wikiPageTitle = "Wiki Page Title");
 
 		WikiEntry.addPageContent(wikiPageContent = "Wiki Page Content");
+
+		SelectFrame(value1 = "relative=top");
 
 		WikiEntry.cancel();
 
@@ -736,6 +628,8 @@ definition {
 
 		WikiEntry.addPageContent(wikiPageContent = "Wiki Page Content");
 
+		SelectFrame(value1 = "relative=top");
+
 		PortletEntry.publish();
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
@@ -745,6 +639,8 @@ definition {
 		WikiNavigator.gotoEntryEditViaPGTable(wikiPageTitle = "Wiki Page Title");
 
 		WikiEntry.addPageContent(wikiPageContent = "Edited Wiki Page Content");
+
+		SelectFrame(value1 = "relative=top");
 
 		WikiEntry.cancel();
 
@@ -759,8 +655,7 @@ definition {
 
 		WikiPage.addFrontPagePG(
 			wikiPageContent = "Wiki Front Page Content",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -772,13 +667,11 @@ definition {
 			wikiPageContent = "Wiki Front Page Content Edit",
 			wikiPageRevision = "1.2",
 			wikiPageTitle = "FrontPage",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Front Page Content Edit",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -789,8 +682,7 @@ definition {
 			wikiPageTitle = "FrontPage",
 			wikiPageVersionDiff = "Wiki Front Page Content Edit",
 			wikiPageVersionNew = "1.2",
-			wikiPageVersionOld = "1.0"
-		);
+			wikiPageVersionOld = "1.0");
 	}
 
 	@priority = "4"
@@ -805,6 +697,8 @@ definition {
 
 		WikiEntry.addPageContent(wikiPageContent = "Wiki Page Content");
 
+		SelectFrame(value1 = "relative=top");
+
 		PortletEntry.publish();
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
@@ -817,14 +711,17 @@ definition {
 
 		WikiEntry.addPageContent(wikiPageContent = "Copied Wiki Page Content");
 
-		PortletEntry.publish();
+		SelectFrame(value1 = "relative=top");
 
-		WikiTable.viewEntry(draftStatus = "APPROVED", wikiPageTitle = "Wiki Page Title");
+		PortletEntry.publish();
 
 		WikiTable.viewEntry(
 			draftStatus = "APPROVED",
-			wikiPageTitle = "Copied Wiki Page Title"
-		);
+			wikiPageTitle = "Wiki Page Title");
+
+		WikiTable.viewEntry(
+			draftStatus = "APPROVED",
+			wikiPageTitle = "Copied Wiki Page Title");
 
 		WikiNavigator.gotoEntryViaPGTable(wikiPageTitle = "Copied Wiki Page Title");
 
@@ -832,15 +729,14 @@ definition {
 	}
 
 	@priority = "5"
-	test DeleteWikiFrontPage {
+	test DeleteFrontPage {
 		property portal.acceptance = "true";
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiPage.addFrontPagePG(
 			wikiPageContent = "Wiki FrontPage Content",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -850,15 +746,16 @@ definition {
 	}
 
 	@priority = "5"
-	test DeleteWikiPage {
+	test DeletePage {
+		property portal.acceptance = "true";
+
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiNavigator.gotoAllPagesPG();
 
 		WikiPage.addPG(
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
+			wikiPageTitle = "Wiki Page Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -885,6 +782,8 @@ definition {
 
 		WikiEntry.addPageContent(wikiPageContent = "Wiki Page Content");
 
+		SelectFrame(value1 = "relative=top");
+
 		WikiEntry.saveAsDraft();
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
@@ -893,13 +792,9 @@ definition {
 
 		WikiNavigator.gotoEntryEditViaPGTable(wikiPageTitle = "Wiki Page Title");
 
-		AssertElementPresent(locator1 = "AlloyEditor#EDITOR", key_editor = "content");
-
-		Click(locator1 = "AlloyEditor#EDITOR", key_editor = "content");
-
-		AssertElementPresent(locator1 = "AlloyEditor#CONTENT_ADD_BUTTON");
-
 		WikiEntry.addPageContent(wikiPageContent = "Edited Wiki Page Content");
+
+		SelectFrame(value1 = "relative=top");
 
 		PortletEntry.publish();
 
@@ -907,7 +802,9 @@ definition {
 
 		WikiNavigator.gotoAllPagesPG();
 
-		WikiTable.viewEntry(draftStatus = "APPROVED", wikiPageTitle = "Wiki Page Title");
+		WikiTable.viewEntry(
+			draftStatus = "APPROVED",
+			wikiPageTitle = "Wiki Page Title");
 
 		WikiNavigator.gotoEntryViaPGTable(wikiPageTitle = "Wiki Page Title");
 
@@ -915,15 +812,14 @@ definition {
 	}
 
 	@priority = "5"
-	test EditWikiFrontPage {
+	test EditFrontPage {
 		property portal.acceptance = "true";
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiPage.addFrontPagePG(
 			wikiPageContent = "Wiki FrontPage Content",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -935,13 +831,11 @@ definition {
 			wikiPageContent = "Wiki FrontPage Content Edit",
 			wikiPageRevision = "1.2",
 			wikiPageTitle = "FrontPage",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki FrontPage Content Edit",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 	}
 
 	@priority = "4"
@@ -952,8 +846,7 @@ definition {
 
 		WikiPage.addPG(
 			wikiPageContent = "Wiki Page1 Content",
-			wikiPageTitle = "Wiki Page1 Title"
-		);
+			wikiPageTitle = "Wiki Page1 Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -961,8 +854,7 @@ definition {
 
 		WikiPage.addPG(
 			wikiPageContent = "Wiki Page2 Content",
-			wikiPageTitle = "Wiki Page2 Title"
-		);
+			wikiPageTitle = "Wiki Page2 Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -973,8 +865,7 @@ definition {
 			wikiPage1Title = "Wiki Page1 Title",
 			wikiPage2Content = "Wiki Page2 Content",
 			wikiPage2Link = "[[Wiki Page2 Title]]",
-			wikiPage2Title = "Wiki Page2 Title"
-		);
+			wikiPage2Title = "Wiki Page2 Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -984,12 +875,11 @@ definition {
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Page2 Content",
-			wikiPageTitle = "Wiki Page2 Title"
-		);
+			wikiPageTitle = "Wiki Page2 Title");
 	}
 
 	@priority = "3"
-	test RemoveRedirectLinkFromWikiPage {
+	test RemoveRedirectLinkFromPage {
 		property test.name.skip.portal.instance = "PGWiki#RemoveRedirectLinkFromWikiPage";
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
@@ -998,8 +888,7 @@ definition {
 
 		WikiPage.addPG(
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
+			wikiPageTitle = "Wiki Page Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1007,16 +896,14 @@ definition {
 
 		WikiPage.renameWikiPagePG(
 			wikiPageTitle = "Wiki Page Title",
-			wikiPageTitleRename = "Wiki Page Rename"
-		);
+			wikiPageTitleRename = "Wiki Page Rename");
 
 		WikiNavigator.gotoPG(wikiPageTitle = "Wiki Page Title");
 
 		WikiPage.removeRedirectWikiPagePG(
 			wikiPage2Content = "Wiki2 Page2 Content2",
 			wikiPageTitle = "Wiki Page Title",
-			wikiPageTitleRename = "Wiki Page Rename"
-		);
+			wikiPageTitleRename = "Wiki Page Rename");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1026,8 +913,7 @@ definition {
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki2 Page2 Content2",
-			wikiPageTitle = "Wiki Page Title"
-		);
+			wikiPageTitle = "Wiki Page Title");
 
 		WikiNavigator.gotoPG(wikiPageTitle = "Wiki Page Rename");
 
@@ -1035,20 +921,18 @@ definition {
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Rename"
-		);
+			wikiPageTitle = "Wiki Page Rename");
 	}
 
 	@priority = "4"
-	test RenameWikiPageTitle {
+	test RenamePageTitle {
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiNavigator.gotoAllPagesPG();
 
 		WikiPage.addPG(
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title"
-		);
+			wikiPageTitle = "Wiki Page Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1056,19 +940,15 @@ definition {
 
 		WikiPage.renameWikiPagePG(
 			wikiPageTitle = "Wiki Page Title",
-			wikiPageTitleRename = "Wiki Page Rename"
-		);
+			wikiPageTitleRename = "Wiki Page Rename");
 
 		WikiNavigator.gotoPG(wikiPageTitle = "Wiki Page Title");
 
-		WikiPage.viewRedirectLinkPG(
-			wikiPageRedirectLink = "(Redirected from Wiki Page Title)"
-		);
+		WikiPage.viewRedirectLinkPG(wikiPageRedirectLink = "(Redirected from Wiki Page Title)");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Rename"
-		);
+			wikiPageTitle = "Wiki Page Rename");
 
 		WikiNavigator.gotoPG(wikiPageTitle = "Wiki Page Rename");
 
@@ -1076,20 +956,18 @@ definition {
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Rename"
-		);
+			wikiPageTitle = "Wiki Page Rename");
 	}
 
 	@priority = "4"
-	test RevertChangeParentWikipage2toWikipage1 {
+	test RevertChangesMadeToParentPages {
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiNavigator.gotoAllPagesPG();
 
 		WikiPage.addPG(
 			wikiPageContent = "Wiki Page1 Content",
-			wikiPageTitle = "Wiki Page1 Title"
-		);
+			wikiPageTitle = "Wiki Page1 Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1097,8 +975,7 @@ definition {
 
 		WikiPage.addPG(
 			wikiPageContent = "Wiki Page2 Content",
-			wikiPageTitle = "Wiki Page2 Title"
-		);
+			wikiPageTitle = "Wiki Page2 Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1108,8 +985,7 @@ definition {
 			wikiPage1Title = "Wiki Page1 Title",
 			wikiPage2Content = "Wiki Page2 Content",
 			wikiPage2Title = "Wiki Page2 Title",
-			wikiPageContent = "Wiki Page2 Content"
-		);
+			wikiPageContent = "Wiki Page2 Content");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1120,8 +996,7 @@ definition {
 			wikiPage2Content = "Wiki Page2 Content",
 			wikiPage2Title = "Wiki Page2 Title",
 			wikiVersion1Summary = "Changed parent from",
-			wikiVersion2Summary = "Reverted to 1.0"
-		);
+			wikiVersion2Summary = "Reverted to 1.0");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1129,13 +1004,11 @@ definition {
 			wikiPageContent = "Wiki Page1 Content",
 			wikiPageRevision = "1.0",
 			wikiPageTitle = "Wiki Page1 Title",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Page1 Content",
-			wikiPageTitle = "Wiki Page1 Title"
-		);
+			wikiPageTitle = "Wiki Page1 Title");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1143,24 +1016,21 @@ definition {
 			wikiPageContent = "Wiki Page2 Content",
 			wikiPageRevision = "1.2",
 			wikiPageTitle = "Wiki Page2 Title",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Page2 Content",
-			wikiPageTitle = "Wiki Page2 Title"
-		);
+			wikiPageTitle = "Wiki Page2 Title");
 	}
 
 	@priority = "4"
-	test RevertEditFrontpage {
+	test RevertEditFrontPage {
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiPage.addFrontPagePG(
 			wikiNodeName = "Main",
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1172,13 +1042,11 @@ definition {
 			wikiPageContent = "Wiki Page Content Edit",
 			wikiPageRevision = "1.2",
 			wikiPageTitle = "FrontPage",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Page Content Edit",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1189,8 +1057,7 @@ definition {
 			wikiPageRevisionNew = "1.3",
 			wikiPageRevisionOld = "1.1",
 			wikiPageTitle = "FrontPage",
-			wikiVersionSummary = "Reverted to 1.1"
-		);
+			wikiVersionSummary = "Reverted to 1.1");
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
@@ -1198,13 +1065,11 @@ definition {
 			wikiPageContent = "Wiki Page Content",
 			wikiPageRevision = "1.3",
 			wikiPageTitle = "FrontPage",
-			wikiPageUsername = "Test Test"
-		);
+			wikiPageUsername = "Test Test");
 
 		WikiPage.viewPG(
 			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "FrontPage"
-		);
+			wikiPageTitle = "FrontPage");
 	}
 
 	@priority = "4"
@@ -1219,6 +1084,8 @@ definition {
 
 		WikiEntry.addPageContent(wikiPageContent = "Wiki Page Content");
 
+		SelectFrame(value1 = "relative=top");
+
 		PortletEntry.publish();
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
@@ -1229,13 +1096,17 @@ definition {
 
 		WikiEntry.addPageContent(wikiPageContent = "Edited Wiki Page Content");
 
+		SelectFrame(value1 = "relative=top");
+
 		WikiEntry.saveAsDraft();
 
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiNavigator.gotoDraftPagesPG();
 
-		WikiTable.viewEntry(draftStatus = "DRAFT", wikiPageTitle = "Wiki Page Title");
+		WikiTable.viewEntry(
+			draftStatus = "DRAFT",
+			wikiPageTitle = "Wiki Page Title");
 
 		WikiNavigator.gotoAllPagesPG();
 
@@ -1243,4 +1114,5 @@ definition {
 
 		WikiEntry.viewPageContentBody(wikiPageContent = "Wiki Page Content");
 	}
+
 }

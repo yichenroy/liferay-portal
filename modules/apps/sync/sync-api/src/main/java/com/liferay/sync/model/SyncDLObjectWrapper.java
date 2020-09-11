@@ -14,8 +14,6 @@
 
 package com.liferay.sync.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,10 +30,9 @@ import java.util.Map;
  * @see SyncDLObject
  * @generated
  */
-@ProviderType
 public class SyncDLObjectWrapper
 	extends BaseModelWrapper<SyncDLObject>
-	implements SyncDLObject, ModelWrapper<SyncDLObject> {
+	implements ModelWrapper<SyncDLObject>, SyncDLObject {
 
 	public SyncDLObjectWrapper(SyncDLObject syncDLObject) {
 		super(syncDLObject);

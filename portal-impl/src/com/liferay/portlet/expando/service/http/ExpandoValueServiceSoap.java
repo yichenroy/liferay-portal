@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.expando.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.expando.kernel.service.ExpandoValueServiceUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -59,9 +57,10 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see ExpandoValueServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class ExpandoValueServiceSoap {
 
 	public static com.liferay.expando.kernel.model.ExpandoValueSoap addValue(
@@ -77,10 +76,10 @@ public class ExpandoValueServiceSoap {
 			return com.liferay.expando.kernel.model.ExpandoValueSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -97,10 +96,10 @@ public class ExpandoValueServiceSoap {
 			return com.liferay.expando.kernel.model.ExpandoValueSoap.
 				toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -116,10 +115,10 @@ public class ExpandoValueServiceSoap {
 
 			return returnValue.toString();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 

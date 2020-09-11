@@ -14,6 +14,7 @@
 
 package com.liferay.wiki.web.internal.asset.model;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -23,6 +24,8 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.PortletLayoutFinder;
+import com.liferay.portal.kernel.portlet.PortletLayoutFinderRegistryUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -31,15 +34,16 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.TrashHelper;
 import com.liferay.wiki.configuration.WikiGroupServiceOverriddenConfiguration;
 import com.liferay.wiki.constants.WikiConstants;
+import com.liferay.wiki.constants.WikiPageConstants;
 import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.constants.WikiWebKeys;
 import com.liferay.wiki.engine.WikiEngineRenderer;
 import com.liferay.wiki.model.WikiPage;
-import com.liferay.wiki.model.WikiPageConstants;
 import com.liferay.wiki.service.WikiPageLocalServiceUtil;
 import com.liferay.wiki.web.internal.security.permission.resource.WikiPagePermission;
 
@@ -71,18 +75,6 @@ public class WikiPageAssetRenderer
 		}
 
 		return page.getResourcePrimKey();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #WikiPageAssetRenderer(WikiPage, WikiEngineRenderer,
-	 *             TrashHelper)}
-	 */
-	@Deprecated
-	public WikiPageAssetRenderer(
-		WikiPage page, WikiEngineRenderer wikiEngineRenderer) {
-
-		this(page, wikiEngineRenderer, null);
 	}
 
 	public WikiPageAssetRenderer(
@@ -119,8 +111,8 @@ public class WikiPageAssetRenderer
 						new GroupServiceSettingsLocator(
 							_page.getGroupId(), WikiConstants.SERVICE_NAME));
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 
 				return null;
 			}
@@ -139,7 +131,9 @@ public class WikiPageAssetRenderer
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
 		if (template.equals(TEMPLATE_ABSTRACT) ||
 			template.equals(TEMPLATE_FULL_CONTENT)) {
 
@@ -167,8 +161,8 @@ public class WikiPageAssetRenderer
 			return HtmlUtil.extractText(
 				_wikiEngineRenderer.convert(_page, null, null, null));
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
 			return _page.getContent();
 		}
@@ -286,9 +280,32 @@ public class WikiPageAssetRenderer
 
 	@Override
 	public String getURLViewInContext(
-		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		String noSuchEntryRedirect) {
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse,
+			String noSuchEntryRedirect)
+		throws Exception {
+
+		if (_assetDisplayPageFriendlyURLProvider != null) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)liferayPortletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			String friendlyURL =
+				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
+					getClassName(), getClassPK(), themeDisplay);
+
+			if (Validator.isNotNull(friendlyURL)) {
+				return friendlyURL;
+			}
+		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)liferayPortletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (!_hasViewInContextGroupLayout(_page.getGroupId(), themeDisplay)) {
+			return null;
+		}
 
 		return getURLViewInContext(
 			liferayPortletRequest, noSuchEntryRedirect, "/wiki/find_page",
@@ -328,13 +345,13 @@ public class WikiPageAssetRenderer
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(WikiWebKeys.WIKI_PAGE, _page);
+		httpServletRequest.setAttribute(WikiWebKeys.WIKI_PAGE, _page);
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	@Override
@@ -347,9 +364,45 @@ public class WikiPageAssetRenderer
 		return true;
 	}
 
+	public void setAssetDisplayPageFriendlyURLProvider(
+		AssetDisplayPageFriendlyURLProvider
+			assetDisplayPageFriendlyURLProvider) {
+
+		_assetDisplayPageFriendlyURLProvider =
+			assetDisplayPageFriendlyURLProvider;
+	}
+
+	private boolean _hasViewInContextGroupLayout(
+		long groupId, ThemeDisplay themeDisplay) {
+
+		try {
+			PortletLayoutFinder portletLayoutFinder =
+				PortletLayoutFinderRegistryUtil.getPortletLayoutFinder(
+					getClassName());
+
+			PortletLayoutFinder.Result result = portletLayoutFinder.find(
+				themeDisplay, groupId);
+
+			if ((result == null) || Validator.isNull(result.getPortletId())) {
+				return false;
+			}
+
+			return true;
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException, portalException);
+			}
+
+			return false;
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiPageAssetRenderer.class);
 
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
 	private final WikiPage _page;
 	private final TrashHelper _trashHelper;
 	private final WikiEngineRenderer _wikiEngineRenderer;

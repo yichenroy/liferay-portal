@@ -14,37 +14,16 @@
 
 package com.liferay.arquillian.extension.junit.bridge.junit;
 
-import com.liferay.arquillian.extension.junit.bridge.client.BndBundleUtil;
-import com.liferay.arquillian.extension.junit.bridge.client.MBeans;
-import com.liferay.arquillian.extension.junit.bridge.command.RunNotifierCommand;
+import com.liferay.arquillian.extension.junit.bridge.client.ClientState;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-
-import java.lang.annotation.Annotation;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URL;
-
-import java.nio.channels.ServerSocketChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import java.security.SecureRandom;
+import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -55,11 +34,6 @@ import org.junit.runner.manipulation.Filterable;
 import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.model.FrameworkField;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.TestClass;
-
-import org.osgi.jmx.framework.FrameworkMBean;
 
 /**
  * @author Shuyang Zhou
@@ -69,23 +43,40 @@ public class Arquillian extends Runner implements Filterable {
 	public Arquillian(Class<?> clazz) {
 		_clazz = clazz;
 
-		_filteredSortedTestClass = new FilteredSortedTestClass(_clazz, null);
-
-		Random random = new SecureRandom();
-
-		_passCode = random.nextLong();
+		_testMethods = _scanTestMethods(clazz);
 	}
 
 	@Override
 	public void filter(Filter filter) throws NoTestsRemainException {
-		_filteredSortedTestClass = new FilteredSortedTestClass(_clazz, filter);
+		_filter(_clazz, _testMethods, filter);
 
-		List<FrameworkMethod> frameworkMethods =
-			_filteredSortedTestClass.getAnnotatedMethods(Test.class);
-
-		if (frameworkMethods.isEmpty()) {
+		if (_testMethods.isEmpty()) {
 			throw new NoTestsRemainException();
 		}
+
+		_clientState.filterTestClasses(
+			_clazz,
+			testClass -> {
+				List<Method> testMethods = _scanTestMethods(testClass);
+
+				List<String> filteredMethodNames = _filter(
+					testClass, testMethods, filter);
+
+				if (testMethods.isEmpty()) {
+					return true;
+				}
+
+				if (!filteredMethodNames.isEmpty()) {
+					if (_filteredMethodNamesMap == null) {
+						_filteredMethodNamesMap = new HashMap<>();
+					}
+
+					_filteredMethodNamesMap.put(
+						testClass.getName(), filteredMethodNames);
+				}
+
+				return false;
+			});
 	}
 
 	@Override
@@ -95,16 +86,12 @@ public class Arquillian extends Runner implements Filterable {
 
 	@Override
 	public void run(RunNotifier runNotifier) {
-		List<FrameworkMethod> frameworkMethods = new ArrayList<>(
-			_filteredSortedTestClass.getAnnotatedMethods(Test.class));
-
-		frameworkMethods.removeIf(
-			frameworkMethod -> {
-				if (frameworkMethod.getAnnotation(Ignore.class) != null) {
+		_testMethods.removeIf(
+			method -> {
+				if (method.getAnnotation(Ignore.class) != null) {
 					runNotifier.fireTestIgnored(
 						Description.createTestDescription(
-							_clazz, frameworkMethod.getName(),
-							frameworkMethod.getAnnotations()));
+							_clazz, method.getName(), method.getAnnotations()));
 
 					return true;
 				}
@@ -112,7 +99,9 @@ public class Arquillian extends Runner implements Filterable {
 				return false;
 			});
 
-		if (frameworkMethods.isEmpty()) {
+		if (_testMethods.isEmpty()) {
+			_clientState.removeTestClass(_clazz);
+
 			return;
 		}
 
@@ -121,151 +110,72 @@ public class Arquillian extends Runner implements Filterable {
 		try {
 			Class.forName(_clazz.getName(), true, _clazz.getClassLoader());
 		}
-		catch (ClassNotFoundException cnfe) {
-			runNotifier.fireTestFailure(new Failure(getDescription(), cnfe));
+		catch (ClassNotFoundException classNotFoundException) {
+			runNotifier.fireTestFailure(
+				new Failure(getDescription(), classNotFoundException));
 
 			return;
 		}
 
-		FrameworkMBean frameworkMBean = MBeans.getFrameworkMBean();
+		try (ClientState.Connection connection = _clientState.open(
+				_clazz, _filteredMethodNamesMap)) {
 
-		try (ServerSocket serverSocket = _getServerSocket()) {
-			long bundleId = _installBundle(
-				frameworkMBean, serverSocket.getLocalPort());
+			connection.execute(
+				_clazz.getName(),
+				runNotifierCommand -> runNotifierCommand.execute(runNotifier));
+		}
+		catch (Throwable throwable) {
+			runNotifier.fireTestFailure(
+				new Failure(getDescription(), throwable));
+		}
+	}
 
-			try {
-				frameworkMBean.startBundle(bundleId);
+	private static List<String> _filter(
+		Class<?> clazz, List<Method> testMethods, Filter filter) {
 
-				while (true) {
-					try (Socket socket = serverSocket.accept();
-						InputStream inputStream = socket.getInputStream();
-						ObjectInputStream objectInputStream =
-							new ObjectInputStream(inputStream)) {
+		List<String> filteredMethodNames = new ArrayList<>();
 
-						if (_passCode != objectInputStream.readLong()) {
-							_logger.log(
-								Level.WARNING,
-								"Pass code mismatch, dropped connection from " +
-									socket.getRemoteSocketAddress());
+		Iterator<Method> iterator = testMethods.iterator();
 
-							continue;
-						}
+		while (iterator.hasNext()) {
+			Method method = iterator.next();
 
-						while (true) {
-							RunNotifierCommand runNotifierCommand =
-								(RunNotifierCommand)
-									objectInputStream.readObject();
+			String methodName = method.getName();
 
-							runNotifierCommand.execute(runNotifier);
-						}
-					}
-					catch (EOFException eofe) {
-						break;
-					}
+			if (!filter.shouldRun(
+					Description.createTestDescription(clazz, methodName))) {
+
+				filteredMethodNames.add(methodName);
+
+				iterator.remove();
+			}
+		}
+
+		return filteredMethodNames;
+	}
+
+	private static List<Method> _scanTestMethods(Class<?> clazz) {
+		List<Method> testMethods = new ArrayList<>();
+
+		while (clazz != Object.class) {
+			for (Method method : clazz.getDeclaredMethods()) {
+				if (method.getAnnotation(Test.class) != null) {
+					testMethods.add(method);
 				}
 			}
-			finally {
-				frameworkMBean.uninstallBundle(bundleId);
-			}
+
+			clazz = clazz.getSuperclass();
 		}
-		catch (Throwable t) {
-			runNotifier.fireTestFailure(new Failure(getDescription(), t));
-		}
+
+		testMethods.sort(Comparator.comparing(Method::getName));
+
+		return testMethods;
 	}
 
-	private static ServerSocket _getServerSocket() throws IOException {
-		ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-
-		int port = _START_PORT;
-
-		while (true) {
-			try {
-				ServerSocket serverSocket = serverSocketChannel.socket();
-
-				serverSocket.bind(new InetSocketAddress(_inetAddress, port));
-
-				return serverSocket;
-			}
-			catch (IOException ioe) {
-				port++;
-			}
-		}
-	}
-
-	private long _installBundle(FrameworkMBean frameworkMBean, int port)
-		throws Exception {
-
-		Path path = BndBundleUtil.createBundle(
-			_clazz.getName(), _filteredSortedTestClass._filteredMethodNames,
-			_inetAddress.getHostAddress(), port, _passCode);
-
-		URI uri = path.toUri();
-
-		URL url = uri.toURL();
-
-		try {
-			return frameworkMBean.installBundleFromURL(
-				url.getPath(), url.toExternalForm());
-		}
-		finally {
-			Files.delete(path);
-		}
-	}
-
-	private static final int _START_PORT = 32764;
-
-	private static final Logger _logger = Logger.getLogger(
-		Arquillian.class.getName());
-
-	private static final InetAddress _inetAddress =
-		InetAddress.getLoopbackAddress();
+	private static final ClientState _clientState = new ClientState();
 
 	private final Class<?> _clazz;
-	private FilteredSortedTestClass _filteredSortedTestClass;
-	private final long _passCode;
-
-	private class FilteredSortedTestClass extends TestClass {
-
-		@Override
-		protected void scanAnnotatedMembers(
-			Map<Class<? extends Annotation>, List<FrameworkMethod>>
-				frameworkMethodsMap,
-			Map<Class<? extends Annotation>, List<FrameworkField>>
-				frameworkFieldsMap) {
-
-			super.scanAnnotatedMembers(frameworkMethodsMap, frameworkFieldsMap);
-
-			_testFrameworkMethods = frameworkMethodsMap.get(Test.class);
-
-			_testFrameworkMethods.sort(
-				Comparator.comparing(FrameworkMethod::getName));
-		}
-
-		private FilteredSortedTestClass(Class<?> clazz, Filter filter) {
-			super(clazz);
-
-			if (filter != null) {
-				_testFrameworkMethods.removeIf(
-					frameworkMethod -> {
-						String methodName = frameworkMethod.getName();
-
-						if (filter.shouldRun(
-								Description.createTestDescription(
-									_clazz, methodName))) {
-
-							return false;
-						}
-
-						_filteredMethodNames.add(methodName);
-
-						return true;
-					});
-			}
-		}
-
-		private final List<String> _filteredMethodNames = new ArrayList<>();
-		private List<FrameworkMethod> _testFrameworkMethods;
-
-	}
+	private Map<String, List<String>> _filteredMethodNamesMap;
+	private final List<Method> _testMethods;
 
 }

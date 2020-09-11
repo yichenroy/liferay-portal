@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.service.permission;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
@@ -25,7 +23,6 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
  * @author Brian Wing Shun Chan
  * @author Julio Camarero
  */
-@ProviderType
 public class UserGroupRolePermissionUtil {
 
 	public static void check(

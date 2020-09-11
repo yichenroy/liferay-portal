@@ -19,8 +19,8 @@ import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.rest.spi.bearer.token.provider.BearerTokenProvider;
 import com.liferay.oauth2.provider.rest.spi.bearer.token.provider.BearerTokenProviderAccessor;
-import com.liferay.oauth2.provider.scope.liferay.OAuth2ProviderScopeLiferayConstants;
 import com.liferay.oauth2.provider.scope.liferay.ScopeContext;
+import com.liferay.oauth2.provider.scope.liferay.constants.OAuth2ProviderScopeLiferayConstants;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationScopeAliasesLocalService;
 import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalService;
@@ -109,9 +109,9 @@ public class OAuth2RESTAuthVerifier implements AuthVerifier {
 
 			return authVerifierResult;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to verify OAuth2 access token", e);
+				_log.debug("Unable to verify OAuth2 access token", exception);
 			}
 
 			return authVerifierResult;
@@ -184,16 +184,13 @@ public class OAuth2RESTAuthVerifier implements AuthVerifier {
 					oAuth2ApplicationScopeAliasesId);
 		}
 
-		BearerTokenProvider.AccessToken accessToken =
-			new BearerTokenProvider.AccessToken(
-				oAuth2Application, new ArrayList<>(), StringPool.BLANK,
-				expiresIn, new HashMap<>(), StringPool.BLANK, StringPool.BLANK,
-				issuedAt, StringPool.BLANK, StringPool.BLANK, new HashMap<>(),
-				StringPool.BLANK, StringPool.BLANK, scopeAliasesList,
-				accessTokenContent, _TOKEN_KEY, oAuth2Authorization.getUserId(),
-				oAuth2Authorization.getUserName());
-
-		return accessToken;
+		return new BearerTokenProvider.AccessToken(
+			oAuth2Application, new ArrayList<>(), StringPool.BLANK, expiresIn,
+			new HashMap<>(), StringPool.BLANK, StringPool.BLANK, issuedAt,
+			StringPool.BLANK, StringPool.BLANK, new HashMap<>(),
+			StringPool.BLANK, StringPool.BLANK, scopeAliasesList,
+			accessTokenContent, _TOKEN_KEY, oAuth2Authorization.getUserId(),
+			oAuth2Authorization.getUserName());
 	}
 
 	private static final String _TOKEN_KEY = "Bearer";

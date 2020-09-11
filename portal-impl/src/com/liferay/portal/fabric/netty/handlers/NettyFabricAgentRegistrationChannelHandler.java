@@ -23,6 +23,7 @@ import com.liferay.portal.fabric.netty.repository.NettyRepository;
 import com.liferay.portal.fabric.repository.Repository;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -33,8 +34,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.io.IOException;
-
-import java.net.SocketAddress;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -102,13 +101,12 @@ public class NettyFabricAgentRegistrationChannelHandler
 
 		Channel channel = channelHandlerContext.channel();
 
-		SocketAddress socketAddress = channel.localAddress();
-
-		String socketAddressString = socketAddress.toString();
+		String socketAddressString = String.valueOf(channel.localAddress());
 
 		Path repositoryPath = Paths.get(
 			_repositoryParentPath.toString(),
-			socketAddressString.replace(CharPool.COLON, CharPool.DASH));
+			StringUtil.replace(
+				socketAddressString, CharPool.COLON, CharPool.DASH));
 
 		Files.createDirectories(repositoryPath);
 

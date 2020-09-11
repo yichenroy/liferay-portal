@@ -29,8 +29,8 @@ import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.security.auto.login.internal.request.header.configuration.RequestHeaderAutoLoginConfiguration;
 import com.liferay.portal.security.auto.login.internal.request.header.constants.RequestHeaderAutoLoginConstants;
-import com.liferay.portal.security.auto.login.request.header.module.configuration.RequestHeaderAutoLoginConfiguration;
 import com.liferay.portal.security.exportimport.UserImporter;
 
 import java.util.HashSet;
@@ -47,25 +47,26 @@ import org.osgi.service.component.annotations.Reference;
  * @author Wesley Gong
  */
 @Component(
-	configurationPid = "com.liferay.portal.security.auto.login.request.header.module.configuration.RequestHeaderAutoLoginConfiguration",
+	configurationPid = "com.liferay.portal.security.auto.login.internal.request.header.configuration.RequestHeaderAutoLoginConfiguration",
 	immediate = true, service = AutoLogin.class
 )
 public class RequestHeaderAutoLogin extends BaseAutoLogin {
 
 	@Override
 	protected String[] doLogin(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		long companyId = _portal.getCompanyId(request);
+		long companyId = _portal.getCompanyId(httpServletRequest);
 
 		if (!isEnabled(companyId)) {
 			return null;
 		}
 
-		String remoteAddr = request.getRemoteAddr();
+		String remoteAddr = httpServletRequest.getRemoteAddr();
 
-		if (isAccessAllowed(companyId, request)) {
+		if (isAccessAllowed(companyId, httpServletRequest)) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("Access allowed for " + remoteAddr);
 			}
@@ -78,7 +79,8 @@ public class RequestHeaderAutoLogin extends BaseAutoLogin {
 			return null;
 		}
 
-		String screenName = request.getHeader(HttpHeaders.LIFERAY_SCREEN_NAME);
+		String screenName = httpServletRequest.getHeader(
+			HttpHeaders.LIFERAY_SCREEN_NAME);
 
 		if (Validator.isNull(screenName)) {
 			return null;
@@ -91,7 +93,7 @@ public class RequestHeaderAutoLogin extends BaseAutoLogin {
 				user = _userImporter.importUser(
 					companyId, StringPool.BLANK, screenName);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -109,7 +111,7 @@ public class RequestHeaderAutoLogin extends BaseAutoLogin {
 	}
 
 	protected boolean isAccessAllowed(
-		long companyId, HttpServletRequest request) {
+		long companyId, HttpServletRequest httpServletRequest) {
 
 		RequestHeaderAutoLoginConfiguration
 			requestHeaderAutoLoginConfiguration =
@@ -128,7 +130,8 @@ public class RequestHeaderAutoLogin extends BaseAutoLogin {
 			hostsAllowed.add(hostAllowed);
 		}
 
-		return AccessControlUtil.isAccessAllowed(request, hostsAllowed);
+		return AccessControlUtil.isAccessAllowed(
+			httpServletRequest, hostsAllowed);
 	}
 
 	protected boolean isEnabled(long companyId) {
@@ -176,19 +179,15 @@ public class RequestHeaderAutoLogin extends BaseAutoLogin {
 		_getRequestHeaderAutoLoginConfiguration(long companyId) {
 
 		try {
-			RequestHeaderAutoLoginConfiguration
-				requestHeaderAutoLoginConfiguration =
-					_configurationProvider.getConfiguration(
-						RequestHeaderAutoLoginConfiguration.class,
-						new CompanyServiceSettingsLocator(
-							companyId,
-							RequestHeaderAutoLoginConstants.SERVICE_NAME));
-
-			return requestHeaderAutoLoginConfiguration;
+			return _configurationProvider.getConfiguration(
+				RequestHeaderAutoLoginConfiguration.class,
+				new CompanyServiceSettingsLocator(
+					companyId, RequestHeaderAutoLoginConstants.SERVICE_NAME));
 		}
-		catch (ConfigurationException ce) {
+		catch (ConfigurationException configurationException) {
 			_log.error(
-				"Unable to get request header auto login configuration", ce);
+				"Unable to get request header auto login configuration",
+				configurationException);
 		}
 
 		return null;

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,10 +29,9 @@ import java.util.Map;
  * @see WebDAVProps
  * @generated
  */
-@ProviderType
 public class WebDAVPropsWrapper
 	extends BaseModelWrapper<WebDAVProps>
-	implements WebDAVProps, ModelWrapper<WebDAVProps> {
+	implements ModelWrapper<WebDAVProps>, WebDAVProps {
 
 	public WebDAVPropsWrapper(WebDAVProps webDAVProps) {
 		super(webDAVProps);

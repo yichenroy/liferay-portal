@@ -14,12 +14,12 @@
 
 package com.liferay.journal.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.journal.model.JournalArticleResource;
 import com.liferay.journal.service.JournalArticleResourceLocalService;
 import com.liferay.journal.service.persistence.JournalArticleResourcePersistence;
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -37,17 +37,21 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
 import java.util.List;
 
 import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the base implementation for the journal article resource local service.
@@ -60,10 +64,10 @@ import javax.sql.DataSource;
  * @see com.liferay.journal.service.impl.JournalArticleResourceLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class JournalArticleResourceLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
-	implements JournalArticleResourceLocalService, IdentifiableOSGiService {
+	implements AopService, IdentifiableOSGiService,
+			   JournalArticleResourceLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -73,6 +77,10 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 
 	/**
 	 * Adds the journal article resource to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect JournalArticleResourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param journalArticleResource the journal article resource
 	 * @return the journal article resource that was added
@@ -104,6 +112,10 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 	/**
 	 * Deletes the journal article resource with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect JournalArticleResourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param resourcePrimKey the primary key of the journal article resource
 	 * @return the journal article resource that was removed
 	 * @throws PortalException if a journal article resource with the primary key could not be found
@@ -120,6 +132,10 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 	/**
 	 * Deletes the journal article resource from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect JournalArticleResourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param journalArticleResource the journal article resource
 	 * @return the journal article resource that was removed
 	 */
@@ -129,6 +145,11 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 		JournalArticleResource journalArticleResource) {
 
 		return journalArticleResourcePersistence.remove(journalArticleResource);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return journalArticleResourcePersistence.dslQuery(dslQuery);
 	}
 
 	@Override
@@ -155,7 +176,7 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalArticleResourceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalArticleResourceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -175,7 +196,7 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalArticleResourceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalArticleResourceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -306,6 +327,16 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return journalArticleResourcePersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
@@ -314,6 +345,13 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 			(JournalArticleResource)persistedModel);
 	}
 
+	public BasePersistence<JournalArticleResource> getBasePersistence() {
+		return journalArticleResourcePersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
@@ -377,7 +415,7 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 	 * Returns a range of all the journal article resources.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalArticleResourceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalArticleResourceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of journal article resources
@@ -404,6 +442,10 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 	/**
 	 * Updates the journal article resource in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect JournalArticleResourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param journalArticleResource the journal article resource
 	 * @return the journal article resource that was updated
 	 */
@@ -415,84 +457,19 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 		return journalArticleResourcePersistence.update(journalArticleResource);
 	}
 
-	/**
-	 * Returns the journal article resource local service.
-	 *
-	 * @return the journal article resource local service
-	 */
-	public JournalArticleResourceLocalService
-		getJournalArticleResourceLocalService() {
-
-		return journalArticleResourceLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			JournalArticleResourceLocalService.class,
+			IdentifiableOSGiService.class, CTService.class,
+			PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the journal article resource local service.
-	 *
-	 * @param journalArticleResourceLocalService the journal article resource local service
-	 */
-	public void setJournalArticleResourceLocalService(
-		JournalArticleResourceLocalService journalArticleResourceLocalService) {
-
-		this.journalArticleResourceLocalService =
-			journalArticleResourceLocalService;
-	}
-
-	/**
-	 * Returns the journal article resource persistence.
-	 *
-	 * @return the journal article resource persistence
-	 */
-	public JournalArticleResourcePersistence
-		getJournalArticleResourcePersistence() {
-
-		return journalArticleResourcePersistence;
-	}
-
-	/**
-	 * Sets the journal article resource persistence.
-	 *
-	 * @param journalArticleResourcePersistence the journal article resource persistence
-	 */
-	public void setJournalArticleResourcePersistence(
-		JournalArticleResourcePersistence journalArticleResourcePersistence) {
-
-		this.journalArticleResourcePersistence =
-			journalArticleResourcePersistence;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService
-		getCounterLocalService() {
-
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService
-			counterLocalService) {
-
-		this.counterLocalService = counterLocalService;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register(
-			"com.liferay.journal.model.JournalArticleResource",
-			journalArticleResourceLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.journal.model.JournalArticleResource");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		journalArticleResourceLocalService =
+			(JournalArticleResourceLocalService)aopProxy;
 	}
 
 	/**
@@ -505,8 +482,23 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 		return JournalArticleResourceLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<JournalArticleResource> getCTPersistence() {
+		return journalArticleResourcePersistence;
+	}
+
+	@Override
+	public Class<JournalArticleResource> getModelClass() {
 		return JournalArticleResource.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<JournalArticleResource>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(journalArticleResourcePersistence);
 	}
 
 	protected String getModelClassName() {
@@ -533,27 +525,20 @@ public abstract class JournalArticleResourceLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = JournalArticleResourceLocalService.class)
 	protected JournalArticleResourceLocalService
 		journalArticleResourceLocalService;
 
-	@BeanReference(type = JournalArticleResourcePersistence.class)
+	@Reference
 	protected JournalArticleResourcePersistence
 		journalArticleResourcePersistence;
 
-	@ServiceReference(
-		type = com.liferay.counter.kernel.service.CounterLocalService.class
-	)
+	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry
-		persistedModelLocalServiceRegistry;
 
 }

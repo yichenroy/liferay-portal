@@ -55,8 +55,7 @@ public class SpringJSONWebServiceScannerStrategy
 			methodDescriptors.add(new MethodDescriptor(method));
 		}
 
-		return methodDescriptors.toArray(
-			new MethodDescriptor[methodDescriptors.size()]);
+		return methodDescriptors.toArray(new MethodDescriptor[0]);
 	}
 
 	/**
@@ -89,6 +88,9 @@ public class SpringJSONWebServiceScannerStrategy
 					service = bean;
 				}
 			}
+			else {
+				break;
+			}
 		}
 
 		return service.getClass();
@@ -120,7 +122,8 @@ public class SpringJSONWebServiceScannerStrategy
 
 					return true;
 				}
-				catch (ReflectiveOperationException roe) {
+				catch (ReflectiveOperationException
+							reflectiveOperationException) {
 				}
 			}
 			else {

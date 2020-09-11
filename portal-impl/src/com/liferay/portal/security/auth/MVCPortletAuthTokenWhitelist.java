@@ -14,6 +14,7 @@
 
 package com.liferay.portal.security.auth;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.security.auth.BaseAuthTokenWhitelist;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -70,12 +70,12 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 
 	@Override
 	public boolean isPortletCSRFWhitelisted(
-		HttpServletRequest request, Portlet portlet) {
+		HttpServletRequest httpServletRequest, Portlet portlet) {
 
 		String portletId = portlet.getPortletId();
 
 		String[] mvcActionCommandNames = getMVCActionCommandNames(
-			request, portletId);
+			httpServletRequest, portletId);
 
 		return _containsAll(
 			portletId, _portletCSRFWhitelist, mvcActionCommandNames);
@@ -83,16 +83,17 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 
 	@Override
 	public boolean isPortletInvocationWhitelisted(
-		HttpServletRequest request, Portlet portlet) {
+		HttpServletRequest httpServletRequest, Portlet portlet) {
 
 		String portletId = portlet.getPortletId();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay.isLifecycleAction()) {
 			String[] mvcActionCommandNames = getMVCActionCommandNames(
-				request, portletId);
+				httpServletRequest, portletId);
 
 			return _containsAll(
 				portletId, _portletInvocationWhitelistAction,
@@ -101,7 +102,7 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 		else if (themeDisplay.isLifecycleRender()) {
 			String namespace = PortalUtil.getPortletNamespace(portletId);
 
-			String mvcRenderCommandName = request.getParameter(
+			String mvcRenderCommandName = httpServletRequest.getParameter(
 				namespace.concat("mvcRenderCommandName"));
 
 			return _contains(
@@ -109,13 +110,13 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 				mvcRenderCommandName);
 		}
 		else if (themeDisplay.isLifecycleResource()) {
-			String ppid = request.getParameter("p_p_id");
+			String ppid = httpServletRequest.getParameter("p_p_id");
 
 			if (!portletId.equals(ppid)) {
 				return false;
 			}
 
-			String mvcResourceCommandName = request.getParameter(
+			String mvcResourceCommandName = httpServletRequest.getParameter(
 				"p_p_resource_id");
 
 			return _contains(
@@ -130,12 +131,9 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 	public boolean isPortletURLCSRFWhitelisted(
 		LiferayPortletURL liferayPortletURL) {
 
-		String[] mvcActionCommandNames = getMVCActionCommandNames(
-			liferayPortletURL);
-
 		return _containsAll(
 			liferayPortletURL.getPortletId(), _portletCSRFWhitelist,
-			mvcActionCommandNames);
+			getMVCActionCommandNames(liferayPortletURL));
 	}
 
 	@Override
@@ -147,12 +145,9 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 		String lifecycle = liferayPortletURL.getLifecycle();
 
 		if (lifecycle.equals(PortletRequest.ACTION_PHASE)) {
-			String[] mvcActionCommandNames = getMVCActionCommandNames(
-				liferayPortletURL);
-
 			return _containsAll(
 				portletId, _portletInvocationWhitelistAction,
-				mvcActionCommandNames);
+				getMVCActionCommandNames(liferayPortletURL));
 		}
 		else if (lifecycle.equals(PortletRequest.RENDER_PHASE)) {
 			String mvcRenderCommandName = liferayPortletURL.getParameter(
@@ -174,11 +169,11 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 	}
 
 	protected String[] getMVCActionCommandNames(
-		HttpServletRequest request, String portletId) {
+		HttpServletRequest httpServletRequest, String portletId) {
 
 		String namespace = PortalUtil.getPortletNamespace(portletId);
 
-		String[] actionNames = request.getParameterValues(
+		String[] actionNames = httpServletRequest.getParameterValues(
 			namespace.concat(ActionRequest.ACTION_NAME));
 
 		String actions = StringUtil.merge(actionNames);
@@ -202,11 +197,8 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 	protected String getWhitelistValue(
 		String portletName, String whitelistAction) {
 
-		return portletName.concat(
-			StringPool.POUND
-		).concat(
-			whitelistAction
-		);
+		return StringBundler.concat(
+			portletName, StringPool.POUND, whitelistAction);
 	}
 
 	protected void trackWhitelistServices(

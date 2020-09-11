@@ -14,14 +14,10 @@
 
 package com.liferay.fragment.processor;
 
-import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.util.LocaleUtil;
-
-import java.util.Locale;
 
 /**
  * @author Pavel Savinov
@@ -36,48 +32,33 @@ public interface FragmentEntryProcessor {
 		return null;
 	}
 
-	public default JSONObject getDefaultEditableValuesJSONObject(String html) {
+	public default JSONArray getDataAttributesJSONArray() {
+		return null;
+	}
+
+	public default JSONObject getDefaultEditableValuesJSONObject(
+		String html, String configuration) {
+
 		return null;
 	}
 
 	public default String processFragmentEntryLinkCSS(
-			FragmentEntryLink fragmentEntryLink, String css, String mode,
-			Locale locale, long[] segmentsExperienceIds)
+			FragmentEntryLink fragmentEntryLink, String css,
+			FragmentEntryProcessorContext fragmentEntryProcessorContext)
 		throws PortalException {
 
 		return css;
 	}
 
 	public default String processFragmentEntryLinkHTML(
-			FragmentEntryLink fragmentEntryLink, String html)
+			FragmentEntryLink fragmentEntryLink, String html,
+			FragmentEntryProcessorContext fragmentEntryProcessorContext)
 		throws PortalException {
 
-		return processFragmentEntryLinkHTML(
-			fragmentEntryLink, html, FragmentEntryLinkConstants.EDIT);
+		return html;
 	}
 
-	public default String processFragmentEntryLinkHTML(
-			FragmentEntryLink fragmentEntryLink, String html, String mode)
-		throws PortalException {
-
-		return processFragmentEntryLinkHTML(
-			fragmentEntryLink, html, mode, LocaleUtil.getMostRelevantLocale());
-	}
-
-	public default String processFragmentEntryLinkHTML(
-			FragmentEntryLink fragmentEntryLink, String html, String mode,
-			Locale locale)
-		throws PortalException {
-
-		return processFragmentEntryLinkHTML(
-			fragmentEntryLink, html, mode, locale, new long[0]);
-	}
-
-	public String processFragmentEntryLinkHTML(
-			FragmentEntryLink fragmentEntryLink, String html, String mode,
-			Locale locale, long[] segmentsExperienceIds)
+	public void validateFragmentEntryHTML(String html, String configuration)
 		throws PortalException;
-
-	public void validateFragmentEntryHTML(String html) throws PortalException;
 
 }

@@ -41,15 +41,24 @@
 
 		.sheet {
 			padding-bottom: 1.5rem;
+
+			.criterion-string {
+				color: $mainLighten28;
+				font-weight: 600;
+
+				b {
+					font-weight: bold;
+				}
+			}
 		}
 	}
 
 	.criteria-builder-section-sidebar {
-		height: 100%;
+		height: calc(100% - 121px);
 		overflow: hidden;
-		position: absolute;
+		position: fixed;
 		right: 0;
-		top: 0;
+		top: 121px;
 		visibility: hidden;
 		width: 0;
 		z-index: 10;
@@ -94,7 +103,9 @@
 
 			@media (min-width: $pageContentMaxWidth) {
 				.contributor-container .container-fluid {
-					padding-right: calc(#{$sidebarWidth} - ((100% - #{$pageContentMaxWidth}) / 2));
+					padding-right: calc(
+						#{$sidebarWidth} - ((100% - #{$pageContentMaxWidth}) / 2)
+					);
 
 					.content-wrapper {
 						padding-right: 32px;

@@ -14,15 +14,12 @@
 
 package com.liferay.counter.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class CounterFinderUtil {
 
 	public static java.util.List<String> getNames() {

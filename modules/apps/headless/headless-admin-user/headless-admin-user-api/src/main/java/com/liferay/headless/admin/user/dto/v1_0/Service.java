@@ -20,15 +20,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
+
+import javax.validation.Valid;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -42,9 +47,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Service")
 public class Service {
 
+	public static Service toDTO(String json) {
+		return ObjectMapperUtil.readValue(Service.class, json);
+	}
+
 	@Schema(
-		description = "A list of hours when the organization is open. Follows https://www.schema.org/OpeningHoursSpecification specification."
+		description = "A list of hours when the organization is open. This follows the [`OpeningHoursSpecification`](https://www.schema.org/OpeningHoursSpecification) specification."
 	)
+	@Valid
 	public HoursAvailable[] getHoursAvailable() {
 		return hoursAvailable;
 	}
@@ -69,37 +79,13 @@ public class Service {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(
+		description = "A list of hours when the organization is open. This follows the [`OpeningHoursSpecification`](https://www.schema.org/OpeningHoursSpecification) specification."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected HoursAvailable[] hoursAvailable;
 
-	@Schema(description = "The identifier of the resource.")
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@JsonIgnore
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long id;
-
-	@Schema(description = "The type of the service provided.")
+	@Schema(description = "The type of service the organization provides.")
 	public String getServiceType() {
 		return serviceType;
 	}
@@ -123,8 +109,10 @@ public class Service {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(
+		description = "The type of service the organization provides."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String serviceType;
 
 	@Override
@@ -159,7 +147,7 @@ public class Service {
 				sb.append(", ");
 			}
 
-			sb.append("\"hoursAvailable\":");
+			sb.append("\"hoursAvailable\": ");
 
 			sb.append("[");
 
@@ -174,22 +162,12 @@ public class Service {
 			sb.append("]");
 		}
 
-		if (id != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"id\":");
-
-			sb.append(id);
-		}
-
 		if (serviceType != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"serviceType\":");
+			sb.append("\"serviceType\": ");
 
 			sb.append("\"");
 
@@ -203,10 +181,88 @@ public class Service {
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.Service",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

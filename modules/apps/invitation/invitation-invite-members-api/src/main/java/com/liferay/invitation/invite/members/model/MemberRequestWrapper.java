@@ -14,8 +14,6 @@
 
 package com.liferay.invitation.invite.members.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see MemberRequest
  * @generated
  */
-@ProviderType
 public class MemberRequestWrapper
 	extends BaseModelWrapper<MemberRequest>
 	implements MemberRequest, ModelWrapper<MemberRequest> {

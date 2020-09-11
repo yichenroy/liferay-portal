@@ -15,10 +15,10 @@
 package com.liferay.portal.cache.test.util;
 
 import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheException;
 import com.liferay.portal.kernel.cache.PortalCacheListener;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.Serializable;
 
@@ -137,7 +137,7 @@ public class TestPortalCacheListener<K extends Serializable, V>
 	}
 
 	private String _allActions() {
-		StringBundler sb = new StringBundler(2 + 2 * _actions.size());
+		StringBundler sb = new StringBundler(2 + (2 * _actions.size()));
 
 		sb.append("All actions{");
 

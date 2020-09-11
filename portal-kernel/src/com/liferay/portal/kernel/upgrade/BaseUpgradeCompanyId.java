@@ -14,11 +14,11 @@
 
 package com.liferay.portal.kernel.upgrade;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.IOException;
 
@@ -71,15 +71,14 @@ public abstract class BaseUpgradeCompanyId extends UpgradeProcess {
 	protected class TableUpdater implements Callable<Void> {
 
 		public TableUpdater(
-			String tableName, String foreignTableName,
-			String foreignColumnName) {
+			String tableName, String foreignTableName, String columnName) {
 
 			_tableName = tableName;
 
-			_columnName = foreignColumnName;
+			_columnName = columnName;
 
 			_foreignNamesArray = new String[][] {
-				{foreignTableName, foreignColumnName}
+				{foreignTableName, columnName}
 			};
 		}
 

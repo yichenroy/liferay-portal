@@ -56,10 +56,7 @@ public class DDMStructureClassType implements ClassType {
 
 	@Override
 	public List<ClassTypeField> getClassTypeFields() throws PortalException {
-		List<ClassTypeField> classTypeFields = getClassTypeFields(
-			getClassTypeId());
-
-		return classTypeFields;
+		return getClassTypeFields(getClassTypeId());
 	}
 
 	@Override
@@ -106,12 +103,12 @@ public class DDMStructureClassType implements ClassType {
 			}
 
 			LocalizedValue label = ddmFormField.getLabel();
-			String name = ddmFormField.getName();
 
 			classTypeFields.add(
 				new ClassTypeField(
 					label.getString(LocaleUtil.fromLanguageId(_languageId)),
-					name, type, ddmStructure.getStructureId()));
+					ddmFormField.getName(), type,
+					ddmStructure.getStructureId()));
 		}
 
 		return classTypeFields;

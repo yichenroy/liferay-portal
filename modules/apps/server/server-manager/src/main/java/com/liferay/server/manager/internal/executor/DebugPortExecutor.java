@@ -42,15 +42,17 @@ public class DebugPortExecutor extends BaseExecutor {
 
 	@Override
 	public void executeRead(
-		HttpServletRequest request, JSONObject responseJSONObject,
+		HttpServletRequest httpServletRequest, JSONObject responseJSONObject,
 		Queue<String> arguments) {
 
 		String debugPort = getDebugPort();
 
 		if (debugPort == null) {
 			responseJSONObject.put(
-				JSONKeys.ERROR, "Server was not started in debug mode");
-			responseJSONObject.put(JSONKeys.STATUS, 1);
+				JSONKeys.ERROR, "Server was not started in debug mode"
+			).put(
+				JSONKeys.STATUS, 1
+			);
 		}
 		else {
 			responseJSONObject.put(JSONKeys.OUTPUT, debugPort);

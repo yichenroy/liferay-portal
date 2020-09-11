@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.notifications;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserNotificationDeliveryLocalServiceUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -84,8 +84,8 @@ public abstract class BaseUserNotificationHandler
 
 			return userNotificationFeedEntry;
 		}
-		catch (Exception e) {
-			_log.error("Unable to interpret notification", e);
+		catch (Exception exception) {
+			_log.error("Unable to interpret notification", exception);
 		}
 
 		return null;
@@ -170,7 +170,7 @@ public abstract class BaseUserNotificationHandler
 			sb.append("class=\"body\"><div class=\"button-holder\"><a ");
 			sb.append("class=\"btn btn-primary ");
 			sb.append("user-notification-action\" href=\"[$CONFIRM_URL$]\">");
-			sb.append("[$CONFIRM$]</a><a class=\"btn btn-default ");
+			sb.append("[$CONFIRM$]</a><a class=\"btn btn-secondary ");
 			sb.append("user-notification-action\" href=\"[$IGNORE_URL$]\">");
 			sb.append("[$IGNORE$]</a></div></div>");
 

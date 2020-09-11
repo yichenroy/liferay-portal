@@ -14,6 +14,7 @@
 
 package com.liferay.portal.layoutconfiguration.util.velocity;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.CustomizedPages;
 import com.liferay.portal.kernel.model.Layout;
@@ -46,7 +47,8 @@ import javax.servlet.jsp.tagext.Tag;
 public class CustomizationSettingsProcessor implements ColumnProcessor {
 
 	public CustomizationSettingsProcessor(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
 		JspFactory jspFactory = JspFactory.getDefaultFactory();
 
@@ -59,8 +61,8 @@ public class CustomizationSettingsProcessor implements ColumnProcessor {
 				PortalClassLoaderUtil.getClassLoader());
 
 			_pageContext = jspFactory.getPageContext(
-				new JSPSupportServlet(request.getServletContext()), request,
-				response, null, false, 0, false);
+				new JSPSupportServlet(httpServletRequest.getServletContext()),
+				httpServletRequest, httpServletResponse, null, false, 0, false);
 		}
 		finally {
 			currentThread.setContextClassLoader(contextClassLoader);
@@ -71,13 +73,14 @@ public class CustomizationSettingsProcessor implements ColumnProcessor {
 		Layout selLayout = null;
 
 		long selPlid = ParamUtil.getLong(
-			request, "selPlid", LayoutConstants.DEFAULT_PLID);
+			httpServletRequest, "selPlid", LayoutConstants.DEFAULT_PLID);
 
 		if (selPlid != LayoutConstants.DEFAULT_PLID) {
 			selLayout = LayoutLocalServiceUtil.fetchLayout(selPlid);
 		}
 
-		_layoutTypeSettings = selLayout.getTypeSettingsProperties();
+		_layoutTypeSettingsUnicodeProperties =
+			selLayout.getTypeSettingsProperties();
 
 		if (!SitesUtil.isLayoutUpdateable(selLayout) ||
 			selLayout.isLayoutPrototypeLinkActive()) {
@@ -104,7 +107,7 @@ public class CustomizationSettingsProcessor implements ColumnProcessor {
 
 		if (_customizationEnabled) {
 			customizable = GetterUtil.getBoolean(
-				_layoutTypeSettings.getProperty(
+				_layoutTypeSettingsUnicodeProperties.getProperty(
 					customizableKey, Boolean.FALSE.toString()));
 		}
 
@@ -125,11 +128,8 @@ public class CustomizationSettingsProcessor implements ColumnProcessor {
 			StringPool.BLANK, "labelOn", "customizable");
 		inputTag.setLabel(StringPool.BLANK);
 		inputTag.setName(
-			"TypeSettingsProperties--".concat(
-				customizableKey
-			).concat(
-				"--"
-			));
+			StringBundler.concat(
+				"TypeSettingsProperties--", customizableKey, "--"));
 		inputTag.setPageContext(_pageContext);
 		inputTag.setType("toggle-switch");
 		inputTag.setValue(customizable);
@@ -187,7 +187,7 @@ public class CustomizationSettingsProcessor implements ColumnProcessor {
 	}
 
 	private final boolean _customizationEnabled;
-	private final UnicodeProperties _layoutTypeSettings;
+	private final UnicodeProperties _layoutTypeSettingsUnicodeProperties;
 	private final PageContext _pageContext;
 	private final Writer _writer;
 

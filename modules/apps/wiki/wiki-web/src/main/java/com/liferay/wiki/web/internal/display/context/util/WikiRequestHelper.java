@@ -27,7 +27,7 @@ import com.liferay.wiki.configuration.WikiGroupServiceOverriddenConfiguration;
 import com.liferay.wiki.constants.WikiConstants;
 import com.liferay.wiki.constants.WikiWebKeys;
 import com.liferay.wiki.model.WikiPage;
-import com.liferay.wiki.web.configuration.WikiPortletInstanceConfiguration;
+import com.liferay.wiki.web.internal.configuration.WikiPortletInstanceConfiguration;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -36,13 +36,13 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class WikiRequestHelper extends BaseStrutsRequestHelper {
 
-	public WikiRequestHelper(HttpServletRequest request) {
-		super(request);
+	public WikiRequestHelper(HttpServletRequest httpServletRequest) {
+		super(httpServletRequest);
 	}
 
 	public long getCategoryId() {
 		if (_categoryId == null) {
-			_categoryId = ParamUtil.getLong(getRequest(), "categoryId", 0);
+			_categoryId = ParamUtil.getLong(getRequest(), "categoryId");
 		}
 
 		return _categoryId;
@@ -53,9 +53,7 @@ public class WikiRequestHelper extends BaseStrutsRequestHelper {
 
 		try {
 			if (_wikiGroupServiceOverriddenConfiguration == null) {
-				String portletResource = getPortletResource();
-
-				if (Validator.isNotNull(portletResource)) {
+				if (Validator.isNotNull(getPortletResource())) {
 					_wikiGroupServiceOverriddenConfiguration =
 						ConfigurationProviderUtil.getConfiguration(
 							WikiGroupServiceOverriddenConfiguration.class,
@@ -76,16 +74,17 @@ public class WikiRequestHelper extends BaseStrutsRequestHelper {
 
 			return _wikiGroupServiceOverriddenConfiguration;
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
 	public WikiPage getWikiPage() {
 		if (_wikiPage == null) {
-			HttpServletRequest request = getRequest();
+			HttpServletRequest httpServletRequest = getRequest();
 
-			_wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
+			_wikiPage = (WikiPage)httpServletRequest.getAttribute(
+				WikiWebKeys.WIKI_PAGE);
 		}
 
 		return _wikiPage;
@@ -96,9 +95,7 @@ public class WikiRequestHelper extends BaseStrutsRequestHelper {
 
 		try {
 			if (_wikiPortletInstanceConfiguration == null) {
-				String portletResource = getPortletResource();
-
-				if (Validator.isNotNull(portletResource)) {
+				if (Validator.isNotNull(getPortletResource())) {
 					_wikiPortletInstanceConfiguration =
 						ConfigurationProviderUtil.getConfiguration(
 							WikiPortletInstanceConfiguration.class,
@@ -118,8 +115,8 @@ public class WikiRequestHelper extends BaseStrutsRequestHelper {
 
 			return _wikiPortletInstanceConfiguration;
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 

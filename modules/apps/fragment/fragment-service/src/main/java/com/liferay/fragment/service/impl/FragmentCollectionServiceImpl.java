@@ -17,22 +17,34 @@ package com.liferay.fragment.service.impl;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentCollection;
+import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.service.base.FragmentCollectionServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jürgen Kappler
  */
+@Component(
+	property = {
+		"json.web.service.context.name=fragment",
+		"json.web.service.context.path=FragmentCollection"
+	},
+	service = AopService.class
+)
 public class FragmentCollectionServiceImpl
 	extends FragmentCollectionServiceBaseImpl {
 
@@ -104,22 +116,31 @@ public class FragmentCollectionServiceImpl
 	public FragmentCollection fetchFragmentCollection(long fragmentCollectionId)
 		throws PortalException {
 
-		FragmentCollection fragmentCollection =
-			fragmentCollectionLocalService.fetchFragmentCollection(
-				fragmentCollectionId);
-
-		if (fragmentCollection != null) {
-			_portletResourcePermission.check(
-				getPermissionChecker(), fragmentCollection.getGroupId(),
-				ActionKeys.VIEW);
-		}
-
-		return fragmentCollection;
+		return fragmentCollectionLocalService.fetchFragmentCollection(
+			fragmentCollectionId);
 	}
 
 	@Override
 	public List<FragmentCollection> getFragmentCollections(long groupId) {
-		return fragmentCollectionPersistence.findByGroupId(groupId);
+		return getFragmentCollections(groupId, false);
+	}
+
+	@Override
+	public List<FragmentCollection> getFragmentCollections(
+		long groupId, boolean includeSystem) {
+
+		return fragmentCollectionPersistence.findByGroupId(
+			_getGroupIds(groupId, includeSystem));
+	}
+
+	@Override
+	public List<FragmentCollection> getFragmentCollections(
+		long groupId, boolean includeSystem, int start, int end,
+		OrderByComparator<FragmentCollection> orderByComparator) {
+
+		return fragmentCollectionPersistence.findByGroupId(
+			_getGroupIds(groupId, includeSystem), start, end,
+			orderByComparator);
 	}
 
 	@Override
@@ -134,8 +155,19 @@ public class FragmentCollectionServiceImpl
 		long groupId, int start, int end,
 		OrderByComparator<FragmentCollection> orderByComparator) {
 
-		return fragmentCollectionPersistence.findByGroupId(
-			groupId, start, end, orderByComparator);
+		return getFragmentCollections(
+			groupId, false, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<FragmentCollection> getFragmentCollections(
+		long groupId, String name, boolean includeSystem, int start, int end,
+		OrderByComparator<FragmentCollection> orderByComparator) {
+
+		return fragmentCollectionPersistence.findByG_LikeN(
+			_getGroupIds(groupId, includeSystem),
+			_customSQL.keywords(name, false, WildcardMode.SURROUND)[0], start,
+			end, orderByComparator);
 	}
 
 	@Override
@@ -143,20 +175,77 @@ public class FragmentCollectionServiceImpl
 		long groupId, String name, int start, int end,
 		OrderByComparator<FragmentCollection> orderByComparator) {
 
+		return getFragmentCollections(
+			groupId, name, false, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<FragmentCollection> getFragmentCollections(long[] groupIds) {
+		List<FragmentCollection> fragmentCollections = new ArrayList<>();
+
+		for (long groupId : groupIds) {
+			fragmentCollections.addAll(getFragmentCollections(groupId));
+		}
+
+		return fragmentCollections;
+	}
+
+	@Override
+	public List<FragmentCollection> getFragmentCollections(
+		long[] groupIds, int start, int end,
+		OrderByComparator<FragmentCollection> orderByComparator) {
+
+		return fragmentCollectionPersistence.findByGroupId(
+			groupIds, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<FragmentCollection> getFragmentCollections(
+		long[] groupIds, String name, int start, int end,
+		OrderByComparator<FragmentCollection> orderByComparator) {
+
 		return fragmentCollectionPersistence.findByG_LikeN(
-			groupId, _customSQL.keywords(name, false, WildcardMode.SURROUND)[0],
-			start, end, orderByComparator);
+			groupIds,
+			_customSQL.keywords(name, false, WildcardMode.SURROUND)[0], start,
+			end, orderByComparator);
 	}
 
 	@Override
 	public int getFragmentCollectionsCount(long groupId) {
-		return fragmentCollectionPersistence.countByGroupId(groupId);
+		return getFragmentCollectionsCount(groupId, false);
+	}
+
+	@Override
+	public int getFragmentCollectionsCount(
+		long groupId, boolean includeSystem) {
+
+		return fragmentCollectionPersistence.countByGroupId(
+			_getGroupIds(groupId, includeSystem));
 	}
 
 	@Override
 	public int getFragmentCollectionsCount(long groupId, String name) {
+		return getFragmentCollectionsCount(groupId, name, false);
+	}
+
+	@Override
+	public int getFragmentCollectionsCount(
+		long groupId, String name, boolean includeSystem) {
+
 		return fragmentCollectionPersistence.countByG_LikeN(
-			groupId,
+			_getGroupIds(groupId, includeSystem),
+			_customSQL.keywords(name, false, WildcardMode.SURROUND)[0]);
+	}
+
+	@Override
+	public int getFragmentCollectionsCount(long[] groupIds) {
+		return fragmentCollectionPersistence.countByGroupId(groupIds);
+	}
+
+	@Override
+	public int getFragmentCollectionsCount(long[] groupIds, String name) {
+		return fragmentCollectionPersistence.countByG_LikeN(
+			groupIds,
 			_customSQL.keywords(name, false, WildcardMode.SURROUND)[0]);
 	}
 
@@ -168,7 +257,7 @@ public class FragmentCollectionServiceImpl
 			getPermissionChecker(), groupId,
 			FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES);
 
-		return fragmentEntryLocalService.getTempFileNames(
+		return _fragmentEntryLocalService.getTempFileNames(
 			getUserId(), groupId, folderName);
 	}
 
@@ -189,13 +278,25 @@ public class FragmentCollectionServiceImpl
 			fragmentCollectionId, name, description);
 	}
 
-	private static volatile PortletResourcePermission
-		_portletResourcePermission =
-			PortletResourcePermissionFactory.getInstance(
-				FragmentCollectionServiceImpl.class,
-				"_portletResourcePermission", FragmentConstants.RESOURCE_NAME);
+	private long[] _getGroupIds(long groupId, boolean includeSystem) {
+		long[] groupIds = {groupId};
 
-	@ServiceReference(type = CustomSQL.class)
+		if (includeSystem) {
+			groupIds = ArrayUtil.append(groupIds, CompanyConstants.SYSTEM);
+		}
+
+		return groupIds;
+	}
+
+	@Reference
 	private CustomSQL _customSQL;
+
+	@Reference
+	private FragmentEntryLocalService _fragmentEntryLocalService;
+
+	@Reference(
+		target = "(resource.name=" + FragmentConstants.RESOURCE_NAME + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

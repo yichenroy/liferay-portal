@@ -15,9 +15,9 @@
 package com.liferay.frontend.taglib.clay.sample.web.internal.data;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.data.ClayTagDataSource;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +36,9 @@ public class SampleTableClayTagDataSource
 	implements ClayTagDataSource<Map<String, Object>> {
 
 	@Override
-	public List<Map<String, Object>> getItems(HttpServletRequest request) {
+	public List<Map<String, Object>> getItems(
+		HttpServletRequest httpServletRequest) {
+
 		return Arrays.asList(
 			_getItem("Blueberry", 57, 100), _getItem("Strawberry", 33, 100),
 			_getItem("Raspberry", 53, 100));
@@ -45,13 +47,13 @@ public class SampleTableClayTagDataSource
 	private Map<String, Object> _getItem(
 		String name, int calories, int portion) {
 
-		Map<String, Object> item = new HashMap<>();
-
-		item.put("calories", calories);
-		item.put("name", name);
-		item.put("portion", portion);
-
-		return item;
+		return HashMapBuilder.<String, Object>put(
+			"calories", calories
+		).put(
+			"name", name
+		).put(
+			"portion", portion
+		).build();
 	}
 
 }

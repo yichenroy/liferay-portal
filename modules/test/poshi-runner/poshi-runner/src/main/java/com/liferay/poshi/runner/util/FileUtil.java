@@ -80,6 +80,16 @@ public class FileUtil {
 		}
 	}
 
+	public static boolean delete(File file) {
+		return FileUtils.deleteQuietly(file);
+	}
+
+	public static boolean delete(String filePath) throws IOException {
+		File file = new File(filePath);
+
+		return FileUtils.deleteQuietly(file);
+	}
+
 	public static boolean exists(File file) {
 		return file.exists();
 	}
@@ -88,6 +98,27 @@ public class FileUtil {
 		File file = new File(fileName);
 
 		return exists(file);
+	}
+
+	public static String fixFilePath(String filePath) {
+		if (OSDetector.isWindows()) {
+			return StringUtil.replace(filePath, "/", "\\");
+		}
+
+		return filePath;
+	}
+
+	public static String getCanonicalPath(String filePath) {
+		try {
+			File file = new File(filePath);
+
+			return file.getCanonicalPath();
+		}
+		catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
+
+		return filePath;
 	}
 
 	public static String getFileName(String filePath) {

@@ -14,11 +14,11 @@
 
 package com.liferay.portal.kernel.cal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.text.Format;
@@ -64,6 +64,7 @@ public class RecurrenceSerializer {
 
 			if (byDay != null) {
 				dayOfMonth = StringPool.QUESTION;
+
 				dayOfWeek = StringPool.BLANK;
 
 				for (int i = 0; i < byDay.length; i++) {

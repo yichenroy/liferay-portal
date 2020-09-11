@@ -15,7 +15,7 @@
 package com.liferay.site.memberships.web.internal.servlet.taglib.util;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Organization;
@@ -46,24 +46,20 @@ public class OrganizationActionDropdownItemsProvider {
 		_organization = organization;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<DropdownItem> getActionDropdownItems() throws Exception {
-		return new DropdownItemList() {
-			{
-				if (GroupPermissionUtil.contains(
-						_themeDisplay.getPermissionChecker(),
-						_themeDisplay.getScopeGroupId(),
-						ActionKeys.ASSIGN_MEMBERS)) {
-
-					add(_getDeleteGroupOrganizationsActionUnsafeConsumer());
-				}
-			}
-		};
+		return DropdownItemListBuilder.add(
+			() -> GroupPermissionUtil.contains(
+				_themeDisplay.getPermissionChecker(),
+				_themeDisplay.getSiteGroupIdOrLiveGroupId(),
+				ActionKeys.ASSIGN_MEMBERS),
+			_getDeleteGroupOrganizationsActionUnsafeConsumer()
+		).build();
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
@@ -77,7 +73,8 @@ public class OrganizationActionDropdownItemsProvider {
 		deleteGroupOrganizationsURL.setParameter(
 			"redirect", _themeDisplay.getURLCurrent());
 		deleteGroupOrganizationsURL.setParameter(
-			"groupId", String.valueOf(_themeDisplay.getScopeGroupId()));
+			"groupId",
+			String.valueOf(_themeDisplay.getSiteGroupIdOrLiveGroupId()));
 		deleteGroupOrganizationsURL.setParameter(
 			"removeOrganizationId",
 			String.valueOf(_organization.getOrganizationId()));
@@ -88,13 +85,13 @@ public class OrganizationActionDropdownItemsProvider {
 				"deleteGroupOrganizationsURL",
 				deleteGroupOrganizationsURL.toString());
 			dropdownItem.setLabel(
-				LanguageUtil.get(_request, "remove-membership"));
+				LanguageUtil.get(_httpServletRequest, "remove-membership"));
 		};
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private final Organization _organization;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final ThemeDisplay _themeDisplay;
 
 }

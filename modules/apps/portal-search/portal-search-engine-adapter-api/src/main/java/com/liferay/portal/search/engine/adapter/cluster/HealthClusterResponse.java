@@ -14,14 +14,11 @@
 
 package com.liferay.portal.search.engine.adapter.cluster;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
 
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
 public class HealthClusterResponse implements ClusterResponse {
 
 	public HealthClusterResponse(

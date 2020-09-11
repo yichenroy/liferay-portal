@@ -1,5 +1,7 @@
 @component-name = "portal-collaboration"
 definition {
+
+	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Mentions";
@@ -13,20 +15,22 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			password = "password",
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn"
-		);
+		User.logoutPG();
+
+		User.loginPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
+
+		User.logoutPG();
+
+		User.loginPG();
 	}
 
 	tearDown {
@@ -50,30 +54,24 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Message Boards"
-		);
+			portlet = "Message Boards");
 
 		Mentions.addMentionViaMessageBoardThread(
 			mentionsUserFullName = "userfn userln",
 			mentionsUserScreenName = "usersn",
-			threadSubject = "Thread Subject"
-		);
+			threadSubject = "Thread Subject");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Message Boards"
-		);
+			portlet = "Message Boards");
 
 		MessageboardsThread.gotoCP(threadSubject = "Thread Subject");
 
 		Mentions.viewMentionTagLink(
 			mentionsUserFullName = "userfn userln",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
 	}
 
 	@priority = "5"
@@ -82,37 +80,29 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Message Boards"
-		);
+			portlet = "Message Boards");
 
 		MessageboardsThread.addCP(
 			threadBody = "Thread Body",
-			threadSubject = "Thread Subject"
-		);
+			threadSubject = "Thread Subject");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Message Boards"
-		);
+			portlet = "Message Boards");
 
 		Mentions.addMentionViaMessageBoardsReply(
 			mentionsUserFullName = "userfn userln",
 			mentionsUserScreenName = "usersn",
 			threadBody = "Thread Reply Body",
-			threadSubject = "Thread Subject"
-		);
+			threadSubject = "Thread Subject");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Message Boards"
-		);
+			portlet = "Message Boards");
 
 		MessageboardsThread.gotoCP(threadSubject = "Thread Subject");
 
@@ -122,13 +112,11 @@ definition {
 			threadBody2 = "Thread Reply Body",
 			threadSubject = "Thread Subject",
 			userName = "Test Test",
-			userName2 = "Test Test"
-		);
+			userName2 = "Test Test");
 
 		Mentions.viewMentionTagLink(
 			mentionsUserFullName = "userfn userln",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
 	}
 
 	@priority = "5"
@@ -137,47 +125,38 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Message Boards"
-		);
+			portlet = "Message Boards");
 
 		MessageboardsThread.addCP(
 			threadBody = "Thread Body",
-			threadSubject = "Thread Subject"
-		);
+			threadSubject = "Thread Subject");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Message Boards"
-		);
+			portlet = "Message Boards");
 
 		Mentions.addMentionViaMessageBoardThreadEdit(
 			mentionsUserFullName = "userfn userln",
 			mentionsUserScreenName = "usersn",
-			threadBody = "Thread Body",
-			threadSubject = "Thread Subject"
-		);
+			threadBody = "Thread Body Edit",
+			threadSubject = "Thread Subject");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Message Boards"
-		);
+			portlet = "Message Boards");
 
 		MessageboardsThread.viewCP(
 			replyCount = "0",
-			threadBody = "Thread Body",
-			threadSubject = "Thread Subject"
-		);
+			threadBody = "Thread Body Edit",
+			threadSubject = "Thread Subject");
 
 		Mentions.viewMentionTagLink(
 			mentionsUserFullName = "userfn userln",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
 	}
+
 }

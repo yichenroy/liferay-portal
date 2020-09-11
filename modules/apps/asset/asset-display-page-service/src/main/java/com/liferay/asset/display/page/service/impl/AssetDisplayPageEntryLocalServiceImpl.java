@@ -21,10 +21,16 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -85,13 +91,12 @@ public class AssetDisplayPageEntryLocalServiceImpl
 
 		assetDisplayPageEntry.setPlid(plid);
 
-		assetDisplayPageEntryPersistence.update(assetDisplayPageEntry);
-
-		// Layout Page Template Entry
+		assetDisplayPageEntry = assetDisplayPageEntryPersistence.update(
+			assetDisplayPageEntry);
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
-				assetDisplayPageEntryId);
+				layoutPageTemplateEntryId);
 
 		if (layoutPageTemplateEntry != null) {
 			layoutPageTemplateEntry.setModifiedDate(new Date());
@@ -171,13 +176,12 @@ public class AssetDisplayPageEntryLocalServiceImpl
 
 		assetDisplayPageEntry.setPlid(plid);
 
-		assetDisplayPageEntryPersistence.update(assetDisplayPageEntry);
-
-		// Layout Page Template Entry
+		assetDisplayPageEntry = assetDisplayPageEntryPersistence.update(
+			assetDisplayPageEntry);
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
-				assetDisplayPageEntryId);
+				layoutPageTemplateEntryId);
 
 		if (layoutPageTemplateEntry != null) {
 			layoutPageTemplateEntry.setModifiedDate(new Date());
@@ -190,19 +194,59 @@ public class AssetDisplayPageEntryLocalServiceImpl
 	}
 
 	private long _getPlid(
-			long groupId, long classNameId, long classPK,
-			long layoutPageTemplateEntryId)
-		throws PortalException {
+		long groupId, long classNameId, long classPK,
+		long layoutPageTemplateEntryId) {
 
-		AssetRendererFactory assetRendererFactory =
+		String className = _portal.getClassName(classNameId);
+
+		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
+			_layoutDisplayPageProviderTracker.
+				getLayoutDisplayPageProviderByClassName(className);
+
+		if (layoutDisplayPageProvider == null) {
+			return LayoutConstants.DEFAULT_PLID;
+		}
+
+		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
+			layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+				new InfoItemReference(className, classPK));
+
+		if (layoutDisplayPageObjectProvider == null) {
+			return LayoutConstants.DEFAULT_PLID;
+		}
+
+		long classTypeId = layoutDisplayPageObjectProvider.getClassTypeId();
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry = Optional.ofNullable(
+			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
+				layoutPageTemplateEntryId)
+		).orElseGet(
+			() ->
+				_layoutPageTemplateEntryLocalService.
+					fetchDefaultLayoutPageTemplateEntry(
+						groupId, classNameId, classTypeId)
+		);
+
+		if (layoutPageTemplateEntry != null) {
+			return layoutPageTemplateEntry.getPlid();
+		}
+
+		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.
 				getAssetRendererFactoryByClassNameId(classNameId);
 
 		AssetEntry assetEntry = null;
 
 		if (assetRendererFactory != null) {
-			assetEntry = assetRendererFactory.getAssetEntry(
-				_portal.getClassName(classNameId), classPK);
+			try {
+				assetEntry = assetRendererFactory.getAssetEntry(
+					_portal.getClassName(classNameId), classPK);
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException, portalException);
+				}
+			}
 		}
 		else {
 			assetEntry = _assetEntryLocalService.fetchEntry(
@@ -211,19 +255,6 @@ public class AssetDisplayPageEntryLocalServiceImpl
 
 		if (assetEntry == null) {
 			return LayoutConstants.DEFAULT_PLID;
-		}
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry = Optional.ofNullable(
-			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
-				layoutPageTemplateEntryId)
-		).orElse(
-			_layoutPageTemplateEntryLocalService.
-				fetchDefaultLayoutPageTemplateEntry(
-					groupId, classNameId, assetEntry.getClassTypeId())
-		);
-
-		if (layoutPageTemplateEntry != null) {
-			return layoutPageTemplateEntry.getPlid();
 		}
 
 		Layout layout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
@@ -243,8 +274,14 @@ public class AssetDisplayPageEntryLocalServiceImpl
 		return LayoutConstants.DEFAULT_PLID;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetDisplayPageEntryLocalServiceImpl.class);
+
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
+	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

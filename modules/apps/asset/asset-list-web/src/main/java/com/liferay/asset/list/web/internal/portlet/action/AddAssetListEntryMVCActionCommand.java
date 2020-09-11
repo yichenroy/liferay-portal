@@ -20,8 +20,8 @@ import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntryService;
 import com.liferay.asset.list.web.internal.handler.AssetListEntryExceptionRequestHandler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -74,16 +74,17 @@ public class AddAssetListEntryMVCActionCommand extends BaseMVCActionCommand {
 					(ThemeDisplay)actionRequest.getAttribute(
 						WebKeys.THEME_DISPLAY);
 
-				UnicodeProperties properties = new UnicodeProperties(true);
+				UnicodeProperties unicodeProperties = new UnicodeProperties(
+					true);
 
-				properties.setProperty(
+				unicodeProperties.setProperty(
 					"groupIds", String.valueOf(themeDisplay.getScopeGroupId()));
 
 				assetListEntry =
 					_assetListEntryService.addDynamicAssetListEntry(
 						serviceContext.getUserId(),
 						serviceContext.getScopeGroupId(), title,
-						properties.toString(), serviceContext);
+						unicodeProperties.toString(), serviceContext);
 			}
 			else {
 				assetListEntry = _assetListEntryService.addAssetListEntry(
@@ -91,10 +92,9 @@ public class AddAssetListEntryMVCActionCommand extends BaseMVCActionCommand {
 					serviceContext);
 			}
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-			jsonObject.put(
-				"redirectURL", getRedirectURL(actionResponse, assetListEntry));
+			JSONObject jsonObject = JSONUtil.put(
+				"redirectURL",
+				getRedirectURL(actionRequest, actionResponse, assetListEntry));
 
 			if (SessionErrors.contains(
 					actionRequest, "assetListEntryNameInvalid")) {
@@ -105,18 +105,19 @@ public class AddAssetListEntryMVCActionCommand extends BaseMVCActionCommand {
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			SessionErrors.add(actionRequest, "assetListEntryNameInvalid");
 
 			hideDefaultErrorMessage(actionRequest);
 
 			_assetListEntryExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, pe);
+				actionRequest, actionResponse, portalException);
 		}
 	}
 
 	protected String getRedirectURL(
-		ActionResponse actionResponse, AssetListEntry assetListEntry) {
+		ActionRequest actionRequest, ActionResponse actionResponse,
+		AssetListEntry assetListEntry) {
 
 		LiferayPortletResponse liferayPortletResponse =
 			_portal.getLiferayPortletResponse(actionResponse);
@@ -124,6 +125,13 @@ public class AddAssetListEntryMVCActionCommand extends BaseMVCActionCommand {
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 		portletURL.setParameter("mvcPath", "/edit_asset_list_entry.jsp");
+
+		String backURL = ParamUtil.getString(actionRequest, "backURL");
+
+		if (backURL != null) {
+			portletURL.setParameter("backURL", backURL);
+		}
+
 		portletURL.setParameter(
 			"assetListEntryId",
 			String.valueOf(assetListEntry.getAssetListEntryId()));

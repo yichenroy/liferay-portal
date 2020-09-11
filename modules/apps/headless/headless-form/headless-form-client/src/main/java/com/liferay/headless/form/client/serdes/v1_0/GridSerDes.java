@@ -14,14 +14,15 @@
 
 package com.liferay.headless.form.client.serdes.v1_0;
 
-import com.liferay.headless.form.client.dto.v1_0.Column;
+import com.liferay.headless.form.client.dto.v1_0.FormFieldOption;
 import com.liferay.headless.form.client.dto.v1_0.Grid;
-import com.liferay.headless.form.client.dto.v1_0.Row;
 import com.liferay.headless.form.client.json.BaseJSONParser;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import javax.annotation.Generated;
@@ -59,7 +60,7 @@ public class GridSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"columns\":");
+			sb.append("\"columns\": ");
 
 			sb.append("[");
 
@@ -79,7 +80,7 @@ public class GridSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(grid.getId());
 		}
@@ -89,7 +90,7 @@ public class GridSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"rows\":");
+			sb.append("\"rows\": ");
 
 			sb.append("[");
 
@@ -109,12 +110,18 @@ public class GridSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		GridJSONParser gridJSONParser = new GridJSONParser();
+
+		return gridJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(Grid grid) {
 		if (grid == null) {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		if (grid.getColumns() == null) {
 			map.put("columns", null);
@@ -140,13 +147,7 @@ public class GridSerDes {
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class GridJSONParser extends BaseJSONParser<Grid> {
+	public static class GridJSONParser extends BaseJSONParser<Grid> {
 
 		@Override
 		protected Grid createDTO() {
@@ -169,9 +170,10 @@ public class GridSerDes {
 						Stream.of(
 							toStrings((Object[])jsonParserFieldValue)
 						).map(
-							object -> ColumnSerDes.toDTO((String)object)
+							object -> FormFieldOptionSerDes.toDTO(
+								(String)object)
 						).toArray(
-							size -> new Column[size]
+							size -> new FormFieldOption[size]
 						));
 				}
 			}
@@ -186,18 +188,87 @@ public class GridSerDes {
 						Stream.of(
 							toStrings((Object[])jsonParserFieldValue)
 						).map(
-							object -> RowSerDes.toDTO((String)object)
+							object -> FormFieldOptionSerDes.toDTO(
+								(String)object)
 						).toArray(
-							size -> new Row[size]
+							size -> new FormFieldOption[size]
 						));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

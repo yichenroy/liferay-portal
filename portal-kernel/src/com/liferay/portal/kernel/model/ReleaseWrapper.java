@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,10 +29,9 @@ import java.util.Map;
  * @see Release
  * @generated
  */
-@ProviderType
 public class ReleaseWrapper
 	extends BaseModelWrapper<Release>
-	implements Release, ModelWrapper<Release> {
+	implements ModelWrapper<Release>, Release {
 
 	public ReleaseWrapper(Release release) {
 		super(release);

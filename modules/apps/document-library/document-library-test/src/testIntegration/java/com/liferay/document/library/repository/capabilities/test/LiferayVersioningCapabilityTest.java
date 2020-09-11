@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -195,29 +196,66 @@ public class LiferayVersioningCapabilityTest {
 			});
 	}
 
+	@Test
+	public void testRespectsTheLimitWhenCheckedInAndOut() throws Exception {
+		int numberOfVersions = 2;
+
+		_withMaximumNumberOfVersionsConfigured(
+			numberOfVersions,
+			() -> {
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						_group.getGroupId());
+
+				FileEntry fileEntry = _addRandomFileEntry(serviceContext);
+
+				for (int i = 0; i < (numberOfVersions + 10); i++) {
+					DLAppServiceUtil.checkOutFileEntry(
+						fileEntry.getFileEntryId(), serviceContext);
+
+					DLAppServiceUtil.checkInFileEntry(
+						fileEntry.getFileEntryId(),
+						DLVersionNumberIncrease.MAJOR,
+						StringUtil.randomString(), serviceContext);
+				}
+
+				List<FileVersion> fileVersions = fileEntry.getFileVersions(
+					WorkflowConstants.STATUS_ANY);
+
+				Assert.assertEquals(
+					"The number of versions stored are: ", numberOfVersions,
+					fileVersions.size());
+
+				FileVersion fileVersion = fileVersions.get(0);
+
+				Assert.assertEquals("13.0", fileVersion.getVersion());
+
+				fileVersion = fileVersions.get(1);
+
+				Assert.assertEquals("12.0", fileVersion.getVersion());
+			});
+	}
+
 	private FileEntry _addRandomFileEntry(ServiceContext serviceContext)
 		throws PortalException {
-
-		String content = StringUtil.randomString();
 
 		return DLAppLocalServiceUtil.addFileEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
-			content.getBytes(), serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
 	}
 
 	private FileEntry _generateNewVersion(
 			FileEntry fileEntry, ServiceContext serviceContext)
 		throws PortalException {
 
-		String content = RandomTestUtil.randomString();
-
 		return DLAppServiceUtil.updateFileEntry(
 			fileEntry.getFileEntryId(), fileEntry.getFileName(),
 			fileEntry.getMimeType(), fileEntry.getTitle(),
 			fileEntry.getDescription(), RandomTestUtil.randomString(),
-			DLVersionNumberIncrease.MINOR, content.getBytes(), serviceContext);
+			DLVersionNumberIncrease.MINOR, TestDataConstants.TEST_BYTE_ARRAY,
+			serviceContext);
 	}
 
 	private void _withMaximumNumberOfVersionsConfigured(

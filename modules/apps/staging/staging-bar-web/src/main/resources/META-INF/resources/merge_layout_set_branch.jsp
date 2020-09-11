@@ -32,7 +32,7 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 }
 %>
 
-<div class="container-fluid-1280">
+<clay:container-fluid>
 	<div class="site-pages-variation taglib-header">
 		<a class="icon-monospaced list-unstyled portlet-icon-back text-default" href="<%= HtmlUtil.escapeAttribute(redirect) %>" title="<%= HtmlUtil.escapeAttribute(LanguageUtil.get(resourceBundle, "back")) %>">
 			<liferay-ui:icon
@@ -100,21 +100,25 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</div>
+</clay:container-fluid>
 
-<aui:script>
+<script>
 	function <portlet:namespace />selectLayoutSetBranch(layoutSetBranchId) {
-		var layoutSetBranch = AUI.$('#<portlet:namespace />' + layoutSetBranchId);
+		var layoutSetBranch = document.getElementById(
+			'<portlet:namespace />' + layoutSetBranchId
+		);
 
-		var mergeLayoutSetBranchId = layoutSetBranch.attr('data-layoutSetBranchId');
-		var mergeLayoutSetBranchMessage = layoutSetBranch.attr('data-layoutSetBranchMessage');
-
-		if (confirm(mergeLayoutSetBranchMessage)) {
-			var form = document.<portlet:namespace />fm4;
-
-			form.<portlet:namespace />mergeLayoutSetBranchId.value = mergeLayoutSetBranchId;
-
-			submitForm(form);
+		if (
+			layoutSetBranch &&
+			confirm(layoutSetBranch.getAttribute('data-layoutSetBranchMessage'))
+		) {
+			Liferay.Util.postForm(document.<portlet:namespace />fm4, {
+				data: {
+					mergeLayoutSetBranchId: layoutSetBranch.getAttribute(
+						'data-layoutSetBranchId'
+					),
+				},
+			});
 		}
 	}
-</aui:script>
+</script>

@@ -14,8 +14,6 @@
 
 package com.liferay.change.tracking.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.change.tracking.service.CTCollectionLocalServiceUtil;
  * @see CTCollection
  * @generated
  */
-@ProviderType
 public abstract class CTCollectionBaseImpl
 	extends CTCollectionModelImpl implements CTCollection {
 

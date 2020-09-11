@@ -14,9 +14,9 @@
 
 package com.liferay.portal.instance.lifecycle;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.Company;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -24,14 +24,6 @@ import com.liferay.portal.kernel.model.Company;
 @ProviderType
 public abstract class BasePortalInstanceLifecycleListener
 	implements PortalInstanceLifecycleListener {
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void portalInstancePreregistered(long companyId) {
-	}
 
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {

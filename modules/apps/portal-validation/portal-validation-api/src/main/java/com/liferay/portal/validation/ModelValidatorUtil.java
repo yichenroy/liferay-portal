@@ -14,14 +14,11 @@
 
 package com.liferay.portal.validation;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ClassedModel;
 
 /**
  * @author Máté Thurzó
  */
-@ProviderType
 public class ModelValidatorUtil {
 
 	public static <T extends ClassedModel> ModelValidationResults validate(

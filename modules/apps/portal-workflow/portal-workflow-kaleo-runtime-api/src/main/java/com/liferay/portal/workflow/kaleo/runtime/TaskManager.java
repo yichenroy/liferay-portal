@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.runtime;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
@@ -25,6 +23,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -45,15 +45,14 @@ public interface TaskManager {
 		throws WorkflowException;
 
 	public WorkflowTask completeWorkflowTask(
-			long workflowTaskInstanceId, long workflowTaskFormId,
-			String formValues, Map<String, Serializable> workflowContext,
+			long workflowTaskId, long workflowTaskFormId, String formValues,
+			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws WorkflowException;
 
 	public WorkflowTask completeWorkflowTask(
-			long workflowTaskInstanceId, long workflowTaskFormId,
-			String formValues, String transitionName,
-			Map<String, Serializable> workflowContext,
+			long workflowTaskId, long workflowTaskFormId, String formValues,
+			String transitionName, Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws WorkflowException;
 
@@ -64,7 +63,7 @@ public interface TaskManager {
 		throws WorkflowException;
 
 	public List<String> getWorkflowTaskFormDefinitions(
-			long workflowTaskInstanceId, ServiceContext serviceContext)
+			long workflowTaskId, ServiceContext serviceContext)
 		throws WorkflowException;
 
 	public WorkflowTask updateDueDate(

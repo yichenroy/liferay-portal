@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.documentlibrary.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.kernel.service.DLFileEntryTypeServiceUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -63,11 +61,49 @@ import java.util.Map;
  *
  * @author Brian Wing Shun Chan
  * @see DLFileEntryTypeServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class DLFileEntryTypeServiceSoap {
 
+	public static com.liferay.document.library.kernel.model.DLFileEntryTypeSoap
+			addFileEntryType(
+				long groupId, long dataDefinitionId, String fileEntryTypeKey,
+				String[] nameMapLanguageIds, String[] nameMapValues,
+				String[] descriptionMapLanguageIds,
+				String[] descriptionMapValues,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws RemoteException {
+
+		try {
+			Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
+				nameMapLanguageIds, nameMapValues);
+			Map<Locale, String> descriptionMap =
+				LocalizationUtil.getLocalizationMap(
+					descriptionMapLanguageIds, descriptionMapValues);
+
+			com.liferay.document.library.kernel.model.DLFileEntryType
+				returnValue = DLFileEntryTypeServiceUtil.addFileEntryType(
+					groupId, dataDefinitionId, fileEntryTypeKey, nameMap,
+					descriptionMap, serviceContext);
+
+			return com.liferay.document.library.kernel.model.
+				DLFileEntryTypeSoap.toSoapModel(returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addFileEntryType(long, String, Map, Map, long,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public static com.liferay.document.library.kernel.model.DLFileEntryTypeSoap
 			addFileEntryType(
 				long groupId, String fileEntryTypeKey,
@@ -92,13 +128,19 @@ public class DLFileEntryTypeServiceSoap {
 			return com.liferay.document.library.kernel.model.
 				DLFileEntryTypeSoap.toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addFileEntryType(long, String, Map, Map, long,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public static com.liferay.document.library.kernel.model.DLFileEntryTypeSoap
 			addFileEntryType(
 				long groupId, String name, String description,
@@ -115,10 +157,10 @@ public class DLFileEntryTypeServiceSoap {
 			return com.liferay.document.library.kernel.model.
 				DLFileEntryTypeSoap.toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -128,10 +170,10 @@ public class DLFileEntryTypeServiceSoap {
 		try {
 			DLFileEntryTypeServiceUtil.deleteFileEntryType(fileEntryTypeId);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -147,10 +189,10 @@ public class DLFileEntryTypeServiceSoap {
 			return com.liferay.document.library.kernel.model.
 				DLFileEntryTypeSoap.toSoapModel(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -168,10 +210,10 @@ public class DLFileEntryTypeServiceSoap {
 			return com.liferay.document.library.kernel.model.
 				DLFileEntryTypeSoap.toSoapModels(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -189,10 +231,10 @@ public class DLFileEntryTypeServiceSoap {
 			return com.liferay.document.library.kernel.model.
 				DLFileEntryTypeSoap.toSoapModels(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -205,10 +247,10 @@ public class DLFileEntryTypeServiceSoap {
 
 			return returnValue;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -228,10 +270,10 @@ public class DLFileEntryTypeServiceSoap {
 			return com.liferay.document.library.kernel.model.
 				DLFileEntryTypeSoap.toSoapModels(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -252,10 +294,10 @@ public class DLFileEntryTypeServiceSoap {
 			return com.liferay.document.library.kernel.model.
 				DLFileEntryTypeSoap.toSoapModels(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -279,10 +321,10 @@ public class DLFileEntryTypeServiceSoap {
 			return com.liferay.document.library.kernel.model.
 				DLFileEntryTypeSoap.toSoapModels(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -298,10 +340,10 @@ public class DLFileEntryTypeServiceSoap {
 
 			return returnValue;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -316,13 +358,46 @@ public class DLFileEntryTypeServiceSoap {
 
 			return returnValue;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
+	public static com.liferay.document.library.kernel.model.DLFileEntryTypeSoap
+			updateFileEntryType(
+				long fileEntryTypeId, String[] nameMapLanguageIds,
+				String[] nameMapValues, String[] descriptionMapLanguageIds,
+				String[] descriptionMapValues)
+		throws RemoteException {
+
+		try {
+			Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
+				nameMapLanguageIds, nameMapValues);
+			Map<Locale, String> descriptionMap =
+				LocalizationUtil.getLocalizationMap(
+					descriptionMapLanguageIds, descriptionMapValues);
+
+			com.liferay.document.library.kernel.model.DLFileEntryType
+				returnValue = DLFileEntryTypeServiceUtil.updateFileEntryType(
+					fileEntryTypeId, nameMap, descriptionMap);
+
+			return com.liferay.document.library.kernel.model.
+				DLFileEntryTypeSoap.toSoapModel(returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #updateFileEntryType(long, Map, Map)}
+	 */
+	@Deprecated
 	public static void updateFileEntryType(
 			long fileEntryTypeId, String[] nameMapLanguageIds,
 			String[] nameMapValues, String[] descriptionMapLanguageIds,
@@ -341,13 +416,18 @@ public class DLFileEntryTypeServiceSoap {
 				fileEntryTypeId, nameMap, descriptionMap, ddmStructureIds,
 				serviceContext);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #updateFileEntryType(long, Map, Map)}
+	 */
+	@Deprecated
 	public static void updateFileEntryType(
 			long fileEntryTypeId, String name, String description,
 			long[] ddmStructureIds,
@@ -359,10 +439,10 @@ public class DLFileEntryTypeServiceSoap {
 				fileEntryTypeId, name, description, ddmStructureIds,
 				serviceContext);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 

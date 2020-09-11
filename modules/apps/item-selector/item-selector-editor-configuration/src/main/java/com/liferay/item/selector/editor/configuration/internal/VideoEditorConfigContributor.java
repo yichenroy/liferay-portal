@@ -64,14 +64,14 @@ public class VideoEditorConfigContributor extends BaseEditorConfigContributor {
 
 		PortletURL itemSelectorURL = getItemSelectorPortletURL(
 			inputEditorTaglibAttributes, requestBackedPortletURLFactory,
-			itemSelectorCriteria.toArray(
-				new ItemSelectorCriterion[itemSelectorCriteria.size()]));
+			itemSelectorCriteria.toArray(new ItemSelectorCriterion[0]));
 
 		if (itemSelectorURL != null) {
 			jsonObject.put(
-				"filebrowserVideoBrowseLinkUrl", itemSelectorURL.toString());
-			jsonObject.put(
-				"filebrowserVideoBrowseUrl", itemSelectorURL.toString());
+				"filebrowserVideoBrowseLinkUrl", itemSelectorURL.toString()
+			).put(
+				"filebrowserVideoBrowseUrl", itemSelectorURL.toString()
+			);
 		}
 	}
 

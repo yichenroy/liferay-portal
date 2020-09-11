@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.opener.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.opener.model.DLOpenerFileEntryReference;
 import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLoc
  * @see DLOpenerFileEntryReference
  * @generated
  */
-@ProviderType
 public abstract class DLOpenerFileEntryReferenceBaseImpl
 	extends DLOpenerFileEntryReferenceModelImpl
 	implements DLOpenerFileEntryReference {

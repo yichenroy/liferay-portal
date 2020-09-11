@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.internal.util.ExportImportPermissionUtil;
 import com.liferay.portal.kernel.exception.NoSuchRoleException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -38,7 +36,6 @@ import java.util.Map;
 /**
  * @author Charles May
  */
-@ProviderType
 public class LayoutCache {
 
 	public Role getNameRole(long companyId, String roleName)
@@ -52,12 +49,12 @@ public class LayoutCache {
 
 				nameRolesMap.put(roleName, role);
 			}
-			catch (NoSuchRoleException nsre) {
+			catch (NoSuchRoleException noSuchRoleException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(nsre, nsre);
+					_log.debug(noSuchRoleException, noSuchRoleException);
 				}
 			}
 		}
@@ -77,12 +74,12 @@ public class LayoutCache {
 
 				uuidRolesMap.put(uuid, role);
 			}
-			catch (NoSuchRoleException nsre) {
+			catch (NoSuchRoleException noSuchRoleException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(nsre, nsre);
+					_log.debug(noSuchRoleException, noSuchRoleException);
 				}
 			}
 		}

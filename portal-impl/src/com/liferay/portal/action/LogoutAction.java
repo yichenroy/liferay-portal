@@ -18,7 +18,7 @@ import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManag
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.struts.Action;
-import com.liferay.portal.struts.ActionConstants;
+import com.liferay.portal.struts.constants.ActionConstants;
 import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
 
@@ -32,20 +32,22 @@ public class LogoutAction implements Action {
 
 	@Override
 	public ActionForward execute(
-			ActionMapping actionMapping, HttpServletRequest request,
-			HttpServletResponse response)
+			ActionMapping actionMapping, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		try {
-			AuthenticatedSessionManagerUtil.logout(request, response);
+			AuthenticatedSessionManagerUtil.logout(
+				httpServletRequest, httpServletResponse);
 
-			request.setAttribute(WebKeys.LOGOUT, Boolean.TRUE);
+			httpServletRequest.setAttribute(WebKeys.LOGOUT, Boolean.TRUE);
 
 			return actionMapping.getActionForward(
 				ActionConstants.COMMON_REFERER);
 		}
-		catch (Exception e) {
-			PortalUtil.sendError(e, request, response);
+		catch (Exception exception) {
+			PortalUtil.sendError(
+				exception, httpServletRequest, httpServletResponse);
 
 			return null;
 		}

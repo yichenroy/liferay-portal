@@ -14,11 +14,11 @@
 
 package com.liferay.portal.odata.filter.expression;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
 
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Defines expression visitors with arbitrary return types. This interface's
@@ -118,6 +118,21 @@ public interface ExpressionVisitor<T> {
 			"Unsupported method lambdaVariableExpression with lambda " +
 				"variable expression " + lambdaVariableExpression);
 	}
+
+	/**
+	 * Called for each {@link ListExpression}.
+	 *
+	 * @param  operation the list expression's operation
+	 * @param  left the return value of the left subtree
+	 * @param  right the return value of the lists of right subtrees
+	 * @return T the object of type {@code T}
+	 * @throws ExpressionVisitException if an expression visit exception
+	 *         occurred
+	 * @review
+	 */
+	public T visitListExpressionOperation(
+			ListExpression.Operation operation, T left, List<T> right)
+		throws ExpressionVisitException;
 
 	/**
 	 * Called for each {@link LiteralExpression}.

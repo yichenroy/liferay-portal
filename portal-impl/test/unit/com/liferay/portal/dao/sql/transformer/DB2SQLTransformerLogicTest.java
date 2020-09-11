@@ -14,9 +14,8 @@
 
 package com.liferay.portal.dao.sql.transformer;
 
-import com.liferay.portal.dao.db.TestDB;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DBType;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -42,13 +41,6 @@ public class DB2SQLTransformerLogicTest
 		sb.append("END");
 
 		return sb.toString();
-	}
-
-	@Test
-	public void testReplaceAlterColumnType() {
-		Assert.assertEquals(
-			"ALTER TABLE T ALTER COLUMN C SET DATA TYPE VARCHAR(256)",
-			sqlTransformer.transform("ALTER_COLUMN_TYPE T C VARCHAR(256)"));
 	}
 
 	@Override
@@ -82,7 +74,7 @@ public class DB2SQLTransformerLogicTest
 
 	@Override
 	protected String getCastClobTextTransformedSQL() {
-		return "select CAST(foo AS VARCHAR(254)) from Foo";
+		return "select CAST(foo AS VARCHAR(32672)) from Foo";
 	}
 
 	@Override

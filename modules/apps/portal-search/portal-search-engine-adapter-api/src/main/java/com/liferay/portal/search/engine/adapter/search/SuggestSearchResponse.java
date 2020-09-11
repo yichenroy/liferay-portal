@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.engine.adapter.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,7 +22,6 @@ import java.util.Map;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class SuggestSearchResponse implements SearchResponse {
 
 	public void addSuggestSearchResult(

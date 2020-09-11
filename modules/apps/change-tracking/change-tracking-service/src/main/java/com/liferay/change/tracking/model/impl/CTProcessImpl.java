@@ -14,32 +14,8 @@
 
 package com.liferay.change.tracking.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil;
-
 /**
  * @author Daniel Kocsis
  */
-@ProviderType
 public class CTProcessImpl extends CTProcessBaseImpl {
-
-	public CTProcessImpl() {
-	}
-
-	@Override
-	public int getStatus() {
-		BackgroundTask backgroundTask =
-			BackgroundTaskManagerUtil.fetchBackgroundTask(
-				getBackgroundTaskId());
-
-		if (backgroundTask == null) {
-			return BackgroundTaskConstants.STATUS_SUCCESSFUL;
-		}
-
-		return backgroundTask.getStatus();
-	}
-
 }

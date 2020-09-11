@@ -14,12 +14,12 @@
 
 package com.liferay.journal.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.TreeModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the JournalArticle service. Represents a row in the &quot;JournalArticle&quot; database table, with each column mapped to a property of this class.
@@ -115,8 +115,12 @@ public interface JournalArticle
 
 	public String getDescription(String languageId, boolean useDefault);
 
+	@com.liferay.portal.kernel.json.JSON
+	public String getDescriptionCurrentValue();
+
 	public java.util.Map<java.util.Locale, String> getDescriptionMap();
 
+	@com.liferay.portal.kernel.json.JSON
 	public String getDescriptionMapAsXML();
 
 	public com.liferay.portal.kernel.xml.Document getDocument();
@@ -141,7 +145,9 @@ public interface JournalArticle
 	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
 			getImagesFileEntries(
 				int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator obc)
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.portal.kernel.repository.model.FileEntry>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public int getImagesFileEntriesCount()
@@ -196,6 +202,7 @@ public interface JournalArticle
 
 	public java.util.Map<java.util.Locale, String> getTitleMap();
 
+	@com.liferay.portal.kernel.json.JSON
 	public String getTitleMapAsXML();
 
 	public String getUrlTitle(java.util.Locale locale)

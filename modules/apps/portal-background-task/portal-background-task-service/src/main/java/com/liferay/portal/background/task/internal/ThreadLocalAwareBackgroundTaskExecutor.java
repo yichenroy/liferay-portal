@@ -43,11 +43,8 @@ public class ThreadLocalAwareBackgroundTaskExecutor
 
 	@Override
 	public BackgroundTaskExecutor clone() {
-		BackgroundTaskExecutor backgroundTaskExecutor =
-			new ThreadLocalAwareBackgroundTaskExecutor(
-				getBackgroundTaskExecutor(), _backgroundTaskThreadLocalManager);
-
-		return backgroundTaskExecutor;
+		return new ThreadLocalAwareBackgroundTaskExecutor(
+			getBackgroundTaskExecutor(), _backgroundTaskThreadLocalManager);
 	}
 
 	@Override
@@ -62,11 +59,11 @@ public class ThreadLocalAwareBackgroundTaskExecutor
 				_backgroundTaskThreadLocalManager.deserializeThreadLocals(
 					backgroundTask.getTaskContextMap());
 			}
-			catch (StaleBackgroundTaskException sbte) {
+			catch (StaleBackgroundTaskException staleBackgroundTaskException) {
 				if (_log.isInfoEnabled()) {
 					_log.info(
 						"Skipped stale background task " + backgroundTask,
-						sbte);
+						staleBackgroundTaskException);
 				}
 
 				return BackgroundTaskResult.SUCCESS;

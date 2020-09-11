@@ -53,13 +53,6 @@ public class UploadProgressTag extends IncludeTag {
 		_message = message;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setRedirect(String redirect) {
-	}
-
 	public void setUpdatePeriod(Integer updatePeriod) {
 		_updatePeriod = updatePeriod;
 	}
@@ -80,11 +73,13 @@ public class UploadProgressTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute("liferay-ui:progress:height", _height);
-		request.setAttribute("liferay-ui:progress:id", _id);
-		request.setAttribute("liferay-ui:progress:message", _message);
-		request.setAttribute("liferay-ui:progress:updatePeriod", _updatePeriod);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute("liferay-ui:progress:height", _height);
+		httpServletRequest.setAttribute("liferay-ui:progress:id", _id);
+		httpServletRequest.setAttribute(
+			"liferay-ui:progress:message", _message);
+		httpServletRequest.setAttribute(
+			"liferay-ui:progress:updatePeriod", _updatePeriod);
 	}
 
 	private static final String _PAGE = "/html/taglib/ui/progress/page.jsp";

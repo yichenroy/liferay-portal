@@ -77,7 +77,7 @@ public class SelectGlobalTemplatesVerticalCard implements VerticalCard {
 
 			data.put("add-layout-url", addLayoutURL.toString());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return data;
@@ -86,7 +86,7 @@ public class SelectGlobalTemplatesVerticalCard implements VerticalCard {
 	@Override
 	public String getElementClasses() {
 		return "add-layout-action-option card-interactive " +
-			"card-interactive-primary";
+			"card-interactive-primary card-type-template template-card";
 	}
 
 	@Override

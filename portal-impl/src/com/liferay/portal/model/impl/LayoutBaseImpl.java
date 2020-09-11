@@ -14,10 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 
@@ -33,7 +29,6 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
  * @see Layout
  * @generated
  */
-@ProviderType
 public abstract class LayoutBaseImpl extends LayoutModelImpl implements Layout {
 
 	/*
@@ -47,12 +42,7 @@ public abstract class LayoutBaseImpl extends LayoutModelImpl implements Layout {
 			LayoutLocalServiceUtil.addLayout(this);
 		}
 		else {
-			try {
-				LayoutLocalServiceUtil.updateLayout(this);
-			}
-			catch (PortalException pe) {
-				throw new SystemException(pe);
-			}
+			LayoutLocalServiceUtil.updateLayout(this);
 		}
 	}
 

@@ -17,7 +17,7 @@ package com.liferay.portal.action;
 import com.liferay.portal.kernel.service.UserServiceUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.struts.Action;
-import com.liferay.portal.struts.ActionConstants;
+import com.liferay.portal.struts.constants.ActionConstants;
 import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
 
@@ -31,13 +31,12 @@ public class UpdateTermsOfUseAction implements Action {
 
 	@Override
 	public ActionForward execute(
-			ActionMapping actionMapping, HttpServletRequest request,
-			HttpServletResponse response)
+			ActionMapping actionMapping, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		long userId = PortalUtil.getUserId(request);
-
-		UserServiceUtil.updateAgreedToTermsOfUse(userId, true);
+		UserServiceUtil.updateAgreedToTermsOfUse(
+			PortalUtil.getUserId(httpServletRequest), true);
 
 		return actionMapping.getActionForward(
 			ActionConstants.COMMON_REFERER_JSP);

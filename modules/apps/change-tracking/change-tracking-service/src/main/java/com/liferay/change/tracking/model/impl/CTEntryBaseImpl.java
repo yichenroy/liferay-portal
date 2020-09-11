@@ -14,8 +14,6 @@
 
 package com.liferay.change.tracking.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTEntryLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.change.tracking.service.CTEntryLocalServiceUtil;
  * @see CTEntry
  * @generated
  */
-@ProviderType
 public abstract class CTEntryBaseImpl
 	extends CTEntryModelImpl implements CTEntry {
 

@@ -14,15 +14,12 @@
 
 package com.liferay.site.navigation.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringPool;
 import com.liferay.site.navigation.constants.SiteNavigationConstants;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class SiteNavigationMenuImpl extends SiteNavigationMenuBaseImpl {
 
 	@Override

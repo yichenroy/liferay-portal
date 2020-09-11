@@ -14,11 +14,11 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the KaleoDefinitionVersion service. Represents a row in the &quot;KaleoDefinitionVersion&quot; database table, with each column mapped to a property of this class.
@@ -60,6 +60,10 @@ public interface KaleoDefinitionVersion
 
 			};
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public KaleoDefinition fetchKaleoDefinition();
 
 	public KaleoDefinition getKaleoDefinition()
@@ -68,6 +72,10 @@ public interface KaleoDefinitionVersion
 	public KaleoNode getKaleoStartNode()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public boolean hasIncompleteKaleoInstances();
 
 }

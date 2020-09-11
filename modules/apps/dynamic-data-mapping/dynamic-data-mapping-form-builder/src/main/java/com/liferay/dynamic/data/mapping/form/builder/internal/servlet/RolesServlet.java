@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.RoleService;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
@@ -55,15 +56,17 @@ public class RolesServlet extends BaseDDMFormBuilderServlet {
 
 	@Override
 	protected void doGet(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		JSONArray jsonArray = getRolesJSONArray();
 
-		response.setContentType(ContentTypes.APPLICATION_JSON);
-		response.setStatus(HttpServletResponse.SC_OK);
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
+		httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
-		ServletResponseUtil.write(response, jsonArray.toJSONString());
+		ServletResponseUtil.write(
+			httpServletResponse, jsonArray.toJSONString());
 	}
 
 	protected JSONArray getRolesJSONArray() {
@@ -71,7 +74,11 @@ public class RolesServlet extends BaseDDMFormBuilderServlet {
 
 		try {
 			List<Role> roles = _roleService.getRoles(
-				CompanyThreadLocal.getCompanyId(), null);
+				CompanyThreadLocal.getCompanyId(),
+				new int[] {
+					RoleConstants.TYPE_ORGANIZATION, RoleConstants.TYPE_REGULAR,
+					RoleConstants.TYPE_SITE
+				});
 
 			for (Role role : roles) {
 				jsonArray.put(toJSONObject(role));
@@ -79,9 +86,9 @@ public class RolesServlet extends BaseDDMFormBuilderServlet {
 
 			return jsonArray;
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -91,8 +98,11 @@ public class RolesServlet extends BaseDDMFormBuilderServlet {
 	protected JSONObject toJSONObject(Role role) {
 		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
-		jsonObject.put("id", role.getRoleId());
-		jsonObject.put("name", role.getName());
+		jsonObject.put(
+			"id", role.getRoleId()
+		).put(
+			"name", role.getName()
+		);
 
 		return jsonObject;
 	}

@@ -29,12 +29,11 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateHandlerRegistryUtil;
-import com.liferay.portal.kernel.template.TemplateManager;
-import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -51,7 +50,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -94,12 +92,12 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 				return _ddmTemplateLocalService.getDDMTemplateByUuidAndGroupId(
 					uuid, groupId);
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
+					_log.debug(portalException, portalException);
 				}
 			}
 
@@ -112,12 +110,12 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 				return _ddmTemplateLocalService.getDDMTemplateByUuidAndGroupId(
 					uuid, companyGroup.getGroupId());
 			}
-			catch (NoSuchTemplateException nste) {
+			catch (NoSuchTemplateException noSuchTemplateException) {
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -149,9 +147,9 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 
 			return group.getGroupId();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -165,15 +163,6 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 		}
 
 		return displayStyle.substring(DISPLAY_STYLE_PREFIX.length());
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	@Override
-	public String getDDMTemplateUuid(String displayStyle) {
-		return getDDMTemplateKey(displayStyle);
 	}
 
 	@Override
@@ -234,29 +223,6 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 		return portletDisplayDDMTemplate;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	@Override
-	public long getPortletDisplayTemplateDDMTemplateId(
-		long groupId, String displayStyle) {
-
-		long portletDisplayDDMTemplateId = 0;
-
-		if (displayStyle.startsWith(DISPLAY_STYLE_PREFIX)) {
-			DDMTemplate portletDisplayDDMTemplate = fetchDDMTemplate(
-				getDDMTemplateGroupId(groupId), displayStyle);
-
-			if (portletDisplayDDMTemplate != null) {
-				portletDisplayDDMTemplateId =
-					portletDisplayDDMTemplate.getTemplateId();
-			}
-		}
-
-		return portletDisplayDDMTemplateId;
-	}
-
 	@Override
 	public List<TemplateHandler> getPortletDisplayTemplateHandlers() {
 		List<TemplateHandler> templateHandlers =
@@ -293,89 +259,100 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 	public Map<String, TemplateVariableGroup> getTemplateVariableGroups(
 		String language) {
 
-		Map<String, TemplateVariableGroup> templateVariableGroups =
-			new LinkedHashMap<>();
+		return LinkedHashMapBuilder.<String, TemplateVariableGroup>put(
+			"fields",
+			() -> {
+				TemplateVariableGroup fieldsTemplateVariableGroup =
+					new TemplateVariableGroup("fields");
 
-		TemplateVariableGroup fieldsTemplateVariableGroup =
-			new TemplateVariableGroup("fields");
+				fieldsTemplateVariableGroup.addCollectionVariable(
+					"entries", List.class,
+					PortletDisplayTemplateConstants.ENTRIES, "entries-item",
+					null, "curEntry", null);
+				fieldsTemplateVariableGroup.addVariable(
+					"entry", null, PortletDisplayTemplateConstants.ENTRY);
 
-		fieldsTemplateVariableGroup.addCollectionVariable(
-			"entries", List.class, PortletDisplayTemplateConstants.ENTRIES,
-			"entries-item", null, "curEntry", null);
-		fieldsTemplateVariableGroup.addVariable(
-			"entry", null, PortletDisplayTemplateConstants.ENTRY);
+				return fieldsTemplateVariableGroup;
+			}
+		).put(
+			"general-variables",
+			() -> {
+				TemplateVariableGroup generalVariablesTemplateVariableGroup =
+					new TemplateVariableGroup("general-variables");
 
-		templateVariableGroups.put("fields", fieldsTemplateVariableGroup);
+				generalVariablesTemplateVariableGroup.addVariable(
+					"current-url", String.class,
+					PortletDisplayTemplateConstants.CURRENT_URL);
+				generalVariablesTemplateVariableGroup.addVariable(
+					"locale", Locale.class,
+					PortletDisplayTemplateConstants.LOCALE);
+				generalVariablesTemplateVariableGroup.addVariable(
+					"portlet-preferences", Map.class,
+					PortletDisplayTemplateConstants.PORTLET_PREFERENCES);
+				generalVariablesTemplateVariableGroup.addVariable(
+					"template-id", null,
+					PortletDisplayTemplateConstants.TEMPLATE_ID);
+				generalVariablesTemplateVariableGroup.addVariable(
+					"theme-display", ThemeDisplay.class,
+					PortletDisplayTemplateConstants.THEME_DISPLAY);
 
-		TemplateVariableGroup generalVariablesTemplateVariableGroup =
-			new TemplateVariableGroup("general-variables");
+				return generalVariablesTemplateVariableGroup;
+			}
+		).put(
+			"util",
+			() -> {
+				TemplateVariableGroup utilTemplateVariableGroup =
+					new TemplateVariableGroup("util");
 
-		generalVariablesTemplateVariableGroup.addVariable(
-			"current-url", String.class,
-			PortletDisplayTemplateConstants.CURRENT_URL);
-		generalVariablesTemplateVariableGroup.addVariable(
-			"locale", Locale.class, PortletDisplayTemplateConstants.LOCALE);
-		generalVariablesTemplateVariableGroup.addVariable(
-			"portlet-preferences", Map.class,
-			PortletDisplayTemplateConstants.PORTLET_PREFERENCES);
-		generalVariablesTemplateVariableGroup.addVariable(
-			"template-id", null, PortletDisplayTemplateConstants.TEMPLATE_ID);
-		generalVariablesTemplateVariableGroup.addVariable(
-			"theme-display", ThemeDisplay.class,
-			PortletDisplayTemplateConstants.THEME_DISPLAY);
+				utilTemplateVariableGroup.addVariable(
+					"http-request", HttpServletRequest.class,
+					PortletDisplayTemplateConstants.REQUEST);
 
-		templateVariableGroups.put(
-			"general-variables", generalVariablesTemplateVariableGroup);
+				if (language.equals(TemplateConstants.LANG_TYPE_VM)) {
+					utilTemplateVariableGroup.addVariable(
+						"liferay-taglib", VelocityTaglib.class,
+						PortletDisplayTemplateConstants.TAGLIB_LIFERAY);
+				}
 
-		TemplateVariableGroup utilTemplateVariableGroup =
-			new TemplateVariableGroup("util");
+				utilTemplateVariableGroup.addVariable(
+					"render-request", RenderRequest.class,
+					PortletDisplayTemplateConstants.RENDER_REQUEST);
+				utilTemplateVariableGroup.addVariable(
+					"render-response", RenderResponse.class,
+					PortletDisplayTemplateConstants.RENDER_RESPONSE);
 
-		utilTemplateVariableGroup.addVariable(
-			"http-request", HttpServletRequest.class,
-			PortletDisplayTemplateConstants.REQUEST);
-
-		if (language.equals(TemplateConstants.LANG_TYPE_VM)) {
-			utilTemplateVariableGroup.addVariable(
-				"liferay-taglib", VelocityTaglib.class,
-				PortletDisplayTemplateConstants.TAGLIB_LIFERAY);
-		}
-
-		utilTemplateVariableGroup.addVariable(
-			"render-request", RenderRequest.class,
-			PortletDisplayTemplateConstants.RENDER_REQUEST);
-		utilTemplateVariableGroup.addVariable(
-			"render-response", RenderResponse.class,
-			PortletDisplayTemplateConstants.RENDER_RESPONSE);
-
-		templateVariableGroups.put("util", utilTemplateVariableGroup);
-
-		return templateVariableGroups;
+				return utilTemplateVariableGroup;
+			}
+		).build();
 	}
 
 	@Override
 	public String renderDDMTemplate(
-			HttpServletRequest request, HttpServletResponse response,
-			DDMTemplate ddmTemplate, List<?> entries)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, DDMTemplate ddmTemplate,
+			List<?> entries)
 		throws Exception {
 
 		Map<String, Object> contextObjects = new HashMap<>();
 
 		return renderDDMTemplate(
-			request, response, ddmTemplate, entries, contextObjects);
+			httpServletRequest, httpServletResponse, ddmTemplate, entries,
+			contextObjects);
 	}
 
 	/**
 	 * Returns the DDM template's content.
 	 *
-	 * @param  request the request corresponding to a portlet render. In some
-	 *         cases, such as an {@link HttpServletRequest} corresponding to a
-	 *         portlet action or resource request, or for a regular servlet, the
-	 *         <code>renderRequest</code> is not accessible to the template.
-	 * @param  response the response corresponding to a portlet render. In some
-	 *         cases, such as an {@link HttpServletResponse} corresponding to a
-	 *         portlet action or resource response, or for a regular servlet,
-	 *         the <code>renderResponse</code> is not accessible to the
-	 *         template.
+	 * @param  httpServletRequest the request corresponding to a portlet render.
+	 *         In some cases, such as an {@link HttpServletRequest}
+	 *         corresponding to a portlet action or resource request, or for a
+	 *         regular servlet, the <code>renderRequest</code> is not accessible
+	 *         to the template.
+	 * @param  httpServletResponse the response corresponding to a portlet
+	 *         render. In some cases, such as an {@link HttpServletResponse}
+	 *         corresponding to a portlet action or resource response, or for a
+	 *         regular servlet, the <code>renderResponse</code> is not
+	 *         accessible to the template.
 	 * @param  ddmTemplate the template to be rendered
 	 * @param  entries the template's entries
 	 * @param  contextObjects the stored parameters used to get the template's
@@ -385,20 +362,23 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 	 */
 	@Override
 	public String renderDDMTemplate(
-			HttpServletRequest request, HttpServletResponse response,
-			DDMTemplate ddmTemplate, List<?> entries,
-			Map<String, Object> contextObjects)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, DDMTemplate ddmTemplate,
+			List<?> entries, Map<String, Object> contextObjects)
 		throws Exception {
 
 		Transformer transformer = TransformerHolder.getTransformer();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		PortletRequest portletRequest = (PortletRequest)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
-		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
+		PortletResponse portletResponse =
+			(PortletResponse)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		if ((portletRequest != null) && (portletResponse != null)) {
 			PortletURL currentURL = PortletURLUtil.getCurrent(
@@ -418,7 +398,7 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 		}
 
 		contextObjects.put(
-			PortletDisplayTemplateConstants.LOCALE, request.getLocale());
+			PortletDisplayTemplateConstants.LOCALE, themeDisplay.getLocale());
 
 		if (portletRequest instanceof RenderRequest) {
 			RenderRequest renderRequest = (RenderRequest)portletRequest;
@@ -462,25 +442,13 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 		contextObjects.put(
 			TemplateConstants.CLASS_NAME_ID, ddmTemplate.getClassNameId());
 
-		TemplateManager templateManager =
-			TemplateManagerUtil.getTemplateManager(ddmTemplate.getLanguage());
-
 		TemplateHandler templateHandler =
 			TemplateHandlerRegistryUtil.getTemplateHandler(
 				ddmTemplate.getClassNameId());
 
-		templateManager.addContextObjects(
-			contextObjects, templateHandler.getCustomContextObjects());
-
-		// Taglibs
-
-		templateManager.addTaglibSupport(contextObjects, request, response);
+		contextObjects.putAll(templateHandler.getCustomContextObjects());
 
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
-
-		templateManager.addTaglibTheme(
-			contextObjects, "taglibLiferay", request,
-			new PipingServletResponse(response, unsyncStringWriter));
 
 		contextObjects.put(TemplateConstants.WRITER, unsyncStringWriter);
 
@@ -490,33 +458,37 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 
 		return transformer.transform(
 			themeDisplay, contextObjects, ddmTemplate.getScript(),
-			ddmTemplate.getLanguage(), unsyncStringWriter);
+			ddmTemplate.getLanguage(), unsyncStringWriter, httpServletRequest,
+			new PipingServletResponse(httpServletResponse, unsyncStringWriter));
 	}
 
 	@Override
 	public String renderDDMTemplate(
-			HttpServletRequest request, HttpServletResponse response,
-			long ddmTemplateId, List<?> entries)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, long ddmTemplateId,
+			List<?> entries)
 		throws Exception {
 
 		Map<String, Object> contextObjects = new HashMap<>();
 
 		return renderDDMTemplate(
-			request, response, ddmTemplateId, entries, contextObjects);
+			httpServletRequest, httpServletResponse, ddmTemplateId, entries,
+			contextObjects);
 	}
 
 	@Override
 	public String renderDDMTemplate(
-			HttpServletRequest request, HttpServletResponse response,
-			long ddmTemplateId, List<?> entries,
-			Map<String, Object> contextObjects)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, long ddmTemplateId,
+			List<?> entries, Map<String, Object> contextObjects)
 		throws Exception {
 
 		DDMTemplate ddmTemplate = _ddmTemplateLocalService.getTemplate(
 			ddmTemplateId);
 
 		return renderDDMTemplate(
-			request, response, ddmTemplate, entries, contextObjects);
+			httpServletRequest, httpServletResponse, ddmTemplate, entries,
+			contextObjects);
 	}
 
 	private Map<String, Object> _mergePortletPreferences(

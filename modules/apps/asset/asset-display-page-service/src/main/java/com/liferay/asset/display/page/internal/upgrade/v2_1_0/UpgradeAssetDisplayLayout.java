@@ -20,8 +20,11 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -29,7 +32,6 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -58,9 +60,73 @@ public class UpgradeAssetDisplayLayout extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
+		_upgradeAssetDisplayLayouts();
+		_upgradeSchema();
+	}
+
+	private long _getPlid(
+			AssetEntry assetEntry, long userId, long groupId,
+			long layoutPageTemplateEntryId, ServiceContext serviceContext)
+		throws PortalException {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry = Optional.ofNullable(
+			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
+				layoutPageTemplateEntryId)
+		).orElseGet(
+			() ->
+				_layoutPageTemplateEntryService.
+					fetchDefaultLayoutPageTemplateEntry(
+						groupId, assetEntry.getClassNameId(),
+						assetEntry.getClassTypeId())
+		);
+
+		if (layoutPageTemplateEntry == null) {
+			return 0;
+		}
+
+		if (layoutPageTemplateEntry.getPlid() > 0) {
+			return layoutPageTemplateEntry.getPlid();
+		}
+
+		serviceContext.setAttribute(
+			"layout.instanceable.allowed", Boolean.TRUE);
+
+		Layout layout = _layoutLocalService.addLayout(
+			userId, groupId, false, 0, assetEntry.getTitleMap(),
+			assetEntry.getTitleMap(), assetEntry.getDescriptionMap(), null,
+			null, LayoutConstants.TYPE_ASSET_DISPLAY, StringPool.BLANK, true,
+			true, new HashMap<>(), serviceContext);
+
+		layoutPageTemplateEntry.setPlid(layout.getPlid());
+
+		_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
+			layoutPageTemplateEntry);
+
+		return layout.getPlid();
+	}
+
+	private void _upgradeAssetDisplayLayouts() throws Exception {
+		ActionableDynamicQuery actionableDynamicQuery =
+			_layoutLocalService.getActionableDynamicQuery();
+
+		actionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> dynamicQuery.add(
+				RestrictionsFactoryUtil.eq(
+					"type", LayoutConstants.TYPE_ASSET_DISPLAY)));
+		actionableDynamicQuery.setPerformActionMethod(
+			(Layout layout) -> {
+				layout.setSystem(true);
+
+				_layoutLocalService.updateLayout(layout);
+			});
+
+		actionableDynamicQuery.performActions();
+	}
+
+	private void _upgradeSchema() throws Exception {
 		alter(
 			AssetDisplayPageEntryTable.class,
-			new AlterTableAddColumn("plid LONG"));
+			new AlterTableAddColumn("plid", "LONG"));
 
 		StringBundler sb = new StringBundler(3);
 
@@ -110,45 +176,6 @@ public class UpgradeAssetDisplayLayout extends UpgradeProcess {
 
 			ps.executeBatch();
 		}
-	}
-
-	private long _getPlid(
-			AssetEntry assetEntry, long userId, long groupId,
-			long layoutPageTemplateEntryId, ServiceContext serviceContext)
-		throws PortalException {
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry = Optional.ofNullable(
-			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
-				layoutPageTemplateEntryId)
-		).orElse(
-			_layoutPageTemplateEntryService.fetchDefaultLayoutPageTemplateEntry(
-				groupId, assetEntry.getClassNameId(),
-				assetEntry.getClassTypeId())
-		);
-
-		if (layoutPageTemplateEntry == null) {
-			return 0;
-		}
-
-		if (layoutPageTemplateEntry.getPlid() > 0) {
-			return layoutPageTemplateEntry.getPlid();
-		}
-
-		serviceContext.setAttribute(
-			"layout.instanceable.allowed", Boolean.TRUE);
-
-		Layout layout = _layoutLocalService.addLayout(
-			userId, groupId, false, 0, assetEntry.getTitleMap(),
-			assetEntry.getTitleMap(), assetEntry.getDescriptionMap(), null,
-			null, LayoutConstants.TYPE_ASSET_DISPLAY, StringPool.BLANK, true,
-			true, new HashMap<>(), serviceContext);
-
-		layoutPageTemplateEntry.setPlid(layout.getPlid());
-
-		_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry);
-
-		return layout.getPlid();
 	}
 
 	private final AssetEntryLocalService _assetEntryLocalService;

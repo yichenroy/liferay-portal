@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.internal.query;
 
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.search.query.DateRangeTermQuery;
 import com.liferay.portal.search.query.QueryVisitor;
@@ -39,6 +39,7 @@ public class DateRangeTermQueryImpl
 		return queryVisitor.visit(this);
 	}
 
+	@Override
 	public String getDateFormat() {
 		return _dateFormat;
 	}
@@ -48,14 +49,17 @@ public class DateRangeTermQueryImpl
 		return 25;
 	}
 
+	@Override
 	public TimeZone getTimeZone() {
 		return _timeZone;
 	}
 
+	@Override
 	public void setDateFormat(String dateFormat) {
 		_dateFormat = dateFormat;
 	}
 
+	@Override
 	public void setTimeZone(TimeZone timeZone) {
 		_timeZone = timeZone;
 	}

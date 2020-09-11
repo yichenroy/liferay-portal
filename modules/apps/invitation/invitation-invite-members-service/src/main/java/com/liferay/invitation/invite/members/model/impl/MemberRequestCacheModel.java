@@ -14,8 +14,6 @@
 
 package com.liferay.invitation.invite.members.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.invitation.invite.members.model.MemberRequest;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
@@ -34,22 +32,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class MemberRequestCacheModel
 	implements CacheModel<MemberRequest>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof MemberRequestCacheModel)) {
+		if (!(object instanceof MemberRequestCacheModel)) {
 			return false;
 		}
 
 		MemberRequestCacheModel memberRequestCacheModel =
-			(MemberRequestCacheModel)obj;
+			(MemberRequestCacheModel)object;
 
 		if (memberRequestId == memberRequestCacheModel.memberRequestId) {
 			return true;

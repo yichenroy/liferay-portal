@@ -14,12 +14,9 @@
 
 package com.liferay.digital.signature.model.field;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum AnchorUnits {
 
 	CM, IN, MM, PIXELS

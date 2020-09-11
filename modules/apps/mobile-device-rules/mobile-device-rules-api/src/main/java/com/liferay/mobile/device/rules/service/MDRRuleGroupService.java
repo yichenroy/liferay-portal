@@ -14,8 +14,6 @@
 
 package com.liferay.mobile.device.rules.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.mobile.device.rules.model.MDRRuleGroup;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -23,7 +21,6 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -31,6 +28,8 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for MDRRuleGroup. Methods of this
@@ -43,13 +42,6 @@ import java.util.Map;
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(
-	property = {
-		"json.web.service.context.name=mdr",
-		"json.web.service.context.path=MDRRuleGroup"
-	},
-	service = MDRRuleGroupService.class
-)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -60,7 +52,7 @@ public interface MDRRuleGroupService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link MDRRuleGroupServiceUtil} to access the mdr rule group remote service. Add custom service methods to <code>com.liferay.mobile.device.rules.service.impl.MDRRuleGroupServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.mobile.device.rules.service.impl.MDRRuleGroupServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the mdr rule group remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link MDRRuleGroupServiceUtil} if injection and service tracking are not available.
 	 */
 	public MDRRuleGroup addRuleGroup(
 			long groupId, Map<Locale, String> nameMap,

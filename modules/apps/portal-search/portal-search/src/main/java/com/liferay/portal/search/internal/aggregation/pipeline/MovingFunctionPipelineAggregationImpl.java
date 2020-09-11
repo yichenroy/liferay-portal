@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.aggregation.pipeline;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.pipeline.GapPolicy;
 import com.liferay.portal.search.aggregation.pipeline.MovingFunctionPipelineAggregation;
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregationVisitor;
@@ -24,7 +22,6 @@ import com.liferay.portal.search.script.Script;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class MovingFunctionPipelineAggregationImpl
 	extends BasePipelineAggregation
 	implements MovingFunctionPipelineAggregation {

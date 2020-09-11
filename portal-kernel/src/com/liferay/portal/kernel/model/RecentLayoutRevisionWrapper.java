@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,10 +28,9 @@ import java.util.Map;
  * @see RecentLayoutRevision
  * @generated
  */
-@ProviderType
 public class RecentLayoutRevisionWrapper
 	extends BaseModelWrapper<RecentLayoutRevision>
-	implements RecentLayoutRevision, ModelWrapper<RecentLayoutRevision> {
+	implements ModelWrapper<RecentLayoutRevision>, RecentLayoutRevision {
 
 	public RecentLayoutRevisionWrapper(
 		RecentLayoutRevision recentLayoutRevision) {

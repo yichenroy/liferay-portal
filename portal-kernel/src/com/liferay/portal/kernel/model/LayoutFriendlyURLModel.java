@@ -14,11 +14,12 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the LayoutFriendlyURL service. Represents a row in the &quot;LayoutFriendlyURL&quot; database table, with each column mapped to a property of this class.
@@ -33,8 +34,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface LayoutFriendlyURLModel
-	extends BaseModel<LayoutFriendlyURL>, MVCCModel, ShardedModel,
-			StagedGroupedModel {
+	extends BaseModel<LayoutFriendlyURL>, CTModel<LayoutFriendlyURL>, MVCCModel,
+			ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -47,6 +48,7 @@ public interface LayoutFriendlyURLModel
 	 *
 	 * @return the primary key of this layout friendly url
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -54,6 +56,7 @@ public interface LayoutFriendlyURLModel
 	 *
 	 * @param primaryKey the primary key of this layout friendly url
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -71,6 +74,22 @@ public interface LayoutFriendlyURLModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this layout friendly url.
+	 *
+	 * @return the ct collection ID of this layout friendly url
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this layout friendly url.
+	 *
+	 * @param ctCollectionId the ct collection ID of this layout friendly url
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this layout friendly url.

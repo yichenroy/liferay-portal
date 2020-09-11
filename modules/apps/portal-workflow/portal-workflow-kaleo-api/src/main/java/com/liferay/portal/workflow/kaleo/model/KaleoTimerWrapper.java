@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see KaleoTimer
  * @generated
  */
-@ProviderType
 public class KaleoTimerWrapper
 	extends BaseModelWrapper<KaleoTimer>
 	implements KaleoTimer, ModelWrapper<KaleoTimer> {
@@ -55,6 +52,7 @@ public class KaleoTimerWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("kaleoClassName", getKaleoClassName());
 		attributes.put("kaleoClassPK", getKaleoClassPK());
+		attributes.put("kaleoDefinitionId", getKaleoDefinitionId());
 		attributes.put(
 			"kaleoDefinitionVersionId", getKaleoDefinitionVersionId());
 		attributes.put("name", getName());
@@ -128,6 +126,12 @@ public class KaleoTimerWrapper
 
 		if (kaleoClassPK != null) {
 			setKaleoClassPK(kaleoClassPK);
+		}
+
+		Long kaleoDefinitionId = (Long)attributes.get("kaleoDefinitionId");
+
+		if (kaleoDefinitionId != null) {
+			setKaleoDefinitionId(kaleoDefinitionId);
 		}
 
 		Long kaleoDefinitionVersionId = (Long)attributes.get(
@@ -259,6 +263,16 @@ public class KaleoTimerWrapper
 	@Override
 	public long getKaleoClassPK() {
 		return model.getKaleoClassPK();
+	}
+
+	/**
+	 * Returns the kaleo definition ID of this kaleo timer.
+	 *
+	 * @return the kaleo definition ID of this kaleo timer
+	 */
+	@Override
+	public long getKaleoDefinitionId() {
+		return model.getKaleoDefinitionId();
 	}
 
 	/**
@@ -484,6 +498,16 @@ public class KaleoTimerWrapper
 	@Override
 	public void setKaleoClassPK(long kaleoClassPK) {
 		model.setKaleoClassPK(kaleoClassPK);
+	}
+
+	/**
+	 * Sets the kaleo definition ID of this kaleo timer.
+	 *
+	 * @param kaleoDefinitionId the kaleo definition ID of this kaleo timer
+	 */
+	@Override
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		model.setKaleoDefinitionId(kaleoDefinitionId);
 	}
 
 	/**

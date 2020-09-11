@@ -14,19 +14,21 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedAuditedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the DDMContent service. Represents a row in the &quot;DDMContent&quot; database table, with each column mapped to a property of this class.
@@ -41,8 +43,8 @@ import java.util.Map;
  */
 @ProviderType
 public interface DDMContentModel
-	extends BaseModel<DDMContent>, GroupedModel, LocalizedModel, ShardedModel,
-			StagedAuditedModel {
+	extends BaseModel<DDMContent>, CTModel<DDMContent>, GroupedModel,
+			LocalizedModel, MVCCModel, ShardedModel, StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -55,6 +57,7 @@ public interface DDMContentModel
 	 *
 	 * @return the primary key of this ddm content
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -62,7 +65,40 @@ public interface DDMContentModel
 	 *
 	 * @param primaryKey the primary key of this ddm content
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this ddm content.
+	 *
+	 * @return the mvcc version of this ddm content
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this ddm content.
+	 *
+	 * @param mvccVersion the mvcc version of this ddm content
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this ddm content.
+	 *
+	 * @return the ct collection ID of this ddm content
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this ddm content.
+	 *
+	 * @param ctCollectionId the ct collection ID of this ddm content
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this ddm content.

@@ -17,8 +17,11 @@ package com.liferay.bookmarks.model;
 import com.liferay.petra.string.StringPool;
 
 /**
- * @author Alexander Chow
+ * @author     Alexander Chow
+ * @deprecated As of Athanasius (7.3.x), replaced by {@link
+ *             com.liferay.bookmarks.constants.BookmarksFolderConstants}
  */
+@Deprecated
 public class BookmarksFolderConstants {
 
 	public static final long DEFAULT_PARENT_FOLDER_ID = 0;
@@ -29,6 +32,10 @@ public class BookmarksFolderConstants {
 		StringPool.DOUBLE_SLASH + StringPool.SPACE +
 			StringPool.DOUBLE_BACK_SLASH;
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public static final String NAME_LABEL = "folder-name";
 
 	public static final String NAME_RESERVED_WORDS = StringPool.NULL;

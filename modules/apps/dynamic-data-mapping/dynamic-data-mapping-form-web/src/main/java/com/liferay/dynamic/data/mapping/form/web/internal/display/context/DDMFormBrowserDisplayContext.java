@@ -15,14 +15,14 @@
 package com.liferay.dynamic.data.mapping.form.web.internal.display.context;
 
 import com.liferay.dynamic.data.mapping.form.web.internal.display.context.util.DDMFormWebRequestHelper;
-import com.liferay.dynamic.data.mapping.form.web.internal.search.FormInstanceSearch;
+import com.liferay.dynamic.data.mapping.form.web.internal.search.DDMFormInstanceSearch;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.util.comparator.DDMFormInstanceModifiedDateComparator;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -48,16 +48,17 @@ import javax.servlet.http.HttpServletRequest;
 public class DDMFormBrowserDisplayContext {
 
 	public DDMFormBrowserDisplayContext(
-		DDMFormInstanceService formInstanceService, RenderRequest renderRequest,
-		RenderResponse renderResponse) {
+		DDMFormInstanceService ddmFormInstanceService,
+		RenderRequest renderRequest, RenderResponse renderResponse) {
 
-		_formInstanceService = formInstanceService;
+		_ddmFormInstanceService = ddmFormInstanceService;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(_renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(_renderRequest);
 
-		_formWebRequestHelper = new DDMFormWebRequestHelper(_request);
+		_formWebRequestHelper = new DDMFormWebRequestHelper(
+			_httpServletRequest);
 	}
 
 	public String getClearResultsURL() throws PortletException {
@@ -69,12 +70,61 @@ public class DDMFormBrowserDisplayContext {
 		return clearResultsURL.toString();
 	}
 
+	public DDMFormInstanceSearch getDDMFormInstanceSearch()
+		throws PortalException {
+
+		if (_ddmFormInstanceSearch != null) {
+			return _ddmFormInstanceSearch;
+		}
+
+		String displayStyle = getDisplayStyle();
+
+		PortletURL portletURL = getPortletURL();
+
+		portletURL.setParameter("displayStyle", displayStyle);
+
+		DDMFormInstanceSearch ddmFormInstanceSearch = new DDMFormInstanceSearch(
+			_renderRequest, portletURL);
+
+		String orderByType = getOrderByType();
+
+		OrderByComparator<DDMFormInstance> orderByComparator =
+			_getDDMFormInstanceOrderByComparator(orderByType);
+
+		ddmFormInstanceSearch.setOrderByCol(getOrderByCol());
+
+		ddmFormInstanceSearch.setOrderByComparator(orderByComparator);
+		ddmFormInstanceSearch.setOrderByType(orderByType);
+
+		if (ddmFormInstanceSearch.isSearch()) {
+			ddmFormInstanceSearch.setEmptyResultsMessage("no-forms-were-found");
+		}
+		else {
+			ddmFormInstanceSearch.setEmptyResultsMessage("there-are-no-forms");
+		}
+
+		List<DDMFormInstance> results = _ddmFormInstanceService.search(
+			_formWebRequestHelper.getCompanyId(),
+			_formWebRequestHelper.getScopeGroupId(), getKeywords(),
+			ddmFormInstanceSearch.getStart(), ddmFormInstanceSearch.getEnd(),
+			ddmFormInstanceSearch.getOrderByComparator());
+
+		ddmFormInstanceSearch.setResults(results);
+
+		ddmFormInstanceSearch.setTotal(getTotalItems());
+
+		_ddmFormInstanceSearch = ddmFormInstanceSearch;
+
+		return _ddmFormInstanceSearch;
+	}
+
 	public String getDisplayStyle() {
 		if (Validator.isNotNull(_displayStyle)) {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
@@ -85,82 +135,31 @@ public class DDMFormBrowserDisplayContext {
 		}
 
 		_eventName = ParamUtil.getString(
-			_request, "eventName",
+			_httpServletRequest, "eventName",
 			_renderResponse.getNamespace() + "selectDDMForm");
 
 		return _eventName;
 	}
 
 	public List<DropdownItem> getFilterItemsDropdownItems() {
-		HttpServletRequest request = _formWebRequestHelper.getRequest();
+		HttpServletRequest httpServletRequest =
+			_formWebRequestHelper.getRequest();
 
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						httpServletRequest, "filter-by-navigation"));
 			}
-		};
-	}
-
-	public FormInstanceSearch getFormInstanceSearch() throws PortalException {
-		if (_formInstanceSearch != null) {
-			return _formInstanceSearch;
-		}
-
-		String displayStyle = getDisplayStyle();
-
-		PortletURL portletURL = getPortletURL();
-
-		portletURL.setParameter("displayStyle", displayStyle);
-
-		FormInstanceSearch formInstanceSearch = new FormInstanceSearch(
-			_renderRequest, portletURL);
-
-		String orderByType = getOrderByType();
-
-		OrderByComparator<DDMFormInstance> orderByComparator =
-			_getDDMFormInstanceOrderByComparator(orderByType);
-
-		String orderByCol = getOrderByCol();
-
-		formInstanceSearch.setOrderByCol(orderByCol);
-
-		formInstanceSearch.setOrderByComparator(orderByComparator);
-		formInstanceSearch.setOrderByType(orderByType);
-
-		if (formInstanceSearch.isSearch()) {
-			formInstanceSearch.setEmptyResultsMessage("no-forms-were-found");
-		}
-		else {
-			formInstanceSearch.setEmptyResultsMessage("there-are-no-forms");
-		}
-
-		List<DDMFormInstance> results = _formInstanceService.search(
-			_formWebRequestHelper.getCompanyId(),
-			_formWebRequestHelper.getScopeGroupId(), getKeywords(),
-			formInstanceSearch.getStart(), formInstanceSearch.getEnd(),
-			formInstanceSearch.getOrderByComparator());
-
-		formInstanceSearch.setResults(results);
-
-		formInstanceSearch.setTotal(getTotalItems());
-
-		_formInstanceSearch = formInstanceSearch;
-
-		return _formInstanceSearch;
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public String getKeywords() {
@@ -168,27 +167,26 @@ public class DDMFormBrowserDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		return _keywords;
 	}
 
 	public List<NavigationItem> getNavigationItems() {
-		HttpServletRequest request = _formWebRequestHelper.getRequest();
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(true);
+				navigationItem.setHref(
+					_renderResponse.createRenderURL(), "mvcPath",
+					"/browser/view.jsp");
 
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(
-							_renderResponse.createRenderURL(), "mvcPath",
-							"/browser/view.jsp");
-						navigationItem.setLabel(
-							LanguageUtil.get(request, "entries"));
-					});
+				HttpServletRequest httpServletRequest =
+					_formWebRequestHelper.getRequest();
+
+				navigationItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "entries"));
 			}
-		};
+		).build();
 	}
 
 	public String getOrderByCol() {
@@ -197,7 +195,7 @@ public class DDMFormBrowserDisplayContext {
 		}
 
 		_orderByCol = ParamUtil.getString(
-			_request, "orderByCol", "modified-date");
+			_httpServletRequest, "orderByCol", "modified-date");
 
 		return _orderByCol;
 	}
@@ -207,7 +205,8 @@ public class DDMFormBrowserDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -288,7 +287,7 @@ public class DDMFormBrowserDisplayContext {
 			return _formInstanceSearchTotal;
 		}
 
-		_formInstanceSearchTotal = _formInstanceService.searchCount(
+		_formInstanceSearchTotal = _ddmFormInstanceService.searchCount(
 			_formWebRequestHelper.getCompanyId(),
 			_formWebRequestHelper.getScopeGroupId(), getKeywords());
 
@@ -304,19 +303,15 @@ public class DDMFormBrowserDisplayContext {
 	}
 
 	protected List<DropdownItem> getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(
-							getPortletURL(), "navigation", "all");
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_formWebRequestHelper.getRequest(), "all"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(true);
+				dropdownItem.setHref(getPortletURL(), "navigation", "all");
+				dropdownItem.setLabel(
+					LanguageUtil.get(
+						_formWebRequestHelper.getRequest(), "all"));
 			}
-		};
+		).build();
 	}
 
 	protected UnsafeConsumer<DropdownItem, Exception> getOrderByDropdownItem(
@@ -332,11 +327,9 @@ public class DDMFormBrowserDisplayContext {
 	}
 
 	protected List<DropdownItem> getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(getOrderByDropdownItem("modified-date"));
-			}
-		};
+		return DropdownItemListBuilder.add(
+			getOrderByDropdownItem("modified-date")
+		).build();
 	}
 
 	private OrderByComparator<DDMFormInstance>
@@ -348,23 +341,20 @@ public class DDMFormBrowserDisplayContext {
 			orderByAsc = true;
 		}
 
-		OrderByComparator<DDMFormInstance> orderByComparator =
-			new DDMFormInstanceModifiedDateComparator(orderByAsc);
-
-		return orderByComparator;
+		return new DDMFormInstanceModifiedDateComparator(orderByAsc);
 	}
 
+	private DDMFormInstanceSearch _ddmFormInstanceSearch;
+	private final DDMFormInstanceService _ddmFormInstanceService;
 	private String _displayStyle;
 	private String _eventName;
-	private FormInstanceSearch _formInstanceSearch;
 	private Integer _formInstanceSearchTotal;
-	private final DDMFormInstanceService _formInstanceService;
 	private final DDMFormWebRequestHelper _formWebRequestHelper;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

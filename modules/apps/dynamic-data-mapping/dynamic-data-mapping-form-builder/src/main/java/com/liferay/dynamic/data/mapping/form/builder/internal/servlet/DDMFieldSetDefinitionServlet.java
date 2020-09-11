@@ -60,18 +60,21 @@ public class DDMFieldSetDefinitionServlet extends BaseDDMFormBuilderServlet {
 
 	@Override
 	protected void doGet(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		long ddmStructureId = ParamUtil.getLong(request, "ddmStructureId");
+		long ddmStructureId = ParamUtil.getLong(
+			httpServletRequest, "ddmStructureId");
 
 		if (ddmStructureId == 0) {
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST);
 
 			return;
 		}
 
-		String languageId = ParamUtil.getString(request, "languageId");
+		String languageId = ParamUtil.getString(
+			httpServletRequest, "languageId");
 
 		Locale locale = LocaleUtil.fromLanguageId(languageId);
 
@@ -80,26 +83,36 @@ public class DDMFieldSetDefinitionServlet extends BaseDDMFormBuilderServlet {
 		Optional<DDMStructure> ddmStructureOptional = Optional.ofNullable(
 			getDDMStructure(ddmStructureId));
 
-		DDMFormBuilderContextResponse fieldContext =
-			_ddmFormBuilderContextFactory.create(
-				DDMFormBuilderContextRequest.with(
-					ddmStructureOptional, request, response, locale, true));
+		DDMFormBuilderContextRequest ddmFormBuilderContextRequest =
+			DDMFormBuilderContextRequest.with(
+				ddmStructureOptional, httpServletRequest, httpServletResponse,
+				locale, true);
 
-		response.setContentType(ContentTypes.APPLICATION_JSON);
-		response.setStatus(HttpServletResponse.SC_OK);
+		String portletNamespace = ParamUtil.getString(
+			httpServletRequest, "portletNamespace");
+
+		ddmFormBuilderContextRequest.addProperty(
+			"portletNamespace", portletNamespace);
+
+		DDMFormBuilderContextResponse fieldContext =
+			_ddmFormBuilderContextFactory.create(ddmFormBuilderContextRequest);
+
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
+		httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
 		JSONSerializer jsonSerializer = _jsonFactory.createJSONSerializer();
 
 		ServletResponseUtil.write(
-			response, jsonSerializer.serializeDeep(fieldContext.getContext()));
+			httpServletResponse,
+			jsonSerializer.serializeDeep(fieldContext.getContext()));
 	}
 
 	protected DDMStructure getDDMStructure(long ddmStructureId) {
 		try {
 			return _ddmStructureService.getStructure(ddmStructureId);
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 		}
 
 		return null;

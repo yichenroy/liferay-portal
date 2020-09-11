@@ -14,14 +14,11 @@
 
 package com.liferay.oauth2.provider.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class OAuth2ApplicationClientGrantTypeException extends PortalException {
 
 	public OAuth2ApplicationClientGrantTypeException() {
@@ -32,13 +29,13 @@ public class OAuth2ApplicationClientGrantTypeException extends PortalException {
 	}
 
 	public OAuth2ApplicationClientGrantTypeException(
-		String msg, Throwable cause) {
+		String msg, Throwable throwable) {
 
-		super(msg, cause);
+		super(msg, throwable);
 	}
 
-	public OAuth2ApplicationClientGrantTypeException(Throwable cause) {
-		super(cause);
+	public OAuth2ApplicationClientGrantTypeException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

@@ -14,7 +14,9 @@
 
 package com.liferay.portal.search.filter;
 
-import aQute.bnd.annotation.ProviderType;
+import com.liferay.portal.search.query.Query;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author André de Oliveira
@@ -32,9 +34,13 @@ public interface ComplexQueryPart {
 
 	public String getParent();
 
+	public Query getQuery();
+
 	public String getType();
 
 	public String getValue();
+
+	public boolean isAdditive();
 
 	public boolean isDisabled();
 

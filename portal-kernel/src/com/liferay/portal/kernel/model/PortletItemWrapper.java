@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,10 +29,9 @@ import java.util.Map;
  * @see PortletItem
  * @generated
  */
-@ProviderType
 public class PortletItemWrapper
 	extends BaseModelWrapper<PortletItem>
-	implements PortletItem, ModelWrapper<PortletItem> {
+	implements ModelWrapper<PortletItem>, PortletItem {
 
 	public PortletItemWrapper(PortletItem portletItem) {
 		super(portletItem);

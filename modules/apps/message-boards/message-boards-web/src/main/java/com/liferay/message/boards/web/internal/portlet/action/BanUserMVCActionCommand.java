@@ -69,17 +69,12 @@ public class BanUserMVCActionCommand extends BaseMVCActionCommand {
 				unbanUser(actionRequest);
 			}
 		}
-		catch (PrincipalException pe) {
-			SessionErrors.add(actionRequest, pe.getClass());
+		catch (PrincipalException principalException) {
+			SessionErrors.add(actionRequest, principalException.getClass());
 
 			actionResponse.setRenderParameter(
 				"mvcPath", "/message_boards/error.jsp");
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setMBBanService(MBBanService mbBanService) {
-		_mbBanService = mbBanService;
 	}
 
 	protected void unbanUser(ActionRequest actionRequest) throws Exception {
@@ -102,6 +97,7 @@ public class BanUserMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
+	@Reference
 	private MBBanService _mbBanService;
 
 }

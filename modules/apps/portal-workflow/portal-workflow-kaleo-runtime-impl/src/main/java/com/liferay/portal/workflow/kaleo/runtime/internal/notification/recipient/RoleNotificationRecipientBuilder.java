@@ -19,10 +19,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupGroupRole;
 import com.liferay.portal.kernel.model.UserGroupRole;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -68,11 +68,9 @@ public class RoleNotificationRecipientBuilder
 
 		long roleId = kaleoNotificationRecipient.getRecipientClassPK();
 
-		Role role = _roleLocalService.getRole(roleId);
-
 		addRoleRecipientAddresses(
-			notificationRecipients, role, notificationReceptionType,
-			executionContext);
+			notificationRecipients, _roleLocalService.getRole(roleId),
+			notificationReceptionType, executionContext);
 	}
 
 	@Override
@@ -85,11 +83,9 @@ public class RoleNotificationRecipientBuilder
 
 		long roleId = kaleoTaskAssignmentInstance.getAssigneeClassPK();
 
-		Role role = _roleLocalService.getRole(roleId);
-
 		addRoleRecipientAddresses(
-			notificationRecipients, role, notificationReceptionType,
-			executionContext);
+			notificationRecipients, _roleLocalService.getRole(roleId),
+			notificationReceptionType, executionContext);
 	}
 
 	protected void addRoleRecipientAddresses(
@@ -210,8 +206,13 @@ public class RoleNotificationRecipientBuilder
 	protected boolean isValidGroup(Group group, Role role)
 		throws PortalException {
 
-		if ((group != null) && group.isOrganization() &&
-			(role.getType() == RoleConstants.TYPE_ORGANIZATION)) {
+		if ((group != null) && group.isDepot() &&
+			(role.getType() == RoleConstants.TYPE_DEPOT)) {
+
+			return true;
+		}
+		else if ((group != null) && group.isOrganization() &&
+				 (role.getType() == RoleConstants.TYPE_ORGANIZATION)) {
 
 			return true;
 		}

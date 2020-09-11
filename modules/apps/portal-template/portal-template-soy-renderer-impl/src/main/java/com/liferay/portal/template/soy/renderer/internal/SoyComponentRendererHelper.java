@@ -33,6 +33,7 @@ import java.io.Writer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -42,16 +43,18 @@ import javax.servlet.http.HttpServletRequest;
 public class SoyComponentRendererHelper {
 
 	public SoyComponentRendererHelper(
-		HttpServletRequest request, ComponentDescriptor componentDescriptor,
-		Map<String, ?> context, Portal portal, SoyRenderer soyRenderer) {
+		HttpServletRequest httpServletRequest,
+		ComponentDescriptor componentDescriptor, Map<String, ?> context,
+		Portal portal, SoyRenderer soyRenderer) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_componentDescriptor = componentDescriptor;
 		_context = new HashMap<>(context);
 		_portal = portal;
 		_soyRenderer = soyRenderer;
 
 		_moduleName = _getModuleName(_componentDescriptor.getModule());
+
 		_wrapperId = _generateWrapperId(
 			(String)_context.get("id"), _componentDescriptor.getComponentId());
 
@@ -101,7 +104,7 @@ public class SoyComponentRendererHelper {
 		String moduleName = StringUtil.extractLast(
 			module, CharPool.FORWARD_SLASH);
 
-		return StringUtil.strip(moduleName, _UNSAFE_MODULE_NAME_CHARS);
+		return StringUtil.removeChars(moduleName, _UNSAFE_MODULE_NAME_CHARS);
 	}
 
 	private void _prepareContext() {
@@ -111,7 +114,8 @@ public class SoyComponentRendererHelper {
 
 		if (!_context.containsKey("portletId")) {
 			_context.put(
-				"portletId", _request.getAttribute(WebKeys.PORTLET_ID));
+				"portletId",
+				_httpServletRequest.getAttribute(WebKeys.PORTLET_ID));
 		}
 
 		if (!_componentDescriptor.isWrapper() &&
@@ -132,36 +136,43 @@ public class SoyComponentRendererHelper {
 			(Map)_context, _wrapperId, _moduleName,
 			_componentDescriptor.isWrapper());
 
-		StringBundler sb = new StringBundler(4);
+		StringBundler sb = new StringBundler(5);
 
 		sb.append(_componentDescriptor.getModule());
 		sb.append(" as ");
 		sb.append(_moduleName);
-		sb.append(
-			String.join(
-				StringPool.COMMA, _componentDescriptor.getDependencies()));
+
+		Set<String> dependencies = _componentDescriptor.getDependencies();
+
+		if (!dependencies.isEmpty()) {
+			sb.append(StringPool.COMMA);
+		}
+
+		sb.append(StringUtil.merge(dependencies));
 
 		if (_componentDescriptor.isPositionInLine()) {
 			ScriptData scriptData = new ScriptData();
 
 			scriptData.append(
-				_portal.getPortletId(_request), componentJavaScript,
+				_portal.getPortletId(_httpServletRequest), componentJavaScript,
 				sb.toString(), ScriptData.ModulesType.ES6);
 
 			scriptData.writeTo(writer);
 		}
 		else {
-			ScriptData scriptData = (ScriptData)_request.getAttribute(
-				WebKeys.AUI_SCRIPT_DATA);
+			ScriptData scriptData =
+				(ScriptData)_httpServletRequest.getAttribute(
+					WebKeys.AUI_SCRIPT_DATA);
 
 			if (scriptData == null) {
 				scriptData = new ScriptData();
 
-				_request.setAttribute(WebKeys.AUI_SCRIPT_DATA, scriptData);
+				_httpServletRequest.setAttribute(
+					WebKeys.AUI_SCRIPT_DATA, scriptData);
 			}
 
 			scriptData.append(
-				_portal.getPortletId(_request), componentJavaScript,
+				_portal.getPortletId(_httpServletRequest), componentJavaScript,
 				sb.toString(), ScriptData.ModulesType.ES6);
 		}
 	}
@@ -178,8 +189,8 @@ public class SoyComponentRendererHelper {
 		}
 
 		_soyRenderer.renderSoy(
-			_request, writer, _componentDescriptor.getTemplateNamespace(),
-			_context);
+			_httpServletRequest, writer,
+			_componentDescriptor.getTemplateNamespace(), _context);
 
 		if (wrapper) {
 			writer.append("</div>");
@@ -193,9 +204,9 @@ public class SoyComponentRendererHelper {
 	private final ComponentDescriptor _componentDescriptor;
 	private final Map<String, Object> _context;
 	private final String _elementSelector;
+	private final HttpServletRequest _httpServletRequest;
 	private final String _moduleName;
 	private final Portal _portal;
-	private final HttpServletRequest _request;
 	private final SoyRenderer _soyRenderer;
 	private final String _wrapperId;
 

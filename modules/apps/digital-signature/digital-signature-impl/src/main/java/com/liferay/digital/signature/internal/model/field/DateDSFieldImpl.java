@@ -14,14 +14,11 @@
 
 package com.liferay.digital.signature.internal.model.field;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.digital.signature.model.field.DateDSField;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class DateDSFieldImpl
 	extends UserEntryDSFieldImpl<DateDSField> implements DateDSField {
 

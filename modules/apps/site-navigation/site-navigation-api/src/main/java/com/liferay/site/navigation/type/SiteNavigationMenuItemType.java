@@ -68,15 +68,16 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default String getName(String typeSettings) {
-		UnicodeProperties typeSettingsProperties = new UnicodeProperties();
+		UnicodeProperties typeSettingsUnicodeProperties =
+			new UnicodeProperties();
 
-		typeSettingsProperties.fastLoad(typeSettings);
+		typeSettingsUnicodeProperties.fastLoad(typeSettings);
 
-		return typeSettingsProperties.get("name");
+		return typeSettingsUnicodeProperties.get("name");
 	}
 
 	public default String getRegularURL(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws Exception {
 
@@ -84,7 +85,7 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default String getResetLayoutURL(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws Exception {
 
@@ -92,7 +93,7 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default String getResetMaxStateURL(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws Exception {
 
@@ -155,6 +156,12 @@ public interface SiteNavigationMenuItemType {
 		return true;
 	}
 
+	public default boolean isAvailable(
+		SiteNavigationMenuItemTypeContext siteNavigationMenuItemTypeContext) {
+
+		return true;
+	}
+
 	public default boolean isBrowsable(
 		SiteNavigationMenuItem siteNavigationMenuItem) {
 
@@ -178,12 +185,14 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default void renderAddPage(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 	}
 
 	public default void renderEditPage(
-			HttpServletRequest request, HttpServletResponse response,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws IOException {
 	}

@@ -26,7 +26,11 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Service {
+public class Service implements Cloneable {
+
+	public static Service toDTO(String json) {
+		return ServiceSerDes.toDTO(json);
+	}
 
 	public HoursAvailable[] getHoursAvailable() {
 		return hoursAvailable;
@@ -50,25 +54,6 @@ public class Service {
 
 	protected HoursAvailable[] hoursAvailable;
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long id;
-
 	public String getServiceType() {
 		return serviceType;
 	}
@@ -89,6 +74,11 @@ public class Service {
 	}
 
 	protected String serviceType;
+
+	@Override
+	public Service clone() throws CloneNotSupportedException {
+		return (Service)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

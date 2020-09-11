@@ -14,11 +14,11 @@
 
 package com.liferay.portal.kernel.search.highlight;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -50,18 +50,13 @@ public class HighlightUtil {
 				queryTerms.add(matcher.group(1));
 			}
 
-			snippet = StringUtil.replace(
-				snippet, HIGHLIGHT_TAG_OPEN, StringPool.BLANK);
-			snippet = StringUtil.replace(
-				snippet, HIGHLIGHT_TAG_CLOSE, StringPool.BLANK);
+			snippet = StringUtil.removeSubstring(snippet, HIGHLIGHT_TAG_OPEN);
+			snippet = StringUtil.removeSubstring(snippet, HIGHLIGHT_TAG_CLOSE);
 		}
 
 		document.addText(
-			Field.SNIPPET.concat(
-				StringPool.UNDERLINE
-			).concat(
-				snippetFieldName
-			),
+			StringBundler.concat(
+				Field.SNIPPET, StringPool.UNDERLINE, snippetFieldName),
 			snippet);
 	}
 
@@ -76,7 +71,7 @@ public class HighlightUtil {
 			return s;
 		}
 
-		StringBundler sb = new StringBundler(3 * queryTerms.length - 1);
+		StringBundler sb = new StringBundler((3 * queryTerms.length) - 1);
 
 		for (int i = 0; i < queryTerms.length; i++) {
 			if (i != 0) {

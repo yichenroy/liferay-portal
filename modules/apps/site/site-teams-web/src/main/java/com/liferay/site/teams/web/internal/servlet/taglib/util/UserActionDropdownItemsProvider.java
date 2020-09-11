@@ -15,7 +15,7 @@
 package com.liferay.site.teams.web.internal.servlet.taglib.util;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.User;
@@ -45,18 +45,16 @@ public class UserActionDropdownItemsProvider {
 		_teamId = teamId;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(_getDeleteTeamUsersUnsafeConsumer());
-			}
-		};
+		return DropdownItemListBuilder.add(
+			_getDeleteTeamUsersUnsafeConsumer()
+		).build();
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
@@ -76,12 +74,13 @@ public class UserActionDropdownItemsProvider {
 			dropdownItem.putData("action", "deleteTeamUsers");
 			dropdownItem.putData(
 				"deleteTeamUsersURL", deleteTeamUsersURL.toString());
-			dropdownItem.setLabel(LanguageUtil.get(_request, "delete"));
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "delete"));
 		};
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final long _teamId;
 	private final ThemeDisplay _themeDisplay;
 	private final User _user;

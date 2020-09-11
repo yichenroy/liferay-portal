@@ -17,6 +17,7 @@ package com.liferay.portal.struts;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.DirectRequestDispatcherFactoryUtil;
+import com.liferay.portal.struts.constants.ActionConstants;
 
 import java.io.IOException;
 
@@ -36,7 +37,8 @@ public class StrutsUtil {
 
 	public static void forward(
 			String uri, ServletContext servletContext,
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws ServletException {
 
 		if (_log.isDebugEnabled()) {
@@ -47,7 +49,7 @@ public class StrutsUtil {
 			return;
 		}
 
-		if (!response.isCommitted()) {
+		if (!httpServletResponse.isCommitted()) {
 			String path = TEXT_HTML_DIR.concat(uri);
 
 			if (_log.isDebugEnabled()) {
@@ -59,15 +61,17 @@ public class StrutsUtil {
 					servletContext, path);
 
 			try {
-				requestDispatcher.forward(request, response);
+				requestDispatcher.forward(
+					httpServletRequest, httpServletResponse);
 			}
-			catch (IOException ioe) {
+			catch (IOException ioException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(ioe, ioe);
+					_log.warn(ioException, ioException);
 				}
 			}
-			catch (ServletException se1) {
-				request.setAttribute(PageContext.EXCEPTION, se1.getRootCause());
+			catch (ServletException servletException1) {
+				httpServletRequest.setAttribute(
+					PageContext.EXCEPTION, servletException1.getRootCause());
 
 				String errorPath = TEXT_HTML_DIR + "/common/error.jsp";
 
@@ -76,15 +80,16 @@ public class StrutsUtil {
 						servletContext, errorPath);
 
 				try {
-					requestDispatcher.forward(request, response);
+					requestDispatcher.forward(
+						httpServletRequest, httpServletResponse);
 				}
-				catch (IOException ioe2) {
+				catch (IOException ioException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(ioe2, ioe2);
+						_log.warn(ioException, ioException);
 					}
 				}
-				catch (ServletException se2) {
-					throw se2;
+				catch (ServletException servletException2) {
+					throw servletException2;
 				}
 			}
 		}

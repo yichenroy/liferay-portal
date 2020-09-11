@@ -65,6 +65,21 @@ public class LiferayVersioningCapability
 		return new LocalRepositoryWrapper(localRepository) {
 
 			@Override
+			public void checkInFileEntry(
+					long userId, long fileEntryId,
+					DLVersionNumberIncrease dlVersionNumberIncrease,
+					String changeLog, ServiceContext serviceContext)
+				throws PortalException {
+
+				super.checkInFileEntry(
+					userId, fileEntryId, dlVersionNumberIncrease, changeLog,
+					serviceContext);
+
+				_purgeVersions(
+					dlAppServiceAdapter, super.getFileEntry(fileEntryId));
+			}
+
+			@Override
 			public FileEntry updateFileEntry(
 					long userId, long fileEntryId, String sourceFileName,
 					String mimeType, String title, String description,
@@ -87,15 +102,16 @@ public class LiferayVersioningCapability
 					String mimeType, String title, String description,
 					String changeLog,
 					DLVersionNumberIncrease dlVersionNumberIncrease,
-					InputStream is, long size, ServiceContext serviceContext)
+					InputStream inputStream, long size,
+					ServiceContext serviceContext)
 				throws PortalException {
 
 				return _purgeVersions(
 					dlAppServiceAdapter,
 					super.updateFileEntry(
 						userId, fileEntryId, sourceFileName, mimeType, title,
-						description, changeLog, dlVersionNumberIncrease, is,
-						size, serviceContext));
+						description, changeLog, dlVersionNumberIncrease,
+						inputStream, size, serviceContext));
 			}
 
 		};
@@ -109,6 +125,21 @@ public class LiferayVersioningCapability
 		return new RepositoryWrapper(repository) {
 
 			@Override
+			public void checkInFileEntry(
+					long userId, long fileEntryId,
+					DLVersionNumberIncrease dlVersionNumberIncrease,
+					String changeLog, ServiceContext serviceContext)
+				throws PortalException {
+
+				super.checkInFileEntry(
+					userId, fileEntryId, dlVersionNumberIncrease, changeLog,
+					serviceContext);
+
+				_purgeVersions(
+					dlAppServiceAdapter, super.getFileEntry(fileEntryId));
+			}
+
+			@Override
 			public FileEntry updateFileEntry(
 					long userId, long fileEntryId, String sourceFileName,
 					String mimeType, String title, String description,
@@ -131,15 +162,16 @@ public class LiferayVersioningCapability
 					String mimeType, String title, String description,
 					String changeLog,
 					DLVersionNumberIncrease dlVersionNumberIncrease,
-					InputStream is, long size, ServiceContext serviceContext)
+					InputStream inputStream, long size,
+					ServiceContext serviceContext)
 				throws PortalException {
 
 				return _purgeVersions(
 					dlAppServiceAdapter,
 					super.updateFileEntry(
 						userId, fileEntryId, sourceFileName, mimeType, title,
-						description, changeLog, dlVersionNumberIncrease, is,
-						size, serviceContext));
+						description, changeLog, dlVersionNumberIncrease,
+						inputStream, size, serviceContext));
 			}
 
 		};
@@ -159,7 +191,7 @@ public class LiferayVersioningCapability
 	private FileEntry _purgeVersions(
 		DLAppServiceAdapter dlAppServiceAdapter, FileEntry fileEntry) {
 
-		if (_versionPurger == null) {
+		if ((_versionPurger == null) || fileEntry.isCheckedOut()) {
 			return fileEntry;
 		}
 

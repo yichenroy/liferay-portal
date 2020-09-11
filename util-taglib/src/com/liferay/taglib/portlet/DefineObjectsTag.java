@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletPreferences;
@@ -39,14 +40,15 @@ public class DefineObjectsTag extends TagSupport {
 
 	@Override
 	public int doStartTag() {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		String lifecycle = (String)request.getAttribute(
+		String lifecycle = (String)httpServletRequest.getAttribute(
 			PortletRequest.LIFECYCLE_PHASE);
 
-		PortletConfig portletConfig = (PortletConfig)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+		PortletConfig portletConfig =
+			(PortletConfig)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_CONFIG);
 
 		if (portletConfig != null) {
 			pageContext.setAttribute("portletConfig", portletConfig);
@@ -54,8 +56,9 @@ public class DefineObjectsTag extends TagSupport {
 				"portletName", portletConfig.getPortletName());
 		}
 
-		PortletRequest portletRequest = (PortletRequest)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
 
 		if (portletRequest != null) {
 			pageContext.setAttribute(
@@ -91,9 +94,7 @@ public class DefineObjectsTag extends TagSupport {
 			pageContext.setAttribute("portletPreferences", portletPreferences);
 			pageContext.setAttribute(
 				"portletPreferencesValues",
-				ProxyUtil.newProxyInstance(
-					ClassLoader.getSystemClassLoader(),
-					new Class<?>[] {Map.class},
+				_mapProxyProviderFunction.apply(
 					new PortletPreferencesValuesInvocationHandler(
 						portletPreferences)));
 
@@ -105,12 +106,13 @@ public class DefineObjectsTag extends TagSupport {
 				pageContext.setAttribute(
 					"portletSessionScope", portletSession.getAttributeMap());
 			}
-			catch (IllegalStateException ise) {
+			catch (IllegalStateException illegalStateException) {
 			}
 		}
 
-		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+		PortletResponse portletResponse =
+			(PortletResponse)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		if (portletResponse == null) {
 			return SKIP_BODY;
@@ -144,6 +146,10 @@ public class DefineObjectsTag extends TagSupport {
 
 		return SKIP_BODY;
 	}
+
+	private static final Function<InvocationHandler, Map<?, ?>>
+		_mapProxyProviderFunction = ProxyUtil.getProxyProviderFunction(
+			Map.class);
 
 	private static class PortletPreferencesValuesInvocationHandler
 		implements InvocationHandler {

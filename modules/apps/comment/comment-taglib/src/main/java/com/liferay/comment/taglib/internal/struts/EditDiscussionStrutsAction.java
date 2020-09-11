@@ -24,9 +24,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DiscussionPermission;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -68,76 +68,84 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 	@Override
 	public String execute(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		AuthTokenUtil.checkCSRFToken(
-			request, EditDiscussionStrutsAction.class.getName());
+			httpServletRequest, EditDiscussionStrutsAction.class.getName());
 
-		String namespace = ParamUtil.getString(request, "namespace");
+		String namespace = ParamUtil.getString(httpServletRequest, "namespace");
 
-		HttpServletRequest namespacedRequest = new NamespaceServletRequest(
-			request, StringPool.BLANK, namespace);
+		HttpServletRequest namespacedHttpServletRequest =
+			new NamespaceServletRequest(
+				httpServletRequest, StringPool.BLANK, namespace);
 
-		String cmd = ParamUtil.getString(namespacedRequest, Constants.CMD);
+		String cmd = ParamUtil.getString(
+			namespacedHttpServletRequest, Constants.CMD);
 
 		try {
-			String redirect = _portal.escapeRedirect(
-				ParamUtil.getString(namespacedRequest, "redirect"));
-
 			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-				long commentId = updateComment(namespacedRequest);
+				long commentId = updateComment(namespacedHttpServletRequest);
 
 				boolean ajax = ParamUtil.getBoolean(
-					namespacedRequest, "ajax", true);
+					namespacedHttpServletRequest, "ajax", true);
 
 				if (ajax) {
 					String randomNamespace = ParamUtil.getString(
-						namespacedRequest, "randomNamespace");
+						namespacedHttpServletRequest, "randomNamespace");
 
-					JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-					jsonObject.put("commentId", commentId);
-					jsonObject.put("randomNamespace", randomNamespace);
-
-					writeJSON(namespacedRequest, response, jsonObject);
+					writeJSON(
+						namespacedHttpServletRequest, httpServletResponse,
+						JSONUtil.put(
+							"commentId", commentId
+						).put(
+							"randomNamespace", randomNamespace
+						));
 
 					return null;
 				}
 			}
 			else if (cmd.equals(Constants.DELETE)) {
-				deleteComment(namespacedRequest);
+				deleteComment(namespacedHttpServletRequest);
 			}
 			else if (cmd.equals(Constants.SUBSCRIBE_TO_COMMENTS)) {
-				subscribeToComments(namespacedRequest, true);
+				subscribeToComments(namespacedHttpServletRequest, true);
 			}
 			else if (cmd.equals(Constants.UNSUBSCRIBE_FROM_COMMENTS)) {
-				subscribeToComments(namespacedRequest, false);
+				subscribeToComments(namespacedHttpServletRequest, false);
 			}
 
+			String redirect = _portal.escapeRedirect(
+				ParamUtil.getString(namespacedHttpServletRequest, "redirect"));
+
 			if (Validator.isNotNull(redirect)) {
-				response.sendRedirect(redirect);
+				httpServletResponse.sendRedirect(redirect);
 			}
 		}
 		catch (DiscussionMaxCommentsException | MessageBodyException |
 			   NoSuchMessageException | PrincipalException |
-			   RequiredMessageException e) {
+			   RequiredMessageException exception) {
 
 			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-			jsonObject.putException(e);
+			jsonObject.putException(exception);
 
-			writeJSON(namespacedRequest, response, jsonObject);
+			writeJSON(
+				namespacedHttpServletRequest, httpServletResponse, jsonObject);
 		}
 
 		return null;
 	}
 
-	protected void deleteComment(HttpServletRequest request) throws Exception {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	protected void deleteComment(HttpServletRequest httpServletRequest)
+		throws Exception {
 
-		long commentId = ParamUtil.getLong(request, "commentId");
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		long commentId = ParamUtil.getLong(httpServletRequest, "commentId");
 
 		DiscussionPermission discussionPermission = _getDiscussionPermission(
 			themeDisplay);
@@ -148,17 +156,18 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 	}
 
 	protected void subscribeToComments(
-			HttpServletRequest request, boolean subscribe)
+			HttpServletRequest httpServletRequest, boolean subscribe)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		DiscussionPermission discussionPermission = _getDiscussionPermission(
 			themeDisplay);
 
-		String className = ParamUtil.getString(request, "className");
-		long classPK = ParamUtil.getLong(request, "classPK");
+		String className = ParamUtil.getString(httpServletRequest, "className");
+		long classPK = ParamUtil.getLong(httpServletRequest, "classPK");
 
 		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
 			className, classPK);
@@ -179,20 +188,22 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 		}
 	}
 
-	protected long updateComment(HttpServletRequest request) throws Exception {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	protected long updateComment(HttpServletRequest httpServletRequest)
+		throws Exception {
 
-		long commentId = ParamUtil.getLong(request, "commentId");
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		String className = ParamUtil.getString(request, "className");
-		long classPK = ParamUtil.getLong(request, "classPK");
-		long parentCommentId = ParamUtil.getLong(request, "parentCommentId");
-		String subject = ParamUtil.getString(request, "subject");
-		String body = ParamUtil.getString(request, "body");
+		long commentId = ParamUtil.getLong(httpServletRequest, "commentId");
+
+		String className = ParamUtil.getString(httpServletRequest, "className");
+		long classPK = ParamUtil.getLong(httpServletRequest, "classPK");
+		String subject = ParamUtil.getString(httpServletRequest, "subject");
+		String body = ParamUtil.getString(httpServletRequest, "body");
 
 		Function<String, ServiceContext> serviceContextFunction =
-			new ServiceContextFunction(request);
+			new ServiceContextFunction(httpServletRequest);
 
 		DiscussionPermission discussionPermission = _getDiscussionPermission(
 			themeDisplay);
@@ -210,7 +221,7 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 			}
 			else {
 				String emailAddress = ParamUtil.getString(
-					request, "emailAddress");
+					httpServletRequest, "emailAddress");
 
 				user = _userLocalService.fetchUserByEmailAddress(
 					themeDisplay.getCompanyId(), emailAddress);
@@ -221,6 +232,9 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 					return 0;
 				}
 			}
+
+			long parentCommentId = ParamUtil.getLong(
+				httpServletRequest, "parentCommentId");
 
 			String name = PrincipalThreadLocal.getName();
 
@@ -264,20 +278,20 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 	}
 
 	protected void writeJSON(
-			HttpServletRequest request, HttpServletResponse response,
-			Object jsonObj)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, Object object)
 		throws IOException {
 
-		response.setContentType(ContentTypes.APPLICATION_JSON);
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-		ServletResponseUtil.write(response, jsonObj.toString());
+		ServletResponseUtil.write(httpServletResponse, object.toString());
 
-		response.flushBuffer();
+		httpServletResponse.flushBuffer();
 	}
 
 	private AssetEntry _getAssetEntry(
 			long commentId, String className, long classPK)
-		throws PortalException {
+		throws Exception {
 
 		if (Validator.isNotNull(className) && (classPK > 0)) {
 			return _assetEntryLocalService.getEntry(className, classPK);
@@ -291,7 +305,7 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 	private DiscussionPermission _getDiscussionPermission(
 			ThemeDisplay themeDisplay)
-		throws PrincipalException {
+		throws Exception {
 
 		DiscussionPermission discussionPermission =
 			_commentManager.getDiscussionPermission(

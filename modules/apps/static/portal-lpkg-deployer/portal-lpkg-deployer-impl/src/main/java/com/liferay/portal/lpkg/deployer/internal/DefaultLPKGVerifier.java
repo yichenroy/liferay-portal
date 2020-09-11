@@ -14,7 +14,7 @@
 
 package com.liferay.portal.lpkg.deployer.internal;
 
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.lpkg.deployer.LPKGVerifier;
 import com.liferay.portal.lpkg.deployer.LPKGVerifyException;
@@ -39,11 +39,6 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(immediate = true, service = LPKGVerifier.class)
 public class DefaultLPKGVerifier implements LPKGVerifier {
-
-	@Activate
-	public void activate(BundleContext bundleContext) {
-		_bundleContext = bundleContext;
-	}
 
 	@Override
 	public List<Bundle> verify(File lpkgFile) {
@@ -78,11 +73,11 @@ public class DefaultLPKGVerifier implements LPKGVerifier {
 			try {
 				version = new Version(versionString);
 			}
-			catch (IllegalArgumentException iae) {
+			catch (IllegalArgumentException illegalArgumentException) {
 				throw new LPKGVerifyException(
 					lpkgFile + " does not have a valid version: " +
 						versionString,
-					iae);
+					illegalArgumentException);
 			}
 
 			List<Bundle> oldBundles = new ArrayList<>();
@@ -107,7 +102,7 @@ public class DefaultLPKGVerifier implements LPKGVerifier {
 
 					throw new LPKGVerifyException(
 						StringBundler.concat(
-							"Existing LPKG bundle ", String.valueOf(bundle),
+							"Existing LPKG bundle ", bundle,
 							" has the same symbolic name and version as LPKG ",
 							"file ", location));
 				}
@@ -115,9 +110,14 @@ public class DefaultLPKGVerifier implements LPKGVerifier {
 
 			return oldBundles;
 		}
-		catch (Exception e) {
-			throw new LPKGVerifyException(e);
+		catch (Exception exception) {
+			throw new LPKGVerifyException(exception);
 		}
+	}
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
 	}
 
 	private BundleContext _bundleContext;

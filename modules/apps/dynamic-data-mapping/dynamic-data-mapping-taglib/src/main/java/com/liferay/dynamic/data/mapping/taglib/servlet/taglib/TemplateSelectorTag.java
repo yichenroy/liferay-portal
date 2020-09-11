@@ -89,23 +89,22 @@ public class TemplateSelectorTag extends BaseTemplateSelectorTag {
 
 		Class<?> clazz = getClass();
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+		return ResourceBundleUtil.getBundle(
 			"content.Language", locale, clazz.getClassLoader());
-
-		return resourceBundle;
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		super.setAttributes(request);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		super.setAttributes(httpServletRequest);
 
 		setNamespacedAttribute(
-			request, "classNameId",
+			httpServletRequest, "classNameId",
 			String.valueOf(PortalUtil.getClassNameId(getClassName())));
 		setNamespacedAttribute(
-			request, "portletDisplayDDMTemplate",
+			httpServletRequest, "portletDisplayDDMTemplate",
 			getPortletDisplayDDMTemplate());
-		setNamespacedAttribute(request, "resourceBundle", getResourceBundle());
+		setNamespacedAttribute(
+			httpServletRequest, "resourceBundle", getResourceBundle());
 	}
 
 }

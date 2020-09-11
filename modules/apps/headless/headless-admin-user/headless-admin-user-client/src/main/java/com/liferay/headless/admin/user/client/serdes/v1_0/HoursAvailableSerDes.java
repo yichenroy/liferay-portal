@@ -17,9 +17,11 @@ package com.liferay.headless.admin.user.client.serdes.v1_0;
 import com.liferay.headless.admin.user.client.dto.v1_0.HoursAvailable;
 import com.liferay.headless.admin.user.client.json.BaseJSONParser;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.annotation.Generated;
 
@@ -58,7 +60,7 @@ public class HoursAvailableSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"closes\":");
+			sb.append("\"closes\": ");
 
 			sb.append("\"");
 
@@ -72,7 +74,7 @@ public class HoursAvailableSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"dayOfWeek\":");
+			sb.append("\"dayOfWeek\": ");
 
 			sb.append("\"");
 
@@ -81,22 +83,12 @@ public class HoursAvailableSerDes {
 			sb.append("\"");
 		}
 
-		if (hoursAvailable.getId() != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"id\":");
-
-			sb.append(hoursAvailable.getId());
-		}
-
 		if (hoursAvailable.getOpens() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"opens\":");
+			sb.append("\"opens\": ");
 
 			sb.append("\"");
 
@@ -110,12 +102,19 @@ public class HoursAvailableSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		HoursAvailableJSONParser hoursAvailableJSONParser =
+			new HoursAvailableJSONParser();
+
+		return hoursAvailableJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(HoursAvailable hoursAvailable) {
 		if (hoursAvailable == null) {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		if (hoursAvailable.getCloses() == null) {
 			map.put("closes", null);
@@ -131,13 +130,6 @@ public class HoursAvailableSerDes {
 			map.put("dayOfWeek", String.valueOf(hoursAvailable.getDayOfWeek()));
 		}
 
-		if (hoursAvailable.getId() == null) {
-			map.put("id", null);
-		}
-		else {
-			map.put("id", String.valueOf(hoursAvailable.getId()));
-		}
-
 		if (hoursAvailable.getOpens() == null) {
 			map.put("opens", null);
 		}
@@ -148,13 +140,7 @@ public class HoursAvailableSerDes {
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class HoursAvailableJSONParser
+	public static class HoursAvailableJSONParser
 		extends BaseJSONParser<HoursAvailable> {
 
 		@Override
@@ -182,23 +168,85 @@ public class HoursAvailableSerDes {
 					hoursAvailable.setDayOfWeek((String)jsonParserFieldValue);
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "id")) {
-				if (jsonParserFieldValue != null) {
-					hoursAvailable.setId(
-						Long.valueOf((String)jsonParserFieldValue));
-				}
-			}
 			else if (Objects.equals(jsonParserFieldName, "opens")) {
 				if (jsonParserFieldValue != null) {
 					hoursAvailable.setOpens((String)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

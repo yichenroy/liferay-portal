@@ -24,8 +24,8 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -106,6 +106,10 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 				long classNameId = GetterUtil.getLong(
 					document.get(Field.CLASS_NAME_ID));
 
+				if (classNameId == 0) {
+					return;
+				}
+
 				className = portal.getClassName(classNameId);
 
 				classPK = document.get(Field.CLASS_PK);
@@ -131,13 +135,13 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 				companyId, groupId, className, GetterUtil.getLong(classPK),
 				viewActionId, document);
 		}
-		catch (NoSuchResourceException nsre) {
+		catch (NoSuchResourceException noSuchResourceException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(nsre, nsre);
+				_log.debug(noSuchResourceException, noSuchResourceException);
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -151,8 +155,8 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 				companyId, groupIds, userId, className, booleanFilter,
 				searchContext);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
 			return booleanFilter;
 		}
@@ -168,8 +172,8 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 
 			indexer.reindex(resourceName, GetterUtil.getLong(resourceClassPK));
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -303,11 +307,9 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 			}
 		}
 
+		document.addKeyword(Field.ROLE_ID, roleIds.toArray(new Long[0]));
 		document.addKeyword(
-			Field.ROLE_ID, roleIds.toArray(new Long[roleIds.size()]));
-		document.addKeyword(
-			Field.GROUP_ROLE_ID,
-			groupRoleIds.toArray(new String[groupRoleIds.size()]));
+			Field.GROUP_ROLE_ID, groupRoleIds.toArray(new String[0]));
 	}
 
 	private SearchPermissionContext _createSearchPermissionContext(
@@ -501,7 +503,8 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 			"searchPermissionContext", searchPermissionContext);
 
 		return _getPermissionFilter(
-			companyId, searchGroupIds, userId, permissionChecker, className,
+			companyId, searchGroupIds, userId, permissionChecker,
+			_getPermissionName(searchContext, className),
 			searchPermissionContext);
 	}
 
@@ -598,6 +601,13 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 		}
 
 		return booleanFilter;
+	}
+
+	private String _getPermissionName(
+		SearchContext searchContext, String defaultValue) {
+
+		return GetterUtil.getString(
+			searchContext.getAttribute("resourcePermissionName"), defaultValue);
 	}
 
 	private static final String _NULL_SEARCH_PERMISSION_CONTEXT =

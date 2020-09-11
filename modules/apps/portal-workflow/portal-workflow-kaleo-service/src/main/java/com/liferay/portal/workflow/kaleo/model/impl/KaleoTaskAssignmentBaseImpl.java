@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskAssignment;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalService
  * @see KaleoTaskAssignment
  * @generated
  */
-@ProviderType
 public abstract class KaleoTaskAssignmentBaseImpl
 	extends KaleoTaskAssignmentModelImpl implements KaleoTaskAssignment {
 

@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -45,15 +44,15 @@ public class DefaultAnnouncementsAdminViewDisplayContext
 	implements AnnouncementsAdminViewDisplayContext {
 
 	public DefaultAnnouncementsAdminViewDisplayContext(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 	}
 
 	@Override
 	public String getCurrentDistributionScopeLabel() throws Exception {
 		String distributionScope = ParamUtil.getString(
-			_request, "distributionScope");
+			_httpServletRequest, "distributionScope");
 
 		if (Validator.isNotNull(distributionScope)) {
 			Map<String, String> distributionScopes = getDistributionScopes();
@@ -76,14 +75,13 @@ public class DefaultAnnouncementsAdminViewDisplayContext
 	public Map<String, String> getDistributionScopes() throws Exception {
 		Map<String, String> distributionScopes = new LinkedHashMap<>();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		PermissionChecker permissionChecker =
-			themeDisplay.getPermissionChecker();
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (PortalPermissionUtil.contains(
-				permissionChecker, ActionKeys.ADD_GENERAL_ANNOUNCEMENTS)) {
+				themeDisplay.getPermissionChecker(),
+				ActionKeys.ADD_GENERAL_ANNOUNCEMENTS)) {
 
 			distributionScopes.put("general", "0,0");
 		}
@@ -94,7 +92,7 @@ public class DefaultAnnouncementsAdminViewDisplayContext
 			distributionScopes.put(
 				StringBundler.concat(
 					group.getDescriptiveName(themeDisplay.getLocale()), " (",
-					LanguageUtil.get(_request, "site"), ")"),
+					LanguageUtil.get(_httpServletRequest, "site"), ")"),
 				PortalUtil.getClassNameId(Group.class) + StringPool.COMMA +
 					group.getGroupId());
 		}
@@ -105,7 +103,7 @@ public class DefaultAnnouncementsAdminViewDisplayContext
 		for (Organization organization : organizations) {
 			String name = StringBundler.concat(
 				organization.getName(), " (",
-				LanguageUtil.get(_request, "organization"), ")");
+				LanguageUtil.get(_httpServletRequest, "organization"), ")");
 
 			distributionScopes.put(
 				name,
@@ -119,7 +117,7 @@ public class DefaultAnnouncementsAdminViewDisplayContext
 			distributionScopes.put(
 				StringBundler.concat(
 					role.getDescriptiveName(), " (",
-					LanguageUtil.get(_request, "role"), ")"),
+					LanguageUtil.get(_httpServletRequest, "role"), ")"),
 				PortalUtil.getClassNameId(Role.class) + StringPool.COMMA +
 					role.getRoleId());
 		}
@@ -131,7 +129,7 @@ public class DefaultAnnouncementsAdminViewDisplayContext
 			distributionScopes.put(
 				StringBundler.concat(
 					userGroup.getName(), " (",
-					LanguageUtil.get(_request, "user-group"), ")"),
+					LanguageUtil.get(_httpServletRequest, "user-group"), ")"),
 				PortalUtil.getClassNameId(UserGroup.class) + StringPool.COMMA +
 					userGroup.getUserGroupId());
 		}
@@ -147,6 +145,6 @@ public class DefaultAnnouncementsAdminViewDisplayContext
 	private static final UUID _UUID = UUID.fromString(
 		"14f20793-d4e2-4173-acd7-7f1c9cda9a36");
 
-	private final HttpServletRequest _request;
+	private final HttpServletRequest _httpServletRequest;
 
 }

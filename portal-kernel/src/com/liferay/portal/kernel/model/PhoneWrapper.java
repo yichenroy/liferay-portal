@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,9 +30,8 @@ import java.util.Map;
  * @see Phone
  * @generated
  */
-@ProviderType
 public class PhoneWrapper
-	extends BaseModelWrapper<Phone> implements Phone, ModelWrapper<Phone> {
+	extends BaseModelWrapper<Phone> implements ModelWrapper<Phone>, Phone {
 
 	public PhoneWrapper(Phone phone) {
 		super(phone);

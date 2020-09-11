@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 
 /**
  * @author Kyle Miho
@@ -60,13 +61,11 @@ public class AssetListTestUtil {
 			long segmentsEntryId)
 		throws PortalException {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId);
-
 		return AssetListEntryAssetEntryRelLocalServiceUtil.
 			addAssetListEntryAssetEntryRel(
 				assetListEntry.getAssetListEntryId(), assetEntry.getEntryId(),
-				segmentsEntryId, serviceContext);
+				segmentsEntryId,
+				ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
 	public static AssetListEntryAssetEntryRel addAssetListEntryAssetEntryRel(
@@ -74,13 +73,11 @@ public class AssetListTestUtil {
 			long segmentsEntryId, int position)
 		throws PortalException {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId);
-
 		return AssetListEntryAssetEntryRelLocalServiceUtil.
 			addAssetListEntryAssetEntryRel(
 				assetListEntry.getAssetListEntryId(), assetEntry.getEntryId(),
-				segmentsEntryId, position, serviceContext);
+				segmentsEntryId, position,
+				ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
 	public static AssetListEntrySegmentsEntryRel
@@ -98,6 +95,12 @@ public class AssetListTestUtil {
 				long segmentsEntryId)
 		throws PortalException {
 
+		UnicodeProperties typeSettingsUnicodeProperties =
+			new UnicodeProperties();
+
+		typeSettingsUnicodeProperties.put(
+			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(groupId);
 
@@ -105,7 +108,7 @@ public class AssetListTestUtil {
 			addAssetListEntrySegmentsEntryRel(
 				TestPropsValues.getUserId(), groupId,
 				assetListEntry.getAssetListEntryId(), segmentsEntryId,
-				RandomTestUtil.randomString(), serviceContext);
+				typeSettingsUnicodeProperties.toString(), serviceContext);
 	}
 
 }

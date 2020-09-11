@@ -14,14 +14,11 @@
 
 package com.liferay.portal.search.engine.adapter.index;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Objects;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class IndicesOptions {
 
 	@Override

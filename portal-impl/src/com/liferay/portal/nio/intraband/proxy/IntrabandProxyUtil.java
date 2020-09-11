@@ -16,6 +16,7 @@ package com.liferay.portal.nio.intraband.proxy;
 
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.asm.ASMUtil;
 import com.liferay.portal.asm.MethodNodeGenerator;
@@ -34,7 +35,6 @@ import com.liferay.portal.kernel.nio.intraband.proxy.annotation.Id;
 import com.liferay.portal.kernel.nio.intraband.proxy.annotation.Proxy;
 import com.liferay.portal.kernel.nio.intraband.rpc.RPCResponse;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.TextFormatter;
@@ -81,7 +81,7 @@ public class IntrabandProxyUtil {
 
 			return (String[])field.get(null);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return null;
 		}
 	}
@@ -127,8 +127,8 @@ public class IntrabandProxyUtil {
 			return constructor.newInstance(
 				id, registrationReference, exceptionHandler);
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
 		}
 	}
 
@@ -142,10 +142,8 @@ public class IntrabandProxyUtil {
 
 					throw new IllegalArgumentException(
 						StringBundler.concat(
-							"Field ", String.valueOf(field),
-							" is expected to be of type ",
-							String.valueOf(clazz), " and ",
-							String.valueOf(!isStatic ? "not " : ""), "static"));
+							"Field ", field, " is expected to be of type ",
+							clazz, " and ", !isStatic ? "not " : "", "static"));
 				}
 
 				break;
@@ -617,7 +615,7 @@ public class IntrabandProxyUtil {
 		try {
 			return Class.forName(className.concat(postfix), false, classLoader);
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (ClassNotFoundException classNotFoundException) {
 		}
 
 		return null;
@@ -703,8 +701,8 @@ public class IntrabandProxyUtil {
 					classNode.name, CharPool.SLASH, CharPool.PERIOD),
 				data, 0, data.length);
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
 		}
 	}
 
@@ -732,7 +730,7 @@ public class IntrabandProxyUtil {
 		try {
 			reloadedClass = Class.forName(clazz.getName(), false, classLoader);
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (ClassNotFoundException classNotFoundException) {
 		}
 
 		if (reloadedClass != clazz) {
@@ -782,11 +780,8 @@ public class IntrabandProxyUtil {
 				methodName = method.getName();
 			}
 
-			return methodName.concat(
-				StringPool.DASH
-			).concat(
-				Type.getMethodDescriptor(method)
-			);
+			return StringBundler.concat(
+				methodName, StringPool.DASH, Type.getMethodDescriptor(method));
 		}
 
 	}
@@ -808,13 +803,9 @@ public class IntrabandProxyUtil {
 			for (int i = 0; i < proxyMethods.size(); i++) {
 				Method proxyMethod = proxyMethods.get(i);
 
-				String name = proxyMethod.getName();
-
-				proxyMethodSignatures[i] = name.concat(
-					StringPool.DASH
-				).concat(
-					Type.getMethodDescriptor(proxyMethod)
-				);
+				proxyMethodSignatures[i] = StringBundler.concat(
+					proxyMethod.getName(), StringPool.DASH,
+					Type.getMethodDescriptor(proxyMethod));
 			}
 		}
 
@@ -847,11 +838,12 @@ public class IntrabandProxyUtil {
 			try {
 				doDispatch(registrationReference, datagram, deserializer);
 			}
-			catch (Exception e) {
-				_log.error("Unable to dispatch", e);
+			catch (Exception exception) {
+				_log.error("Unable to dispatch", exception);
 
 				_sendResponse(
-					registrationReference, datagram, new RPCResponse(e));
+					registrationReference, datagram,
+					new RPCResponse(exception));
 			}
 		}
 
@@ -868,7 +860,7 @@ public class IntrabandProxyUtil {
 			String[] proxyMethodsSignatures) {
 
 			StringBundler sb = new StringBundler(
-				proxyMethodsSignatures.length * 4 + 1);
+				(proxyMethodsSignatures.length * 4) + 1);
 
 			sb.append(StringPool.OPEN_CURLY_BRACE);
 
@@ -908,7 +900,7 @@ public class IntrabandProxyUtil {
 		private void _unknownMethodIndex(int methodIndex) {
 			throw new IllegalArgumentException(
 				StringBundler.concat(
-					"Unknow method index ", String.valueOf(methodIndex),
+					"Unknow method index ", methodIndex,
 					" for proxy methods mappings ", _PROXY_METHODS_MAPPING));
 		}
 
@@ -973,17 +965,17 @@ public class IntrabandProxyUtil {
 
 				RPCResponse rpcResponse = deserializer.readObject();
 
-				Exception e = rpcResponse.getException();
+				Exception exception = rpcResponse.getException();
 
-				if (e != null) {
-					throw e;
+				if (exception != null) {
+					throw exception;
 				}
 
 				return (T)rpcResponse.getResult();
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_exceptionHandler != null) {
-					_exceptionHandler.onException(e);
+					_exceptionHandler.onException(exception);
 				}
 
 				return null;
@@ -1077,8 +1069,8 @@ public class IntrabandProxyUtil {
 				ClassLoader.class, "defineClass", String.class, byte[].class,
 				int.class, int.class);
 		}
-		catch (Throwable t) {
-			throw new ExceptionInInitializerError(t);
+		catch (Throwable throwable) {
+			throw new ExceptionInInitializerError(throwable);
 		}
 	}
 

@@ -30,13 +30,13 @@ public class FragmentCollectionsManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public FragmentCollectionsManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request,
 		FragmentCollectionsDisplayContext fragmentCollectionsDisplayContext) {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			fragmentCollectionsDisplayContext.getSearchContainer());
 	}
 

@@ -15,7 +15,7 @@
 package com.liferay.portal.javadoc;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Arrays;
@@ -42,7 +42,7 @@ public class JavadocUtil {
 			try {
 				return classLoader.loadClass(className);
 			}
-			catch (ClassNotFoundException cnfe) {
+			catch (ClassNotFoundException classNotFoundException) {
 			}
 		}
 
@@ -54,7 +54,7 @@ public class JavadocUtil {
 			try {
 				return contextClassLoader.loadClass(className);
 			}
-			catch (ClassNotFoundException cnfe) {
+			catch (ClassNotFoundException classNotFoundException) {
 			}
 		}
 

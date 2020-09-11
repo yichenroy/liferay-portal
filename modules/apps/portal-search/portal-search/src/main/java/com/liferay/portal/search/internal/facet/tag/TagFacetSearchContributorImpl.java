@@ -41,12 +41,12 @@ public class TagFacetSearchContributorImpl
 
 		Facet facet = searchRequestBuilder.withSearchContextGet(
 			searchContext -> {
-				TagFacetBuilderImpl tagBuilderImplImpl =
+				TagFacetBuilderImpl tagFacetBuilderImpl =
 					new TagFacetBuilderImpl(searchContext);
 
-				tagFacetBuilderConsumer.accept(tagBuilderImplImpl);
+				tagFacetBuilderConsumer.accept(tagFacetBuilderImpl);
 
-				return tagBuilderImplImpl.build();
+				return tagFacetBuilderImpl.build();
 			});
 
 		searchRequestBuilder.withFacetContext(
@@ -119,8 +119,11 @@ public class TagFacetSearchContributorImpl
 
 			JSONObject jsonObject = facetConfiguration.getData();
 
-			jsonObject.put("frequencyThreshold", _frequencyThreshold);
-			jsonObject.put("maxTerms", _maxTerms);
+			jsonObject.put(
+				"frequencyThreshold", _frequencyThreshold
+			).put(
+				"maxTerms", _maxTerms
+			);
 
 			return facetConfiguration;
 		}

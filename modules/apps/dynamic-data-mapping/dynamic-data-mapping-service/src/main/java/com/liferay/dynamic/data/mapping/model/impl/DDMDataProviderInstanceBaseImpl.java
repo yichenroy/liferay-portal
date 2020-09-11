@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance;
 import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLocalServ
  * @see DDMDataProviderInstance
  * @generated
  */
-@ProviderType
 public abstract class DDMDataProviderInstanceBaseImpl
 	extends DDMDataProviderInstanceModelImpl
 	implements DDMDataProviderInstance {

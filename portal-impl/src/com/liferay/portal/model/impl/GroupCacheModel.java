@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -33,21 +31,20 @@ import java.io.ObjectOutput;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class GroupCacheModel
 	implements CacheModel<Group>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof GroupCacheModel)) {
+		if (!(object instanceof GroupCacheModel)) {
 			return false;
 		}
 
-		GroupCacheModel groupCacheModel = (GroupCacheModel)obj;
+		GroupCacheModel groupCacheModel = (GroupCacheModel)object;
 
 		if ((groupId == groupCacheModel.groupId) &&
 			(mvccVersion == groupCacheModel.mvccVersion)) {
@@ -77,10 +74,12 @@ public class GroupCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(45);
+		StringBundler sb = new StringBundler(47);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", groupId=");
@@ -133,6 +132,7 @@ public class GroupCacheModel
 		GroupImpl groupImpl = new GroupImpl();
 
 		groupImpl.setMvccVersion(mvccVersion);
+		groupImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			groupImpl.setUuid("");
@@ -207,8 +207,12 @@ public class GroupCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		groupId = objectInput.readLong();
@@ -230,7 +234,7 @@ public class GroupCacheModel
 		description = objectInput.readUTF();
 
 		type = objectInput.readInt();
-		typeSettings = objectInput.readUTF();
+		typeSettings = (String)objectInput.readObject();
 
 		manualMembership = objectInput.readBoolean();
 
@@ -249,6 +253,8 @@ public class GroupCacheModel
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -302,10 +308,10 @@ public class GroupCacheModel
 		objectOutput.writeInt(type);
 
 		if (typeSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(typeSettings);
+			objectOutput.writeObject(typeSettings);
 		}
 
 		objectOutput.writeBoolean(manualMembership);
@@ -329,6 +335,7 @@ public class GroupCacheModel
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long groupId;
 	public long companyId;

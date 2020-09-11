@@ -16,37 +16,12 @@
 
 <%@ include file="/init.jsp" %>
 
-<style type="text/css">
-	.personal-menu-dropdown .btn .sticker .inline-item {
-		font-size: unset;
-	}
-</style>
-
 <c:choose>
 	<c:when test="<%= themeDisplay.isSignedIn() %>">
 		<span class="user-avatar-link">
-			<liferay-util:buffer
-				var="userAvatar"
-			>
-				<span class="sticker">
-					<span class="inline-item">
-						<liferay-ui:user-portrait
-							cssClass="sticker-lg"
-							user="<%= user %>"
-						/>
-					</span>
-
-					<c:if test="<%= themeDisplay.isImpersonated() %>">
-						<span class="sticker sticker-bottom-right sticker-circle sticker-outside sticker-sm sticker-user-icon">
-							<aui:icon image="user" markupView="lexicon" />
-						</span>
-					</c:if>
-				</span>
-			</liferay-util:buffer>
-
 			<liferay-product-navigation:personal-menu
-				expanded="<%= true %>"
-				label="<%= userAvatar %>"
+				size="lg"
+				user="<%= user %>"
 			/>
 
 			<%
@@ -62,23 +37,129 @@
 				%>
 
 				<aui:a href="<%= (notificationsURL != null) ? notificationsURL : null %>">
-					<span class="badge badge-danger panel-notifications-count">
-						<span class="badge-item badge-item-expand"><%= notificationsCount %></span>
-					</span>
+					<clay:badge
+						cssClass="panel-notifications-count"
+						displayType="danger"
+						label="<%= String.valueOf(notificationsCount) %>"
+					/>
 				</aui:a>
 			</c:if>
 		</span>
 	</c:when>
 	<c:otherwise>
-
-		<%
-		Map<String, Object> anchorData = new HashMap<String, Object>();
-
-		anchorData.put("redirect", String.valueOf(PortalUtil.isLoginRedirectRequired(request)));
-		%>
-
 		<span class="sign-in text-default" role="presentation">
-			<aui:icon cssClass="sign-in text-default" data="<%= anchorData %>" image="user" label="sign-in" markupView="lexicon" url="<%= themeDisplay.getURLSignIn() %>" />
+			<aui:icon
+				cssClass="sign-in text-default"
+				data='<%=
+					HashMapBuilder.<String, Object>put(
+						"redirect", String.valueOf(PortalUtil.isLoginRedirectRequired(request))
+					).build()
+				%>'
+				image="user"
+				label="sign-in"
+				markupView="lexicon"
+				url="<%= themeDisplay.getURLSignIn() %>"
+			/>
 		</span>
+
+		<aui:script sandbox="<%= true %>">
+			var signInLink = document.querySelector('.sign-in > a');
+
+			if (signInLink && signInLink.dataset.redirect === 'false') {
+				var signInURL = '<%= themeDisplay.getURLSignIn() %>';
+
+				var modalSignInURL = Liferay.Util.addParams(
+					'windowState=exclusive',
+					signInURL
+				);
+
+				var setModalContent = function (html) {
+					var modalBody = document.querySelector('.liferay-modal-body');
+
+					if (modalBody) {
+						var fragment = document
+							.createRange()
+							.createContextualFragment(html);
+
+						modalBody.innerHTML = '';
+
+						modalBody.appendChild(fragment);
+					}
+				};
+
+				var loading = false;
+				var redirect = false;
+				var html = '';
+				var modalOpen = false;
+
+				var fetchModalSignIn = function () {
+					if (loading || html) {
+						return;
+					}
+
+					loading = true;
+
+					Liferay.Util.fetch(modalSignInURL)
+						.then(function (response) {
+							return response.text();
+						})
+						.then(function (response) {
+							if (!loading) {
+								return;
+							}
+
+							loading = false;
+
+							if (!response) {
+								redirect = true;
+
+								return;
+							}
+
+							html = response;
+
+							if (modalOpen) {
+								setModalContent(response);
+							}
+						})
+						.catch(function () {
+							redirect = true;
+						});
+				};
+
+				signInLink.addEventListener('mouseover', fetchModalSignIn);
+				signInLink.addEventListener('focus', fetchModalSignIn);
+
+				signInLink.addEventListener('click', function (event) {
+					event.preventDefault();
+
+					if (redirect) {
+						Liferay.Util.navigate(signInURL);
+
+						return;
+					}
+
+					Liferay.Util.openModal({
+						bodyHTML: html ? html : '<span class="loading-animation">',
+						height: '400px',
+						onClose: function () {
+							loading = false;
+							redirect = false;
+							html = '';
+							modalOpen = false;
+						},
+						onOpen: function () {
+							modalOpen = true;
+
+							if (html && document.querySelector('.loading-animation')) {
+								setModalContent(html);
+							}
+						},
+						size: 'md',
+						title: '<liferay-ui:message key="sign-in" />',
+					});
+				});
+			}
+		</aui:script>
 	</c:otherwise>
 </c:choose>

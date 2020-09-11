@@ -14,8 +14,7 @@
 
 package com.liferay.ratings.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -24,6 +23,8 @@ import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.ratings.kernel.model.RatingsEntry;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for RatingsEntry. Methods of this
@@ -35,6 +36,7 @@ import com.liferay.ratings.kernel.model.RatingsEntry;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -46,7 +48,7 @@ public interface RatingsEntryService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link RatingsEntryServiceUtil} to access the ratings entry remote service. Add custom service methods to <code>com.liferay.portlet.ratings.service.impl.RatingsEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.ratings.service.impl.RatingsEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the ratings entry remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link RatingsEntryServiceUtil} if injection and service tracking are not available.
 	 */
 	public void deleteEntry(String className, long classPK)
 		throws PortalException;

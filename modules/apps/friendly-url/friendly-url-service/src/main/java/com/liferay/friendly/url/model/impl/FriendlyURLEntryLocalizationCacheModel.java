@@ -14,8 +14,6 @@
 
 package com.liferay.friendly.url.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
@@ -33,24 +31,23 @@ import java.io.ObjectOutput;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class FriendlyURLEntryLocalizationCacheModel
 	implements CacheModel<FriendlyURLEntryLocalization>, Externalizable,
 			   MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof FriendlyURLEntryLocalizationCacheModel)) {
+		if (!(object instanceof FriendlyURLEntryLocalizationCacheModel)) {
 			return false;
 		}
 
 		FriendlyURLEntryLocalizationCacheModel
 			friendlyURLEntryLocalizationCacheModel =
-				(FriendlyURLEntryLocalizationCacheModel)obj;
+				(FriendlyURLEntryLocalizationCacheModel)object;
 
 		if ((friendlyURLEntryLocalizationId ==
 				friendlyURLEntryLocalizationCacheModel.
@@ -83,10 +80,12 @@ public class FriendlyURLEntryLocalizationCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(19);
+		StringBundler sb = new StringBundler(21);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", friendlyURLEntryLocalizationId=");
 		sb.append(friendlyURLEntryLocalizationId);
 		sb.append(", companyId=");
@@ -114,6 +113,7 @@ public class FriendlyURLEntryLocalizationCacheModel
 			new FriendlyURLEntryLocalizationImpl();
 
 		friendlyURLEntryLocalizationImpl.setMvccVersion(mvccVersion);
+		friendlyURLEntryLocalizationImpl.setCtCollectionId(ctCollectionId);
 		friendlyURLEntryLocalizationImpl.setFriendlyURLEntryLocalizationId(
 			friendlyURLEntryLocalizationId);
 		friendlyURLEntryLocalizationImpl.setCompanyId(companyId);
@@ -147,6 +147,8 @@ public class FriendlyURLEntryLocalizationCacheModel
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
 
+		ctCollectionId = objectInput.readLong();
+
 		friendlyURLEntryLocalizationId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
@@ -165,6 +167,8 @@ public class FriendlyURLEntryLocalizationCacheModel
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		objectOutput.writeLong(friendlyURLEntryLocalizationId);
 
@@ -194,6 +198,7 @@ public class FriendlyURLEntryLocalizationCacheModel
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public long friendlyURLEntryLocalizationId;
 	public long companyId;
 	public long friendlyURLEntryId;

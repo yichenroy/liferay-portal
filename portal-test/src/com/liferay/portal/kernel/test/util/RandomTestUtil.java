@@ -15,15 +15,15 @@
 package com.liferay.portal.kernel.test.util;
 
 import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.test.randomizerbumpers.RandomizerBumper;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PwdGenerator;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -90,7 +90,7 @@ public class RandomTestUtil {
 			return value;
 		}
 
-		return (int)(Math.abs(value) % range + min);
+		return (int)((Math.abs(value) % range) + min);
 	}
 
 	public static Map<Locale, String> randomLocaleStringMap() {
@@ -98,11 +98,9 @@ public class RandomTestUtil {
 	}
 
 	public static Map<Locale, String> randomLocaleStringMap(Locale locale) {
-		Map<Locale, String> map = new HashMap<>();
-
-		map.put(LocaleUtil.getDefault(), randomString());
-
-		return map;
+		return HashMapBuilder.put(
+			LocaleUtil.getDefault(), randomString()
+		).build();
 	}
 
 	public static long randomLong() {
@@ -141,8 +139,7 @@ public class RandomTestUtil {
 			StringBundler.concat(
 				"Unable to generate a random string that is acceptable by all ",
 				"randomizer bumpers ", Arrays.toString(randomizerBumpers),
-				" after ", String.valueOf(_RANDOMIZER_BUMPER_TRIES_MAX),
-				" tries"));
+				" after ", _RANDOMIZER_BUMPER_TRIES_MAX, " tries"));
 	}
 
 	@SafeVarargs

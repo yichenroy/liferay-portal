@@ -14,11 +14,12 @@
 
 package com.liferay.announcements.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the AnnouncementsDelivery service. Represents a row in the &quot;AnnouncementsDelivery&quot; database table, with each column mapped to a property of this class.
@@ -33,7 +34,7 @@ import com.liferay.portal.kernel.model.ShardedModel;
  */
 @ProviderType
 public interface AnnouncementsDeliveryModel
-	extends BaseModel<AnnouncementsDelivery>, ShardedModel {
+	extends BaseModel<AnnouncementsDelivery>, MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -54,6 +55,22 @@ public interface AnnouncementsDeliveryModel
 	 * @param primaryKey the primary key of this announcements delivery
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this announcements delivery.
+	 *
+	 * @return the mvcc version of this announcements delivery
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this announcements delivery.
+	 *
+	 * @param mvccVersion the mvcc version of this announcements delivery
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the delivery ID of this announcements delivery.

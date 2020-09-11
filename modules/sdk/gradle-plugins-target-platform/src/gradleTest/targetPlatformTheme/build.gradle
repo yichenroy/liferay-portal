@@ -1,7 +1,9 @@
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins", version: "3.13.172"
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.theme.builder", version: "2.0.6"
+		classpath(group: "com.liferay", name: "com.liferay.gradle.plugins", version: "11.0.45") {
+			exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
+		}
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.theme.builder", version: "2.0.13"
 	}
 
 	repositories {
@@ -35,7 +37,7 @@ dependencies {
 
 	portalCommonCSS group: "com.liferay", name: "com.liferay.frontend.css.common"
 
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.bom", version: "7.0.4"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom", version: "7.2.1"
 }
 
 repositories {
@@ -50,12 +52,8 @@ runGradleTest {
 			it.name == "com.liferay.frontend.theme.styled"
 		}
 
-		assert resolvedArtifact.file.name.contains("2.1.2")
+		assert resolvedArtifact.file.name.equals("com.liferay.frontend.theme.styled-4.0.20.jar")
 
-		resolvedArtifact = configurations.portalCommonCSS.resolvedConfiguration.resolvedArtifacts.find {
-			it.name == "com.liferay.frontend.css.common"
-		}
-
-		assert resolvedArtifact.file.name.contains("2.0.4")
+		assert configurations.portalCommonCSS.singleFile.name.equals("com.liferay.frontend.css.common-4.0.3.jar")
 	}
 }

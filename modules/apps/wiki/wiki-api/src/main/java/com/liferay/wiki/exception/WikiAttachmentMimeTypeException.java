@@ -14,14 +14,11 @@
 
 package com.liferay.wiki.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class WikiAttachmentMimeTypeException extends PortalException {
 
 	public WikiAttachmentMimeTypeException() {
@@ -31,12 +28,12 @@ public class WikiAttachmentMimeTypeException extends PortalException {
 		super(msg);
 	}
 
-	public WikiAttachmentMimeTypeException(String msg, Throwable cause) {
-		super(msg, cause);
+	public WikiAttachmentMimeTypeException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public WikiAttachmentMimeTypeException(Throwable cause) {
-		super(cause);
+	public WikiAttachmentMimeTypeException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

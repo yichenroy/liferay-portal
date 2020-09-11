@@ -14,8 +14,6 @@
 
 package com.liferay.counter.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.counter.kernel.model.Counter;
 import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.counter.kernel.service.persistence.CounterFinder;
@@ -34,7 +32,6 @@ import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
  * @see com.liferay.counter.service.impl.CounterLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class CounterLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
 	implements CounterLocalService, IdentifiableOSGiService {

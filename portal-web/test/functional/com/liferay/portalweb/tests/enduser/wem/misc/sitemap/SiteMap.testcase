@@ -1,5 +1,6 @@
 @component-name = "portal-wcm"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Sitemap";
@@ -11,22 +12,14 @@ definition {
 
 		JSONGroup.addGroup(groupName = "Test Site Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
-
 		JSONLayout.addPrivateLayout(
 			groupName = "Test Site Name",
-			layoutName = "Site Page Name"
-		);
+			layoutName = "Site Page Name");
 
 		JSONLayout.addPrivateLayout(
 			groupName = "Test Site Name",
 			layoutName = "Child Page Name",
-			parentLayoutName = "Site Page Name"
-		);
+			parentLayoutName = "Site Page Name");
 	}
 
 	tearDown {
@@ -42,18 +35,20 @@ definition {
 
 	@priority = "4"
 	test DisplayPrivatePageWithChildPage {
-		Navigator.gotoPrivateSitePage(
-			pageName = "Child Page Name",
-			siteName = "Test Site Name"
-		);
+		JSONLayout.addWidgetToPrivateLayout(
+			groupName = "Test Site Name",
+			layoutName = "Child Page Name",
+			widgetName = "Site Map");
 
-		Portlet.addPG(portletName = "Site Map");
+		Navigator.openPrivateSitePageURL(
+			pageName = "Child Page Name",
+			siteName = "Test Site Name");
 
 		Portlet.viewSpecificPG(portletName = "Site Map");
 
 		SiteMapPortlet.viewDefaultPG(
 			listChildPageName = "Child Page Name",
-			listPageName = "Site Page Name"
-		);
+			listPageName = "Site Page Name");
 	}
+
 }

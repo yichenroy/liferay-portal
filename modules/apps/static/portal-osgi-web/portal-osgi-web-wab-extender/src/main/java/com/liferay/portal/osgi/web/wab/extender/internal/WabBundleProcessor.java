@@ -14,8 +14,10 @@
 
 package com.liferay.portal.osgi.web.wab.extender.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -36,8 +38,12 @@ import com.liferay.portal.osgi.web.wab.extender.internal.registration.FilterRegi
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.ListenerServiceRegistrationComparator;
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.ServletRegistrationImpl;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -71,8 +77,6 @@ import javax.servlet.annotation.HandlesTypes;
 import javax.servlet.http.HttpSessionAttributeListener;
 import javax.servlet.http.HttpSessionListener;
 
-import org.apache.felix.utils.log.Logger;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -89,12 +93,11 @@ public class WabBundleProcessor {
 
 	public WabBundleProcessor(
 		Bundle bundle, JSPServletFactory jspServletFactory,
-		JSPTaglibHelper jspTaglibHelper, Logger logger) {
+		JSPTaglibHelper jspTaglibHelper) {
 
 		_bundle = bundle;
 		_jspServletFactory = jspServletFactory;
 		_jspTaglibHelper = jspTaglibHelper;
-		_logger = logger;
 
 		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
 
@@ -156,9 +159,20 @@ public class WabBundleProcessor {
 				ModifiableServletContextAdapter.createInstance(
 					_bundle.getBundleContext(),
 					servletContextHelperRegistration.getServletContext(),
-					_jspServletFactory, webXMLDefinition, _logger);
+					_jspServletFactory, webXMLDefinition);
 
-			initServletContainerInitializers(_bundle, servletContext);
+			Set<Class<?>> allClasses =
+				servletContextHelperRegistration.getClasses();
+
+			Set<Class<?>> annotatedClasses =
+				servletContextHelperRegistration.getAnnotatedClasses();
+
+			initServletContainerInitializers(
+				_bundle, servletContext, allClasses, annotatedClasses);
+
+			if (!allClasses.equals(annotatedClasses)) {
+				_saveScannedAnnotatedClasses(annotatedClasses);
+			}
 
 			ModifiableServletContext modifiableServletContext =
 				(ModifiableServletContext)servletContext;
@@ -171,11 +185,11 @@ public class WabBundleProcessor {
 
 				Map<String, Object> attributes = new HashMap<>();
 
-				Enumeration<String> attributeNames =
+				Enumeration<String> enumeration =
 					servletContext.getAttributeNames();
 
-				while (attributeNames.hasMoreElements()) {
-					String attributeName = attributeNames.nextElement();
+				while (enumeration.hasMoreElements()) {
+					String attributeName = enumeration.nextElement();
 
 					attributes.put(
 						attributeName,
@@ -199,7 +213,7 @@ public class WabBundleProcessor {
 					_bundle.getBundleContext(), newServletContext,
 					_jspServletFactory, webXMLDefinition, listenerDefinitions,
 					filterRegistrationImpls, servletRegistrationImpls,
-					attributes, _logger);
+					attributes);
 
 				modifiableServletContext =
 					(ModifiableServletContext)servletContext;
@@ -226,16 +240,15 @@ public class WabBundleProcessor {
 				webXMLDefinition.getServletDefinitions(),
 				modifiableServletContext);
 		}
-		catch (Exception e) {
-			_logger.log(
-				Logger.LOG_ERROR,
+		catch (Exception exception) {
+			_log.error(
 				"Catastrophic initialization failure! Shutting down " +
-					_contextName + " WAB due to: " + e.getMessage(),
-				e);
+					_contextName + " WAB due to: " + exception.getMessage(),
+				exception);
 
 			destroy();
 
-			throw e;
+			throw exception;
 		}
 		finally {
 			currentThread.setContextClassLoader(contextClassLoader);
@@ -243,34 +256,24 @@ public class WabBundleProcessor {
 	}
 
 	protected void collectAnnotatedClasses(
-		String classResource, Bundle bundle, Class<?>[] handledTypesArray,
+		Class<?> annotatedClass, Class<?>[] handlesTypesClasses,
+		Set<Class<?>> annotationHandlesTypesClasses,
 		Set<Class<?>> annotatedClasses) {
-
-		String className = classResource.replaceAll("\\.class$", "");
-
-		className = className.replaceAll("/", ".");
-
-		Class<?> annotatedClass = null;
-
-		try {
-			annotatedClass = bundle.loadClass(className);
-		}
-		catch (Throwable t) {
-			_logger.log(Logger.LOG_DEBUG, t.getMessage());
-
-			return;
-		}
 
 		// Class extends/implements
 
-		for (Class<?> handledType : handledTypesArray) {
-			if (handledType.isAssignableFrom(annotatedClass) &&
+		for (Class<?> handlesTypesClass : handlesTypesClasses) {
+			if (handlesTypesClass.isAssignableFrom(annotatedClass) &&
 				!Modifier.isAbstract(annotatedClass.getModifiers())) {
 
 				annotatedClasses.add(annotatedClass);
 
 				return;
 			}
+		}
+
+		if (annotationHandlesTypesClasses == null) {
+			return;
 		}
 
 		// Class annotation
@@ -280,13 +283,15 @@ public class WabBundleProcessor {
 		try {
 			classAnnotations = annotatedClass.getAnnotations();
 		}
-		catch (Throwable t) {
-			_logger.log(Logger.LOG_DEBUG, t.getMessage());
+		catch (Throwable throwable) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(throwable.getMessage());
+			}
 		}
 
 		for (Annotation classAnnotation : classAnnotations) {
-			if (ArrayUtil.contains(
-					handledTypesArray, classAnnotation.annotationType())) {
+			if (annotationHandlesTypesClasses.contains(
+					classAnnotation.annotationType())) {
 
 				annotatedClasses.add(annotatedClass);
 
@@ -301,8 +306,10 @@ public class WabBundleProcessor {
 		try {
 			classMethods = annotatedClass.getDeclaredMethods();
 		}
-		catch (Throwable t) {
-			_logger.log(Logger.LOG_DEBUG, t.getMessage());
+		catch (Throwable throwable) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(throwable.getMessage());
+			}
 		}
 
 		for (Method method : classMethods) {
@@ -311,13 +318,15 @@ public class WabBundleProcessor {
 			try {
 				methodAnnotations = method.getDeclaredAnnotations();
 			}
-			catch (Throwable t) {
-				_logger.log(Logger.LOG_DEBUG, t.getMessage());
+			catch (Throwable throwable) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(throwable.getMessage());
+				}
 			}
 
 			for (Annotation methodAnnotation : methodAnnotations) {
-				if (ArrayUtil.contains(
-						handledTypesArray, methodAnnotation.annotationType())) {
+				if (annotationHandlesTypesClasses.contains(
+						methodAnnotation.annotationType())) {
 
 					annotatedClasses.add(annotatedClass);
 
@@ -333,8 +342,10 @@ public class WabBundleProcessor {
 		try {
 			declaredFields = annotatedClass.getDeclaredFields();
 		}
-		catch (Throwable t) {
-			_logger.log(Logger.LOG_DEBUG, t.getMessage());
+		catch (Throwable throwable) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(throwable.getMessage());
+			}
 		}
 
 		for (Field field : declaredFields) {
@@ -343,13 +354,15 @@ public class WabBundleProcessor {
 			try {
 				fieldAnnotations = field.getDeclaredAnnotations();
 			}
-			catch (Throwable t) {
-				_logger.log(Logger.LOG_DEBUG, t.getMessage());
+			catch (Throwable throwable) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(throwable.getMessage());
+				}
 			}
 
 			for (Annotation fieldAnnotation : fieldAnnotations) {
-				if (ArrayUtil.contains(
-						handledTypesArray, fieldAnnotation.annotationType())) {
+				if (annotationHandlesTypesClasses.contains(
+						fieldAnnotation.annotationType())) {
 
 					annotatedClasses.add(annotatedClass);
 
@@ -366,8 +379,8 @@ public class WabBundleProcessor {
 			try {
 				serviceRegistration.unregister();
 			}
-			catch (Exception e) {
-				_logger.log(Logger.LOG_ERROR, e.getMessage(), e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -381,8 +394,8 @@ public class WabBundleProcessor {
 			try {
 				serviceRegistration.unregister();
 			}
-			catch (Exception e) {
-				_logger.log(Logger.LOG_ERROR, e.getMessage(), e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -396,8 +409,8 @@ public class WabBundleProcessor {
 			try {
 				serviceRegistration.unregister();
 			}
-			catch (Exception e) {
-				_logger.log(Logger.LOG_ERROR, e.getMessage(), e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -434,7 +447,7 @@ public class WabBundleProcessor {
 			classNamesList.add(ServletRequestListener.class.getName());
 		}
 
-		return classNamesList.toArray(new String[classNamesList.size()]);
+		return classNamesList.toArray(new String[0]);
 	}
 
 	protected ServletContextHelperRegistration initContext() {
@@ -500,12 +513,11 @@ public class WabBundleProcessor {
 					initParameters.entrySet()) {
 
 				String key = initParametersEntry.getKey();
-				String value = initParametersEntry.getValue();
 
 				properties.put(
 					HttpWhiteboardConstants.
 						HTTP_WHITEBOARD_FILTER_INIT_PARAM_PREFIX + key,
-					value);
+					initParametersEntry.getValue());
 			}
 
 			FilterExceptionAdapter filterExceptionAdaptor =
@@ -564,7 +576,7 @@ public class WabBundleProcessor {
 
 			if (!registeredPortletContextLoaderListener) {
 				PortletContextLoaderListener portletContextLoaderListener =
-					new PortletContextLoaderListener(_bundleContext, _logger);
+					new PortletContextLoaderListener(_bundleContext);
 
 				ServletContextListenerExceptionAdapter
 					servletContextListenerExceptionAdaptor =
@@ -583,7 +595,7 @@ public class WabBundleProcessor {
 					portletContextLoaderListener.getServiceRegistrations();
 
 				if (exception != null) {
-					for (ServiceRegistration contextServiceRegistration :
+					for (ServiceRegistration<?> contextServiceRegistration :
 							contextServiceRegistrations) {
 
 						contextServiceRegistration.unregister();
@@ -628,20 +640,21 @@ public class WabBundleProcessor {
 	}
 
 	protected void initServletContainerInitializers(
-			Bundle bundle, ServletContext servletContext)
+			Bundle bundle, ServletContext servletContext, Set<Class<?>> classes,
+			Set<Class<?>> annotatedClasses)
 		throws IOException {
 
-		Enumeration<URL> initializerResources = bundle.getResources(
+		Enumeration<URL> enumeration = bundle.getResources(
 			"META-INF/services/javax.servlet.ServletContainerInitializer");
 
-		if (initializerResources == null) {
+		if (enumeration == null) {
 			return;
 		}
 
 		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
 
-		while (initializerResources.hasMoreElements()) {
-			URL url = initializerResources.nextElement();
+		while (enumeration.hasMoreElements()) {
+			URL url = enumeration.nextElement();
 
 			try (InputStream inputStream = url.openStream()) {
 				Collection<String> fqcns = new ArrayList<>();
@@ -663,12 +676,13 @@ public class WabBundleProcessor {
 
 					if (Validator.isNotNull(fqcn)) {
 						processServletContainerInitializerClass(
-							fqcn, bundle, bundleWiring, servletContext);
+							fqcn, bundle, bundleWiring, servletContext, classes,
+							annotatedClasses);
 					}
 				}
 			}
-			catch (IOException ioe) {
-				_logger.log(Logger.LOG_ERROR, ioe.getMessage(), ioe);
+			catch (IOException ioException) {
+				_log.error(ioException, ioException);
 			}
 		}
 	}
@@ -716,12 +730,11 @@ public class WabBundleProcessor {
 					initParameters.entrySet()) {
 
 				String key = initParametersEntry.getKey();
-				String value = initParametersEntry.getValue();
 
 				properties.put(
 					HttpWhiteboardConstants.
 						HTTP_WHITEBOARD_SERVLET_INIT_PARAM_PREFIX + key,
-					value);
+					initParametersEntry.getValue());
 			}
 
 			ServletExceptionAdapter servletExceptionAdaptor =
@@ -748,7 +761,8 @@ public class WabBundleProcessor {
 
 	protected void processServletContainerInitializerClass(
 		String fqcn, Bundle bundle, BundleWiring bundleWiring,
-		ServletContext servletContext) {
+		ServletContext servletContext, Set<Class<?>> classes,
+		Set<Class<?>> annotatedClasses) {
 
 		Class<? extends ServletContainerInitializer> initializerClass = null;
 
@@ -762,47 +776,48 @@ public class WabBundleProcessor {
 			initializerClass = clazz.asSubclass(
 				ServletContainerInitializer.class);
 		}
-		catch (Exception e) {
-			_logger.log(Logger.LOG_ERROR, e.getMessage(), e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
 			return;
 		}
 
-		HandlesTypes handledTypes = initializerClass.getAnnotation(
+		HandlesTypes handlesTypes = initializerClass.getAnnotation(
 			HandlesTypes.class);
 
-		if (handledTypes == null) {
-			handledTypes = _NULL_HANDLES_TYPES;
-		}
+		Set<Class<?>> localAnnotatedClasses = null;
 
-		Class<?>[] handledTypesArray = handledTypes.value();
+		if (handlesTypes != null) {
+			Class<?>[] handlesTypesClasses = handlesTypes.value();
 
-		if (handledTypesArray == null) {
-			handledTypesArray = new Class<?>[0];
-		}
+			if (handlesTypesClasses != null) {
+				Set<Class<?>> annotationHandlesTypesClasses = null;
 
-		Collection<String> classResources = bundleWiring.listResources(
-			"/", "*.class", BundleWiring.LISTRESOURCES_RECURSE);
+				for (Class<?> handlesTypesClass : handlesTypesClasses) {
+					if (handlesTypesClass.isAnnotation()) {
+						if (annotationHandlesTypesClasses == null) {
+							annotationHandlesTypesClasses = new HashSet<>();
+						}
 
-		if (classResources == null) {
-			classResources = new ArrayList<>(0);
-		}
+						annotationHandlesTypesClasses.add(handlesTypesClass);
+					}
+				}
 
-		Set<Class<?>> annotatedClasses = new HashSet<>();
+				localAnnotatedClasses = new HashSet<>();
 
-		for (String classResource : classResources) {
-			URL urlClassResource = bundle.getResource(classResource);
+				for (Class<?> clazz : classes) {
+					collectAnnotatedClasses(
+						clazz, handlesTypesClasses,
+						annotationHandlesTypesClasses, localAnnotatedClasses);
+				}
 
-			if (urlClassResource == null) {
-				continue;
+				if (localAnnotatedClasses.isEmpty()) {
+					localAnnotatedClasses = null;
+				}
+				else {
+					annotatedClasses.addAll(localAnnotatedClasses);
+				}
 			}
-
-			collectAnnotatedClasses(
-				classResource, bundle, handledTypesArray, annotatedClasses);
-		}
-
-		if (annotatedClasses.isEmpty()) {
-			annotatedClasses = null;
 		}
 
 		try {
@@ -810,10 +825,10 @@ public class WabBundleProcessor {
 				initializerClass.newInstance();
 
 			servletContainerInitializer.onStartup(
-				annotatedClasses, servletContext);
+				localAnnotatedClasses, servletContext);
 		}
-		catch (Throwable t) {
-			_logger.log(Logger.LOG_ERROR, t.getMessage(), t);
+		catch (Throwable throwable) {
+			_log.error(throwable, throwable);
 		}
 	}
 
@@ -840,30 +855,50 @@ public class WabBundleProcessor {
 
 				webXMLDefinition.addListenerDefinition(listenerDefinition);
 			}
-			catch (Exception e) {
-				_logger.log(
-					Logger.LOG_ERROR,
+			catch (Exception exception) {
+				_log.error(
 					"Bundle " + _bundle + " is unable to load listener " +
 						listenerClassName);
 			}
 		}
 	}
 
-	private static final HandlesTypes _NULL_HANDLES_TYPES = new HandlesTypes() {
+	private void _saveScannedAnnotatedClasses(Set<Class<?>> annotatedClasses) {
+		File annotatedClassesFile = _bundle.getDataFile("annotated.classes");
 
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return null;
+		try (OutputStream outputStream = new FileOutputStream(
+				annotatedClassesFile);
+			PrintWriter printWriter = new PrintWriter(outputStream)) {
+
+			printWriter.println("last.modified=" + _bundle.getLastModified());
+
+			if (annotatedClasses.isEmpty()) {
+				printWriter.println("annotated.classes=");
+			}
+			else {
+				StringBundler sb = new StringBundler(
+					(annotatedClasses.size() * 2) + 1);
+
+				sb.append("annotated.classes=");
+
+				for (Class<?> clazz : annotatedClasses) {
+					sb.append(clazz.getName());
+					sb.append(StringPool.COMMA);
+				}
+
+				sb.setIndex(sb.index() - 1);
+
+				printWriter.println(sb.toString());
+			}
 		}
-
-		@Override
-		public Class<?>[] value() {
-			return new Class<?>[0];
+		catch (IOException ioException) {
 		}
-
-	};
+	}
 
 	private static final String _VENDOR = "Liferay, Inc.";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WabBundleProcessor.class);
 
 	private final Bundle _bundle;
 	private final ClassLoader _bundleClassLoader;
@@ -876,7 +911,6 @@ public class WabBundleProcessor {
 	private final Set<ServiceRegistration<?>> _listenerServiceRegistrations =
 		new ConcurrentSkipListSet<>(
 			new ListenerServiceRegistrationComparator());
-	private final Logger _logger;
 	private ServiceReference<ServletContextHelperRegistration>
 		_servletContextHelperRegistrationServiceReference;
 	private final Set<ServiceRegistration<Servlet>>

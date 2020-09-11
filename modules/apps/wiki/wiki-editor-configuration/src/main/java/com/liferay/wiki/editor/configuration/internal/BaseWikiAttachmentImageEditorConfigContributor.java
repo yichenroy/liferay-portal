@@ -21,14 +21,17 @@ import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
 import com.liferay.item.selector.criteria.url.criterion.URLItemSelectorCriterion;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.wiki.configuration.WikiFileUploadConfiguration;
 import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.item.selector.criterion.WikiAttachmentItemSelectorCriterion;
 
@@ -103,12 +106,15 @@ public abstract class BaseWikiAttachmentImageEditorConfigContributor
 			requestBackedPortletURLFactory, name + "selectItem",
 			wikiPageResourcePrimKey, themeDisplay);
 
-		jsonObject.put("filebrowserImageBrowseLinkUrl", itemSelectorURL);
-		jsonObject.put("filebrowserImageBrowseUrl", itemSelectorURL);
+		jsonObject.put(
+			"filebrowserImageBrowseLinkUrl", itemSelectorURL
+		).put(
+			"filebrowserImageBrowseUrl", itemSelectorURL
+		);
 	}
 
 	protected ItemSelectorCriterion getImageItemSelectorCriterion(
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes) {
+		ItemSelectorReturnType... desiredItemSelectorReturnTypes) {
 
 		ItemSelectorCriterion imageItemSelectorCriterion =
 			new ImageItemSelectorCriterion();
@@ -133,56 +139,71 @@ public abstract class BaseWikiAttachmentImageEditorConfigContributor
 
 		uploadURL.setParameter(
 			ActionRequest.ACTION_NAME, "/wiki/upload_page_attachment");
-		uploadURL.setParameter(
-			"mimeTypes", PropsValues.DL_FILE_ENTRY_PREVIEW_IMAGE_MIME_TYPES);
+		uploadURL.setParameter("mimeTypes", _getMimeTypes());
 		uploadURL.setParameter(
 			"resourcePrimKey", String.valueOf(wikiPageResourcePrimKey));
 
-		ItemSelectorCriterion uploadItemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new UploadItemSelectorCriterion(
 				WikiPortletKeys.WIKI, uploadURL.toString(),
 				LanguageUtil.get(themeDisplay.getLocale(), "page-attachments"));
 
-		List<ItemSelectorReturnType> uploadDesiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		uploadDesiredItemSelectorReturnTypes.add(
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new FileEntryItemSelectorReturnType());
 
-		uploadItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			uploadDesiredItemSelectorReturnTypes);
-
-		return uploadItemSelectorCriterion;
+		return itemSelectorCriterion;
 	}
 
 	protected ItemSelectorCriterion getURLItemSelectorCriterion() {
-		ItemSelectorCriterion urlItemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new URLItemSelectorCriterion();
 
-		List<ItemSelectorReturnType> urlDesiredItemSelectorReturnTypes =
-			new ArrayList<>();
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new URLItemSelectorReturnType());
 
-		urlDesiredItemSelectorReturnTypes.add(new URLItemSelectorReturnType());
-
-		urlItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			urlDesiredItemSelectorReturnTypes);
-
-		return urlItemSelectorCriterion;
+		return itemSelectorCriterion;
 	}
 
 	protected ItemSelectorCriterion getWikiAttachmentItemSelectorCriterion(
 		long wikiPageResourcePrimKey,
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes) {
+		ItemSelectorReturnType... desiredItemSelectorReturnTypes) {
 
-		ItemSelectorCriterion attachmentItemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new WikiAttachmentItemSelectorCriterion(
-				wikiPageResourcePrimKey,
-				PropsValues.DL_FILE_ENTRY_PREVIEW_IMAGE_MIME_TYPES);
+				wikiPageResourcePrimKey, _getMimeTypes());
 
-		attachmentItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			desiredItemSelectorReturnTypes);
 
-		return attachmentItemSelectorCriterion;
+		return itemSelectorCriterion;
+	}
+
+	protected abstract WikiFileUploadConfiguration
+		getWikiFileUploadConfiguration();
+
+	private String[] _getMimeTypes() {
+		String[] dlFileEntryPreviewImageMimeTypes =
+			PropsValues.DL_FILE_ENTRY_PREVIEW_IMAGE_MIME_TYPES;
+
+		WikiFileUploadConfiguration wikiFileUploadConfiguration =
+			getWikiFileUploadConfiguration();
+
+		List<String> wikiAttachmentMimeTypes = ListUtil.fromArray(
+			wikiFileUploadConfiguration.attachmentMimeTypes());
+
+		if (wikiAttachmentMimeTypes.contains(StringPool.STAR)) {
+			return dlFileEntryPreviewImageMimeTypes;
+		}
+
+		List<String> mimeTypes = new ArrayList<>();
+
+		for (String mimeType : dlFileEntryPreviewImageMimeTypes) {
+			if (wikiAttachmentMimeTypes.contains(mimeType)) {
+				mimeTypes.add(mimeType);
+			}
+		}
+
+		return mimeTypes.toArray(new String[0]);
 	}
 
 }

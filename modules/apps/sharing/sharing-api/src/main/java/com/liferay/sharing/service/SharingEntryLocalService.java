@@ -14,9 +14,8 @@
 
 package com.liferay.sharing.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -43,6 +42,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the local service interface for SharingEntry. Methods of this
  * service will not have security checks based on the propagated JAAS
@@ -64,7 +65,7 @@ public interface SharingEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SharingEntryLocalServiceUtil} to access the sharing entry local service. Add custom service methods to <code>com.liferay.sharing.service.impl.SharingEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.sharing.service.impl.SharingEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the sharing entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SharingEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -125,11 +126,21 @@ public interface SharingEntryLocalService
 	/**
 	 * Adds the sharing entry to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharingEntry the sharing entry
 	 * @return the sharing entry that was added
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public SharingEntry addSharingEntry(SharingEntry sharingEntry);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	/**
 	 * Creates a new sharing entry with the primary key. Does not add the sharing entry to the database.
@@ -172,6 +183,10 @@ public interface SharingEntryLocalService
 	/**
 	 * Deletes the sharing entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharingEntryId the primary key of the sharing entry
 	 * @return the sharing entry that was removed
 	 * @throws PortalException if a sharing entry with the primary key could not be found
@@ -197,6 +212,10 @@ public interface SharingEntryLocalService
 	/**
 	 * Deletes the sharing entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharingEntry the sharing entry
 	 * @return the sharing entry that was removed
 	 */
@@ -209,6 +228,9 @@ public interface SharingEntryLocalService
 	 * @param toUserId the user's ID
 	 */
 	public void deleteToUserSharingEntries(long toUserId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -226,7 +248,7 @@ public interface SharingEntryLocalService
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -242,7 +264,7 @@ public interface SharingEntryLocalService
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -280,14 +302,14 @@ public interface SharingEntryLocalService
 	public SharingEntry fetchSharingEntry(long sharingEntryId);
 
 	/**
-	 * Returns the sharing entry for the resource shared with the user or null
-	 * if there's none. The class name ID and class primary key identify the
-	 * resource's type and instance, respectively.
+	 * Returns the sharing entry for the resource shared with the user or
+	 * <code>null</code> if there's none. The class name ID and class primary
+	 * key identify the resource's type and instance, respectively.
 	 *
 	 * @param toUserId the user's ID
 	 * @param classNameId the resource's class name ID
 	 * @param classPK the class primary key of the resource
-	 * @return the sharing entry or null if none
+	 * @return the sharing entry or <code>null</code> if none
 	 * @review
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -330,8 +352,8 @@ public interface SharingEntryLocalService
 		OrderByComparator<SharingEntry> orderByComparator);
 
 	/**
-	 * Returns the number of sharing entries for the type of resource shared
-	 * by the user. The class name ID identifies the resource type.
+	 * Returns the number of sharing entries for the type of resource shared by
+	 * the user. The class name ID identifies the resource type.
 	 *
 	 * @param fromUserId the user's ID
 	 * @param classNameId the class name ID of the resources
@@ -370,6 +392,9 @@ public interface SharingEntryLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
@@ -379,7 +404,7 @@ public interface SharingEntryLocalService
 	 * Returns a range of all the sharing entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of sharing entries
@@ -613,6 +638,34 @@ public interface SharingEntryLocalService
 	 *
 	 * @param sharingEntryId the primary key of the sharing entry
 	 * @param sharingEntryActions the sharing entry actions
+	 * @param shareable whether the user the resource is shared with can
+	 also share it
+	 * @param expirationDate the date when the sharing entry expires
+	 * @param serviceContext the service context
+	 * @return the sharing entry
+	 * @throws PortalException if the sharing entry does not exist, if the
+	 sharing entry actions are invalid (e.g., empty, don't contain
+	 {@code SharingEntryAction#VIEW}, or contain a {@code null}
+	 value), or if the expiration date is a past value
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 SharingEntryLocalService#updateSharingEntry(
+	 long, long, Collection, boolean, Date, ServiceContext)}
+	 * @review
+	 */
+	@Deprecated
+	public SharingEntry updateSharingEntry(
+			long sharingEntryId,
+			Collection<SharingEntryAction> sharingEntryActions,
+			boolean shareable, Date expirationDate,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * Updates the sharing entry in the database.
+	 *
+	 * @param userId the primary key of the user updating the sharing entry
+	 * @param sharingEntryId the primary key of the sharing entry
+	 * @param sharingEntryActions the sharing entry actions
 	 * @param shareable whether the user the resource is shared with can also
 	 share it
 	 * @param expirationDate the date when the sharing entry expires
@@ -622,9 +675,10 @@ public interface SharingEntryLocalService
 	 sharing entry actions are invalid (e.g., empty, don't contain
 	 {@code SharingEntryAction#VIEW}, or contain a {@code null}
 	 value), or if the expiration date is a past value
+	 * @review
 	 */
 	public SharingEntry updateSharingEntry(
-			long sharingEntryId,
+			long userId, long sharingEntryId,
 			Collection<SharingEntryAction> sharingEntryActions,
 			boolean shareable, Date expirationDate,
 			ServiceContext serviceContext)
@@ -632,6 +686,10 @@ public interface SharingEntryLocalService
 
 	/**
 	 * Updates the sharing entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param sharingEntry the sharing entry
 	 * @return the sharing entry that was updated

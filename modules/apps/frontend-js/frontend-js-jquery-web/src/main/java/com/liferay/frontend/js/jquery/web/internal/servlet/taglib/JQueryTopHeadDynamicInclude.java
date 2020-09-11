@@ -14,7 +14,7 @@
 
 package com.liferay.frontend.js.jquery.web.internal.servlet.taglib;
 
-import com.liferay.frontend.js.jquery.web.configuration.JSJQueryConfiguration;
+import com.liferay.frontend.js.jquery.web.internal.configuration.JSJQueryConfiguration;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
@@ -44,38 +44,55 @@ import org.osgi.service.component.annotations.Reference;
  * @author Julien Castelain
  */
 @Component(
-	configurationPid = "com.liferay.frontend.js.jquery.web.configuration.JSJQueryConfiguration",
+	configurationPid = "com.liferay.frontend.js.jquery.web.internal.configuration.JSJQueryConfiguration",
 	immediate = true, service = DynamicInclude.class
 )
 public class JQueryTopHeadDynamicInclude extends BaseDynamicInclude {
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
 		if (!_jsJQueryConfiguration.enableJQuery()) {
 			return;
 		}
 
-		PrintWriter printWriter = response.getWriter();
+		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		StringBundler sb = new StringBundler();
 
 		AbsolutePortalURLBuilder absolutePortalURLBuilder =
 			_absolutePortalURLBuilderFactory.getAbsolutePortalURLBuilder(
-				request);
+				httpServletRequest);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay.isThemeJsFastLoad()) {
 			sb.append("<script data-senna-track=\"permanent\" src=\"");
+
+			String comboPath = _portal.getStaticResourceURL(
+				httpServletRequest, "/combo", "minifierType=js", _lastModified);
+
+			boolean cdnDynamicResourcesEnabled =
+				_portal.isCDNDynamicResourcesEnabled(
+					themeDisplay.getCompanyId());
+
+			if (!cdnDynamicResourcesEnabled) {
+				absolutePortalURLBuilder.ignoreCDNHost();
+			}
+
 			sb.append(
-				_portal.getStaticResourceURL(
-					request, _portal.getPathContext() + "/combo",
-					"minifierType=js", _lastModified));
+				absolutePortalURLBuilder.forResource(
+					comboPath
+				).build());
+
+			if (cdnDynamicResourcesEnabled) {
+				absolutePortalURLBuilder.ignoreCDNHost();
+			}
 
 			for (String fileName : _FILE_NAMES) {
 				sb.append("&");
@@ -122,7 +139,10 @@ public class JQueryTopHeadDynamicInclude extends BaseDynamicInclude {
 	}
 
 	private static final String[] _FILE_NAMES = {
-		"/jquery/jquery.js", "/jquery/fm.js", "/jquery/form.js"
+		"/jquery/jquery.min.js", "/jquery/init.js", "/jquery/ajax.js",
+		"/jquery/bootstrap.bundle.min.js", "/jquery/collapsible_search.js",
+		"/jquery/fm.js", "/jquery/form.js", "/jquery/popper.min.js",
+		"/jquery/side_navigation.js"
 	};
 
 	@Reference

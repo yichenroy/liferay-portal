@@ -14,10 +14,11 @@
 
 package com.liferay.portal.search.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -36,13 +37,5 @@ public interface IndexWriterHelperConfiguration {
 		name = "index-commit-immediately", required = false
 	)
 	public boolean indexCommitImmediately();
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             IndexStatusManagerConfiguration#indexReadOnly}
-	 */
-	@Deprecated
-	@Meta.AD(deflt = "false", name = "index-read-only", required = false)
-	public boolean indexReadOnly();
 
 }

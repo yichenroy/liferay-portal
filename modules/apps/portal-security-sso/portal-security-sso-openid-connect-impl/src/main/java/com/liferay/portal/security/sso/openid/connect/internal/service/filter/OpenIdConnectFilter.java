@@ -55,11 +55,11 @@ public class OpenIdConnectFilter extends BaseFilter {
 
 	@Override
 	public boolean isFilterEnabled(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		long companyId = _portal.getCompanyId(request);
-
-		return _openIdConnect.isEnabled(companyId);
+		return _openIdConnect.isEnabled(
+			_portal.getCompanyId(httpServletRequest));
 	}
 
 	@Override
@@ -118,9 +118,9 @@ public class OpenIdConnectFilter extends BaseFilter {
 			}
 		}
 		catch (StrangersNotAllowedException |
-			   UserEmailAddressException.MustNotUseCompanyMx e) {
+			   UserEmailAddressException.MustNotUseCompanyMx exception) {
 
-			Class<?> clazz = e.getClass();
+			Class<?> clazz = exception.getClass();
 
 			httpSession.removeAttribute(
 				OpenIdConnectWebKeys.OPEN_ID_CONNECT_SESSION);
@@ -128,35 +128,39 @@ public class OpenIdConnectFilter extends BaseFilter {
 			sendError(
 				clazz.getSimpleName(), httpServletRequest, httpServletResponse);
 		}
-		catch (Exception e) {
-			_log.error("Unable to process the OpenID login", e);
+		catch (Exception exception) {
+			_log.error(
+				"Unable to process OpenID Connect authentication response: " +
+					exception.getMessage(),
+				exception);
 
 			httpSession.removeAttribute(
 				OpenIdConnectWebKeys.OPEN_ID_CONNECT_SESSION);
 
-			_portal.sendError(e, httpServletRequest, httpServletResponse);
+			_portal.sendError(
+				exception, httpServletRequest, httpServletResponse);
 		}
 	}
 
 	@Override
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		processAuthenticationResponse(request, response);
+		processAuthenticationResponse(httpServletRequest, httpServletResponse);
 
 		processFilter(
-			OpenIdConnectFilter.class.getName(), request, response,
-			filterChain);
+			OpenIdConnectFilter.class.getName(), httpServletRequest,
+			httpServletResponse, filterChain);
 	}
 
 	protected void sendError(
-			String error, HttpServletRequest request,
-			HttpServletResponse response)
+			String error, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		HttpSession session = request.getSession(false);
+		HttpSession session = httpServletRequest.getSession(false);
 
 		if (session == null) {
 			return;
@@ -171,7 +175,7 @@ public class OpenIdConnectFilter extends BaseFilter {
 
 		actionURL = _http.addParameter(actionURL, "error", error);
 
-		response.sendRedirect(actionURL);
+		httpServletResponse.sendRedirect(actionURL);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

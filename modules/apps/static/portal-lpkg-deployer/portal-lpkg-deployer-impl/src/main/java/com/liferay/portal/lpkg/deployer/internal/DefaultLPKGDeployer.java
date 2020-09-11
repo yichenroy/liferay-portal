@@ -16,6 +16,7 @@ package com.liferay.portal.lpkg.deployer.internal;
 
 import com.liferay.osgi.util.bundle.BundleStartLevelUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.module.framework.ThrowableCollector;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.StreamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.lpkg.deployer.LPKGDeployer;
 import com.liferay.portal.lpkg.deployer.LPKGVerifier;
@@ -87,16 +87,6 @@ import org.osgi.util.tracker.BundleTracker;
 @Component(immediate = true, service = LPKGDeployer.class)
 public class DefaultLPKGDeployer implements LPKGDeployer {
 
-	@Activate
-	public void activate(BundleContext bundleContext) {
-		try {
-			_activate(bundleContext);
-		}
-		catch (Throwable t) {
-			_throwableCollector.collect(t);
-		}
-	}
-
 	@Override
 	public List<Bundle> deploy(BundleContext bundleContext, File lpkgFile)
 		throws IOException {
@@ -108,9 +98,9 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 		if (!lpkgFilePath.startsWith(_deploymentDirPath)) {
 			throw new LPKGVerifyException(
 				StringBundler.concat(
-					"Unable to deploy ", String.valueOf(lpkgFile),
+					"Unable to deploy ", lpkgFile,
 					" from outside the deployment directory ",
-					String.valueOf(_deploymentDirPath)));
+					_deploymentDirPath));
 		}
 
 		List<Bundle> oldBundles = _lpkgVerifier.verify(lpkgFile);
@@ -122,9 +112,8 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 				if (_log.isInfoEnabled()) {
 					_log.info(
 						StringBundler.concat(
-							"Uninstalled older LPKG bundle ",
-							String.valueOf(bundle), " in order to install ",
-							String.valueOf(lpkgFile)));
+							"Uninstalled older LPKG bundle ", bundle,
+							" in order to install ", lpkgFile));
 				}
 
 				String location = LPKGLocationUtil.getLPKGLocation(lpkgFile);
@@ -137,12 +126,12 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 						"Removed old LPKG bundle " + bundle.getLocation());
 				}
 			}
-			catch (BundleException be) {
+			catch (BundleException bundleException) {
 				_log.error(
 					StringBundler.concat(
-						"Unable to uninstall ", String.valueOf(bundle),
-						" in order to install ", String.valueOf(lpkgFile)),
-					be);
+						"Unable to uninstall ", bundle, " in order to install ",
+						lpkgFile),
+					bundleException);
 			}
 		}
 
@@ -206,17 +195,16 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 					throw new Exception(
 						StringBundler.concat(
 							"Unable to refresh references to the new bundle ",
-							String.valueOf(lpkgBundle),
-							" because of framework event ",
-							String.valueOf(frameworkEvent)),
+							lpkgBundle, " because of framework event ",
+							frameworkEvent),
 						frameworkEvent.getThrowable());
 				}
 			}
 
 			return bundles;
 		}
-		catch (Exception e) {
-			throw new IOException(e);
+		catch (Exception exception) {
+			throw new IOException(exception);
 		}
 	}
 
@@ -258,6 +246,16 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 		}
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		try {
+			_activate(bundleContext);
+		}
+		catch (Throwable throwable) {
+			_throwableCollector.collect(throwable);
+		}
+	}
+
 	@Deactivate
 	protected void deactivate(BundleContext bundleContext) {
 		_lpkgBundleTracker.close();
@@ -287,12 +285,12 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 
 		Path overrideDirPath = _deploymentDirPath.resolve("override");
 
-		List<File> jarFiles = _scanFiles(overrideDirPath, ".jar", true);
+		List<File> jarFiles = _scanFiles(overrideDirPath, ".jar", true, false);
 
 		removalPendingBundles.addAll(
 			_uninstallOrphanOverridingJars(bundleContext, jarFiles));
 
-		List<File> warFiles = _scanFiles(overrideDirPath, ".war", true);
+		List<File> warFiles = _scanFiles(overrideDirPath, ".war", true, false);
 
 		_uninstallOrphanOverridingWars(bundleContext, warFiles);
 
@@ -317,14 +315,20 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 			}
 		}
 
-		_lpkgBundleTracker = new BundleTracker<>(
-			bundleContext, ~Bundle.UNINSTALLED,
+		LPKGBundleTrackerCustomizer lpkgBundleTrackerCustomizer =
 			new LPKGBundleTrackerCustomizer(
-				bundleContext, _urls, _toFileNames(jarFiles, warFiles)));
+				bundleContext, _urls, _toFileNames(jarFiles, warFiles));
+
+		_lpkgBundleTracker = new BundleTracker<>(
+			bundleContext, ~Bundle.UNINSTALLED, lpkgBundleTrackerCustomizer);
 
 		_lpkgBundleTracker.open();
 
-		List<File> lpkgFiles = _scanFiles(_deploymentDirPath, ".lpkg", false);
+		lpkgBundleTrackerCustomizer.cleanTrackedBundles(
+			_lpkgBundleTracker.getBundles());
+
+		List<File> lpkgFiles = _scanFiles(
+			_deploymentDirPath, ".lpkg", false, true);
 
 		if (lpkgFiles.isEmpty()) {
 			return;
@@ -338,7 +342,7 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 			File lpkgFile = iterator.next();
 
 			List<File> innerLPKGFiles = ContainerLPKGUtil.deploy(
-				lpkgFile, bundleContext);
+				lpkgFile, bundleContext, null);
 
 			if (innerLPKGFiles != null) {
 				iterator.remove();
@@ -357,7 +361,7 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 	}
 
 	private Path _getDeploymentDirPath(BundleContext bundleContext)
-		throws IOException {
+		throws Exception {
 
 		File deploymentDir = new File(
 			GetterUtil.getString(
@@ -386,8 +390,8 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 					lpkgBundle.start();
 				}
 			}
-			catch (Exception e) {
-				_log.error("Unable to deploy LPKG file " + lpkgFile, e);
+			catch (Exception exception) {
+				_log.error("Unable to deploy LPKG file " + lpkgFile, exception);
 			}
 		}
 	}
@@ -491,7 +495,7 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 	}
 
 	private Properties _loadOverrideWarsProperties(BundleContext bundleContext)
-		throws IOException {
+		throws Exception {
 
 		Bundle bundle = bundleContext.getBundle(0);
 
@@ -544,7 +548,7 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 
 	private void _saveOverrideWarsProperties(
 			BundleContext bundleContext, Properties properties)
-		throws IOException {
+		throws Exception {
 
 		Bundle bundle = bundleContext.getBundle(0);
 
@@ -561,7 +565,8 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 	}
 
 	private List<File> _scanFiles(
-			Path dirPath, String extension, boolean checkFileName)
+			Path dirPath, String extension, boolean checkFileName,
+			boolean recursive)
 		throws IOException {
 
 		if (Files.notExists(dirPath)) {
@@ -578,19 +583,23 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 					String.valueOf(path.getFileName()));
 
 				if (!pathName.endsWith(extension)) {
+					if (recursive && Files.isDirectory(path)) {
+						files.addAll(
+							_scanFiles(
+								path, extension, checkFileName, recursive));
+					}
+
 					continue;
 				}
 
-				if (checkFileName) {
-					if (!_isValid(pathName)) {
-						if (_log.isWarnEnabled()) {
-							_log.warn(
-								"Override file " + path +
-									" has an invalid name and will be ignored");
-						}
-
-						continue;
+				if (checkFileName && !_isValid(pathName)) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Override file " + path +
+								" has an invalid name and will be ignored");
 					}
+
+					continue;
 				}
 
 				files.add(path.toFile());
@@ -616,7 +625,7 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 
 	private Set<Bundle> _uninstallOrphanOverridingJars(
 			BundleContext bundleContext, List<File> jarFiles)
-		throws BundleException {
+		throws Exception {
 
 		Set<Bundle> removedBundles = new HashSet<>();
 
@@ -649,7 +658,7 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 
 	private void _uninstallOrphanOverridingWars(
 			BundleContext bundleContext, List<File> warFiles)
-		throws IOException {
+		throws Exception {
 
 		Properties properties = _loadOverrideWarsProperties(bundleContext);
 

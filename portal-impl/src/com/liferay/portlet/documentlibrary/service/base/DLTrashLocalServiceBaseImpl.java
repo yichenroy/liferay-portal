@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.documentlibrary.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.kernel.service.DLTrashLocalService;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -41,7 +39,6 @@ import javax.sql.DataSource;
  * @see com.liferay.portlet.documentlibrary.service.impl.DLTrashLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class DLTrashLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
 	implements DLTrashLocalService, IdentifiableOSGiService {
@@ -130,8 +127,8 @@ public abstract class DLTrashLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 

@@ -55,22 +55,27 @@ import org.osgi.service.component.annotations.Reference;
 public class InactiveRequestHandlerImpl implements InactiveRequestHandler {
 
 	@Override
+	public boolean isShowInactiveRequestMessage() {
+		return _showInactiveRequestMessage;
+	}
+
+	@Override
 	public void processInactiveRequest(
-			HttpServletRequest request, HttpServletResponse response,
-			String messageKey)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String messageKey)
 		throws IOException {
 
-		response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+		httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
 
 		if (!_showInactiveRequestMessage) {
 			return;
 		}
 
-		response.setContentType(ContentTypes.TEXT_HTML_UTF8);
+		httpServletResponse.setContentType(ContentTypes.TEXT_HTML_UTF8);
 
-		PrintWriter printWriter = response.getWriter();
+		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		Locale locale = _portal.getLocale(request);
+		Locale locale = _portal.getLocale(httpServletRequest);
 
 		String message = null;
 
@@ -107,9 +112,10 @@ public class InactiveRequestHandlerImpl implements InactiveRequestHandler {
 		try (InputStream inputStream = url.openStream()) {
 			_content = StringUtil.read(inputStream);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to read " + _INACTIVE_HTML_FILE_NAME, ioe);
+				_log.warn(
+					"Unable to read " + _INACTIVE_HTML_FILE_NAME, ioException);
 			}
 		}
 	}

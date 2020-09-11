@@ -21,8 +21,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
 
 /**
- * @author Eudaldo Alonso
+ * @author     Eudaldo Alonso
+ * @deprecated As of Athanasius (7.3.x), replaced by {@link
+ *             com.liferay.layout.taglib.servlet.taglib.LayoutClassedModelUsagesViewTag}
  */
+@Deprecated
 public class AssetViewUsagesTag<R> extends IncludeTag {
 
 	public String getClassName() {
@@ -62,10 +65,10 @@ public class AssetViewUsagesTag<R> extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-view-usages:className", _className);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-view-usages:classPK",
 			String.valueOf(_classPK));
 	}

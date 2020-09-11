@@ -14,14 +14,15 @@
 
 package com.liferay.knowledge.base.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the KBFolder service. Represents a row in the &quot;KBFolder&quot; database table, with each column mapped to a property of this class.
@@ -36,7 +37,7 @@ import java.util.Date;
  */
 @ProviderType
 public interface KBFolderModel
-	extends BaseModel<KBFolder>, ShardedModel, StagedGroupedModel {
+	extends BaseModel<KBFolder>, MVCCModel, ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -57,6 +58,22 @@ public interface KBFolderModel
 	 * @param primaryKey the primary key of this kb folder
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this kb folder.
+	 *
+	 * @return the mvcc version of this kb folder
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this kb folder.
+	 *
+	 * @param mvccVersion the mvcc version of this kb folder
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this kb folder.

@@ -14,11 +14,11 @@
 
 package com.liferay.portal.diff;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.diff.Diff;
 import com.liferay.portal.kernel.diff.DiffResult;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.util.FileImpl;
 
 import java.io.Reader;
@@ -226,14 +226,12 @@ public class DiffImplTest {
 		List<DiffResult> expectedSource = new ArrayList<>();
 		List<DiffResult> expectedTarget = new ArrayList<>();
 
-		List<String> changedLines = new ArrayList<>();
-
 		expectedSource.add(
 			new DiffResult(0, Diff.OPEN_DEL + "ccc" + Diff.CLOSE_DEL));
 
 		expectedTarget.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
-		changedLines = new ArrayList<>();
+		List<String> changedLines = new ArrayList<>();
 
 		changedLines.add(
 			StringBundler.concat("bb", Diff.OPEN_DEL, "e", Diff.CLOSE_DEL));

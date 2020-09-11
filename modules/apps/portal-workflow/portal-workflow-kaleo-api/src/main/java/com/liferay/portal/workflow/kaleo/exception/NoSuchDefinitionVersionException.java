@@ -14,14 +14,11 @@
 
 package com.liferay.portal.workflow.kaleo.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchDefinitionVersionException extends NoSuchModelException {
 
 	public NoSuchDefinitionVersionException() {
@@ -31,12 +28,12 @@ public class NoSuchDefinitionVersionException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchDefinitionVersionException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchDefinitionVersionException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchDefinitionVersionException(Throwable cause) {
-		super(cause);
+	public NoSuchDefinitionVersionException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

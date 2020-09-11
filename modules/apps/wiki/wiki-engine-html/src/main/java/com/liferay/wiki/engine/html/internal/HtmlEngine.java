@@ -66,7 +66,7 @@ public class HtmlEngine extends BaseWikiEngine {
 	}
 
 	@Override
-	public String getHelpPageTitle(HttpServletRequest request) {
+	public String getHelpPageTitle(HttpServletRequest httpServletRequest) {
 		return null;
 	}
 
@@ -82,8 +82,8 @@ public class HtmlEngine extends BaseWikiEngine {
 		try {
 			return _getOutgoingLinks(page);
 		}
-		catch (PortalException pe) {
-			throw new PageContentException(pe);
+		catch (PortalException portalException) {
+			throw new PageContentException(portalException);
 		}
 	}
 
@@ -195,9 +195,9 @@ public class HtmlEngine extends BaseWikiEngine {
 
 				links.put(StringUtil.toLowerCase(title), Boolean.TRUE);
 			}
-			catch (NoSuchNodeException nsne) {
+			catch (NoSuchNodeException noSuchNodeException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(nsne.getMessage());
+					_log.warn(noSuchNodeException.getMessage());
 				}
 			}
 		}

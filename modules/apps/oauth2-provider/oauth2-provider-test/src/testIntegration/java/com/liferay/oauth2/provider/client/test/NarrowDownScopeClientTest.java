@@ -14,64 +14,80 @@
 
 package com.liferay.oauth2.provider.client.test;
 
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.oauth2.provider.constants.GrantType;
-import com.liferay.oauth2.provider.test.internal.TestApplication;
-import com.liferay.oauth2.provider.test.internal.activator.BaseTestPreparatorBundleActivator;
+import com.liferay.oauth2.provider.internal.test.TestApplication;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.function.Function;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.BundleActivator;
 
 /**
  * @author Carlos Sierra Andrés
  */
-@RunAsClient
 @RunWith(Arquillian.class)
 public class NarrowDownScopeClientTest extends BaseClientTestCase {
 
-	@Deployment
-	public static Archive<?> getArchive() throws Exception {
-		return BaseClientTestCase.getArchive(
-			NarrowDownScopeTestPreparatorBundleActivator.class);
-	}
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new LiferayIntegrationTestRule();
 
 	@Test
 	public void test() throws Exception {
 		Assert.assertEquals(
-			"HEAD",
+			"GET",
 			getToken(
 				"oauthTestApplication", null,
 				getAuthorizationCodeBiFunction(
-					"test@liferay.com", "test", null, "HEAD"),
+					"test@liferay.com", "test", null, "GET"),
 				this::parseScopeString));
 
 		Assert.assertEquals(
-			"HEAD",
+			"GET",
 			getToken(
 				"oauthTestApplication", null,
-				getClientCredentialsResponseBiFunction("HEAD"),
+				getClientCredentialsResponseBiFunction("GET"),
 				this::parseScopeString));
 
-		Assert.assertEquals(
-			"HEAD",
-			getToken(
-				"oauthTestApplication", null,
-				getResourceOwnerPasswordBiFunction(
-					"test@liferay.com", "test", "HEAD"),
-				this::parseScopeString));
+		Response response = getToken(
+			"oauthTestApplication", null,
+			getResourceOwnerPasswordBiFunction(
+				"test@liferay.com", "test", "GET"),
+			Function.identity());
+
+		Assert.assertEquals("GET", parseScopeString(response));
+
+		WebTarget webTarget = getWebTarget("methods");
+
+		Invocation.Builder builder = authorize(
+			webTarget.request(), parseTokenString(response));
+
+		Response postResponse = builder.post(
+			Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
+
+		Assert.assertEquals(403, postResponse.getStatus());
 
 		String scopeString = getToken(
 			"oauthTestApplication", null,
@@ -79,7 +95,7 @@ public class NarrowDownScopeClientTest extends BaseClientTestCase {
 			this::parseScopeString);
 
 		Assert.assertEquals(
-			new HashSet<>(Arrays.asList("HEAD", "GET", "OPTIONS", "POST")),
+			new HashSet<>(Arrays.asList("GET", "POST")),
 			new HashSet<>(Arrays.asList(scopeString.split(" "))));
 
 		Assert.assertEquals(
@@ -87,7 +103,7 @@ public class NarrowDownScopeClientTest extends BaseClientTestCase {
 			getToken(
 				"oauthTestApplication", null,
 				getResourceOwnerPasswordBiFunction(
-					"test@liferay.com", "test", "HEAD GET OPTIONS POST PUT"),
+					"test@liferay.com", "test", "GET POST PUT"),
 				this::parseError));
 	}
 
@@ -112,9 +128,14 @@ public class NarrowDownScopeClientTest extends BaseClientTestCase {
 				Arrays.asList(
 					GrantType.AUTHORIZATION_CODE, GrantType.CLIENT_CREDENTIALS,
 					GrantType.RESOURCE_OWNER_PASSWORD),
-				Arrays.asList("HEAD", "GET", "OPTIONS", "POST"));
+				Arrays.asList("GET", "POST"));
 		}
 
+	}
+
+	@Override
+	protected BundleActivator getBundleActivator() {
+		return new NarrowDownScopeTestPreparatorBundleActivator();
 	}
 
 }

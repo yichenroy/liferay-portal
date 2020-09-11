@@ -20,14 +20,25 @@ import com.liferay.gradle.plugins.target.platform.internal.util.TargetPlatformPl
 
 import groovy.lang.Closure;
 
+import java.io.File;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.PluginManager;
 import org.gradle.api.specs.AndSpec;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.TaskContainer;
+import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.util.GUtil;
 
 /**
@@ -35,10 +46,94 @@ import org.gradle.util.GUtil;
  */
 public class TargetPlatformExtension {
 
-	public TargetPlatformExtension(Project project) {
+	public TargetPlatformExtension(final Project project) {
 		_project = project;
 
 		_subprojects.addAll(project.getSubprojects());
+
+		Logger logger = project.getLogger();
+
+		onlyIf(
+			new Spec<Project>() {
+
+				@Override
+				public boolean isSatisfiedBy(Project project) {
+					TaskContainer taskContainer = project.getTasks();
+
+					Task jarTask = taskContainer.findByName(
+						JavaPlugin.JAR_TASK_NAME);
+
+					if (!(jarTask instanceof Jar)) {
+						if (logger.isInfoEnabled()) {
+							logger.info(
+								"Excluding {} because it is not a valid Java " +
+									"project",
+								project);
+						}
+
+						return false;
+					}
+
+					return true;
+				}
+
+			});
+
+		resolveOnlyIf(
+			new Spec<Project>() {
+
+				@Override
+				public boolean isSatisfiedBy(Project project) {
+					Project rootProject = project.getRootProject();
+
+					File bndrunFile = rootProject.file(
+						TargetPlatformPlugin.PLATFORM_BNDRUN_FILE_NAME);
+
+					if (!bndrunFile.exists()) {
+						StringBuilder sb = new StringBuilder();
+
+						sb.append("Explicitly excluding ");
+						sb.append(project);
+						sb.append(" from resolution because there is no ");
+						sb.append(
+							TargetPlatformPlugin.PLATFORM_BNDRUN_FILE_NAME);
+						sb.append(" file at the root of the gradle workspace");
+
+						if (logger.isInfoEnabled()) {
+							logger.info(sb.toString());
+						}
+
+						return false;
+					}
+
+					return true;
+				}
+
+			});
+
+		resolveOnlyIf(
+			new Spec<Project>() {
+
+				@Override
+				public boolean isSatisfiedBy(Project project) {
+					PluginManager pluginManager = project.getPluginManager();
+
+					if (!pluginManager.hasPlugin("com.liferay.osgi.plugin")) {
+						if (logger.isInfoEnabled()) {
+							logger.info(
+								"Explicitly excluding {} from resolution " +
+									"because it does not appear to be an " +
+										"OSGi bundle",
+								project);
+						}
+
+						return false;
+					}
+
+					return true;
+				}
+
+			});
 	}
 
 	public TargetPlatformExtension applyToConfiguration(
@@ -49,8 +144,20 @@ public class TargetPlatformExtension {
 				_project,
 				TargetPlatformPlugin.TARGET_PLATFORM_BOMS_CONFIGURATION_NAME);
 
-		TargetPlatformPluginUtil.configureDependencyManagement(
-			_project, targetPlatformBomsConfiguration, configurationNames);
+		List<String> configurationNamesList = new ArrayList<>();
+
+		Iterator<?> iterator = configurationNames.iterator();
+
+		while (iterator.hasNext()) {
+			Object object = iterator.next();
+
+			if (object instanceof String) {
+				configurationNamesList.add((String)object);
+			}
+		}
+
+		TargetPlatformPluginUtil.configureTargetPlatform(
+			_project, configurationNamesList, targetPlatformBomsConfiguration);
 
 		return this;
 	}
@@ -71,10 +178,6 @@ public class TargetPlatformExtension {
 
 	public Set<Project> getSubprojects() {
 		return _subprojects;
-	}
-
-	public boolean isIgnoreResolveFailures() {
-		return GradleUtil.toBoolean(_ignoreResolveFailures);
 	}
 
 	public TargetPlatformExtension onlyIf(Closure<Boolean> onlyIfClosure) {
@@ -105,16 +208,13 @@ public class TargetPlatformExtension {
 		return this;
 	}
 
-	public void setIgnoreResolveFailures(Object ignoreResolveFailures) {
-		_ignoreResolveFailures = ignoreResolveFailures;
-	}
-
 	public void setOnlyIf(Closure<Boolean> onlyIfClosure) {
 		_onlyIfSpec = new AndSpec<>();
 
 		_onlyIfSpec.and(onlyIfClosure);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void setOnlyIf(Spec<Project> onlyIfSpec) {
 		_onlyIfSpec = new AndSpec<>(onlyIfSpec);
 	}
@@ -125,6 +225,7 @@ public class TargetPlatformExtension {
 		_resolveOnlyIfSpec.and(resolveOnlyIfClosure);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void setResolveOnlyIf(Spec<Project> resolveOnlyIfSpec) {
 		_resolveOnlyIfSpec = new AndSpec<>(resolveOnlyIfSpec);
 	}
@@ -139,6 +240,7 @@ public class TargetPlatformExtension {
 		setSubprojects(Arrays.asList(subprojects));
 	}
 
+	@SuppressWarnings("unchecked")
 	public TargetPlatformExtension subprojects(Iterable<Project> subprojects) {
 		GUtil.addToCollection(_subprojects, subprojects);
 
@@ -149,7 +251,6 @@ public class TargetPlatformExtension {
 		return subprojects(Arrays.asList(subprojects));
 	}
 
-	private Object _ignoreResolveFailures;
 	private AndSpec<Project> _onlyIfSpec = new AndSpec<>();
 	private final Project _project;
 	private AndSpec<Project> _resolveOnlyIfSpec = new AndSpec<>();

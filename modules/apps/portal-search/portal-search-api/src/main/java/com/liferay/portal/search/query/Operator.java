@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.query;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum Operator {
 
 	AND, OR

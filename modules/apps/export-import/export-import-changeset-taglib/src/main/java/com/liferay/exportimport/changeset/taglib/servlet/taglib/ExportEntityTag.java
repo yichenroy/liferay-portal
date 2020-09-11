@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.changeset.taglib.servlet.taglib;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.changeset.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.taglib.util.IncludeTag;
@@ -26,7 +24,6 @@ import javax.servlet.jsp.PageContext;
 /**
  * @author Akos Thurzo
  */
-@ProviderType
 public class ExportEntityTag extends IncludeTag {
 
 	public String getClassName() {
@@ -84,16 +81,16 @@ public class ExportEntityTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:export-entity:className",
 			_className);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:export-entity:classNameId",
 			_classNameId);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:export-entity:groupId", _groupId);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:export-entity:uuid", _uuid);
 	}
 

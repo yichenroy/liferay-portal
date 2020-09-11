@@ -30,13 +30,13 @@ public class SelectUsersManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public SelectUsersManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request,
 		SelectUsersDisplayContext selectUsersDisplayContext) {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			selectUsersDisplayContext.getUserSearchContainer());
 	}
 
@@ -64,6 +64,11 @@ public class SelectUsersManagementToolbarDisplayContext
 	@Override
 	public String getSearchContainerId() {
 		return "users";
+	}
+
+	@Override
+	protected String getDefaultDisplayStyle() {
+		return "icon";
 	}
 
 	@Override

@@ -14,13 +14,18 @@
 
 package com.liferay.exportimport.kernel.background.task;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class BackgroundTaskExecutorNames {
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final String DDM_STRUCTURE_INDEXER_BACKGROUND_TASK_EXECUTOR =
+		"com.liferay.dynamic.data.mapping.internal.background.task." +
+			"DDMStructureIndexerBackgroundTaskExecutor";
 
 	public static final String LAYOUT_EXPORT_BACKGROUND_TASK_EXECUTOR =
 		"com.liferay.exportimport.internal.background.task." +

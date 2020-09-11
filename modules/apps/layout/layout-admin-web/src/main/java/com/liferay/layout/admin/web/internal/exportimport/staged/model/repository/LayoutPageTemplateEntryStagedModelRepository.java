@@ -50,6 +50,12 @@ public class LayoutPageTemplateEntryStagedModelRepository
 		long userId = portletDataContext.getUserId(
 			layoutPageTemplateEntry.getUserUuid());
 
+		long plid = layoutPageTemplateEntry.getPlid();
+
+		if (layoutPageTemplateEntry.getLayoutPrototypeId() > 0) {
+			plid = 0;
+		}
+
 		ServiceContext serviceContext = portletDataContext.createServiceContext(
 			layoutPageTemplateEntry);
 
@@ -66,7 +72,7 @@ public class LayoutPageTemplateEntryStagedModelRepository
 			layoutPageTemplateEntry.getType(),
 			layoutPageTemplateEntry.isDefaultTemplate(),
 			layoutPageTemplateEntry.getLayoutPrototypeId(),
-			layoutPageTemplateEntry.getPreviewFileEntryId(),
+			layoutPageTemplateEntry.getPreviewFileEntryId(), plid,
 			layoutPageTemplateEntry.getStatus(), serviceContext);
 	}
 
@@ -167,6 +173,8 @@ public class LayoutPageTemplateEntryStagedModelRepository
 			layoutPageTemplateEntry.isDefaultTemplate());
 		existingLayoutPageTemplateEntry.setLayoutPrototypeId(
 			layoutPageTemplateEntry.getLayoutPrototypeId());
+		existingLayoutPageTemplateEntry.setPlid(
+			layoutPageTemplateEntry.getPlid());
 		existingLayoutPageTemplateEntry.setStatus(
 			layoutPageTemplateEntry.getStatus());
 

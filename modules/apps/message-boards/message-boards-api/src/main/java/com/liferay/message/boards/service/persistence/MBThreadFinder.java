@@ -14,7 +14,7 @@
 
 package com.liferay.message.boards.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -95,9 +95,6 @@ public interface MBThreadFinder {
 			long groupId, long userId, long[] categoryIds,
 			com.liferay.portal.kernel.dao.orm.QueryDefinition
 				<com.liferay.message.boards.model.MBThread> queryDefinition);
-
-	public java.util.List<com.liferay.message.boards.model.MBThread>
-		findByNoAssets();
 
 	public java.util.List<com.liferay.message.boards.model.MBThread> findByG_U(
 		long groupId, long userId,

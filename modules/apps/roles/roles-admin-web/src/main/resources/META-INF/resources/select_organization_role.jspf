@@ -17,9 +17,7 @@
 <%
 String p_u_i_d = ParamUtil.getString(request, "p_u_i_d");
 int step = ParamUtil.getInteger(request, "step", 1);
-String displayStyle = ParamUtil.getString(request, "displayStyle", "list");
 String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectOrganizationRole");
-String syncEntitiesEventName = ParamUtil.getString(request, "syncEntitiesEventName", liferayPortletResponse.getNamespace() + "syncOrganizationRoles");
 
 User selUser = PortalUtil.getSelectedUser(request);
 
@@ -39,25 +37,43 @@ if (step == 1) {
 	if (organizations.size() == 1) {
 		step = 2;
 
-		uniqueOrganizationId = organizations.get(0).getOrganizationId();
+		Organization organization = organizations.get(0);
+
+		uniqueOrganizationId = organization.getOrganizationId();
 	}
 }
 
-SelectRoleManagementToolbarDisplayContext SelectRoleManagementToolbarDisplayContext = new SelectRoleManagementToolbarDisplayContext(request, renderRequest, renderResponse, eventName);
+SelectRoleManagementToolbarDisplayContext selectRoleManagementToolbarDisplayContext = new SelectRoleManagementToolbarDisplayContext(request, renderRequest, renderResponse, eventName);
 
-PortletURL portletURL = SelectRoleManagementToolbarDisplayContext.getPortletURL();
+PortletURL portletURL = selectRoleManagementToolbarDisplayContext.getPortletURL();
 
-SearchContainer roleSearchContainer = SelectRoleManagementToolbarDisplayContext.getRoleSearchContainer(filterManageableRoles);
+long organizationId = 0;
+Organization selectedOrganization = null;
+
+if (step == 2) {
+	organizationId = ParamUtil.getLong(request, "organizationId", uniqueOrganizationId);
+
+	selectedOrganization = OrganizationServiceUtil.getOrganization(organizationId);
+}
+
+SearchContainer<Role> roleSearchContainer = null;
+
+if (selectedOrganization == null) {
+	roleSearchContainer = selectRoleManagementToolbarDisplayContext.getRoleSearchContainer(filterManageableRoles);
+}
+else {
+	roleSearchContainer = selectRoleManagementToolbarDisplayContext.getRoleSearchContainer(filterManageableRoles, selectedOrganization.getGroupId());
+}
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= SelectRoleManagementToolbarDisplayContext.getClearResultsURL() %>"
+	clearResultsURL="<%= selectRoleManagementToolbarDisplayContext.getClearResultsURL() %>"
 	itemsTotal="<%= (step == 1) ? organizations.size() : roleSearchContainer.getTotal() %>"
-	searchActionURL="<%= SelectRoleManagementToolbarDisplayContext.getSearchActionURL() %>"
+	searchActionURL="<%= selectRoleManagementToolbarDisplayContext.getSearchActionURL() %>"
 	searchFormName="searchFm"
 	selectable="<%= false %>"
 	showSearch="<%= true %>"
-	viewTypeItems="<%= SelectRoleManagementToolbarDisplayContext.getViewTypeItems() %>"
+	viewTypeItems="<%= selectRoleManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
 <aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl container-form-lg" method="post" name="selectOrganizationRoleFm">
@@ -122,13 +138,13 @@ SearchContainer roleSearchContainer = SelectRoleManagementToolbarDisplayContext.
 					<liferay-ui:search-container-column-text>
 
 						<%
-						Map<String, Object> data = new HashMap<String, Object>();
-
 						Group group = organization.getGroup();
 
-						data.put("groupid", group.getGroupId());
-
-						data.put("organizationid", organization.getOrganizationId());
+						Map<String, Object> data = HashMapBuilder.<String, Object>put(
+							"groupid", group.getGroupId()
+						).put(
+							"organizationid", organization.getOrganizationId()
+						).build();
 						%>
 
 						<aui:button cssClass="organization-selector-button" data="<%= data %>" value="choose" />
@@ -143,45 +159,30 @@ SearchContainer roleSearchContainer = SelectRoleManagementToolbarDisplayContext.
 			<aui:script require="metal-dom/src/dom as dom">
 				var form = document.<portlet:namespace />selectOrganizationRoleFm;
 
-				dom.delegate(
-					form,
-					'click',
-					'.organization-selector-button',
-					function(event) {
-						Liferay.Util.postForm(
-							form,
-							{
-								data: {
-									organizationId: event.delegateTarget.dataset.organizationid
-								},
+				dom.delegate(form, 'click', '.organization-selector-button', function (event) {
+					Liferay.Util.postForm(form, {
+						data: {
+							organizationId: event.delegateTarget.dataset.organizationid,
+						},
 
-								<%
-								portletURL.setParameter("resetCur", Boolean.TRUE.toString());
-								portletURL.setParameter("step", "2");
-								%>
+						<%
+						portletURL.setParameter("resetCur", Boolean.TRUE.toString());
+						portletURL.setParameter("step", "2");
+						%>
 
-								url: '<%= portletURL.toString() %>'
-							}
-						);
-					}
-				);
+						url: '<%= portletURL.toString() %>',
+					});
+				});
 			</aui:script>
 		</c:when>
 		<c:when test="<%= step == 2 %>">
-
-			<%
-			long organizationId = ParamUtil.getLong(request, "organizationId", uniqueOrganizationId);
-			%>
-
 			<aui:input name="step" type="hidden" value="2" />
 			<aui:input name="organizationId" type="hidden" value="<%= String.valueOf(organizationId) %>" />
 
 			<%
-			Organization organization = OrganizationServiceUtil.getOrganization(organizationId);
-
 			portletURL.setParameter("step", "1");
 
-			String breadcrumbs = "<a href=\"" + portletURL.toString() + "\">" + LanguageUtil.get(request, "organizations") + "</a> &raquo; " + HtmlUtil.escape(organization.getName());
+			String breadcrumbs = "<a href=\"" + portletURL.toString() + "\">" + LanguageUtil.get(request, "organizations") + "</a> &raquo; " + HtmlUtil.escape(selectedOrganization.getName());
 			%>
 
 			<div class="breadcrumbs">
@@ -207,31 +208,39 @@ SearchContainer roleSearchContainer = SelectRoleManagementToolbarDisplayContext.
 						name="title"
 					>
 						<liferay-ui:icon
-							iconCssClass="<%= RolesAdminUtil.getIconCssClass(role) %>"
+							icon="<%= RolesAdminUtil.getIconCssClass(role) %>"
 							label="<%= true %>"
+							markupView="lexicon"
 							message="<%= HtmlUtil.escape(role.getTitle(locale)) %>"
 						/>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text>
-						<c:if test="<%= Validator.isNull(p_u_i_d) || OrganizationMembershipPolicyUtil.isRoleAllowed((selUser != null) ? selUser.getUserId() : 0, organization.getOrganizationId(), role.getRoleId()) %>">
+						<c:if test="<%= Validator.isNull(p_u_i_d) || OrganizationMembershipPolicyUtil.isRoleAllowed((selUser != null) ? selUser.getUserId() : 0, selectedOrganization.getOrganizationId(), role.getRoleId()) %>">
 
 							<%
-							Map<String, Object> data = new HashMap<String, Object>();
+							Group selectedOrganizationGroup = selectedOrganization.getGroup();
 
-							data.put("entityid", role.getRoleId());
-							data.put("entityname", role.getTitle(locale));
-							data.put("groupdescriptivename", organization.getGroup().getDescriptiveName(locale));
-							data.put("groupid", organization.getGroupId());
-							data.put("iconcssclass", RolesAdminUtil.getIconCssClass(role));
-							data.put("searchcontainername", "organizationRoles");
+							Map<String, Object> data = HashMapBuilder.<String, Object>put(
+								"entityid", role.getRoleId()
+							).put(
+								"entityname", role.getTitle(locale)
+							).put(
+								"groupdescriptivename", selectedOrganizationGroup.getDescriptiveName(locale)
+							).put(
+								"groupid", selectedOrganization.getGroupId()
+							).put(
+								"iconcssclass", RolesAdminUtil.getIconCssClass(role)
+							).put(
+								"searchcontainername", "organizationRoles"
+							).build();
 
 							boolean disabled = false;
 
 							List<UserGroupRole> userGroupRoles = UserGroupRoleLocalServiceUtil.getUserGroupRoles(selUser.getUserId());
 
 							for (UserGroupRole userGroupRole : userGroupRoles) {
-								if ((organization.getGroupId() == userGroupRole.getGroupId()) && (userGroupRole.getRoleId() == role.getRoleId())) {
+								if ((selectedOrganization.getGroupId() == userGroupRole.getGroupId()) && (userGroupRole.getRoleId() == role.getRoleId())) {
 									disabled = true;
 
 									break;
@@ -251,18 +260,3 @@ SearchContainer roleSearchContainer = SelectRoleManagementToolbarDisplayContext.
 		</c:when>
 	</c:choose>
 </aui:form>
-
-<aui:script use="aui-base">
-	var Util = Liferay.Util;
-
-	var openingLiferay = Util.getOpener().Liferay;
-
-	openingLiferay.fire(
-		'<%= HtmlUtil.escape(syncEntitiesEventName) %>',
-		{
-			selectors: A.all('.selector-button')
-		}
-	);
-
-	Util.selectEntityHandler('#<portlet:namespace />selectOrganizationRoleFm', '<%= HtmlUtil.escapeJS(eventName) %>');
-</aui:script>

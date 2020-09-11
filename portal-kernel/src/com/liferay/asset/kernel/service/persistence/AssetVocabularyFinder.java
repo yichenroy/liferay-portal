@@ -14,7 +14,7 @@
 
 package com.liferay.asset.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -31,12 +31,14 @@ public interface AssetVocabularyFinder {
 		filterFindByG_N(
 			long groupId, String name, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.asset.kernel.model.AssetVocabulary> obc);
+				<com.liferay.asset.kernel.model.AssetVocabulary>
+					orderByComparator);
 
 	public java.util.List<com.liferay.asset.kernel.model.AssetVocabulary>
 		findByG_N(
 			long groupId, String name, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.asset.kernel.model.AssetVocabulary> obc);
+				<com.liferay.asset.kernel.model.AssetVocabulary>
+					orderByComparator);
 
 }

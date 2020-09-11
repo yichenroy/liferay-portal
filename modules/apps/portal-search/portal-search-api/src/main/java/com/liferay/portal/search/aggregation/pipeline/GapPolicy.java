@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.aggregation.pipeline;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum GapPolicy {
 
 	INSTANT_ZEROS, SKIP

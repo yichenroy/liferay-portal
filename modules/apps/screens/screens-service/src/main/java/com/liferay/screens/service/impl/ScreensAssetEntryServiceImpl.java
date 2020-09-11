@@ -27,6 +27,7 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleResource;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -36,6 +37,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -49,11 +51,11 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.URLCodec;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portlet.asset.service.permission.AssetEntryPermission;
+import com.liferay.screens.service.ScreensDDLRecordService;
 import com.liferay.screens.service.base.ScreensAssetEntryServiceBaseImpl;
 
 import java.util.ArrayList;
@@ -62,9 +64,19 @@ import java.util.Locale;
 
 import javax.portlet.PortletPreferences;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author José Manuel Navarro
  */
+@Component(
+	property = {
+		"json.web.service.context.name=screens",
+		"json.web.service.context.path=ScreensAssetEntry"
+	},
+	service = AopService.class
+)
 public class ScreensAssetEntryServiceImpl
 	extends ScreensAssetEntryServiceBaseImpl {
 
@@ -156,11 +168,11 @@ public class ScreensAssetEntryServiceImpl
 
 			return toJSONArray(assetEntries, locale);
 		}
-		catch (PortalException | SystemException e) {
-			throw e;
+		catch (PortalException | SystemException exception) {
+			throw exception;
 		}
-		catch (Exception e) {
-			throw new PortalException(e);
+		catch (Exception exception) {
+			throw new PortalException(exception);
 		}
 	}
 
@@ -208,9 +220,9 @@ public class ScreensAssetEntryServiceImpl
 					filteredAssetEntries.add(assetEntry);
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
+					_log.debug(exception, exception);
 				}
 			}
 		}
@@ -231,7 +243,7 @@ public class ScreensAssetEntryServiceImpl
 			return getFileEntryJSONObject(assetEntry);
 		}
 		else if (className.equals(DDLRecord.class.getName())) {
-			return screensDDLRecordService.getDDLRecord(
+			return _screensDDLRecordService.getDDLRecord(
 				assetEntry.getClassPK(), locale);
 		}
 		else if (className.equals(JournalArticle.class.getName())) {
@@ -250,14 +262,10 @@ public class ScreensAssetEntryServiceImpl
 		BlogsEntry blogsEntry = _blogsEntryService.getEntry(
 			assetEntry.getClassPK());
 
-		JSONObject blogsEntryJSONObject = JSONFactoryUtil.createJSONObject();
-
-		blogsEntryJSONObject.put(
+		return JSONUtil.put(
 			"blogsEntry",
 			JSONFactoryUtil.createJSONObject(
 				JSONFactoryUtil.looseSerialize(blogsEntry)));
-
-		return blogsEntryJSONObject;
 	}
 
 	protected JSONObject getFileEntryJSONObject(AssetEntry assetEntry)
@@ -266,21 +274,19 @@ public class ScreensAssetEntryServiceImpl
 		FileEntry fileEntry = dlAppService.getFileEntry(
 			assetEntry.getClassPK());
 
-		JSONObject fileEntryJSONObject = JSONFactoryUtil.createJSONObject();
-
-		fileEntryJSONObject.put(
+		return JSONUtil.put(
 			"fileEntry",
 			JSONFactoryUtil.createJSONObject(
-				JSONFactoryUtil.looseSerialize(fileEntry)));
-		fileEntryJSONObject.put("url", getFileEntryPreviewURL(fileEntry));
-
-		return fileEntryJSONObject;
+				JSONFactoryUtil.looseSerialize(fileEntry))
+		).put(
+			"url", getFileEntryPreviewURL(fileEntry)
+		);
 	}
 
 	protected String getFileEntryPreviewURL(FileEntry fileEntry) {
 		StringBundler sb = new StringBundler(9);
 
-		sb.append(PortalUtil.getPathContext());
+		sb.append(_portal.getPathContext());
 		sb.append("/documents/");
 		sb.append(fileEntry.getRepositoryId());
 		sb.append(StringPool.SLASH);
@@ -305,7 +311,7 @@ public class ScreensAssetEntryServiceImpl
 			journalArticle = journalArticleLocalService.getArticle(
 				assetEntry.getClassPK());
 		}
-		catch (Exception nsae) {
+		catch (Exception exception) {
 			JournalArticleResource journalArticleResource =
 				journalArticleResourceLocalService.getArticleResource(
 					assetEntry.getClassPK());
@@ -315,10 +321,7 @@ public class ScreensAssetEntryServiceImpl
 				journalArticleResource.getArticleId());
 		}
 
-		JSONObject journalArticleJSONObject =
-			JSONFactoryUtil.createJSONObject();
-
-		journalArticleJSONObject.put(
+		JSONObject journalArticleJSONObject = JSONUtil.put(
 			"DDMStructure",
 			JSONFactoryUtil.createJSONObject(
 				JSONFactoryUtil.looseSerialize(
@@ -327,9 +330,11 @@ public class ScreensAssetEntryServiceImpl
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			JSONFactoryUtil.looseSerialize(journalArticle));
 
-		journalArticleJSONObject.put("modelAttributes", jsonObject);
 		journalArticleJSONObject.put(
-			"modelValues", jsonObject.getString("content"));
+			"modelAttributes", jsonObject
+		).put(
+			"modelValues", jsonObject.getString("content")
+		);
 
 		jsonObject.remove("content");
 
@@ -341,14 +346,10 @@ public class ScreensAssetEntryServiceImpl
 
 		User user = userService.getUserById(assetEntry.getClassPK());
 
-		JSONObject userJSONObject = JSONFactoryUtil.createJSONObject();
-
-		userJSONObject.put(
+		return JSONUtil.put(
 			"user",
 			JSONFactoryUtil.createJSONObject(
 				JSONFactoryUtil.looseSerialize(user)));
-
-		return userJSONObject;
 	}
 
 	protected JSONArray toJSONArray(
@@ -372,12 +373,19 @@ public class ScreensAssetEntryServiceImpl
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			JSONFactoryUtil.looseSerialize(assetEntry));
 
-		jsonObject.put("className", assetEntry.getClassName());
-		jsonObject.put("description", assetEntry.getDescription(locale));
-		jsonObject.put("locale", String.valueOf(locale));
-		jsonObject.put("object", getAssetObjectJSONObject(assetEntry, locale));
-		jsonObject.put("summary", assetEntry.getSummary(locale));
-		jsonObject.put("title", assetEntry.getTitle(locale));
+		jsonObject.put(
+			"className", assetEntry.getClassName()
+		).put(
+			"description", assetEntry.getDescription(locale)
+		).put(
+			"locale", String.valueOf(locale)
+		).put(
+			"object", getAssetObjectJSONObject(assetEntry, locale)
+		).put(
+			"summary", assetEntry.getSummary(locale)
+		).put(
+			"title", assetEntry.getTitle(locale)
+		);
 
 		return jsonObject;
 	}
@@ -391,10 +399,16 @@ public class ScreensAssetEntryServiceImpl
 				ScreensAssetEntryServiceImpl.class,
 				"_journalArticleModelResourcePermission", JournalArticle.class);
 
-	@ServiceReference(type = AssetPublisherHelper.class)
+	@Reference
 	private AssetPublisherHelper _assetPublisherHelper;
 
-	@ServiceReference(type = BlogsEntryService.class)
+	@Reference
 	private BlogsEntryService _blogsEntryService;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private ScreensDDLRecordService _screensDDLRecordService;
 
 }

@@ -21,7 +21,8 @@ page import="com.liferay.asset.kernel.model.AssetVocabulary" %><%@
 page import="com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil" %><%@
 page import="com.liferay.asset.kernel.service.AssetCategoryServiceUtil" %><%@
 page import="com.liferay.asset.kernel.service.AssetVocabularyServiceUtil" %><%@
-page import="com.liferay.portlet.asset.util.AssetUtil" %>
+page import="com.liferay.portlet.asset.util.AssetUtil" %><%@
+page import="com.liferay.portlet.asset.util.comparator.AssetVocabularyGroupLocalizedTitleComparator" %>
 
 <%!
 public long[] _filterCategoryIds(long vocabularyId, long[] categoryIds) {
@@ -39,7 +40,7 @@ public long[] _filterCategoryIds(long vocabularyId, long[] categoryIds) {
 		}
 	}
 
-	return ArrayUtil.toArray(filteredCategoryIds.toArray(new Long[filteredCategoryIds.size()]));
+	return ArrayUtil.toArray(filteredCategoryIds.toArray(new Long[0]));
 }
 
 private String[] _getCategoryIdsTitles(String categoryIds, String categoryNames, long vocabularyId, ThemeDisplay themeDisplay) {

@@ -1,5 +1,17 @@
 package ${configYAML.apiPackagePath}.client.dto.${escapedVersion};
 
+<#list globalEnumSchemas?keys as globalEnumSchemaName>
+	import ${configYAML.apiPackagePath}.client.constant.${escapedVersion}.${globalEnumSchemaName};
+</#list>
+
+<#list allExternalSchemas?keys as externalSchemaName>
+	import ${configYAML.apiPackagePath}.client.dto.${escapedVersion}.${externalSchemaName};
+</#list>
+
+<#list allSchemas?keys as schemaName>
+	import ${configYAML.apiPackagePath}.client.dto.${escapedVersion}.${schemaName};
+</#list>
+
 import ${configYAML.apiPackagePath}.client.function.UnsafeSupplier;
 import ${configYAML.apiPackagePath}.client.serdes.${escapedVersion}.${schemaName}SerDes;
 
@@ -16,62 +28,32 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class ${schemaName} {
-	<#assign enumSchemas = freeMarkerTool.getDTOEnumSchemas(schema) />
+public class ${schemaName} implements Cloneable {
 
-	<#list enumSchemas?keys as enumName>
-		public static enum ${enumName} {
+	public static ${schemaName} toDTO(String json) {
+		return ${schemaName}SerDes.toDTO(json);
+	}
 
-			<#list enumSchemas[enumName].enumValues as enumValue>
-				${freeMarkerTool.getEnumFieldName(enumValue)}("${enumValue}")
-
-				<#if enumValue_has_next>
-					,
-				</#if>
-			</#list>;
-
-			public static ${enumName} create(String value) {
-				for (${enumName} ${enumName?uncap_first} : values()) {
-					if (Objects.equals(${enumName?uncap_first}.getValue(), value)) {
-						return ${enumName?uncap_first};
-					}
-				}
-
-				return null;
-			}
-
-			public String getValue() {
-				return _value;
-			}
-
-			@Override
-			public String toString() {
-				return _value;
-			}
-
-			private ${enumName}(String value) {
-				_value = value;
-			}
-
-			private final String _value;
-
-		}
-	</#list>
-
-	<#assign properties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema) />
+	<#assign
+		enumSchemas = freeMarkerTool.getDTOEnumSchemas(openAPIYAML, schema)
+		properties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema)
+	/>
 
 	<#list properties?keys as propertyName>
-		<#assign
-			propertySchema = freeMarkerTool.getDTOPropertySchema(propertyName, schema)
-			propertyType = properties[propertyName]
-		/>
+		<#assign capitalizedPropertyName = propertyName?cap_first />
 
-		public ${propertyType} get${propertyName?cap_first}() {
+		<#if enumSchemas?keys?seq_contains(properties[propertyName])>
+			<#assign capitalizedPropertyName = properties[propertyName] />
+		</#if>
+
+		<#assign propertyType = properties[propertyName] />
+
+		public ${propertyType} get${capitalizedPropertyName}() {
 			return ${propertyName};
 		}
 
 		<#if enumSchemas?keys?seq_contains(propertyType)>
-			public String get${propertyName?cap_first}AsString() {
+			public String get${capitalizedPropertyName}AsString() {
 				if (${propertyName} == null) {
 					return null;
 				}
@@ -80,11 +62,11 @@ public class ${schemaName} {
 			}
 		</#if>
 
-		public void set${propertyName?cap_first}(${propertyType} ${propertyName}) {
+		public void set${capitalizedPropertyName}(${propertyType} ${propertyName}) {
 			this.${propertyName} = ${propertyName};
 		}
 
-		public void set${propertyName?cap_first}(UnsafeSupplier<${propertyType}, Exception> ${propertyName}UnsafeSupplier) {
+		public void set${capitalizedPropertyName}(UnsafeSupplier<${propertyType}, Exception> ${propertyName}UnsafeSupplier) {
 			try {
 				${propertyName} = ${propertyName}UnsafeSupplier.get();
 			}
@@ -95,6 +77,11 @@ public class ${schemaName} {
 
 		protected ${propertyType} ${propertyName};
 	</#list>
+
+	@Override
+	public ${schemaName} clone() throws CloneNotSupportedException {
+		return (${schemaName})super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {
@@ -121,5 +108,44 @@ public class ${schemaName} {
 	public String toString() {
 		return ${schemaName}SerDes.toJSON(this);
 	}
+
+	<#list enumSchemas?keys as enumName>
+		public static enum ${enumName} {
+
+		<#list enumSchemas[enumName].enumValues as enumValue>
+			${freeMarkerTool.getEnumFieldName(enumValue)}("${enumValue}")
+
+			<#if enumValue_has_next>
+				,
+			</#if>
+		</#list>;
+
+		public static ${enumName} create(String value) {
+			for (${enumName} ${freeMarkerTool.getSchemaVarName(enumName)} : values()) {
+				if (Objects.equals(${freeMarkerTool.getSchemaVarName(enumName)}.getValue(), value)) {
+					return ${freeMarkerTool.getSchemaVarName(enumName)};
+				}
+			}
+
+			return null;
+		}
+
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private ${enumName}(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+		}
+	</#list>
 
 }

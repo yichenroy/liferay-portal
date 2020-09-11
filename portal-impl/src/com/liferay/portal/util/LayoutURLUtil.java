@@ -27,26 +27,29 @@ import com.liferay.portal.kernel.util.WebKeys;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Shuyang Zhou
+ * @author     Shuyang Zhou
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class LayoutURLUtil {
 
 	public static String getLayoutURL(
 		Layout layout, ServiceContext serviceContext) {
 
-		HttpServletRequest request = serviceContext.getRequest();
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
 
-		if (request == null) {
+		if (httpServletRequest == null) {
 			return StringPool.BLANK;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		try {
 			return PortalUtil.getLayoutURL(layout, themeDisplay, false);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return StringPool.BLANK;
 		}
 	}

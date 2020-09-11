@@ -30,13 +30,13 @@ public class AssetTagsSelectorManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public AssetTagsSelectorManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request,
 		AssetTagsSelectorDisplayContext assetTagsSelectorDisplayContext) {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			assetTagsSelectorDisplayContext.getTagsSearchContainer());
 	}
 

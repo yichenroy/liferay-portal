@@ -34,9 +34,12 @@ public class BaseWikiListPagesDisplayContext
 
 	public BaseWikiListPagesDisplayContext(
 		UUID uuid, WikiListPagesDisplayContext parentDisplayContext,
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		super(uuid, parentDisplayContext, request, response);
+		super(
+			uuid, parentDisplayContext, httpServletRequest,
+			httpServletResponse);
 	}
 
 	@Override
@@ -50,7 +53,8 @@ public class BaseWikiListPagesDisplayContext
 	}
 
 	@Override
-	public void populateResultsAndTotal(SearchContainer searchContainer)
+	public void populateResultsAndTotal(
+			SearchContainer<WikiPage> searchContainer)
 		throws PortalException {
 
 		parentDisplayContext.populateResultsAndTotal(searchContainer);

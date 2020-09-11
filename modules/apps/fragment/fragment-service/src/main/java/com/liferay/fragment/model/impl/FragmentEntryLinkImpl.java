@@ -14,19 +14,34 @@
 
 package com.liferay.fragment.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.GroupConstants;
 
 import java.util.Date;
 
 /**
  * @author Eudaldo Alonso
  */
-@ProviderType
 public class FragmentEntryLinkImpl extends FragmentEntryLinkBaseImpl {
+
+	@Override
+	public boolean isCacheable() {
+		if (getFragmentEntryId() == 0) {
+			return false;
+		}
+
+		FragmentEntry fragmentEntry =
+			FragmentEntryLocalServiceUtil.fetchFragmentEntry(
+				getFragmentEntryId());
+
+		if (fragmentEntry != null) {
+			return fragmentEntry.isCacheable();
+		}
+
+		return false;
+	}
 
 	@Override
 	public boolean isLatestVersion() throws PortalException {
@@ -37,6 +52,29 @@ public class FragmentEntryLinkImpl extends FragmentEntryLinkBaseImpl {
 		Date fragmentEntryModifiedDate = fragmentEntry.getModifiedDate();
 
 		return fragmentEntryModifiedDate.before(getLastPropagationDate());
+	}
+
+	@Override
+	public boolean isSystem() throws PortalException {
+		if (getFragmentEntryId() == 0) {
+			return false;
+		}
+
+		FragmentEntry fragmentEntry =
+			FragmentEntryLocalServiceUtil.fetchFragmentEntry(
+				getFragmentEntryId());
+
+		if (fragmentEntry == null) {
+			return false;
+		}
+
+		if (fragmentEntry.getGroupId() ==
+				GroupConstants.DEFAULT_PARENT_GROUP_ID) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 }

@@ -1,8 +1,11 @@
 definition {
+
 	macro addCP {
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
-		Type(locator1 = "TextInput#SOURCE_URL", value1 = "${sourceURL}");
+		Type(
+			locator1 = "TextInput#SOURCE_URL",
+			value1 = "${sourceURL}");
 
 		PortletEntry.save();
 
@@ -26,10 +29,10 @@ definition {
 	}
 
 	macro selectConfigurationFrame {
-		if (IsElementPresent(locator1 = "IFrame#DIALOG")) {
+		if (IsElementPresent(locator1 = "IFrame#MODAL_BODY")) {
 			echo("Selecting configuration iframe");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 		}
 	}
 
@@ -42,10 +45,17 @@ definition {
 	}
 
 	macro selectPermissionsFrame {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		while (IsElementPresent(locator1 = "IFrame#MODAL_BODY")) {
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		}
+	}
+
+	macro selectTagFrame {
+		SelectFrame(locator1 = "IFrame#SELECT_TAG");
 	}
 
 	macro selectTopFrame {
 		SelectFrame(value1 = "relative=top");
 	}
+
 }

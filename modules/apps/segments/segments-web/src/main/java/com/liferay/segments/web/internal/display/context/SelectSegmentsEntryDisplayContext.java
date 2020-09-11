@@ -15,7 +15,7 @@
 package com.liferay.segments.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -24,9 +24,9 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.search.SortFactoryUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -52,16 +52,16 @@ import javax.servlet.http.HttpServletRequest;
 public class SelectSegmentsEntryDisplayContext {
 
 	public SelectSegmentsEntryDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse,
 		SegmentsEntryLocalService segmentsEntryLocalService) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_segmentsEntryLocalService = segmentsEntryLocalService;
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -90,31 +90,28 @@ public class SelectSegmentsEntryDisplayContext {
 		}
 
 		_eventName = ParamUtil.getString(
-			_request, "eventName",
+			_httpServletRequest, "eventName",
 			_renderResponse.getNamespace() + "selectEntity");
 
 		return _eventName;
 	}
 
 	public List<DropdownItem> getFilterItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public String getGroupDescriptiveName(SegmentsEntry segmentsEntry)
@@ -131,7 +128,8 @@ public class SelectSegmentsEntryDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -142,12 +140,14 @@ public class SelectSegmentsEntryDisplayContext {
 		return portletURL.toString();
 	}
 
-	public SearchContainer getSearchContainer() throws PortalException {
+	public SearchContainer<SegmentsEntry> getSearchContainer()
+		throws PortalException {
+
 		if (_searchContainer != null) {
 			return _searchContainer;
 		}
 
-		SearchContainer searchContainer = new SearchContainer(
+		SearchContainer<SegmentsEntry> searchContainer = new SearchContainer(
 			_renderRequest, _getPortletURL(), null, "there-are-no-segments");
 
 		searchContainer.setId("selectSegmentsEntry");
@@ -158,8 +158,14 @@ public class SelectSegmentsEntryDisplayContext {
 		BaseModelSearchResult<SegmentsEntry> baseModelSearchResult =
 			_segmentsEntryLocalService.searchSegmentsEntries(
 				_themeDisplay.getCompanyId(), _themeDisplay.getScopeGroupId(),
-				_getKeywords(), true, searchContainer.getStart(),
-				searchContainer.getEnd(), _getSort());
+				_getKeywords(), true,
+				LinkedHashMapBuilder.<String, Object>put(
+					"excludedSegmentsEntryIds", _getExcludedSegmentsEntryIds()
+				).put(
+					"excludedSources", _getExcludedSources()
+				).build(),
+				searchContainer.getStart(), searchContainer.getEnd(),
+				_getSort());
 
 		searchContainer.setResults(baseModelSearchResult.getBaseModels());
 		searchContainer.setTotal(baseModelSearchResult.getLength());
@@ -169,9 +175,15 @@ public class SelectSegmentsEntryDisplayContext {
 		return _searchContainer;
 	}
 
+	public String getSearchContainerId() {
+		return "selectSegmentsEntrySegments";
+	}
+
 	public long[] getSelectedSegmentsEntryIds() {
 		return StringUtil.split(
-			ParamUtil.getString(_request, "selectedSegmentsEntryIds"), 0L);
+			ParamUtil.getString(
+				_httpServletRequest, "selectedSegmentsEntryIds"),
+			0L);
 	}
 
 	public String getSortingURL() {
@@ -202,18 +214,37 @@ public class SelectSegmentsEntryDisplayContext {
 		return true;
 	}
 
+	private long[] _getExcludedSegmentsEntryIds() {
+		if (_excludedSegmentsEntryIds != null) {
+			return _excludedSegmentsEntryIds;
+		}
+
+		_excludedSegmentsEntryIds = ParamUtil.getLongValues(
+			_httpServletRequest, "excludedSegmentsEntryIds");
+
+		return _excludedSegmentsEntryIds;
+	}
+
+	private String[] _getExcludedSources() {
+		if (_excludedSources != null) {
+			return _excludedSources;
+		}
+
+		_excludedSources = ParamUtil.getStringValues(
+			_httpServletRequest, "excludedSources");
+
+		return _excludedSources;
+	}
+
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(_renderResponse.createRenderURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(true);
+				dropdownItem.setHref(_renderResponse.createRenderURL());
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-		};
+		).build();
 	}
 
 	private String _getKeywords() {
@@ -221,7 +252,7 @@ public class SelectSegmentsEntryDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		return _keywords;
 	}
@@ -240,13 +271,13 @@ public class SelectSegmentsEntryDisplayContext {
 	private OrderByComparator<SegmentsEntry> _getOrderByComparator() {
 		boolean orderByAsc = false;
 
-		String orderByCol = _getOrderByCol();
-
 		String orderByType = getOrderByType();
 
 		if (orderByType.equals("asc")) {
 			orderByAsc = true;
 		}
+
+		String orderByCol = _getOrderByCol();
 
 		OrderByComparator<SegmentsEntry> orderByComparator = null;
 
@@ -262,28 +293,24 @@ public class SelectSegmentsEntryDisplayContext {
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(_getOrderByCol(), "modified-date"));
-						dropdownItem.setHref(
-							_getPortletURL(), "orderByCol", "modified-date");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "modified-date"));
-					});
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(_getOrderByCol(), "name"));
-						dropdownItem.setHref(
-							_getPortletURL(), "orderByCol", "name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(_getOrderByCol(), "modified-date"));
+				dropdownItem.setHref(
+					_getPortletURL(), "orderByCol", "modified-date");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "modified-date"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(_getOrderByCol(), "name"));
+				dropdownItem.setHref(_getPortletURL(), "orderByCol", "name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "name"));
+			}
+		).build();
 	}
 
 	private PortletURL _getPortletURL() {
@@ -298,6 +325,12 @@ public class SelectSegmentsEntryDisplayContext {
 		}
 
 		portletURL.setParameter("displayStyle", getDisplayStyle());
+		portletURL.setParameter("eventName", getEventName());
+		portletURL.setParameter(
+			"excludedSegmentsEntryIds",
+			StringUtil.merge(_getExcludedSegmentsEntryIds()));
+		portletURL.setParameter(
+			"excludedSources", StringUtil.merge(_getExcludedSources()));
 		portletURL.setParameter("orderByCol", _getOrderByCol());
 		portletURL.setParameter("orderByType", getOrderByType());
 
@@ -305,17 +338,29 @@ public class SelectSegmentsEntryDisplayContext {
 	}
 
 	private Sort _getSort() {
-		String orderByCol = _getOrderByCol();
+		boolean orderByAsc = false;
 
-		if (orderByCol.equals("name")) {
-			return SortFactoryUtil.getSort(
-				SegmentsEntry.class, Sort.STRING_TYPE, Field.NAME,
-				getOrderByType());
+		String orderByType = getOrderByType();
+
+		if (orderByType.equals("asc")) {
+			orderByAsc = true;
 		}
 
-		return SortFactoryUtil.getSort(
-			SegmentsEntry.class, Sort.LONG_TYPE, Field.MODIFIED_DATE,
-			getOrderByType());
+		String orderByCol = _getOrderByCol();
+
+		Sort sort = null;
+
+		if (orderByCol.equals("name")) {
+			String sortFieldName = Field.getSortableFieldName(
+				"localized_name_".concat(_themeDisplay.getLanguageId()));
+
+			sort = new Sort(sortFieldName, Sort.STRING_TYPE, !orderByAsc);
+		}
+		else {
+			sort = new Sort(Field.MODIFIED_DATE, Sort.LONG_TYPE, !orderByAsc);
+		}
+
+		return sort;
 	}
 
 	private boolean _hasResults() throws PortalException {
@@ -336,13 +381,15 @@ public class SelectSegmentsEntryDisplayContext {
 
 	private String _displayStyle;
 	private String _eventName;
+	private long[] _excludedSegmentsEntryIds;
+	private String[] _excludedSources;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
-	private SearchContainer _searchContainer;
+	private SearchContainer<SegmentsEntry> _searchContainer;
 	private final SegmentsEntryLocalService _segmentsEntryLocalService;
 	private final ThemeDisplay _themeDisplay;
 

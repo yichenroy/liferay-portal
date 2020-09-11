@@ -30,6 +30,8 @@ import java.io.InputStream;
 
 import java.net.URL;
 
+import java.util.Objects;
+
 /**
  * @author Brian Wing Shun Chan
  */
@@ -65,8 +67,9 @@ public class RSSWebCacheItem implements WebCacheItem {
 		try (InputStream inputStream = _readURL()) {
 			return input.build(new XmlReader(inputStream));
 		}
-		catch (Exception e) {
-			throw new WebCacheException(_url + " " + e.toString(), e);
+		catch (Exception exception) {
+			throw new WebCacheException(
+				_url + " " + exception.toString(), exception);
 		}
 	}
 
@@ -78,7 +81,7 @@ public class RSSWebCacheItem implements WebCacheItem {
 	private InputStream _readURL() throws IOException {
 		URL url = new URL(_url);
 
-		if ("file".equals(url.getProtocol())) {
+		if (Objects.equals(url.getProtocol(), "file")) {
 			return url.openStream();
 		}
 

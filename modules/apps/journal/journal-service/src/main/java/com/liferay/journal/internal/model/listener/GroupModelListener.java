@@ -37,18 +37,9 @@ public class GroupModelListener extends BaseModelListener<Group> {
 				group.getCompanyId(), JournalArticle.class.getName(),
 				group.getGroupId());
 		}
-		catch (Exception e) {
-			throw new ModelListenerException(e);
+		catch (Exception exception) {
+			throw new ModelListenerException(exception);
 		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected void setSubscriptionLocalService(
-		com.liferay.portal.kernel.service.SubscriptionLocalService
-			subscriptionLocalService) {
 	}
 
 	@Reference

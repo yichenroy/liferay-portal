@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,10 +29,9 @@ import java.util.Map;
  * @see UserTrackerPath
  * @generated
  */
-@ProviderType
 public class UserTrackerPathWrapper
 	extends BaseModelWrapper<UserTrackerPath>
-	implements UserTrackerPath, ModelWrapper<UserTrackerPath> {
+	implements ModelWrapper<UserTrackerPath>, UserTrackerPath {
 
 	public UserTrackerPathWrapper(UserTrackerPath userTrackerPath) {
 		super(userTrackerPath);

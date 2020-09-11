@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,9 +29,8 @@ import java.util.Map;
  * @see Ticket
  * @generated
  */
-@ProviderType
 public class TicketWrapper
-	extends BaseModelWrapper<Ticket> implements Ticket, ModelWrapper<Ticket> {
+	extends BaseModelWrapper<Ticket> implements ModelWrapper<Ticket>, Ticket {
 
 	public TicketWrapper(Ticket ticket) {
 		super(ticket);

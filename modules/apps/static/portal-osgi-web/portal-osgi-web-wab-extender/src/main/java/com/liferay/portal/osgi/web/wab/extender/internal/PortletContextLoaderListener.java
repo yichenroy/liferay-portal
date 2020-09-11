@@ -18,6 +18,8 @@ import com.liferay.portal.bean.BeanLocatorImpl;
 import com.liferay.portal.kernel.bean.BeanLocator;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.bean.PortletBeanLocatorUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletClassLoaderUtil;
 import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
@@ -37,8 +39,6 @@ import java.util.Set;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
-import org.apache.felix.utils.log.Logger;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
@@ -57,11 +57,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  */
 public class PortletContextLoaderListener extends ContextLoaderListener {
 
-	public PortletContextLoaderListener(
-		BundleContext bundleContext, Logger logger) {
-
+	public PortletContextLoaderListener(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
-		_logger = logger;
 	}
 
 	@Override
@@ -91,8 +88,10 @@ public class PortletContextLoaderListener extends ContextLoaderListener {
 			PortletBeanLocatorUtil.setBeanLocator(
 				servletContext.getServletContextName(), null);
 		}
-		catch (Exception e) {
-			_logger.log(Logger.LOG_WARNING, e.getMessage(), e);
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(exception, exception);
+			}
 		}
 
 		super.contextDestroyed(servletContextEvent);
@@ -152,8 +151,8 @@ public class PortletContextLoaderListener extends ContextLoaderListener {
 			PortletBeanLocatorUtil.setBeanLocator(
 				servletContext.getServletContextName(), beanLocatorImpl);
 		}
-		catch (Exception e) {
-			_logger.log(Logger.LOG_ERROR, e.getMessage(), e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (previousApplicationContext == null) {
@@ -175,7 +174,7 @@ public class PortletContextLoaderListener extends ContextLoaderListener {
 	protected WebApplicationContext createWebApplicationContext(
 		ServletContext servletContext) {
 
-		return new PortletApplicationContext(_logger);
+		return new PortletApplicationContext();
 	}
 
 	@Override
@@ -223,20 +222,19 @@ public class PortletContextLoaderListener extends ContextLoaderListener {
 		iterator.forEachRemaining(
 			beanName -> {
 				try {
-					Object bean = configurableApplicationContext.getBean(
-						beanName);
-
 					ServiceRegistration<?> serviceRegistration =
-						_registerService(_bundleContext, beanName, bean);
+						_registerService(
+							_bundleContext, beanName,
+							configurableApplicationContext.getBean(beanName));
 
 					if (serviceRegistration != null) {
 						_serviceRegistrations.add(serviceRegistration);
 					}
 				}
-				catch (BeanIsAbstractException biae) {
+				catch (BeanIsAbstractException beanIsAbstractException) {
 				}
-				catch (Exception e) {
-					_logger.log(Logger.LOG_ERROR, e.getMessage(), e);
+				catch (Exception exception) {
+					_log.error(exception, exception);
 				}
 			});
 	}
@@ -268,14 +266,16 @@ public class PortletContextLoaderListener extends ContextLoaderListener {
 		properties.put("bean.id", beanName);
 
 		return bundleContext.registerService(
-			names.toArray(new String[names.size()]), bean, properties);
+			names.toArray(new String[0]), bean, properties);
 	}
 
 	private static final String _PORTAL_CONFIG_LOCATION_PARAM =
 		"portalContextConfigLocation";
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		PortletContextLoaderListener.class);
+
 	private final BundleContext _bundleContext;
-	private final Logger _logger;
 	private final List<ServiceRegistration<?>> _serviceRegistrations =
 		new ArrayList<>();
 

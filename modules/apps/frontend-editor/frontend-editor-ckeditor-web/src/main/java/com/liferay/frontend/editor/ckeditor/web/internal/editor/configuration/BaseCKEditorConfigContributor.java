@@ -16,14 +16,14 @@ package com.liferay.frontend.editor.ckeditor.web.internal.editor.configuration;
 
 import com.liferay.frontend.editor.ckeditor.web.internal.constants.CKEditorConstants;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
-import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Map;
 
@@ -45,43 +45,45 @@ public class BaseCKEditorConfigContributor extends BaseEditorConfigContributor {
 				CKEditorConstants.ATTRIBUTE_NAMESPACE + ":cssClasses"));
 
 		jsonObject.put(
-			"bodyClass", "html-editor " + HtmlUtil.escape(cssClasses));
-
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
-
-		jsonArray.put(
-			HtmlUtil.escape(
-				PortalUtil.getStaticResourceURL(
-					themeDisplay.getRequest(),
-					themeDisplay.getPathThemeCss() + "/clay.css")));
-		jsonArray.put(
-			HtmlUtil.escape(
-				PortalUtil.getStaticResourceURL(
-					themeDisplay.getRequest(),
-					themeDisplay.getPathThemeCss() + "/main.css")));
-
-		jsonObject.put("contentsCss", jsonArray);
-
-		String contentsLanguageDir = getContentsLanguageDir(
-			inputEditorTaglibAttributes);
-
-		jsonObject.put(
-			"contentsLangDirection", HtmlUtil.escapeJS(contentsLanguageDir));
+			"bodyClass", "html-editor " + HtmlUtil.escape(cssClasses)
+		).put(
+			"contentsCss",
+			JSONUtil.putAll(
+				HtmlUtil.escape(
+					PortalUtil.getStaticResourceURL(
+						themeDisplay.getRequest(),
+						themeDisplay.getPathThemeCss() + "/clay.css")),
+				HtmlUtil.escape(
+					PortalUtil.getStaticResourceURL(
+						themeDisplay.getRequest(),
+						themeDisplay.getPathThemeCss() + "/main.css")),
+				HtmlUtil.escape(
+					PortalUtil.getStaticResourceURL(
+						themeDisplay.getRequest(),
+						"/o/frontend-editor-ckeditor-web/ckeditor/skins" +
+							"/moono-lexicon/editor.css")))
+		).put(
+			"contentsLangDirection",
+			HtmlUtil.escapeJS(
+				getContentsLanguageDir(inputEditorTaglibAttributes))
+		);
 
 		String contentsLanguageId = getContentsLanguageId(
 			inputEditorTaglibAttributes);
 
-		contentsLanguageId = contentsLanguageId.replace("iw", "he");
-		contentsLanguageId = contentsLanguageId.replace("_", "-");
+		contentsLanguageId = StringUtil.replace(contentsLanguageId, "iw", "he");
+		contentsLanguageId = StringUtil.replace(contentsLanguageId, '_', '-');
 
-		jsonObject.put("contentsLanguage", contentsLanguageId);
-
-		jsonObject.put("height", 265);
+		jsonObject.put(
+			"contentsLanguage", contentsLanguageId
+		).put(
+			"height", 265
+		);
 
 		String languageId = getLanguageId(themeDisplay);
 
-		languageId = languageId.replace("iw", "he");
-		languageId = languageId.replace("_", "-");
+		languageId = StringUtil.replace(languageId, "iw", "he");
+		languageId = StringUtil.replace(languageId, '_', '-');
 
 		jsonObject.put("language", languageId);
 
@@ -101,7 +103,8 @@ public class BaseCKEditorConfigContributor extends BaseEditorConfigContributor {
 
 		return GetterUtil.getBoolean(
 			inputEditorTaglibAttributes.get(
-				CKEditorConstants.ATTRIBUTE_NAMESPACE + ":showSource"));
+				CKEditorConstants.ATTRIBUTE_NAMESPACE + ":showSource"),
+			true);
 	}
 
 }

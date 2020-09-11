@@ -14,12 +14,14 @@
 
 package com.liferay.trash.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the TrashVersion service. Represents a row in the &quot;TrashVersion&quot; database table, with each column mapped to a property of this class.
@@ -34,7 +36,8 @@ import com.liferay.portal.kernel.model.ShardedModel;
  */
 @ProviderType
 public interface TrashVersionModel
-	extends AttachedModel, BaseModel<TrashVersion>, ShardedModel {
+	extends AttachedModel, BaseModel<TrashVersion>, CTModel<TrashVersion>,
+			MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -47,6 +50,7 @@ public interface TrashVersionModel
 	 *
 	 * @return the primary key of this trash version
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -54,7 +58,40 @@ public interface TrashVersionModel
 	 *
 	 * @param primaryKey the primary key of this trash version
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this trash version.
+	 *
+	 * @return the mvcc version of this trash version
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this trash version.
+	 *
+	 * @param mvccVersion the mvcc version of this trash version
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this trash version.
+	 *
+	 * @return the ct collection ID of this trash version
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this trash version.
+	 *
+	 * @param ctCollectionId the ct collection ID of this trash version
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the version ID of this trash version.

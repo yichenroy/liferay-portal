@@ -14,9 +14,10 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the PortletPreferences service. Represents a row in the &quot;PortletPreferences&quot; database table, with each column mapped to a property of this class.
@@ -31,7 +32,8 @@ import com.liferay.portal.kernel.bean.AutoEscape;
  */
 @ProviderType
 public interface PortletPreferencesModel
-	extends BaseModel<PortletPreferences>, MVCCModel, ShardedModel {
+	extends BaseModel<PortletPreferences>, CTModel<PortletPreferences>,
+			MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -44,6 +46,7 @@ public interface PortletPreferencesModel
 	 *
 	 * @return the primary key of this portlet preferences
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -51,6 +54,7 @@ public interface PortletPreferencesModel
 	 *
 	 * @param primaryKey the primary key of this portlet preferences
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -68,6 +72,22 @@ public interface PortletPreferencesModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this portlet preferences.
+	 *
+	 * @return the ct collection ID of this portlet preferences
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this portlet preferences.
+	 *
+	 * @param ctCollectionId the ct collection ID of this portlet preferences
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the portlet preferences ID of this portlet preferences.

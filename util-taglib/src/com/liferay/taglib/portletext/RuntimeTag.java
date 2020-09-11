@@ -30,18 +30,17 @@ import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletJSONUtil;
 import com.liferay.portal.kernel.portlet.PortletLayoutListener;
 import com.liferay.portal.kernel.portlet.PortletParameterUtil;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.RestrictPortletServletRequest;
+import com.liferay.portal.kernel.portlet.constants.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
@@ -49,10 +48,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.DirectTag;
 import com.liferay.taglib.servlet.PipingServletResponse;
 import com.liferay.taglib.util.PortalIncludeUtil;
+import com.liferay.taglib.util.ThreadLocalUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Stack;
 
 import javax.servlet.http.HttpServletRequest;
@@ -68,10 +69,13 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 
 	public static void doTag(
 			String portletName, PageContext pageContext,
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		doTag(portletName, null, pageContext, request, response);
+		doTag(
+			portletName, null, pageContext, httpServletRequest,
+			httpServletResponse);
 	}
 
 	public static void doTag(
@@ -79,7 +83,8 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 			PortletProvider.Action portletProviderAction, String instanceId,
 			String queryString, String defaultPreferences,
 			boolean persistSettings, PageContext pageContext,
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		String portletId = PortletProviderUtil.getPortletId(
@@ -88,12 +93,13 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 		if (Validator.isNotNull(portletId)) {
 			doTag(
 				portletId, instanceId, queryString, _SETTINGS_SCOPE_DEFAULT,
-				defaultPreferences, persistSettings, pageContext, request,
-				response);
+				defaultPreferences, persistSettings, pageContext,
+				httpServletRequest, httpServletResponse);
 		}
 		else {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			Layout layout = themeDisplay.getLayout();
 
@@ -106,13 +112,13 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 			}
 
 			String errorMessage = LanguageUtil.format(
-				request, "an-app-that-can-x-x-belongs-here",
+				httpServletRequest, "an-app-that-can-x-x-belongs-here",
 				new Object[] {
 					portletProviderAction.name(), portletProviderClassName
 				},
 				false);
 
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				"liferay-portlet:runtime:errorMessage", errorMessage);
 
 			PortalIncludeUtil.include(pageContext, _ERROR_PAGE);
@@ -121,95 +127,117 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 
 	public static void doTag(
 			String portletName, String queryString, PageContext pageContext,
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		doTag(portletName, queryString, null, pageContext, request, response);
+		doTag(
+			portletName, queryString, null, pageContext, httpServletRequest,
+			httpServletResponse);
 	}
 
 	public static void doTag(
 			String portletName, String queryString, String defaultPreferences,
-			PageContext pageContext, HttpServletRequest request,
-			HttpServletResponse response)
+			PageContext pageContext, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		doTag(
 			portletName, StringPool.BLANK, queryString, _SETTINGS_SCOPE_DEFAULT,
-			defaultPreferences, true, pageContext, request, response);
+			defaultPreferences, true, pageContext, httpServletRequest,
+			httpServletResponse);
 	}
 
 	public static void doTag(
 			String portletName, String instanceId, String queryString,
 			String defaultPreferences, PageContext pageContext,
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		doTag(
 			portletName, instanceId, queryString, _SETTINGS_SCOPE_DEFAULT,
-			defaultPreferences, true, pageContext, request, response);
+			defaultPreferences, true, pageContext, httpServletRequest,
+			httpServletResponse);
 	}
 
 	public static void doTag(
 			String portletName, String instanceId, String queryString,
 			String settingsScope, String defaultPreferences,
 			boolean persistSettings, PageContext pageContext,
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
+		instanceId = PortalUtil.getJsSafePortletId(instanceId);
+
 		if (pageContext != null) {
-			if (response == pageContext.getResponse()) {
-				response = PipingServletResponse.createPipingServletResponse(
-					pageContext);
+			if (httpServletResponse == pageContext.getResponse()) {
+				httpServletResponse =
+					PipingServletResponse.createPipingServletResponse(
+						pageContext);
 			}
 			else {
-				response = new PipingServletResponse(
-					response, pageContext.getOut());
+				httpServletResponse = new PipingServletResponse(
+					httpServletResponse, pageContext.getOut());
 			}
 		}
 
-		HttpServletRequest originalRequest =
-			PortalUtil.getOriginalServletRequest(request);
+		HttpServletRequest originalHttpServletRequest =
+			PortalUtil.getOriginalServletRequest(httpServletRequest);
 
 		RestrictPortletServletRequest restrictPortletServletRequest =
-			new RestrictPortletServletRequest(originalRequest);
+			new RestrictPortletServletRequest(originalHttpServletRequest);
 
 		Map<String, String[]> parameterMap = new HashMap<>(
-			request.getParameterMap());
+			httpServletRequest.getParameterMap());
 
 		String portletInstanceKey = portletName;
 
-		if (Validator.isNotNull(instanceId)) {
+		if (Validator.isNotNull(instanceId) && !instanceId.startsWith("0")) {
 			portletInstanceKey = PortletIdCodec.encode(
 				PortletIdCodec.decodePortletName(portletName),
 				PortletIdCodec.decodeUserId(portletName), instanceId);
 		}
 
 		if (!Objects.equals(
-				portletInstanceKey, request.getParameter("p_p_id"))) {
+				portletInstanceKey,
+				httpServletRequest.getParameter("p_p_id"))) {
 
-			parameterMap = MapUtil.filterByKeys(
-				parameterMap, key -> !key.startsWith("p_p_"));
+			Set<String> keySet = parameterMap.keySet();
+
+			keySet.removeIf(key -> key.startsWith("p_p_"));
 		}
 
 		String portletNamespace = PortalUtil.getPortletNamespace(
 			portletInstanceKey);
 
-		parameterMap.putAll(
-			MapUtil.filterByKeys(
-				originalRequest.getParameterMap(),
-				key -> key.startsWith(portletNamespace)));
+		Map<String, String[]> originalParameterMap =
+			originalHttpServletRequest.getParameterMap();
+
+		for (Map.Entry<String, String[]> entry :
+				originalParameterMap.entrySet()) {
+
+			String key = entry.getKey();
+
+			if (key.startsWith(portletNamespace)) {
+				parameterMap.put(key, entry.getValue());
+			}
+		}
 
 		queryString = PortletParameterUtil.addNamespace(
 			portletInstanceKey, queryString);
 
-		request = DynamicServletRequest.addQueryString(
+		httpServletRequest = DynamicServletRequest.addQueryString(
 			restrictPortletServletRequest, parameterMap, queryString, false);
 
 		try {
-			request.setAttribute(WebKeys.RENDER_PORTLET_RESOURCE, Boolean.TRUE);
+			httpServletRequest.setAttribute(
+				WebKeys.RENDER_PORTLET_RESOURCE, Boolean.TRUE);
 
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			Portlet portlet = getPortlet(
 				themeDisplay.getCompanyId(), portletInstanceKey);
@@ -224,9 +252,10 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 
 			if (embeddedPortletIds.search(portlet.getPortletId()) > -1) {
 				String errorMessage = LanguageUtil.get(
-					request, "the-application-cannot-include-itself");
+					httpServletRequest,
+					"the-application-cannot-include-itself");
 
-				request.setAttribute(
+				httpServletRequest.setAttribute(
 					"liferay-portlet:runtime:errorMessage", errorMessage);
 
 				PortalIncludeUtil.include(pageContext, _ERROR_PAGE);
@@ -250,7 +279,8 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 
 			Layout layout = themeDisplay.getLayout();
 
-			request.setAttribute(WebKeys.SETTINGS_SCOPE, settingsScope);
+			httpServletRequest.setAttribute(
+				WebKeys.SETTINGS_SCOPE, settingsScope);
 
 			JSONObject jsonObject = null;
 
@@ -278,7 +308,7 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 				PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 					layout, portletInstanceKey, defaultPreferences);
 				PortletPreferencesFactoryUtil.getPortletSetup(
-					request, portletInstanceKey, defaultPreferences);
+					httpServletRequest, portletInstanceKey, defaultPreferences);
 
 				PortletLayoutListener portletLayoutListener =
 					portlet.getPortletLayoutListenerInstance();
@@ -295,21 +325,24 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 				jsonObject = JSONFactoryUtil.createJSONObject();
 
 				PortletJSONUtil.populatePortletJSONObject(
-					request, StringPool.BLANK, portlet, jsonObject);
+					httpServletRequest, StringPool.BLANK, portlet, jsonObject);
 			}
 
 			if (jsonObject != null) {
-				PortletJSONUtil.writeHeaderPaths(response, jsonObject);
+				PortletJSONUtil.writeHeaderPaths(
+					httpServletResponse, jsonObject);
 			}
 
 			embeddedPortletIds.push(portletInstanceKey);
 
-			PortletContainerUtil.render(request, response, portlet);
+			PortletContainerUtil.render(
+				httpServletRequest, httpServletResponse, portlet);
 
 			embeddedPortletIds.pop();
 
 			if (jsonObject != null) {
-				PortletJSONUtil.writeFooterPaths(response, jsonObject);
+				PortletJSONUtil.writeFooterPaths(
+					httpServletResponse, jsonObject);
 			}
 		}
 		finally {
@@ -320,16 +353,17 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 	@Override
 	public int doEndTag() throws JspException {
 		try {
-			HttpServletRequest request =
+			HttpServletRequest httpServletRequest =
 				(HttpServletRequest)pageContext.getRequest();
 
-			Layout layout = (Layout)request.getAttribute(WebKeys.LAYOUT);
+			Layout layout = (Layout)httpServletRequest.getAttribute(
+				WebKeys.LAYOUT);
 
 			if (layout == null) {
 				return EVAL_PAGE;
 			}
 
-			HttpServletResponse response =
+			HttpServletResponse httpServletResponse =
 				(HttpServletResponse)pageContext.getResponse();
 
 			if (Validator.isNotNull(_portletProviderClassName) &&
@@ -338,21 +372,23 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 				doTag(
 					_portletProviderClassName, _portletProviderAction,
 					_instanceId, _queryString, _defaultPreferences,
-					_persistSettings, pageContext, request, response);
+					_persistSettings, pageContext, httpServletRequest,
+					httpServletResponse);
 			}
 			else {
 				doTag(
-					_portletName, _instanceId, _queryString, _settingsScope,
-					_defaultPreferences, _persistSettings, pageContext, request,
-					response);
+					_portletName, _instanceId, _queryString,
+					_SETTINGS_SCOPE_DEFAULT, _defaultPreferences,
+					_persistSettings, pageContext, httpServletRequest,
+					httpServletResponse);
 			}
 
 			return EVAL_PAGE;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new JspException(e);
+			throw new JspException(exception);
 		}
 	}
 
@@ -386,8 +422,11 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 		_queryString = queryString;
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setSettingsScope(String settingsScope) {
-		_settingsScope = settingsScope;
 	}
 
 	/**
@@ -440,7 +479,9 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 	private static final Log _log = LogFactoryUtil.getLog(RuntimeTag.class);
 
 	private static final ThreadLocal<Stack<String>> _embeddedPortletIds =
-		new CentralizedThreadLocal<>(RuntimeTag.class + "._embeddedPortletIds");
+		ThreadLocalUtil.create(
+			RuntimeTag.class, "_embeddedPortletIds",
+			name -> new CentralizedThreadLocal<>(name));
 
 	private String _defaultPreferences;
 	private String _instanceId;
@@ -449,6 +490,5 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 	private PortletProvider.Action _portletProviderAction;
 	private String _portletProviderClassName;
 	private String _queryString;
-	private String _settingsScope = _SETTINGS_SCOPE_DEFAULT;
 
 }

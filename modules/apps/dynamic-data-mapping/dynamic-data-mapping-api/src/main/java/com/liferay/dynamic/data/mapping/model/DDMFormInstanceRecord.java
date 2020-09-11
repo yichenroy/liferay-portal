@@ -14,11 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the DDMFormInstanceRecord service. Represents a row in the &quot;DDMFormInstanceRecord&quot; database table, with each column mapped to a property of this class.
@@ -78,6 +78,9 @@ public interface DDMFormInstanceRecord
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public int getStatus()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public String getStorageType()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 }

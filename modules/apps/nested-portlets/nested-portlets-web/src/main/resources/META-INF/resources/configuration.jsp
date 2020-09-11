@@ -36,35 +36,42 @@
 			>
 				<h4><liferay-ui:message key="layout-template" /></h4>
 
-				<%
-				String layoutTemplateId = nestedPortletsDisplayContext.getLayoutTemplateId();
+				<clay:row>
 
-				for (LayoutTemplate layoutTemplate : nestedPortletsDisplayContext.getLayoutTemplates()) {
-				%>
+					<%
+					String layoutTemplateId = nestedPortletsDisplayContext.getLayoutTemplateId();
 
-					<div class="entry-card lfr-asset-item">
-						<div class="radio radio-card radio-top-left">
-							<label>
-								<aui:input checked="<%= layoutTemplateId.equals(layoutTemplate.getLayoutTemplateId()) %>" label="" name="preferences--layoutTemplateId--" type="radio" value="<%= layoutTemplate.getLayoutTemplateId() %>" />
+					for (LayoutTemplate layoutTemplate : nestedPortletsDisplayContext.getLayoutTemplates()) {
+					%>
 
-								<div class="card">
-									<div class="aspect-ratio aspect-ratio-bg-cover" style="background-image:url('<%= layoutTemplate.getStaticResourcePath() + HtmlUtil.escapeAttribute(layoutTemplate.getThumbnailPath()) %>')">
-									</div>
+						<clay:col
+							md="3"
+							size="6"
+							sm="4"
+						>
+							<div class="radio radio-card radio-top-left">
+								<label>
+									<aui:input checked="<%= layoutTemplateId.equals(layoutTemplate.getLayoutTemplateId()) %>" label="" name="preferences--layoutTemplateId--" type="radio" value="<%= layoutTemplate.getLayoutTemplateId() %>" />
 
-									<div class="card-row card-row-padded">
-										<div class="card-col-field">
-											<%= layoutTemplate.getName(locale) %>
+									<div class="card">
+										<div class="aspect-ratio aspect-ratio-bg-cover" style="background-image: url('<%= layoutTemplate.getStaticResourcePath() + HtmlUtil.escapeAttribute(layoutTemplate.getThumbnailPath()) %>');">
+										</div>
+
+										<div class="card-body">
+											<div class="card-col-field">
+												<%= layoutTemplate.getName(locale) %>
+											</div>
 										</div>
 									</div>
-								</div>
-							</label>
-						</div>
-					</div>
+								</label>
+							</div>
+						</clay:col>
 
-				<%
-				}
-				%>
+					<%
+					}
+					%>
 
+				</clay:row>
 			</liferay-frontend:fieldset>
 		</liferay-frontend:fieldset-group>
 	</liferay-frontend:edit-form-body>

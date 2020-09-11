@@ -14,6 +14,7 @@
 
 package com.liferay.portal.servlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
@@ -43,36 +43,41 @@ public class GoogleGadgetServlet extends HttpServlet {
 
 	@Override
 	public void service(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		try {
-			String content = getContent(request);
+			String content = getContent(httpServletRequest);
 
 			if (content == null) {
 				PortalUtil.sendError(
 					HttpServletResponse.SC_NOT_FOUND,
-					new NoSuchLayoutException(), request, response);
+					new NoSuchLayoutException(), httpServletRequest,
+					httpServletResponse);
 			}
 			else {
-				request.setAttribute(WebKeys.GOOGLE_GADGET, Boolean.TRUE);
+				httpServletRequest.setAttribute(
+					WebKeys.GOOGLE_GADGET, Boolean.TRUE);
 
-				response.setContentType(ContentTypes.TEXT_XML);
+				httpServletResponse.setContentType(ContentTypes.TEXT_XML);
 
-				ServletResponseUtil.write(response, content);
+				ServletResponseUtil.write(httpServletResponse, content);
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
 			PortalUtil.sendError(
-				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e, request,
-				response);
+				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, exception,
+				httpServletRequest, httpServletResponse);
 		}
 	}
 
-	protected String getContent(HttpServletRequest request) throws Exception {
-		String path = GetterUtil.getString(request.getPathInfo());
+	protected String getContent(HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		String path = GetterUtil.getString(httpServletRequest.getPathInfo());
 
 		if (Validator.isNull(path)) {
 			return null;
@@ -84,7 +89,7 @@ public class GoogleGadgetServlet extends HttpServlet {
 			return null;
 		}
 
-		long companyId = PortalUtil.getCompanyId(request);
+		long companyId = PortalUtil.getCompanyId(httpServletRequest);
 
 		String portletId = path.substring(
 			pos + Portal.FRIENDLY_URL_SEPARATOR.length());
@@ -94,7 +99,7 @@ public class GoogleGadgetServlet extends HttpServlet {
 
 		String title = portlet.getDisplayName();
 
-		String widgetURL = String.valueOf(request.getRequestURL());
+		String widgetURL = String.valueOf(httpServletRequest.getRequestURL());
 
 		widgetURL = widgetURL.replaceFirst(
 			PropsValues.GOOGLE_GADGET_SERVLET_MAPPING,

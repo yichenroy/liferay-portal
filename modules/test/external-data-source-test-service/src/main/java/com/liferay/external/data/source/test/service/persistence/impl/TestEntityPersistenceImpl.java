@@ -14,13 +14,14 @@
 
 package com.liferay.external.data.source.test.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.external.data.source.test.exception.NoSuchTestEntityException;
 import com.liferay.external.data.source.test.model.TestEntity;
+import com.liferay.external.data.source.test.model.TestEntityTable;
 import com.liferay.external.data.source.test.model.impl.TestEntityImpl;
 import com.liferay.external.data.source.test.model.impl.TestEntityModelImpl;
 import com.liferay.external.data.source.test.service.persistence.TestEntityPersistence;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -29,23 +30,26 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
-
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The persistence implementation for the test entity service.
@@ -57,7 +61,6 @@ import java.util.Set;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class TestEntityPersistenceImpl
 	extends BasePersistenceImpl<TestEntity> implements TestEntityPersistence {
 
@@ -80,26 +83,19 @@ public class TestEntityPersistenceImpl
 	private FinderPath _finderPathCountAll;
 
 	public TestEntityPersistenceImpl() {
-		setModelClass(TestEntity.class);
-
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
 		dbColumnNames.put("id", "id_");
 		dbColumnNames.put("data", "data_");
 
-		try {
-			Field field = BasePersistenceImpl.class.getDeclaredField(
-				"_dbColumnNames");
+		setDBColumnNames(dbColumnNames);
 
-			field.setAccessible(true);
+		setModelClass(TestEntity.class);
 
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setModelImplClass(TestEntityImpl.class);
+		setModelPKClass(long.class);
+
+		setTable(TestEntityTable.INSTANCE);
 	}
 
 	/**
@@ -110,10 +106,7 @@ public class TestEntityPersistenceImpl
 	@Override
 	public void cacheResult(TestEntity testEntity) {
 		entityCache.putResult(
-			TestEntityModelImpl.ENTITY_CACHE_ENABLED, TestEntityImpl.class,
-			testEntity.getPrimaryKey(), testEntity);
-
-		testEntity.resetOriginalValues();
+			TestEntityImpl.class, testEntity.getPrimaryKey(), testEntity);
 	}
 
 	/**
@@ -125,13 +118,9 @@ public class TestEntityPersistenceImpl
 	public void cacheResult(List<TestEntity> testEntities) {
 		for (TestEntity testEntity : testEntities) {
 			if (entityCache.getResult(
-					TestEntityModelImpl.ENTITY_CACHE_ENABLED,
 					TestEntityImpl.class, testEntity.getPrimaryKey()) == null) {
 
 				cacheResult(testEntity);
-			}
-			else {
-				testEntity.resetOriginalValues();
 			}
 		}
 	}
@@ -161,23 +150,24 @@ public class TestEntityPersistenceImpl
 	 */
 	@Override
 	public void clearCache(TestEntity testEntity) {
-		entityCache.removeResult(
-			TestEntityModelImpl.ENTITY_CACHE_ENABLED, TestEntityImpl.class,
-			testEntity.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		entityCache.removeResult(TestEntityImpl.class, testEntity);
 	}
 
 	@Override
 	public void clearCache(List<TestEntity> testEntities) {
+		for (TestEntity testEntity : testEntities) {
+			entityCache.removeResult(TestEntityImpl.class, testEntity);
+		}
+	}
+
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
-		for (TestEntity testEntity : testEntities) {
-			entityCache.removeResult(
-				TestEntityModelImpl.ENTITY_CACHE_ENABLED, TestEntityImpl.class,
-				testEntity.getPrimaryKey());
+		for (Serializable primaryKey : primaryKeys) {
+			entityCache.removeResult(TestEntityImpl.class, primaryKey);
 		}
 	}
 
@@ -239,11 +229,11 @@ public class TestEntityPersistenceImpl
 
 			return remove(testEntity);
 		}
-		catch (NoSuchTestEntityException nsee) {
-			throw nsee;
+		catch (NoSuchTestEntityException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -266,8 +256,8 @@ public class TestEntityPersistenceImpl
 				session.delete(testEntity);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -289,33 +279,25 @@ public class TestEntityPersistenceImpl
 		try {
 			session = openSession();
 
-			if (testEntity.isNew()) {
+			if (isNew) {
 				session.save(testEntity);
-
-				testEntity.setNew(false);
 			}
 			else {
 				testEntity = (TestEntity)session.merge(testEntity);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		entityCache.putResult(TestEntityImpl.class, testEntity, false, true);
 
 		if (isNew) {
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+			testEntity.setNew(false);
 		}
-
-		entityCache.putResult(
-			TestEntityModelImpl.ENTITY_CACHE_ENABLED, TestEntityImpl.class,
-			testEntity.getPrimaryKey(), testEntity, false);
 
 		testEntity.resetOriginalValues();
 
@@ -364,161 +346,12 @@ public class TestEntityPersistenceImpl
 	/**
 	 * Returns the test entity with the primary key or returns <code>null</code> if it could not be found.
 	 *
-	 * @param primaryKey the primary key of the test entity
-	 * @return the test entity, or <code>null</code> if a test entity with the primary key could not be found
-	 */
-	@Override
-	public TestEntity fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(
-			TestEntityModelImpl.ENTITY_CACHE_ENABLED, TestEntityImpl.class,
-			primaryKey);
-
-		if (serializable == nullModel) {
-			return null;
-		}
-
-		TestEntity testEntity = (TestEntity)serializable;
-
-		if (testEntity == null) {
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				testEntity = (TestEntity)session.get(
-					TestEntityImpl.class, primaryKey);
-
-				if (testEntity != null) {
-					cacheResult(testEntity);
-				}
-				else {
-					entityCache.putResult(
-						TestEntityModelImpl.ENTITY_CACHE_ENABLED,
-						TestEntityImpl.class, primaryKey, nullModel);
-				}
-			}
-			catch (Exception e) {
-				entityCache.removeResult(
-					TestEntityModelImpl.ENTITY_CACHE_ENABLED,
-					TestEntityImpl.class, primaryKey);
-
-				throw processException(e);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return testEntity;
-	}
-
-	/**
-	 * Returns the test entity with the primary key or returns <code>null</code> if it could not be found.
-	 *
 	 * @param id the primary key of the test entity
 	 * @return the test entity, or <code>null</code> if a test entity with the primary key could not be found
 	 */
 	@Override
 	public TestEntity fetchByPrimaryKey(long id) {
 		return fetchByPrimaryKey((Serializable)id);
-	}
-
-	@Override
-	public Map<Serializable, TestEntity> fetchByPrimaryKeys(
-		Set<Serializable> primaryKeys) {
-
-		if (primaryKeys.isEmpty()) {
-			return Collections.emptyMap();
-		}
-
-		Map<Serializable, TestEntity> map =
-			new HashMap<Serializable, TestEntity>();
-
-		if (primaryKeys.size() == 1) {
-			Iterator<Serializable> iterator = primaryKeys.iterator();
-
-			Serializable primaryKey = iterator.next();
-
-			TestEntity testEntity = fetchByPrimaryKey(primaryKey);
-
-			if (testEntity != null) {
-				map.put(primaryKey, testEntity);
-			}
-
-			return map;
-		}
-
-		Set<Serializable> uncachedPrimaryKeys = null;
-
-		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(
-				TestEntityModelImpl.ENTITY_CACHE_ENABLED, TestEntityImpl.class,
-				primaryKey);
-
-			if (serializable != nullModel) {
-				if (serializable == null) {
-					if (uncachedPrimaryKeys == null) {
-						uncachedPrimaryKeys = new HashSet<Serializable>();
-					}
-
-					uncachedPrimaryKeys.add(primaryKey);
-				}
-				else {
-					map.put(primaryKey, (TestEntity)serializable);
-				}
-			}
-		}
-
-		if (uncachedPrimaryKeys == null) {
-			return map;
-		}
-
-		StringBundler query = new StringBundler(
-			uncachedPrimaryKeys.size() * 2 + 1);
-
-		query.append(_SQL_SELECT_TESTENTITY_WHERE_PKS_IN);
-
-		for (Serializable primaryKey : uncachedPrimaryKeys) {
-			query.append((long)primaryKey);
-
-			query.append(",");
-		}
-
-		query.setIndex(query.index() - 1);
-
-		query.append(")");
-
-		String sql = query.toString();
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			Query q = session.createQuery(sql);
-
-			for (TestEntity testEntity : (List<TestEntity>)q.list()) {
-				map.put(testEntity.getPrimaryKeyObj(), testEntity);
-
-				cacheResult(testEntity);
-
-				uncachedPrimaryKeys.remove(testEntity.getPrimaryKeyObj());
-			}
-
-			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(
-					TestEntityModelImpl.ENTITY_CACHE_ENABLED,
-					TestEntityImpl.class, primaryKey, nullModel);
-			}
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-
-		return map;
 	}
 
 	/**
@@ -535,7 +368,7 @@ public class TestEntityPersistenceImpl
 	 * Returns a range of all the test entities.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>TestEntityModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>TestEntityModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of test entities
@@ -551,7 +384,7 @@ public class TestEntityPersistenceImpl
 	 * Returns an ordered range of all the test entities.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>TestEntityModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>TestEntityModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of test entities
@@ -570,64 +403,62 @@ public class TestEntityPersistenceImpl
 	 * Returns an ordered range of all the test entities.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>TestEntityModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>TestEntityModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of test entities
 	 * @param end the upper bound of the range of test entities (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of test entities
 	 */
 	@Override
 	public List<TestEntity> findAll(
 		int start, int end, OrderByComparator<TestEntity> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindAll;
-			finderArgs = FINDER_ARGS_EMPTY;
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<TestEntity> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<TestEntity>)finderCache.getResult(
 				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_TESTENTITY);
+				sb.append(_SQL_SELECT_TESTENTITY);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_TESTENTITY;
 
-				if (pagination) {
-					sql = sql.concat(TestEntityModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(TestEntityModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -635,29 +466,19 @@ public class TestEntityPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<TestEntity>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<TestEntity>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<TestEntity>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -694,18 +515,15 @@ public class TestEntityPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_TESTENTITY);
+				Query query = session.createQuery(_SQL_COUNT_TESTENTITY);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -721,6 +539,21 @@ public class TestEntityPersistenceImpl
 	}
 
 	@Override
+	protected EntityCache getEntityCache() {
+		return entityCache;
+	}
+
+	@Override
+	protected String getPKDBName() {
+		return "id_";
+	}
+
+	@Override
+	protected String getSelectSQL() {
+		return _SQL_SELECT_TESTENTITY;
+	}
+
+	@Override
 	protected Map<String, Integer> getTableColumnsMap() {
 		return TestEntityModelImpl.TABLE_COLUMNS_MAP;
 	}
@@ -729,30 +562,42 @@ public class TestEntityPersistenceImpl
 	 * Initializes the test entity persistence.
 	 */
 	public void afterPropertiesSet() {
-		_finderPathWithPaginationFindAll = new FinderPath(
-			TestEntityModelImpl.ENTITY_CACHE_ENABLED,
-			TestEntityModelImpl.FINDER_CACHE_ENABLED, TestEntityImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+		Bundle bundle = FrameworkUtil.getBundle(
+			TestEntityPersistenceImpl.class);
 
-		_finderPathWithoutPaginationFindAll = new FinderPath(
-			TestEntityModelImpl.ENTITY_CACHE_ENABLED,
-			TestEntityModelImpl.FINDER_CACHE_ENABLED, TestEntityImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+		_bundleContext = bundle.getBundleContext();
 
-		_finderPathCountAll = new FinderPath(
-			TestEntityModelImpl.ENTITY_CACHE_ENABLED,
-			TestEntityModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_argumentsResolverServiceRegistration = _bundleContext.registerService(
+			ArgumentsResolver.class, new TestEntityModelArgumentsResolver(),
+			MapUtil.singletonDictionary(
+				"model.class.name", TestEntity.class.getName()));
+
+		_finderPathWithPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathWithoutPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathCountAll = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 	}
 
 	public void destroy() {
 		entityCache.removeCache(TestEntityImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		_argumentsResolverServiceRegistration.unregister();
+
+		for (ServiceRegistration<FinderPath> serviceRegistration :
+				_serviceRegistrations) {
+
+			serviceRegistration.unregister();
+		}
 	}
+
+	private BundleContext _bundleContext;
 
 	@ServiceReference(type = EntityCache.class)
 	protected EntityCache entityCache;
@@ -762,9 +607,6 @@ public class TestEntityPersistenceImpl
 
 	private static final String _SQL_SELECT_TESTENTITY =
 		"SELECT testEntity FROM TestEntity testEntity";
-
-	private static final String _SQL_SELECT_TESTENTITY_WHERE_PKS_IN =
-		"SELECT testEntity FROM TestEntity testEntity WHERE id_ IN (";
 
 	private static final String _SQL_COUNT_TESTENTITY =
 		"SELECT COUNT(testEntity) FROM TestEntity testEntity";
@@ -779,5 +621,103 @@ public class TestEntityPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"id", "data"});
+
+	private FinderPath _createFinderPath(
+		String cacheName, String methodName, String[] params,
+		String[] columnNames, boolean baseModelResult) {
+
+		FinderPath finderPath = new FinderPath(
+			cacheName, methodName, params, columnNames, baseModelResult);
+
+		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+			_serviceRegistrations.add(
+				_bundleContext.registerService(
+					FinderPath.class, finderPath,
+					MapUtil.singletonDictionary("cache.name", cacheName)));
+		}
+
+		return finderPath;
+	}
+
+	private ServiceRegistration<ArgumentsResolver>
+		_argumentsResolverServiceRegistration;
+	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
+		new HashSet<>();
+
+	private static class TestEntityModelArgumentsResolver
+		implements ArgumentsResolver {
+
+		@Override
+		public Object[] getArguments(
+			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
+			boolean original) {
+
+			String[] columnNames = finderPath.getColumnNames();
+
+			if ((columnNames == null) || (columnNames.length == 0)) {
+				if (baseModel.isNew()) {
+					return FINDER_ARGS_EMPTY;
+				}
+
+				return null;
+			}
+
+			TestEntityModelImpl testEntityModelImpl =
+				(TestEntityModelImpl)baseModel;
+
+			long columnBitmask = testEntityModelImpl.getColumnBitmask();
+
+			if (!checkColumn || (columnBitmask == 0)) {
+				return _getValue(testEntityModelImpl, columnNames, original);
+			}
+
+			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
+				finderPath);
+
+			if (finderPathColumnBitmask == null) {
+				finderPathColumnBitmask = 0L;
+
+				for (String columnName : columnNames) {
+					finderPathColumnBitmask |=
+						testEntityModelImpl.getColumnBitmask(columnName);
+				}
+
+				_finderPathColumnBitmasksCache.put(
+					finderPath, finderPathColumnBitmask);
+			}
+
+			if ((columnBitmask & finderPathColumnBitmask) != 0) {
+				return _getValue(testEntityModelImpl, columnNames, original);
+			}
+
+			return null;
+		}
+
+		private Object[] _getValue(
+			TestEntityModelImpl testEntityModelImpl, String[] columnNames,
+			boolean original) {
+
+			Object[] arguments = new Object[columnNames.length];
+
+			for (int i = 0; i < arguments.length; i++) {
+				String columnName = columnNames[i];
+
+				if (original) {
+					arguments[i] = testEntityModelImpl.getColumnOriginalValue(
+						columnName);
+				}
+				else {
+					arguments[i] = testEntityModelImpl.getColumnValue(
+						columnName);
+				}
+			}
+
+			return arguments;
+		}
+
+		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
+			new ConcurrentHashMap<>();
+
+	}
 
 }

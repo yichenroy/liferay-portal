@@ -34,7 +34,6 @@ import com.liferay.document.library.web.internal.display.context.util.DLRequestH
 import com.liferay.document.library.web.internal.settings.DLPortletInstanceSettings;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -89,17 +88,17 @@ import javax.servlet.http.HttpServletRequest;
 public class DLAdminDisplayContext {
 
 	public DLAdminDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
 		VersioningStrategy versioningStrategy) {
 
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 		_versioningStrategy = versioningStrategy;
 
-		_request = liferayPortletRequest.getHttpServletRequest();
-
-		_dlRequestHelper = new DLRequestHelper(_request);
+		_dlRequestHelper = new DLRequestHelper(_httpServletRequest);
 
 		_dlPortletInstanceSettings =
 			_dlRequestHelper.getDLPortletInstanceSettings();
@@ -108,9 +107,9 @@ public class DLAdminDisplayContext {
 			_dlRequestHelper);
 
 		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
-			liferayPortletRequest);
+			httpServletRequest);
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_permissionChecker = _themeDisplay.getPermissionChecker();
@@ -119,7 +118,8 @@ public class DLAdminDisplayContext {
 	}
 
 	public String getDisplayStyle() {
-		String displayStyle = ParamUtil.getString(_request, "displayStyle");
+		String displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle");
 
 		String[] displayViews = _dlPortletInstanceSettings.getDisplayViews();
 
@@ -134,7 +134,7 @@ public class DLAdminDisplayContext {
 					DLPortletKeys.DOCUMENT_LIBRARY, "display-style",
 					displayStyle);
 
-				_request.setAttribute(
+				_httpServletRequest.setAttribute(
 					WebKeys.SINGLE_PAGE_APPLICATION_CLEAR_CACHE, Boolean.TRUE);
 			}
 		}
@@ -155,14 +155,15 @@ public class DLAdminDisplayContext {
 	}
 
 	public String getNavigation() {
-		return ParamUtil.getString(_request, "navigation", "home");
+		return ParamUtil.getString(_httpServletRequest, "navigation", "home");
 	}
 
 	public String getOrderByCol() {
-		String orderByCol = ParamUtil.getString(_request, "orderByCol");
+		String orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol");
 
 		long fileEntryTypeId = ParamUtil.getLong(
-			_request, "fileEntryTypeId", -1);
+			_httpServletRequest, "fileEntryTypeId", -1);
 
 		if (orderByCol.equals("downloads") && (fileEntryTypeId >= 0)) {
 			orderByCol = "modifiedDate";
@@ -181,7 +182,8 @@ public class DLAdminDisplayContext {
 	}
 
 	public String getOrderByType() {
-		String orderByType = ParamUtil.getString(_request, "orderByType");
+		String orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType");
 
 		if (Validator.isNotNull(orderByType)) {
 			_portalPreferences.setValue(
@@ -189,7 +191,7 @@ public class DLAdminDisplayContext {
 		}
 		else {
 			orderByType = _portalPreferences.getValue(
-				DLPortletKeys.DOCUMENT_LIBRARY, "order-by-type", "asc");
+				DLPortletKeys.DOCUMENT_LIBRARY, "order-by-type", "desc");
 		}
 
 		return orderByType;
@@ -211,7 +213,7 @@ public class DLAdminDisplayContext {
 		}
 
 		return StringBundler.concat(
-			"^[^?]+/", portletDisplay.getInstanceId(), "/view/" + _folderId,
+			"^[^?]+/", portletDisplay.getInstanceId(), "/view/", _folderId,
 			"\\?");
 	}
 
@@ -222,7 +224,9 @@ public class DLAdminDisplayContext {
 			return folder.getRepositoryId();
 		}
 
-		return _themeDisplay.getScopeGroupId();
+		return ParamUtil.getLong(
+			_httpServletRequest, "repositoryId",
+			_themeDisplay.getScopeGroupId());
 	}
 
 	public long getRootFolderId() {
@@ -233,7 +237,7 @@ public class DLAdminDisplayContext {
 		return _rootFolderName;
 	}
 
-	public SearchContainer getSearchContainer() {
+	public SearchContainer<Object> getSearchContainer() {
 		if (_searchContainer == null) {
 			try {
 				if (isSearch()) {
@@ -243,8 +247,8 @@ public class DLAdminDisplayContext {
 					_searchContainer = _getDLSearchContainer();
 				}
 			}
-			catch (PortalException pe) {
-				throw new SystemException(pe);
+			catch (PortalException portalException) {
+				throw new SystemException(portalException);
 			}
 		}
 
@@ -257,16 +261,17 @@ public class DLAdminDisplayContext {
 		portletURL.setParameter(
 			"mvcRenderCommandName", "/document_library/search");
 
-		String redirect = ParamUtil.getString(_request, "redirect");
+		String redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
 		portletURL.setParameter("redirect", redirect);
 
-		long searchFolderId = ParamUtil.getLong(_request, "searchFolderId");
+		long searchFolderId = ParamUtil.getLong(
+			_httpServletRequest, "searchFolderId");
 
 		portletURL.setParameter(
 			"searchFolderId", String.valueOf(searchFolderId));
 
-		String keywords = ParamUtil.getString(_request, "keywords");
+		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		portletURL.setParameter("keywords", keywords);
 
@@ -279,7 +284,7 @@ public class DLAdminDisplayContext {
 
 	public boolean isSearch() {
 		String mvcRenderCommandName = ParamUtil.getString(
-			_request, "mvcRenderCommandName");
+			_httpServletRequest, "mvcRenderCommandName");
 
 		return mvcRenderCommandName.equals("/document_library/search");
 	}
@@ -292,11 +297,15 @@ public class DLAdminDisplayContext {
 		try {
 			_computeRootFolder();
 
-			_folder = (Folder)_request.getAttribute(
+			_folder = (Folder)_httpServletRequest.getAttribute(
 				WebKeys.DOCUMENT_LIBRARY_FOLDER);
 
-			_folderId = BeanPropertiesUtil.getLong(
-				_folder, "folderId", getRootFolderId());
+			if (_folder == null) {
+				_folderId = getRootFolderId();
+			}
+			else {
+				_folderId = _folder.getFolderId();
+			}
 
 			_defaultFolderView = false;
 
@@ -310,17 +319,19 @@ public class DLAdminDisplayContext {
 				try {
 					_folder = DLAppLocalServiceUtil.getFolder(_folderId);
 				}
-				catch (NoSuchFolderException nsfe) {
+				catch (NoSuchFolderException noSuchFolderException) {
 					_folderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 
 					if (_log.isWarnEnabled()) {
-						_log.warn("Unable to get folder " + _folderId, nsfe);
+						_log.warn(
+							"Unable to get folder " + _folderId,
+							noSuchFolderException);
 					}
 				}
 			}
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
@@ -328,48 +339,51 @@ public class DLAdminDisplayContext {
 		_rootFolderId = _dlPortletInstanceSettings.getRootFolderId();
 		_rootFolderName = StringPool.BLANK;
 
-		if (_rootFolderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			try {
-				Folder rootFolder = DLAppLocalServiceUtil.getFolder(
-					_rootFolderId);
+		if (_rootFolderId == DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+			return;
+		}
 
-				_rootFolderName = rootFolder.getName();
+		try {
+			Folder rootFolder = DLAppLocalServiceUtil.getFolder(_rootFolderId);
 
-				if (rootFolder.getGroupId() !=
-						_themeDisplay.getScopeGroupId()) {
+			_rootFolderName = rootFolder.getName();
 
-					_rootFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
-					_rootFolderName = StringPool.BLANK;
-				}
-			}
-			catch (NoSuchFolderException nsfe) {
+			if (rootFolder.getGroupId() != _themeDisplay.getScopeGroupId()) {
 				_rootFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+				_rootFolderName = StringPool.BLANK;
+			}
+		}
+		catch (NoSuchFolderException noSuchFolderException) {
+			_rootFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						StringBundler.concat(
-							"Could not find folder {folderId=", _rootFolderId,
-							"}"),
-						nsfe);
-				}
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					StringBundler.concat(
+						"Could not find folder {folderId=", _rootFolderId, "}"),
+					noSuchFolderException);
 			}
-			catch (PortalException pe) {
-				throw new SystemException(pe);
-			}
+		}
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
-	private SearchContainer _getDLSearchContainer() throws PortalException {
-		String navigation = ParamUtil.getString(_request, "navigation", "home");
+	private SearchContainer<Object> _getDLSearchContainer()
+		throws PortalException {
 
-		String currentFolder = ParamUtil.getString(_request, "curFolder");
-		String deltaFolder = ParamUtil.getString(_request, "deltaFolder");
+		String navigation = ParamUtil.getString(
+			_httpServletRequest, "navigation", "home");
+
+		String currentFolder = ParamUtil.getString(
+			_httpServletRequest, "curFolder");
+		String deltaFolder = ParamUtil.getString(
+			_httpServletRequest, "deltaFolder");
 
 		long fileEntryTypeId = ParamUtil.getLong(
-			_request, "fileEntryTypeId", -1);
+			_httpServletRequest, "fileEntryTypeId", -1);
 
 		String dlFileEntryTypeName = LanguageUtil.get(
-			_request, "basic-document");
+			_httpServletRequest, "basic-document");
 
 		int status = WorkflowConstants.STATUS_APPROVED;
 
@@ -381,8 +395,8 @@ public class DLAdminDisplayContext {
 			status = WorkflowConstants.STATUS_ANY;
 		}
 
-		long categoryId = ParamUtil.getLong(_request, "categoryId");
-		String tagName = ParamUtil.getString(_request, "tag");
+		long categoryId = ParamUtil.getLong(_httpServletRequest, "categoryId");
+		String tagName = ParamUtil.getString(_httpServletRequest, "tag");
 
 		boolean useAssetEntryQuery = false;
 
@@ -408,15 +422,19 @@ public class DLAdminDisplayContext {
 		portletURL.setParameter("deltaFolder", deltaFolder);
 		portletURL.setParameter("folderId", String.valueOf(folderId));
 
-		SearchContainer dlSearchContainer = new SearchContainer(
+		if (fileEntryTypeId >= 0) {
+			portletURL.setParameter(
+				"fileEntryTypeId", String.valueOf(fileEntryTypeId));
+		}
+
+		SearchContainer<Object> dlSearchContainer = new SearchContainer(
 			_liferayPortletRequest, null, null, "curEntry",
 			_dlPortletInstanceSettings.getEntriesPerPage(), portletURL, null,
 			null);
 
-		String[] entryColumns =
-			_dlPortletInstanceSettingsHelper.getEntryColumns();
-
-		dlSearchContainer.setHeaderNames(ListUtil.fromArray(entryColumns));
+		dlSearchContainer.setHeaderNames(
+			ListUtil.fromArray(
+				_dlPortletInstanceSettingsHelper.getEntryColumns()));
 
 		String orderByCol = getOrderByCol();
 		String orderByType = getOrderByType();
@@ -427,7 +445,7 @@ public class DLAdminDisplayContext {
 			orderByModel = true;
 		}
 
-		OrderByComparator<?> orderByComparator =
+		OrderByComparator<Object> orderByComparator =
 			DLUtil.getRepositoryModelOrderByComparator(
 				orderByCol, orderByType, orderByModel);
 
@@ -435,11 +453,11 @@ public class DLAdminDisplayContext {
 		dlSearchContainer.setOrderByComparator(orderByComparator);
 		dlSearchContainer.setOrderByType(orderByType);
 
-		List results = new ArrayList();
+		List<Object> results = new ArrayList<>();
 		int total = 0;
 
 		if (fileEntryTypeId >= 0) {
-			Indexer indexer = IndexerRegistryUtil.getIndexer(
+			Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
 				DLFileEntryConstants.getClassName());
 
 			if (fileEntryTypeId > 0) {
@@ -448,14 +466,18 @@ public class DLAdminDisplayContext {
 						fileEntryTypeId);
 
 				dlFileEntryTypeName = dlFileEntryType.getName(
-					_request.getLocale());
+					_httpServletRequest.getLocale());
 			}
 
 			SearchContext searchContext = SearchContextFactory.getInstance(
-				_request);
+				_httpServletRequest);
 
 			searchContext.setAttribute("paginationType", "none");
 			searchContext.setEnd(dlSearchContainer.getEnd());
+
+			if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+				searchContext.setFolderIds(new long[] {folderId});
+			}
 
 			int type = Sort.STRING_TYPE;
 			String fieldName = orderByCol;
@@ -495,7 +517,7 @@ public class DLAdminDisplayContext {
 				try {
 					fileEntry = DLAppLocalServiceUtil.getFileEntry(fileEntryId);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							StringBundler.concat(
@@ -530,7 +552,8 @@ public class DLAdminDisplayContext {
 
 					dlSearchContainer.setTotal(total);
 
-					results = AssetEntryServiceUtil.getEntries(assetEntryQuery);
+					results.addAll(
+						AssetEntryServiceUtil.getEntries(assetEntryQuery));
 				}
 				else {
 					long repositoryId = getRepositoryId();
@@ -568,11 +591,16 @@ public class DLAdminDisplayContext {
 
 				dlSearchContainer.setTotal(total);
 
-				results = DLAppServiceUtil.getGroupFileEntries(
-					repositoryId, groupFileEntriesUserId, folderId, null,
-					status, dlSearchContainer.getStart(),
-					dlSearchContainer.getEnd(),
-					dlSearchContainer.getOrderByComparator());
+				OrderByComparator<FileEntry> fileEntryOrderByComparator =
+					DLUtil.getRepositoryModelOrderByComparator(
+						orderByCol, orderByType, orderByModel);
+
+				results.addAll(
+					DLAppServiceUtil.getGroupFileEntries(
+						repositoryId, groupFileEntriesUserId, folderId, null,
+						status, dlSearchContainer.getStart(),
+						dlSearchContainer.getEnd(),
+						fileEntryOrderByComparator));
 			}
 		}
 
@@ -581,7 +609,8 @@ public class DLAdminDisplayContext {
 		if (fileEntryTypeId >= 0) {
 			dlSearchContainer.setEmptyResultsMessage(
 				LanguageUtil.format(
-					_request, "there-are-no-documents-or-media-files-of-type-x",
+					_httpServletRequest,
+					"there-are-no-documents-or-media-files-of-type-x",
 					HtmlUtil.escape(dlFileEntryTypeName)));
 		}
 		else {
@@ -592,16 +621,16 @@ public class DLAdminDisplayContext {
 		return dlSearchContainer;
 	}
 
-	private Hits _getHits(SearchContainer searchContainer)
+	private Hits _getHits(SearchContainer<Object> searchContainer)
 		throws PortalException {
 
 		SearchContext searchContext = SearchContextFactory.getInstance(
-			_request);
+			_httpServletRequest);
 
 		searchContext.setAttribute("paginationType", "regular");
 
 		long searchRepositoryId = ParamUtil.getLong(
-			_request, "searchRepositoryId");
+			_httpServletRequest, "searchRepositoryId");
 
 		if (searchRepositoryId == 0) {
 			searchRepositoryId = _themeDisplay.getScopeGroupId();
@@ -610,13 +639,15 @@ public class DLAdminDisplayContext {
 		searchContext.setAttribute("searchRepositoryId", searchRepositoryId);
 		searchContext.setEnd(searchContainer.getEnd());
 
-		long searchFolderId = ParamUtil.getLong(_request, "searchFolderId");
+		long searchFolderId = ParamUtil.getLong(
+			_httpServletRequest, "searchFolderId");
 
 		searchContext.setFolderIds(new long[] {searchFolderId});
 
 		searchContext.setIncludeDiscussions(true);
+		searchContext.setIncludeInternalAssetCategories(true);
 
-		String keywords = ParamUtil.getString(_request, "keywords");
+		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		searchContext.setKeywords(keywords);
 
@@ -633,7 +664,8 @@ public class DLAdminDisplayContext {
 		List<Object> searchResults = new ArrayList<>();
 
 		for (SearchResult searchResult :
-				SearchResultUtil.getSearchResults(hits, _request.getLocale())) {
+				SearchResultUtil.getSearchResults(
+					hits, _httpServletRequest.getLocale())) {
 
 			FileEntry fileEntry = null;
 			Folder folder = null;
@@ -668,16 +700,18 @@ public class DLAdminDisplayContext {
 					searchResults.add(folder);
 				}
 			}
-			catch (ClassNotFoundException cnfe) {
-				throw new PortalException(cnfe);
+			catch (ClassNotFoundException classNotFoundException) {
+				throw new PortalException(classNotFoundException);
 			}
 		}
 
 		return searchResults;
 	}
 
-	private SearchContainer _getSearchSearchContainer() throws PortalException {
-		SearchContainer searchContainer = new SearchContainer(
+	private SearchContainer<Object> _getSearchSearchContainer()
+		throws PortalException {
+
+		SearchContainer<Object> searchContainer = new SearchContainer(
 			_liferayPortletRequest, getSearchSearchContainerURL(), null, null);
 
 		Hits hits = _getHits(searchContainer);
@@ -698,14 +732,14 @@ public class DLAdminDisplayContext {
 	private final DLRequestHelper _dlRequestHelper;
 	private Folder _folder;
 	private long _folderId;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final PermissionChecker _permissionChecker;
 	private final PortalPreferences _portalPreferences;
-	private final HttpServletRequest _request;
 	private long _rootFolderId;
 	private String _rootFolderName;
-	private SearchContainer _searchContainer;
+	private SearchContainer<Object> _searchContainer;
 	private final ThemeDisplay _themeDisplay;
 	private final VersioningStrategy _versioningStrategy;
 

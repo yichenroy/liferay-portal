@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.model.impl.LayoutTypeControllerImpl;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -32,11 +31,12 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class ProductNavigationControlMenuUtil {
 
-	public static boolean isEditEnabled(HttpServletRequest request)
+	public static boolean isEditEnabled(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay.isStateMaximized()) {
 			return false;
@@ -45,6 +45,10 @@ public class ProductNavigationControlMenuUtil {
 		Layout layout = themeDisplay.getLayout();
 
 		if (!layout.isTypePortlet()) {
+			return false;
+		}
+
+		if (layout.isTypeAssetDisplay() || layout.isTypeContent()) {
 			return false;
 		}
 
@@ -59,10 +63,6 @@ public class ProductNavigationControlMenuUtil {
 			layoutTypePortlet.getLayoutTypeController();
 
 		if (layoutTypeController.isFullPageDisplayable()) {
-			return false;
-		}
-
-		if (!(layoutTypeController instanceof LayoutTypeControllerImpl)) {
 			return false;
 		}
 

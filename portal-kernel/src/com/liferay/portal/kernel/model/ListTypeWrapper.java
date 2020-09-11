@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,7 +28,6 @@ import java.util.Map;
  * @see ListType
  * @generated
  */
-@ProviderType
 public class ListTypeWrapper
 	extends BaseModelWrapper<ListType>
 	implements ListType, ModelWrapper<ListType> {

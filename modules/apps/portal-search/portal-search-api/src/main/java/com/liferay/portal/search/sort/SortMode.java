@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.sort;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum SortMode {
 
 	AVG, MAX, MEDIAN, MIN, SUM

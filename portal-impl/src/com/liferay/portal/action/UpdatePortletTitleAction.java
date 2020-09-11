@@ -16,7 +16,6 @@ package com.liferay.portal.action;
 
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
@@ -39,20 +38,20 @@ public class UpdatePortletTitleAction extends JSONAction {
 
 	@Override
 	public String getJSON(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		HttpSession session = request.getSession();
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Layout layout = themeDisplay.getLayout();
 
 		PermissionChecker permissionChecker =
 			themeDisplay.getPermissionChecker();
 
-		String portletId = ParamUtil.getString(request, "portletId");
+		String portletId = ParamUtil.getString(httpServletRequest, "portletId");
 
 		if (!PortletPermissionUtil.contains(
 				permissionChecker, layout, portletId,
@@ -61,21 +60,39 @@ public class UpdatePortletTitleAction extends JSONAction {
 			return null;
 		}
 
-		String languageId = LanguageUtil.getLanguageId(request);
-		String title = ParamUtil.getString(request, "title");
+		HttpSession session = httpServletRequest.getSession();
+
+		String languageId = LanguageUtil.getLanguageId(httpServletRequest);
+		String title = ParamUtil.getString(httpServletRequest, "title");
 
 		PortletPreferences portletSetup =
-			PortletPreferencesFactoryUtil.getLayoutPortletSetup(
-				layout, portletId);
+			themeDisplay.getStrictLayoutPortletSetup(layout, portletId);
 
 		portletSetup.setValue("portletSetupTitle_" + languageId, title);
 		portletSetup.setValue("portletSetupUseCustomTitle", "true");
 
 		portletSetup.store();
 
+		if (layout.isTypeContent()) {
+			Layout draftLayout = layout.fetchDraftLayout();
+
+			if (draftLayout != null) {
+				PortletPreferences draftLayoutPortletSetup =
+					themeDisplay.getStrictLayoutPortletSetup(
+						draftLayout, portletId);
+
+				draftLayoutPortletSetup.setValue(
+					"portletSetupTitle_" + languageId, title);
+				draftLayoutPortletSetup.setValue(
+					"portletSetupUseCustomTitle", "true");
+
+				draftLayoutPortletSetup.store();
+			}
+		}
+
 		InvokerPortletUtil.clearResponse(
 			session, layout.getPrimaryKey(), portletId,
-			LanguageUtil.getLanguageId(request));
+			LanguageUtil.getLanguageId(httpServletRequest));
 
 		return null;
 	}

@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,7 +31,6 @@ import java.util.Map;
  * @see DDLRecordSet
  * @generated
  */
-@ProviderType
 public class DDLRecordSetWrapper
 	extends BaseModelWrapper<DDLRecordSet>
 	implements DDLRecordSet, ModelWrapper<DDLRecordSet> {

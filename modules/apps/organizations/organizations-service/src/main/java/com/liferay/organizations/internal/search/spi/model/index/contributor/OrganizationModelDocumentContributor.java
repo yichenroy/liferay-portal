@@ -14,6 +14,7 @@
 
 package com.liferay.organizations.internal.search.spi.model.index.contributor;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
 import com.liferay.portal.kernel.exception.NoSuchRegionException;
@@ -31,7 +32,6 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.RegionService;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 
@@ -64,6 +64,7 @@ public class OrganizationModelDocumentContributor
 				Field.ORGANIZATION_ID, organization.getOrganizationId());
 			document.addKeyword(Field.TREE_PATH, organization.buildTreePath());
 			document.addKeyword(Field.TYPE, organization.getType());
+			document.addTextSortable(Field.TYPE, organization.getType());
 			document.addTextSortable(
 				"nameTreePath", _buildNameTreePath(organization));
 			document.addKeyword(
@@ -73,8 +74,8 @@ public class OrganizationModelDocumentContributor
 				document, organization.getAddresses(),
 				organization.getRegionId(), organization.getCountryId());
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
@@ -135,13 +136,13 @@ public class OrganizationModelDocumentContributor
 
 		if (countryId > 0) {
 			try {
-				Country country = _countryService.getCountry(countryId);
-
-				countries.addAll(_getLocalizedCountryNames(country));
+				countries.addAll(
+					_getLocalizedCountryNames(
+						_countryService.getCountry(countryId)));
 			}
-			catch (NoSuchCountryException nsce) {
+			catch (NoSuchCountryException noSuchCountryException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(nsce.getMessage());
+					_log.warn(noSuchCountryException.getMessage());
 				}
 			}
 		}
@@ -154,9 +155,9 @@ public class OrganizationModelDocumentContributor
 
 				regions.add(StringUtil.toLowerCase(region.getName()));
 			}
-			catch (NoSuchRegionException nsre) {
+			catch (NoSuchRegionException noSuchRegionException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(nsre.getMessage());
+					_log.warn(noSuchRegionException.getMessage());
 				}
 			}
 		}
@@ -178,12 +179,11 @@ public class OrganizationModelDocumentContributor
 			zips.add(StringUtil.toLowerCase(address.getZip()));
 		}
 
-		document.addText("city", cities.toArray(new String[cities.size()]));
-		document.addText(
-			"country", countries.toArray(new String[countries.size()]));
-		document.addText("region", regions.toArray(new String[regions.size()]));
-		document.addText("street", streets.toArray(new String[streets.size()]));
-		document.addText("zip", zips.toArray(new String[zips.size()]));
+		document.addText("city", cities.toArray(new String[0]));
+		document.addText("country", countries.toArray(new String[0]));
+		document.addText("region", regions.toArray(new String[0]));
+		document.addText("street", streets.toArray(new String[0]));
+		document.addText("zip", zips.toArray(new String[0]));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

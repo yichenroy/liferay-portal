@@ -19,7 +19,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
-import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.monitoring.DataSampleFactory;
 import com.liferay.portal.kernel.monitoring.DataSampleThreadLocal;
@@ -104,20 +105,20 @@ public class MonitoringFilter
 		return processFilterCount.decrementAndGet();
 	}
 
-	protected long getGroupId(HttpServletRequest request) {
-		long groupId = ParamUtil.getLong(request, "groupId");
+	protected long getGroupId(HttpServletRequest httpServletRequest) {
+		long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 
 		if (groupId > 0) {
 			return groupId;
 		}
 
-		Layout layout = (Layout)request.getAttribute(WebKeys.LAYOUT);
+		Layout layout = (Layout)httpServletRequest.getAttribute(WebKeys.LAYOUT);
 
 		if (layout != null) {
 			return layout.getGroupId();
 		}
 
-		long plid = ParamUtil.getLong(request, "p_l_id");
+		long plid = ParamUtil.getLong(httpServletRequest, "p_l_id");
 
 		if ((plid > 0) && (_layoutLocalService != null)) {
 			try {
@@ -125,9 +126,10 @@ public class MonitoringFilter
 
 				groupId = layout.getGroupId();
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug("Unable to retrieve layout " + plid, pe);
+					_log.debug(
+						"Unable to retrieve layout " + plid, portalException);
 				}
 			}
 		}
@@ -148,8 +150,8 @@ public class MonitoringFilter
 
 	@Override
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws IOException, ServletException {
 
 		PortalRequestDataSample portalRequestDataSample = null;
@@ -160,12 +162,15 @@ public class MonitoringFilter
 			portalRequestDataSample =
 				(PortalRequestDataSample)
 					_dataSampleFactory.createPortalRequestDataSample(
-						_portal.getCompanyId(request), getGroupId(request),
-						request.getHeader(HttpHeaders.REFERER),
-						request.getRemoteAddr(), request.getRemoteUser(),
-						request.getRequestURI(),
-						GetterUtil.getString(request.getRequestURL()),
-						request.getHeader(HttpHeaders.USER_AGENT));
+						_portal.getCompanyId(httpServletRequest),
+						getGroupId(httpServletRequest),
+						httpServletRequest.getHeader(HttpHeaders.REFERER),
+						httpServletRequest.getRemoteAddr(),
+						httpServletRequest.getRemoteUser(),
+						httpServletRequest.getRequestURI(),
+						GetterUtil.getString(
+							httpServletRequest.getRequestURL()),
+						httpServletRequest.getHeader(HttpHeaders.USER_AGENT));
 
 			DataSampleThreadLocal.initialize();
 		}
@@ -176,29 +181,32 @@ public class MonitoringFilter
 			}
 
 			processFilter(
-				MonitoringFilter.class.getName(), request, response,
-				filterChain);
+				MonitoringFilter.class.getName(), httpServletRequest,
+				httpServletResponse, filterChain);
 
 			if (portalRequestDataSample != null) {
 				portalRequestDataSample.capture(RequestStatus.SUCCESS);
 
-				portalRequestDataSample.setGroupId(getGroupId(request));
-				portalRequestDataSample.setStatusCode(response.getStatus());
+				portalRequestDataSample.setGroupId(
+					getGroupId(httpServletRequest));
+				portalRequestDataSample.setStatusCode(
+					httpServletResponse.getStatus());
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (portalRequestDataSample != null) {
 				portalRequestDataSample.capture(RequestStatus.ERROR);
 			}
 
-			if (e instanceof IOException) {
-				throw (IOException)e;
+			if (exception instanceof IOException) {
+				throw (IOException)exception;
 			}
-			else if (e instanceof ServletException) {
-				throw (ServletException)e;
+			else if (exception instanceof ServletException) {
+				throw (ServletException)exception;
 			}
 			else {
-				throw new ServletException("Unable to execute request", e);
+				throw new ServletException(
+					"Unable to execute request", exception);
 			}
 		}
 		finally {
@@ -207,9 +215,11 @@ public class MonitoringFilter
 			}
 
 			if (decrementProcessFilterCount() == 0) {
-				MessageBusUtil.sendMessage(
-					DestinationNames.MONITORING,
-					DataSampleThreadLocal.getDataSamples());
+				Message message = new Message();
+
+				message.setPayload(DataSampleThreadLocal.getDataSamples());
+
+				_messageBus.sendMessage(DestinationNames.MONITORING, message);
 
 				_processFilterCount.remove();
 			}
@@ -251,6 +261,9 @@ public class MonitoringFilter
 		policyOption = ReferencePolicyOption.GREEDY
 	)
 	private volatile LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private MessageBus _messageBus;
 
 	private boolean _monitorPortalRequest;
 

@@ -44,6 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.display-category=category.collaboration",
 		"com.liferay.portlet.header-portlet-css=/blogs/css/main.css",
 		"com.liferay.portlet.icon=/blogs/icons/blogs.png",
+		"com.liferay.portlet.layout-cacheable=true",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.private-request-attributes=false",
 		"com.liferay.portlet.private-session-attributes=false",
@@ -53,14 +54,14 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Blogs", "javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.always-display-default-configuration-icons=true",
+		"javax.portlet.init-param.always-send-redirect=true",
 		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.name=" + BlogsPortletKeys.BLOGS,
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=guest,power-user,user",
 		"javax.portlet.supported-public-render-parameter=categoryId",
 		"javax.portlet.supported-public-render-parameter=resetCur",
-		"javax.portlet.supported-public-render-parameter=tag",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.supported-public-render-parameter=tag"
 	},
 	service = Portlet.class
 )
@@ -78,7 +79,7 @@ public class BlogsPortlet extends BaseBlogsPortlet {
 	}
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.blogs.web)(&(release.schema.version>=1.2.0)(!(release.schema.version>=1.3.0))))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.blogs.web)(&(release.schema.version>=1.2.0)(!(release.schema.version>=2.0.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

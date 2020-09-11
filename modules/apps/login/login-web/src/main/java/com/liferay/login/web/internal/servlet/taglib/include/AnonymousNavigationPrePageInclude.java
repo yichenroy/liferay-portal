@@ -43,10 +43,10 @@ public class AnonymousNavigationPrePageInclude implements PageInclude {
 
 	@Override
 	public void include(PageContext pageContext) throws JspException {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		String mvcRenderCommandName = request.getParameter(
+		String mvcRenderCommandName = httpServletRequest.getParameter(
 			"mvcRenderCommandName");
 
 		if ((mvcRenderCommandName != null) &&
@@ -56,8 +56,9 @@ public class AnonymousNavigationPrePageInclude implements PageInclude {
 			return;
 		}
 
-		PortletConfig portletConfig = (PortletConfig)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+		PortletConfig portletConfig =
+			(PortletConfig)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_CONFIG);
 
 		String portletName = portletConfig.getPortletName();
 
@@ -80,7 +81,6 @@ public class AnonymousNavigationPrePageInclude implements PageInclude {
 
 		IconTag iconTag = new IconTag();
 
-		iconTag.setIconCssClass("icon-user");
 		iconTag.setMessage("guest");
 		iconTag.setUrl(anonymousURL);
 

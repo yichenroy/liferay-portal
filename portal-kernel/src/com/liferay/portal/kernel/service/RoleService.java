@@ -14,8 +14,7 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -32,6 +31,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the remote service interface for Role. Methods of this
  * service are expected to have security checks based on the propagated JAAS
@@ -42,6 +43,7 @@ import java.util.Map;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -53,7 +55,7 @@ public interface RoleService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link RoleServiceUtil} to access the role remote service. Add custom service methods to <code>com.liferay.portal.service.impl.RoleServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.RoleServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the role remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link RoleServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -238,7 +240,7 @@ public interface RoleService extends BaseService {
 	public List<Role> search(
 		long companyId, String keywords, Integer[] types,
 		LinkedHashMap<String, Object> params, int start, int end,
-		OrderByComparator<Role> obc);
+		OrderByComparator<Role> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int searchCount(

@@ -14,11 +14,11 @@
 
 package com.liferay.portal.upgrade.v7_0_3;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.util.PropsUtil;
 
 import java.util.List;
@@ -34,7 +34,7 @@ public class UpgradeOrganization extends UpgradeProcess {
 	}
 
 	protected List<String> getOrganizationTypes() {
-		List<String> organizationsTypes = ListUtil.toList(
+		List<String> organizationsTypes = ListUtil.fromArray(
 			PropsUtil.getArray("organizations.types"));
 
 		if (ListUtil.isEmpty(organizationsTypes)) {
@@ -45,16 +45,14 @@ public class UpgradeOrganization extends UpgradeProcess {
 	}
 
 	protected void updateOrganizationsType() throws Exception {
-		List<String> organizationsTypes = getOrganizationTypes();
-
-		String organizationsTypesString = ListUtil.toString(
-			organizationsTypes, StringPool.NULL, "', '");
+		String organizationTypesString = ListUtil.toString(
+			getOrganizationTypes(), StringPool.NULL, "', '");
 
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			runSQL(
 				StringBundler.concat(
 					"update Organization_ set type_ = 'organization' where ",
-					"type_ not in ('", organizationsTypesString, "')"));
+					"type_ not in ('", organizationTypesString, "')"));
 		}
 	}
 

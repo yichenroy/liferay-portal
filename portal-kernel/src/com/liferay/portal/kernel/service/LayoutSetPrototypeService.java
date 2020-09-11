@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -29,6 +27,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for LayoutSetPrototype. Methods of this
@@ -51,7 +51,7 @@ public interface LayoutSetPrototypeService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link LayoutSetPrototypeServiceUtil} to access the layout set prototype remote service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutSetPrototypeServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutSetPrototypeServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the layout set prototype remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link LayoutSetPrototypeServiceUtil} if injection and service tracking are not available.
 	 */
 	public LayoutSetPrototype addLayoutSetPrototype(
 			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
@@ -80,7 +80,7 @@ public interface LayoutSetPrototypeService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<LayoutSetPrototype> search(
 			long companyId, Boolean active,
-			OrderByComparator<LayoutSetPrototype> obc)
+			OrderByComparator<LayoutSetPrototype> orderByComparator)
 		throws PortalException;
 
 	public LayoutSetPrototype updateLayoutSetPrototype(

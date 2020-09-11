@@ -26,15 +26,15 @@ import javax.servlet.http.HttpSession;
 public class CompoundSessionIdServletRequest
 	extends PersistentHttpServletRequestWrapper {
 
-	public CompoundSessionIdServletRequest(HttpServletRequest request) {
-		super(request);
+	public CompoundSessionIdServletRequest(
+		HttpServletRequest httpServletRequest) {
+
+		super(httpServletRequest);
 	}
 
 	@Override
 	public HttpSession getSession() {
-		HttpSession session = super.getSession();
-
-		return _getCompoundSessionIdHttpSession(session);
+		return _getCompoundSessionIdHttpSession(super.getSession());
 	}
 
 	@Override

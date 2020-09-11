@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
@@ -23,7 +21,6 @@ import com.liferay.portal.kernel.exception.NoSuchModelException;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchRecordSetException extends NoSuchModelException {
 
 	public NoSuchRecordSetException() {
@@ -33,12 +30,12 @@ public class NoSuchRecordSetException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchRecordSetException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchRecordSetException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchRecordSetException(Throwable cause) {
-		super(cause);
+	public NoSuchRecordSetException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

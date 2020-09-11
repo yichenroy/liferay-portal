@@ -14,8 +14,6 @@
 
 package com.liferay.sync.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -34,22 +32,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class SyncDLObjectCacheModel
 	implements CacheModel<SyncDLObject>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof SyncDLObjectCacheModel)) {
+		if (!(object instanceof SyncDLObjectCacheModel)) {
 			return false;
 		}
 
 		SyncDLObjectCacheModel syncDLObjectCacheModel =
-			(SyncDLObjectCacheModel)obj;
+			(SyncDLObjectCacheModel)object;
 
 		if (syncDLObjectId == syncDLObjectCacheModel.syncDLObjectId) {
 			return true;
@@ -275,7 +272,9 @@ public class SyncDLObjectCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		syncDLObjectId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
@@ -296,7 +295,7 @@ public class SyncDLObjectCacheModel
 		mimeType = objectInput.readUTF();
 		description = objectInput.readUTF();
 		changeLog = objectInput.readUTF();
-		extraSettings = objectInput.readUTF();
+		extraSettings = (String)objectInput.readObject();
 		version = objectInput.readUTF();
 
 		versionId = objectInput.readLong();
@@ -382,10 +381,10 @@ public class SyncDLObjectCacheModel
 		}
 
 		if (extraSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(extraSettings);
+			objectOutput.writeObject(extraSettings);
 		}
 
 		if (version == null) {

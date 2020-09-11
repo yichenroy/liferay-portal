@@ -14,11 +14,11 @@
 
 package com.liferay.portal.template;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.template.TemplateConstants;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.theme.ThemeLoader;
 import com.liferay.portal.theme.ThemeLoaderFactory;
 
@@ -72,12 +72,10 @@ public class ThemeResourceParser extends URLResourceParser {
 			_log.debug(
 				StringBundler.concat(
 					templateId, " is associated with the theme loader ",
-					servletContextName, " ", String.valueOf(themeLoader)));
+					servletContextName, " ", themeLoader));
 		}
 
-		File fileStorage = themeLoader.getFileStorage();
-
-		File file = new File(fileStorage, templateId);
+		File file = new File(themeLoader.getFileStorage(), templateId);
 
 		URI uri = file.toURI();
 

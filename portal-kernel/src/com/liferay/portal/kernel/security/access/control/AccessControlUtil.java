@@ -40,7 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 public class AccessControlUtil {
 
 	public static AccessControl getAccessControl() {
-		return _instance._serviceTracker.getService();
+		return _accessControlUtil._serviceTracker.getService();
 	}
 
 	public static AccessControlContext getAccessControlContext() {
@@ -48,11 +48,11 @@ public class AccessControlUtil {
 	}
 
 	public static void initAccessControlContext(
-		HttpServletRequest request, HttpServletResponse response,
-		Map<String, Object> settings) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, Map<String, Object> settings) {
 
 		getAccessControl().initAccessControlContext(
-			request, response, settings);
+			httpServletRequest, httpServletResponse, settings);
 	}
 
 	public static void initContextUser(long userId) throws AuthException {
@@ -60,13 +60,13 @@ public class AccessControlUtil {
 	}
 
 	public static boolean isAccessAllowed(
-		HttpServletRequest request, Set<String> hostsAllowed) {
+		HttpServletRequest httpServletRequest, Set<String> hostsAllowed) {
 
 		if (hostsAllowed.isEmpty()) {
 			return true;
 		}
 
-		String remoteAddr = request.getRemoteAddr();
+		String remoteAddr = httpServletRequest.getRemoteAddr();
 
 		for (String hostAllowed : hostsAllowed) {
 			AllowedIPAddressesValidator allowedIPAddressesValidator =
@@ -110,11 +110,11 @@ public class AccessControlUtil {
 
 	private static final String _SERVER_IP = "SERVER_IP";
 
-	private static final AccessControlUtil _instance = new AccessControlUtil();
-
 	private static final ThreadLocal<AccessControlContext>
 		_accessControlContext = new CentralizedThreadLocal<>(
 			AccessControlUtil.class + "._accessControlContext");
+	private static final AccessControlUtil _accessControlUtil =
+		new AccessControlUtil();
 
 	private final ServiceTracker<?, AccessControl> _serviceTracker;
 

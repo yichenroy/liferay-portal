@@ -14,18 +14,15 @@
 
 package com.liferay.product.navigation.product.menu.web.internal.product.navigation.control.menu;
 
-import com.liferay.application.list.PanelCategory;
-import com.liferay.application.list.PanelCategoryRegistry;
-import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SessionClicks;
@@ -34,16 +31,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.control.menu.BaseProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
-import com.liferay.product.navigation.product.menu.constants.ProductNavigationProductMenuWebKeys;
-import com.liferay.product.navigation.product.menu.web.internal.constants.ProductNavigationProductMenuPortletKeys;
-import com.liferay.taglib.portletext.RuntimeTag;
-import com.liferay.taglib.util.BodyBottomTag;
+import com.liferay.product.navigation.product.menu.constants.ProductNavigationProductMenuPortletKeys;
+import com.liferay.product.navigation.product.menu.helper.ProductNavigationProductMenuHelper;
 
 import java.io.IOException;
 import java.io.Writer;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -54,9 +47,6 @@ import javax.portlet.WindowStateException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,56 +71,29 @@ public class ProductMenuProductNavigationControlMenuEntry
 	}
 
 	@Override
-	public String getURL(HttpServletRequest request) {
+	public String getURL(HttpServletRequest httpServletRequest) {
 		return null;
 	}
 
 	@Override
-	public boolean includeBody(
-			HttpServletRequest request, HttpServletResponse response)
-		throws IOException {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		if (themeDisplay.isIsolated()) {
-			return false;
-		}
-
-		BodyBottomTag bodyBottomTag = new BodyBottomTag();
-
-		bodyBottomTag.setOutputKey("productMenu");
-
-		try {
-			bodyBottomTag.doBodyTag(
-				request, response, this::_processBodyBottomContent);
-		}
-		catch (JspException je) {
-			throw new IOException(je);
-		}
-
-		return true;
-	}
-
-	@Override
 	public boolean includeIcon(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		Map<String, String> values = new HashMap<>();
-
-		String portletNamespace = _portal.getPortletNamespace(
-			ProductNavigationProductMenuPortletKeys.
-				PRODUCT_NAVIGATION_PRODUCT_MENU);
-
-		values.put("portletNamespace", portletNamespace);
-
-		values.put("title", HtmlUtil.escape(LanguageUtil.get(request, "menu")));
+		Map<String, String> values = HashMapBuilder.put(
+			"portletNamespace",
+			_portal.getPortletNamespace(
+				ProductNavigationProductMenuPortletKeys.
+					PRODUCT_NAVIGATION_PRODUCT_MENU)
+		).put(
+			"title",
+			HtmlUtil.escape(LanguageUtil.get(httpServletRequest, "menu"))
+		).build();
 
 		String productMenuState = SessionClicks.get(
-			request,
-			ProductNavigationProductMenuWebKeys.
-				PRODUCT_NAVIGATION_PRODUCT_MENU_STATE,
+			httpServletRequest,
+			"com.liferay.product.navigation.product.menu.web_productMenuState",
 			"closed");
 
 		if (Objects.equals(productMenuState, "open")) {
@@ -140,13 +103,14 @@ public class ProductMenuProductNavigationControlMenuEntry
 		else {
 			values.put("cssClass", StringPool.BLANK);
 
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 			PortletURL portletURL = PortletURLFactoryUtil.create(
-				request,
+				httpServletRequest,
 				ProductNavigationProductMenuPortletKeys.
 					PRODUCT_NAVIGATION_PRODUCT_MENU,
 				RenderRequest.RENDER_PHASE);
@@ -157,14 +121,14 @@ public class ProductMenuProductNavigationControlMenuEntry
 			try {
 				portletURL.setWindowState(LiferayWindowState.EXCLUSIVE);
 			}
-			catch (WindowStateException wse) {
-				ReflectionUtil.throwException(wse);
+			catch (WindowStateException windowStateException) {
+				ReflectionUtil.throwException(windowStateException);
 			}
 
 			values.put("dataURL", "data-url='" + portletURL.toString() + "'");
 		}
 
-		Writer writer = response.getWriter();
+		Writer writer = httpServletResponse.getWriter();
 
 		writer.write(StringUtil.replace(_TMPL_CONTENT, "${", "}", values));
 
@@ -172,85 +136,26 @@ public class ProductMenuProductNavigationControlMenuEntry
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest request) throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public boolean isShow(HttpServletRequest httpServletRequest)
+		throws PortalException {
 
-		if (!themeDisplay.isSignedIn()) {
-			return false;
+		if (_productNavigationProductMenuHelper.isShowProductMenu(
+				httpServletRequest)) {
+
+			return true;
 		}
 
-		User user = themeDisplay.getUser();
-
-		if (!themeDisplay.isImpersonated() && !user.isSetupComplete()) {
-			return false;
-		}
-
-		List<PanelCategory> childPanelCategories =
-			_panelCategoryRegistry.getChildPanelCategories(
-				PanelCategoryKeys.ROOT, themeDisplay.getPermissionChecker(),
-				themeDisplay.getScopeGroup());
-
-		if (childPanelCategories.isEmpty()) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private void _processBodyBottomContent(PageContext pageContext) {
-		try {
-			JspWriter jspWriter = pageContext.getOut();
-
-			jspWriter.write("<div class=\"");
-
-			HttpServletRequest request =
-				(HttpServletRequest)pageContext.getRequest();
-
-			String productMenuState = SessionClicks.get(
-				request,
-				ProductNavigationProductMenuWebKeys.
-					PRODUCT_NAVIGATION_PRODUCT_MENU_STATE,
-				"closed");
-
-			jspWriter.write(productMenuState);
-
-			jspWriter.write(
-				" hidden-print lfr-product-menu-panel sidenav-fixed " +
-					"sidenav-menu-slider\" id=\"");
-
-			String portletNamespace = _portal.getPortletNamespace(
-				ProductNavigationProductMenuPortletKeys.
-					PRODUCT_NAVIGATION_PRODUCT_MENU);
-
-			jspWriter.write(portletNamespace);
-
-			jspWriter.write("sidenavSliderId\">");
-			jspWriter.write(
-				"<div class=\"product-menu sidebar sidenav-menu\">");
-
-			RuntimeTag runtimeTag = new RuntimeTag();
-
-			runtimeTag.setPortletName(
-				ProductNavigationProductMenuPortletKeys.
-					PRODUCT_NAVIGATION_PRODUCT_MENU);
-
-			runtimeTag.doTag(pageContext);
-
-			jspWriter.write("</div></div>");
-		}
-		catch (Exception e) {
-			ReflectionUtil.throwException(e);
-		}
+		return false;
 	}
 
 	private static final String _TMPL_CONTENT = StringUtil.read(
 		ProductMenuProductNavigationControlMenuEntry.class, "icon.tmpl");
 
 	@Reference
-	private PanelCategoryRegistry _panelCategoryRegistry;
+	private Portal _portal;
 
 	@Reference
-	private Portal _portal;
+	private ProductNavigationProductMenuHelper
+		_productNavigationProductMenuHelper;
 
 }

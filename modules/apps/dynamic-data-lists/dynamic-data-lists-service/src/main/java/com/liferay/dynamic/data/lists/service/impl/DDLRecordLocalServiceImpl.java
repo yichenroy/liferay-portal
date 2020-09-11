@@ -15,16 +15,18 @@
 package com.liferay.dynamic.data.lists.service.impl;
 
 import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.dynamic.data.lists.constants.DDLRecordConstants;
+import com.liferay.dynamic.data.lists.constants.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.exception.NoSuchRecordException;
 import com.liferay.dynamic.data.lists.exception.RecordGroupIdException;
 import com.liferay.dynamic.data.lists.model.DDLFormRecord;
 import com.liferay.dynamic.data.lists.model.DDLRecord;
-import com.liferay.dynamic.data.lists.model.DDLRecordConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
-import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordVersion;
+import com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService;
 import com.liferay.dynamic.data.lists.service.base.DDLRecordLocalServiceBaseImpl;
 import com.liferay.dynamic.data.lists.util.DDL;
+import com.liferay.dynamic.data.lists.util.comparator.DDLRecordIdComparator;
 import com.liferay.dynamic.data.mapping.exception.StorageException;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -38,6 +40,7 @@ import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -60,12 +63,10 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
@@ -77,6 +78,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * Provides the local service for accessing, adding, deleting, and updating
  * dynamic data lists (DDL) records.
@@ -84,6 +88,10 @@ import java.util.Objects;
  * @author Marcellus Tavares
  * @author Eduardo Lundgren
  */
+@Component(
+	property = "model.class.name=com.liferay.dynamic.data.lists.model.DDLRecord",
+	service = AopService.class
+)
 public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 
 	/**
@@ -141,7 +149,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		record.setVersion(DDLRecordConstants.VERSION_DEFAULT);
 		record.setDisplayIndex(displayIndex);
 
-		ddlRecordPersistence.update(record);
+		record = ddlRecordPersistence.update(record);
 
 		// Record version
 
@@ -155,11 +163,9 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 
 		// Asset
 
-		Locale locale = serviceContext.getLocale();
-
 		updateAsset(
 			userId, record, recordVersion, serviceContext.getAssetCategoryIds(),
-			serviceContext.getAssetTagNames(), locale,
+			serviceContext.getAssetTagNames(), serviceContext.getLocale(),
 			serviceContext.getAssetPriority());
 
 		// Workflow
@@ -178,86 +184,26 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * Adds a record that's based on the fields object and that references the
-	 * record set.
-	 *
-	 * @param      userId the primary key of the record's creator/owner
-	 * @param      groupId the primary key of the record's group
-	 * @param      recordSetId the primary key of the record set
-	 * @param      displayIndex the index position in which the record is
-	 *             displayed in the spreadsheet view.
-	 * @param      fields the record values. See the dynamic-data-mapping-api
-	 *             module's Fields class for more information.
-	 * @param      serviceContext the service context to be applied. This can
-	 *             set the UUID, guest permissions, and group permissions for
-	 *             the record.
-	 * @return     the record
-	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #addRecord(long, long, int, DDMFormValues, ServiceContext)}
+	 * @deprecated As of Athanasius (7.3.x)
 	 */
 	@Deprecated
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public DDLRecord addRecord(
-			long userId, long groupId, long recordSetId, int displayIndex,
-			Fields fields, ServiceContext serviceContext)
+			long userId, long groupId, long ddmStorageId, long ddlRecordSetId,
+			ServiceContext serviceContext)
 		throws PortalException {
 
-		DDLRecordSet recordSet = ddlRecordSetPersistence.findByPrimaryKey(
-			recordSetId);
-
-		DDMFormValues ddmFormValues = fieldsToDDMFormValuesConverter.convert(
-			recordSet.getDDMStructure(), fields);
-
-		return ddlRecordLocalService.addRecord(
-			userId, groupId, recordSetId, displayIndex, ddmFormValues,
+		return addRecord(
+			userId, groupId, ddmStorageId, ddlRecordSetId, null, 0,
 			serviceContext);
-	}
-
-	/**
-	 * Adds a record that's based on the fields map and that references the
-	 * record set.
-	 *
-	 * @param      userId the primary key of the record's creator/owner
-	 * @param      groupId the primary key of the record's group
-	 * @param      recordSetId the primary key of the record set
-	 * @param      displayIndex the index position in which the record is
-	 *             displayed in the spreadsheet view
-	 * @param      fieldsMap the record values. The fieldsMap is a map of field
-	 *             names and their serializable values.
-	 * @param      serviceContext the service context to be applied. This can
-	 *             set the UUID, guest permissions, and group permissions for
-	 *             the record.
-	 * @return     the record
-	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #addRecord(long, long, int, DDMFormValues, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DDLRecord addRecord(
-			long userId, long groupId, long recordSetId, int displayIndex,
-			Map<String, Serializable> fieldsMap, ServiceContext serviceContext)
-		throws PortalException {
-
-		DDLRecordSet recordSet = ddlRecordSetPersistence.findByPrimaryKey(
-			recordSetId);
-
-		DDMStructure ddmStructure = recordSet.getDDMStructure();
-
-		Fields fields = toFields(
-			ddmStructure.getStructureId(), fieldsMap,
-			serviceContext.getLocale(), LocaleUtil.getSiteDefault());
-
-		return ddlRecordLocalService.addRecord(
-			userId, groupId, recordSetId, displayIndex, fields, serviceContext);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public DDLRecord addRecord(
 			long userId, long groupId, long ddmStorageId, long ddlRecordSetId,
-			ServiceContext serviceContext)
+			String className, long classPK, ServiceContext serviceContext)
 		throws PortalException {
 
 		// Record
@@ -283,10 +229,12 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		record.setDDMStorageId(ddmStorageId);
 		record.setRecordSetId(ddlRecordSetId);
 		record.setRecordSetVersion(ddlRecordSet.getVersion());
+		record.setClassName(className);
+		record.setClassPK(classPK);
 		record.setVersion(DDLRecordConstants.VERSION_DEFAULT);
 		record.setDisplayIndex(0);
 
-		ddlRecordPersistence.update(record);
+		record = ddlRecordPersistence.update(record);
 
 		// Record version
 
@@ -364,47 +312,6 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * Disassociates the locale from the record.
-	 *
-	 * @param      recordId the primary key of the record
-	 * @param      locale the locale of the record values to be removed
-	 * @param      serviceContext the service context to be applied. This can
-	 *             set the record modified date.
-	 * @return     the affected record
-	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #updateRecord(long, boolean, int, DDMFormValues,
-	 *             ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DDLRecord deleteRecordLocale(
-			long recordId, Locale locale, ServiceContext serviceContext)
-		throws PortalException {
-
-		DDLRecord record = ddlRecordPersistence.findByPrimaryKey(recordId);
-
-		DDLRecordSet recordSet = record.getRecordSet();
-
-		DDMFormValues ddmFormValues = storageEngine.getDDMFormValues(
-			record.getDDMStorageId());
-
-		Fields fields = ddmFormValuesToFieldsConverter.convert(
-			recordSet.getDDMStructure(), ddmFormValues);
-
-		for (Field field : fields) {
-			Map<Locale, List<Serializable>> valuesMap = field.getValuesMap();
-
-			valuesMap.remove(locale);
-		}
-
-		return ddlRecordLocalService.updateRecord(
-			serviceContext.getUserId(), recordId, false,
-			DDLRecordConstants.DISPLAY_INDEX_DEFAULT, fields, false,
-			serviceContext);
-	}
-
-	/**
 	 * Deletes all the record set's records.
 	 *
 	 * @param  recordSetId the primary key of the record set from which to
@@ -419,6 +326,12 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		for (DDLRecord record : records) {
 			ddlRecordLocalService.deleteRecord(record);
 		}
+	}
+
+	@Override
+	public DDLRecord fetchFirstRecord(String className, long classPK) {
+		return ddlRecordPersistence.fetchByC_C_First(
+			className, classPK, new DDLRecordIdComparator(true));
 	}
 
 	/**
@@ -501,19 +414,6 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		return storageEngine.getDDMFormValues(ddmStorageId);
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             DDLRecordVersionLocalService#getLatestRecordVersion(long)}
-	 */
-	@Deprecated
-	@Override
-	@SuppressWarnings("deprecation")
-	public DDLRecordVersion getLatestRecordVersion(long recordId)
-		throws PortalException {
-
-		return ddlRecordVersionLocalService.getLatestRecordVersion(recordId);
-	}
-
 	@Override
 	public Long[] getMinAndMaxCompanyRecordIds(
 		long companyId, int status, int scope) {
@@ -588,10 +488,10 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	@Override
 	public List<DDLRecord> getRecords(
 		long recordSetId, int start, int end,
-		OrderByComparator<DDLRecord> obc) {
+		OrderByComparator<DDLRecord> orderByComparator) {
 
 		return ddlRecordPersistence.findByRecordSetId(
-			recordSetId, start, end, obc);
+			recordSetId, start, end, orderByComparator);
 	}
 
 	/**
@@ -609,10 +509,10 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	@Override
 	public List<DDLRecord> getRecords(
 		long recordSetId, long userId, int start, int end,
-		OrderByComparator<DDLRecord> obc) {
+		OrderByComparator<DDLRecord> orderByComparator) {
 
 		return ddlRecordPersistence.findByR_U(
-			recordSetId, userId, start, end, obc);
+			recordSetId, userId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -641,62 +541,6 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService#getRecordVersion(
-	 *             long)}
-	 */
-	@Deprecated
-	@Override
-	@SuppressWarnings("deprecation")
-	public DDLRecordVersion getRecordVersion(long recordVersionId)
-		throws PortalException {
-
-		return ddlRecordVersionPersistence.findByPrimaryKey(recordVersionId);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService#getRecordVersion(
-	 *             long, String)}
-	 */
-	@Deprecated
-	@Override
-	@SuppressWarnings("deprecation")
-	public DDLRecordVersion getRecordVersion(long recordId, String version)
-		throws PortalException {
-
-		return ddlRecordVersionPersistence.findByR_V(recordId, version);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService#getRecordVersions(
-	 *             long, int, int, OrderByComparator)}
-	 */
-	@Deprecated
-	@Override
-	@SuppressWarnings("deprecation")
-	public List<DDLRecordVersion> getRecordVersions(
-		long recordId, int start, int end,
-		OrderByComparator<DDLRecordVersion> orderByComparator) {
-
-		return ddlRecordVersionPersistence.findByRecordId(
-			recordId, start, end, orderByComparator);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService#getRecordVersionsCount(
-	 *             long)}
-	 */
-	@Deprecated
-	@Override
-	@SuppressWarnings("deprecation")
-	public int getRecordVersionsCount(long recordId) {
-		return ddlRecordVersionPersistence.countByRecordId(recordId);
-	}
-
-	/**
 	 * Reverts the record to the given version.
 	 *
 	 * @param  userId the primary key of the user who is reverting the record
@@ -713,7 +557,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		throws PortalException {
 
 		DDLRecordVersion recordVersion =
-			ddlRecordVersionLocalService.getRecordVersion(recordId, version);
+			_ddlRecordVersionLocalService.getRecordVersion(recordId, version);
 
 		if (!recordVersion.isApproved()) {
 			return;
@@ -727,21 +571,6 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		ddlRecordLocalService.updateRecord(
 			userId, recordId, true, recordVersion.getDisplayIndex(),
 			ddmFormValues, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #revertRecord(long, long, String, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	@SuppressWarnings("deprecation")
-	public void revertRecordVersion(
-			long userId, long recordId, String version,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		revertRecord(userId, recordId, version, serviceContext);
 	}
 
 	/**
@@ -761,8 +590,8 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 
 			return indexer.search(searchContext);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
@@ -784,12 +613,11 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 
 			Hits hits = indexer.search(searchContext, DDL.SELECTED_FIELD_NAMES);
 
-			List<DDLRecord> records = getRecords(hits);
-
-			return new BaseModelSearchResult<>(records, hits.getLength());
+			return new BaseModelSearchResult<>(
+				getRecords(hits), hits.getLength());
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
@@ -941,12 +769,17 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 			storageEngine.update(
 				recordVersion.getDDMStorageId(), ddmFormValues, serviceContext);
 
-			String version = recordVersion.getVersion();
-
 			updateRecordVersion(
-				user, recordVersion, version, displayIndex,
+				user, recordVersion, recordVersion.getVersion(), displayIndex,
 				recordVersion.getStatus(), serviceContext);
 		}
+
+		// Asset
+
+		updateAsset(
+			userId, record, recordVersion, serviceContext.getAssetCategoryIds(),
+			serviceContext.getAssetTagNames(), serviceContext.getLocale(),
+			serviceContext.getAssetPriority());
 
 		if (isKeepRecordVersionLabel(
 				record.getRecordVersion(), recordVersion, serviceContext)) {
@@ -975,102 +808,6 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		return record;
 	}
 
-	/**
-	 * Updates a record, replacing its display index and values.
-	 *
-	 * @param      userId the primary key of the user updating the record
-	 * @param      recordId the primary key of the record
-	 * @param      majorVersion whether this update is a major change. A major
-	 *             change increments the record's major version number
-	 * @param      displayIndex the index position in which the record is
-	 *             displayed in the spreadsheet view.
-	 * @param      fields the record values. See <code>Fields</code> in the
-	 *             <code>dynamic.data.mapping.api</code> module.
-	 * @param      mergeFields whether to merge the new fields with the existing
-	 *             ones; otherwise replace the existing fields
-	 * @param      serviceContext the service context to be applied. This can
-	 *             set the record modified date.
-	 * @return     the record
-	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #updateRecord(long, long, boolean, int, DDMFormValues,
-	 *             ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DDLRecord updateRecord(
-			long userId, long recordId, boolean majorVersion, int displayIndex,
-			Fields fields, boolean mergeFields, ServiceContext serviceContext)
-		throws PortalException {
-
-		DDLRecord record = ddlRecordPersistence.findByPrimaryKey(recordId);
-
-		DDLRecordSet recordSet = record.getRecordSet();
-
-		if (mergeFields) {
-			DDLRecordVersion recordVersion = record.getLatestRecordVersion();
-
-			DDMFormValues existingDDMFormValues =
-				storageEngine.getDDMFormValues(recordVersion.getDDMStorageId());
-
-			Fields existingFields = ddmFormValuesToFieldsConverter.convert(
-				recordSet.getDDMStructure(), existingDDMFormValues);
-
-			fields = ddm.mergeFields(fields, existingFields);
-		}
-
-		DDMFormValues ddmFormValues = fieldsToDDMFormValuesConverter.convert(
-			recordSet.getDDMStructure(), fields);
-
-		return ddlRecordLocalService.updateRecord(
-			userId, recordId, majorVersion, displayIndex, ddmFormValues,
-			serviceContext);
-	}
-
-	/**
-	 * Updates a record, replacing its display index and values.
-	 *
-	 * @param      userId the primary key of the user updating the record
-	 * @param      recordId the primary key of the record
-	 * @param      displayIndex the index position in which the record is
-	 *             displayed in the spreadsheet view
-	 * @param      fieldsMap the record values. The fieldsMap is a map of field
-	 *             names and its Serializable values.
-	 * @param      mergeFields whether to merge the new fields with the existing
-	 *             ones; otherwise replace the existing fields
-	 * @param      serviceContext the service context to be applied. This can
-	 *             set the record modified date.
-	 * @return     the record
-	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #updateRecord(long, long, boolean, int, DDMFormValues,
-	 *             ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DDLRecord updateRecord(
-			long userId, long recordId, int displayIndex,
-			Map<String, Serializable> fieldsMap, boolean mergeFields,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		DDLRecord record = ddlRecordPersistence.findByPrimaryKey(recordId);
-
-		DDMFormValues oldDDMFormValues = record.getDDMFormValues();
-
-		DDLRecordSet recordSet = record.getRecordSet();
-
-		DDMStructure ddmStructure = recordSet.getDDMStructure();
-
-		Fields fields = toFields(
-			ddmStructure.getStructureId(), fieldsMap,
-			serviceContext.getLocale(), oldDDMFormValues.getDefaultLocale());
-
-		return ddlRecordLocalService.updateRecord(
-			userId, recordId, false, displayIndex, fields, mergeFields,
-			serviceContext);
-	}
-
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public DDLRecord updateRecord(
@@ -1078,18 +815,12 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		// Record
-
 		User user = userLocalService.getUser(userId);
 
 		DDLRecord record = ddlRecordPersistence.findByPrimaryKey(recordId);
 
 		record.setModifiedDate(serviceContext.getModifiedDate(null));
 		record.setDDMStorageId(ddmStorageId);
-
-		record = ddlRecordPersistence.update(record);
-
-		// Record version
 
 		DDLRecordVersion ddlRecordVersion = record.getLatestRecordVersion();
 
@@ -1103,7 +834,9 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 
 		addRecordVersion(user, record, ddmStorageId, version, 0, status);
 
-		return record;
+		record.setVersion(version);
+
+		return ddlRecordPersistence.update(record);
 	}
 
 	/**
@@ -1137,7 +870,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		recordVersion.setStatusByUserName(user.getFullName());
 		recordVersion.setStatusDate(new Date());
 
-		ddlRecordVersionPersistence.update(recordVersion);
+		recordVersion = ddlRecordVersionPersistence.update(recordVersion);
 
 		// Record
 
@@ -1145,18 +878,18 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 			recordVersion.getRecordId());
 
 		if (status == WorkflowConstants.STATUS_APPROVED) {
-			if (DLUtil.compareVersions(
-					record.getVersion(), recordVersion.getVersion()) <= 0) {
+			int compare = DLUtil.compareVersions(
+				record.getVersion(), recordVersion.getVersion());
 
-				record.setDDMStorageId(recordVersion.getDDMStorageId());
-				record.setVersion(recordVersion.getVersion());
-				record.setRecordSetId(recordVersion.getRecordSetId());
-				record.setDisplayIndex(recordVersion.getDisplayIndex());
-				record.setVersion(recordVersion.getVersion());
+			if (compare <= 0) {
 				record.setVersionUserId(recordVersion.getUserId());
 				record.setVersionUserName(recordVersion.getUserName());
+				record.setDDMStorageId(recordVersion.getDDMStorageId());
+				record.setRecordSetId(recordVersion.getRecordSetId());
+				record.setVersion(recordVersion.getVersion());
+				record.setDisplayIndex(recordVersion.getDisplayIndex());
 
-				ddlRecordPersistence.update(record);
+				record = ddlRecordPersistence.update(record);
 			}
 		}
 		else {
@@ -1179,17 +912,15 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 
 				record.setVersion(newVersion);
 
-				ddlRecordPersistence.update(record);
+				record = ddlRecordPersistence.update(record);
 			}
 		}
 
 		// Asset
 
-		Locale locale = serviceContext.getLocale();
-
 		updateAsset(
 			userId, record, recordVersion, serviceContext.getAssetCategoryIds(),
-			serviceContext.getAssetTagNames(), locale,
+			serviceContext.getAssetTagNames(), serviceContext.getLocale(),
 			serviceContext.getAssetPriority());
 
 		return record;
@@ -1220,9 +951,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		recordVersion.setStatusByUserName(user.getFullName());
 		recordVersion.setStatusDate(record.getModifiedDate());
 
-		ddlRecordVersionPersistence.update(recordVersion);
-
-		return recordVersion;
+		return ddlRecordVersionPersistence.update(recordVersion);
 	}
 
 	protected void deleteAssetEntry(long recordId) throws PortalException {
@@ -1252,10 +981,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	protected Indexer<DDLRecord> getDDLRecordIndexer() {
-		Indexer<DDLRecord> indexer = indexerRegistry.nullSafeGetIndexer(
-			DDLRecord.class);
-
-		return indexer;
+		return indexerRegistry.nullSafeGetIndexer(DDLRecord.class);
 	}
 
 	protected String getNextVersion(
@@ -1287,16 +1013,14 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 					com.liferay.portal.kernel.search.Field.ENTRY_CLASS_PK));
 
 			try {
-				DDLRecord record = getRecord(recordId);
-
-				records.add(record);
+				records.add(getRecord(recordId));
 			}
-			catch (NoSuchRecordException nsre) {
+			catch (NoSuchRecordException noSuchRecordException) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"DDL record index is stale and contains record " +
 							recordId,
-						nsre);
+						noSuchRecordException);
 				}
 
 				long companyId = GetterUtil.getLong(
@@ -1320,10 +1044,6 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		return DDLRecord.class.getName();
 	}
 
-	/**
-	 * See <code>DLFileVersionPolicyImpl#isKeepFileVersionLabel</code> in the
-	 * <code>com.liferay.document.library.service</code> module.
-	 */
 	protected boolean isKeepRecordVersionLabel(
 			DDLRecordVersion lastRecordVersion,
 			DDLRecordVersion latestRecordVersion, ServiceContext serviceContext)
@@ -1412,7 +1132,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 
 		if (fieldsDisplayField == null) {
 			StringBundler fieldsDisplayFieldSB = new StringBundler(
-				fieldsMap.size() * 4 - 1);
+				(fieldsMap.size() * 4) - 1);
 
 			for (String fieldName : fields.getNames()) {
 				fieldsDisplayFieldSB.append(fieldName);
@@ -1460,22 +1180,22 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		}
 	}
 
-	@ServiceReference(type = DDM.class)
+	@Reference
 	protected DDM ddm;
 
-	@ServiceReference(type = DDMFormValuesToFieldsConverter.class)
+	@Reference
 	protected DDMFormValuesToFieldsConverter ddmFormValuesToFieldsConverter;
 
-	@ServiceReference(type = DDMStructureLocalService.class)
+	@Reference
 	protected DDMStructureLocalService ddmStructureLocalService;
 
-	@ServiceReference(type = FieldsToDDMFormValuesConverter.class)
+	@Reference
 	protected FieldsToDDMFormValuesConverter fieldsToDDMFormValuesConverter;
 
-	@ServiceReference(type = IndexerRegistry.class)
+	@Reference
 	protected IndexerRegistry indexerRegistry;
 
-	@ServiceReference(type = StorageEngine.class)
+	@Reference
 	protected StorageEngine storageEngine;
 
 	private List<Serializable> _getSerializableValues(Serializable value) {
@@ -1489,7 +1209,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		else if (value instanceof Serializable[]) {
 			Serializable[] values = (Serializable[])value;
 
-			serializableValues = ListUtil.toList(values);
+			serializableValues = ListUtil.fromArray(values);
 		}
 		else if (value instanceof boolean[]) {
 			boolean[] values = (boolean[])value;
@@ -1555,5 +1275,8 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDLRecordLocalServiceImpl.class);
+
+	@Reference
+	private DDLRecordVersionLocalService _ddlRecordVersionLocalService;
 
 }

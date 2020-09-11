@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
@@ -30,7 +28,6 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
  * @see DLTrashService
  * @generated
  */
-@ProviderType
 public class DLTrashServiceUtil {
 
 	/*

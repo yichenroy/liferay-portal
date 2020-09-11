@@ -36,6 +36,7 @@ import javax.portlet.RenderResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 
 /**
  * @author Ryan Park
@@ -43,32 +44,34 @@ import org.osgi.framework.Bundle;
 public class MarketplaceAppManagerUtil {
 
 	public static void addPortletBreadcrumbEntry(
-		AppDisplay appDisplay, Bundle bundle, HttpServletRequest request,
-		RenderResponse renderResponse) {
+		AppDisplay appDisplay, Bundle bundle,
+		HttpServletRequest httpServletRequest, RenderResponse renderResponse) {
 
 		PortletURL portletURL = renderResponse.createRenderURL();
 
 		portletURL.setParameter("mvcPath", "/view.jsp");
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, LanguageUtil.get(request, "app-manager"),
+			httpServletRequest,
+			LanguageUtil.get(httpServletRequest, "app-manager"),
 			portletURL.toString());
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, appDisplay.getDisplayTitle(),
+			httpServletRequest, appDisplay.getDisplayTitle(),
 			appDisplay.getDisplayURL(renderResponse));
 
 		Dictionary<String, String> headers = bundle.getHeaders(
 			StringPool.BLANK);
 
 		String bundleName = GetterUtil.getString(
-			headers.get(BundleConstants.BUNDLE_NAME));
+			headers.get(Constants.BUNDLE_NAME));
 
-		PortalUtil.addPortletBreadcrumbEntry(request, bundleName, null);
+		PortalUtil.addPortletBreadcrumbEntry(
+			httpServletRequest, bundleName, null);
 	}
 
 	public static void addPortletBreadcrumbEntry(
-		AppDisplay appDisplay, HttpServletRequest request,
+		AppDisplay appDisplay, HttpServletRequest httpServletRequest,
 		RenderResponse renderResponse) {
 
 		PortletURL portletURL = renderResponse.createRenderURL();
@@ -76,11 +79,12 @@ public class MarketplaceAppManagerUtil {
 		portletURL.setParameter("mvcPath", "/view.jsp");
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, LanguageUtil.get(request, "app-manager"),
+			httpServletRequest,
+			LanguageUtil.get(httpServletRequest, "app-manager"),
 			portletURL.toString());
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, appDisplay.getDisplayTitle(), null);
+			httpServletRequest, appDisplay.getDisplayTitle(), null);
 	}
 
 	public static String[] getCategories(List<App> apps, List<Bundle> bundles) {

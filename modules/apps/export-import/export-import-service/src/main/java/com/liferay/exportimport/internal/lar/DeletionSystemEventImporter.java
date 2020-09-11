@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
@@ -43,11 +41,10 @@ import org.xml.sax.XMLReader;
 /**
  * @author Zsolt Berentey
  */
-@ProviderType
 public class DeletionSystemEventImporter {
 
 	public static DeletionSystemEventImporter getInstance() {
-		return _instance;
+		return _deletionSystemEventImporter;
 	}
 
 	public void importDeletionSystemEvents(
@@ -104,7 +101,7 @@ public class DeletionSystemEventImporter {
 			StagedModelDataHandlerUtil.deleteStagedModel(
 				portletDataContext, element);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				StringBundler sb = new StringBundler(4);
 
@@ -161,7 +158,7 @@ public class DeletionSystemEventImporter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		DeletionSystemEventImporter.class);
 
-	private static final DeletionSystemEventImporter _instance =
-		new DeletionSystemEventImporter();
+	private static final DeletionSystemEventImporter
+		_deletionSystemEventImporter = new DeletionSystemEventImporter();
 
 }

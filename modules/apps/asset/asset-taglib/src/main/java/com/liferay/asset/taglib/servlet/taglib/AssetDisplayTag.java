@@ -22,7 +22,6 @@ import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.asset.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
@@ -49,8 +48,8 @@ public class AssetDisplayTag extends IncludeTag {
 
 			return EVAL_PAGE;
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 		finally {
 			clearDynamicAttributes();
@@ -59,12 +58,10 @@ public class AssetDisplayTag extends IncludeTag {
 
 			cleanUpSetAttributes();
 
-			if (!ServerDetector.isResin()) {
-				setPage(null);
-				setUseCustomPage(true);
+			setPage(null);
+			setUseCustomPage(true);
 
-				cleanUp();
-			}
+			cleanUp();
 		}
 	}
 
@@ -201,26 +198,29 @@ public class AssetDisplayTag extends IncludeTag {
 	}
 
 	@Override
-	protected void includePage(String page, HttpServletResponse response)
+	protected void includePage(
+			String page, HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		try {
-			boolean include = _renderer.include(request, response, _template);
+			boolean include = _renderer.include(
+				request, httpServletResponse, _template);
 
 			if (include) {
 				return;
 			}
 		}
-		catch (Exception e) {
-			_log.error("Unable to include asset renderer template", e);
+		catch (Exception exception) {
+			_log.error("Unable to include asset renderer template", exception);
 		}
 
-		super.includePage("/asset_display/" + _template + ".jsp", response);
+		super.includePage(
+			"/asset_display/" + _template + ".jsp", httpServletResponse);
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			WebKeys.ASSET_ENTRY_ABSTRACT_LENGTH, _abstractLength);
 
 		AssetEntry assetEntry = _assetEntry;
@@ -236,7 +236,7 @@ public class AssetDisplayTag extends IncludeTag {
 			}
 		}
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-display:assetEntry", assetEntry);
 
 		if ((_renderer == null) && (assetEntry != null)) {
@@ -246,10 +246,11 @@ public class AssetDisplayTag extends IncludeTag {
 		if (_renderer instanceof AssetRenderer) {
 			AssetRenderer<?> assetRenderer = (AssetRenderer<?>)_renderer;
 
-			request.setAttribute(WebKeys.ASSET_RENDERER, assetRenderer);
+			httpServletRequest.setAttribute(
+				WebKeys.ASSET_RENDERER, assetRenderer);
 		}
 		else {
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				"liferay-asset:asset-display:renderer", _renderer);
 		}
 
@@ -260,11 +261,11 @@ public class AssetDisplayTag extends IncludeTag {
 		}
 
 		if (assetRendererFactory != null) {
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				WebKeys.ASSET_RENDERER_FACTORY, assetRendererFactory);
 		}
 
-		request.setAttribute(WebKeys.ASSET_ENTRY_VIEW_URL, _viewURL);
+		httpServletRequest.setAttribute(WebKeys.ASSET_ENTRY_VIEW_URL, _viewURL);
 
 		addParam("showComments", String.valueOf(_showComments));
 		addParam("showExtraInfo", String.valueOf(_showExtraInfo));

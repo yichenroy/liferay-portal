@@ -14,8 +14,6 @@
 
 package com.liferay.portal.background.task.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -32,7 +30,6 @@ import org.osgi.util.tracker.ServiceTracker;
  * @see BackgroundTaskService
  * @generated
  */
-@ProviderType
 public class BackgroundTaskServiceUtil {
 
 	/*
@@ -41,10 +38,17 @@ public class BackgroundTaskServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portal.background.task.service.impl.BackgroundTaskServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static int getBackgroundTasksCount(
-		long groupId, String taskExecutorClassName, String completed) {
+		long groupId, String taskExecutorClassName, boolean completed) {
 
 		return getService().getBackgroundTasksCount(
 			groupId, taskExecutorClassName, completed);
+	}
+
+	public static int getBackgroundTasksCount(
+		long groupId, String name, String taskExecutorClassName) {
+
+		return getService().getBackgroundTasksCount(
+			groupId, name, taskExecutorClassName);
 	}
 
 	public static String getBackgroundTaskStatusJSON(long backgroundTaskId) {

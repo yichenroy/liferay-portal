@@ -24,8 +24,8 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.asset.tags.selector.web.internal.display.context.AssetTagsSelectorDisplayContext" %><%@
 page import="com.liferay.asset.tags.selector.web.internal.display.context.AssetTagsSelectorManagementToolbarDisplayContext" %><%@
-page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.json.JSONFactoryUtil" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %>
 
 <liferay-frontend:defineObjects />
@@ -35,7 +35,7 @@ page import="com.liferay.portal.kernel.util.HtmlUtil" %>
 <portlet:defineObjects />
 
 <%
-AssetTagsSelectorDisplayContext assetTagsSelectorDisplayContext = new AssetTagsSelectorDisplayContext(renderRequest, renderResponse, request);
+AssetTagsSelectorDisplayContext assetTagsSelectorDisplayContext = new AssetTagsSelectorDisplayContext(request, renderRequest, renderResponse);
 %>
 
 <%@ include file="/init-ext.jsp" %>

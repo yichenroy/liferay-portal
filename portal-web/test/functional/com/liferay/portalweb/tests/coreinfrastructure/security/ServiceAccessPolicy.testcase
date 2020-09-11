@@ -1,5 +1,6 @@
 @component-name = "portal-security"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Security";
@@ -26,6 +27,7 @@ definition {
 	@priority = "5"
 	test ServiceAccessPolicySmoke {
 		property custom.properties = "json.service.auth.token.hosts.allowed=";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ServiceAccessPolicy#ServiceAccessPolicySmoke";
 
 		var companyId = JSONCompany.getCompanyId();
@@ -46,18 +48,16 @@ definition {
 			fail("FAIL! Cannot find the warning message.");
 		}
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
 			panel = "Control Panel",
-			portlet = "Service Access Policy"
-		);
+			portlet = "Service Access Policy");
 
 		ServiceAccessPolicy.editServiceAccessPolicy(
 			allowedServiceSignature = "com.liferay.portal.kernel.service.UserService#getUserByEmailAddress",
-			policyName = "SYSTEM_DEFAULT"
-		);
+			policyName = "SYSTEM_DEFAULT");
 
-		var userId = JSONUser.getUserIdByEmailAddress(userEmailAddress = "test@liferay.com ");
+		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com ");
 
 		var curl = '''
 			${portalURL}/api/jsonws/user/get-user-by-email-address \
@@ -87,16 +87,14 @@ definition {
 			fail("FAIL! Cannot find the currrent user.");
 		}
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
 			panel = "Control Panel",
-			portlet = "Service Access Policy"
-		);
+			portlet = "Service Access Policy");
 
 		ServiceAccessPolicy.editServiceAccessPolicy(
 			allowedServiceSignature = " ",
-			policyName = "SYSTEM_USER_PASSWORD"
-		);
+			policyName = "SYSTEM_USER_PASSWORD");
 
 		var curl = '''
 			${portalURL}/api/jsonws/user/get-current-user \
@@ -112,4 +110,5 @@ definition {
 			fail("FAIL! Cannot find the warning message.");
 		}
 	}
+
 }

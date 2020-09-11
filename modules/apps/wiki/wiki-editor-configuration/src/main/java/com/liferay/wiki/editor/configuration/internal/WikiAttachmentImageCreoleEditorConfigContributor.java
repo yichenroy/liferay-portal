@@ -16,25 +16,28 @@ package com.liferay.wiki.editor.configuration.internal;
 
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
-import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.wiki.configuration.WikiFileUploadConfiguration;
 import com.liferay.wiki.constants.WikiPortletKeys;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
 import javax.portlet.PortletURL;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Ambrín Chaudhary
  */
 @Component(
+	configurationPid = "com.liferay.wiki.configuration.WikiFileUploadConfiguration",
 	property = {
 		"editor.config.key=contentEditor", "editor.name=alloyeditor_creole",
 		"editor.name=ckeditor_creole",
@@ -48,45 +51,47 @@ import org.osgi.service.component.annotations.Reference;
 public class WikiAttachmentImageCreoleEditorConfigContributor
 	extends BaseWikiAttachmentImageEditorConfigContributor {
 
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_wikiFileUploadConfiguration = ConfigurableUtil.createConfigurable(
+			WikiFileUploadConfiguration.class, properties);
+	}
+
 	@Override
 	protected String getItemSelectorURL(
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory,
 		String itemSelectedEventName, long wikiPageResourcePrimKey,
 		ThemeDisplay themeDisplay) {
 
-		ItemSelectorCriterion urlItemSelectorCriterion =
-			getURLItemSelectorCriterion();
-
-		PortletURL itemSelectorURL = null;
-
 		if (wikiPageResourcePrimKey == 0) {
-			itemSelectorURL = _itemSelector.getItemSelectorURL(
+			PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
 				requestBackedPortletURLFactory, itemSelectedEventName,
-				urlItemSelectorCriterion);
+				getURLItemSelectorCriterion());
+
+			return itemSelectorURL.toString();
 		}
-		else {
-			List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-				new ArrayList<>();
 
-			desiredItemSelectorReturnTypes.add(
-				new FileEntryItemSelectorReturnType());
+		ItemSelectorCriterion attachmentItemSelectorCriterion =
+			getWikiAttachmentItemSelectorCriterion(
+				wikiPageResourcePrimKey, new FileEntryItemSelectorReturnType());
 
-			ItemSelectorCriterion attachmentItemSelectorCriterion =
-				getWikiAttachmentItemSelectorCriterion(
-					wikiPageResourcePrimKey, desiredItemSelectorReturnTypes);
+		ItemSelectorCriterion uploadItemSelectorCriterion =
+			getUploadItemSelectorCriterion(
+				wikiPageResourcePrimKey, themeDisplay,
+				requestBackedPortletURLFactory);
 
-			ItemSelectorCriterion uploadItemSelectorCriterion =
-				getUploadItemSelectorCriterion(
-					wikiPageResourcePrimKey, themeDisplay,
-					requestBackedPortletURLFactory);
-
-			itemSelectorURL = _itemSelector.getItemSelectorURL(
-				requestBackedPortletURLFactory, itemSelectedEventName,
-				attachmentItemSelectorCriterion, urlItemSelectorCriterion,
-				uploadItemSelectorCriterion);
-		}
+		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
+			requestBackedPortletURLFactory, itemSelectedEventName,
+			attachmentItemSelectorCriterion, getURLItemSelectorCriterion(),
+			uploadItemSelectorCriterion);
 
 		return itemSelectorURL.toString();
+	}
+
+	@Override
+	protected WikiFileUploadConfiguration getWikiFileUploadConfiguration() {
+		return _wikiFileUploadConfiguration;
 	}
 
 	@Reference(unbind = "-")
@@ -94,6 +99,13 @@ public class WikiAttachmentImageCreoleEditorConfigContributor
 		_itemSelector = itemSelector;
 	}
 
+	protected void setWikiFileUploadConfiguration(
+		WikiFileUploadConfiguration wikiFileUploadConfiguration) {
+
+		_wikiFileUploadConfiguration = wikiFileUploadConfiguration;
+	}
+
 	private ItemSelector _itemSelector;
+	private WikiFileUploadConfiguration _wikiFileUploadConfiguration;
 
 }

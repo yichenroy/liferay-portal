@@ -26,18 +26,22 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Grid {
+public class Grid implements Cloneable {
 
-	public Column[] getColumns() {
+	public static Grid toDTO(String json) {
+		return GridSerDes.toDTO(json);
+	}
+
+	public FormFieldOption[] getColumns() {
 		return columns;
 	}
 
-	public void setColumns(Column[] columns) {
+	public void setColumns(FormFieldOption[] columns) {
 		this.columns = columns;
 	}
 
 	public void setColumns(
-		UnsafeSupplier<Column[], Exception> columnsUnsafeSupplier) {
+		UnsafeSupplier<FormFieldOption[], Exception> columnsUnsafeSupplier) {
 
 		try {
 			columns = columnsUnsafeSupplier.get();
@@ -47,7 +51,7 @@ public class Grid {
 		}
 	}
 
-	protected Column[] columns;
+	protected FormFieldOption[] columns;
 
 	public Long getId() {
 		return id;
@@ -68,15 +72,17 @@ public class Grid {
 
 	protected Long id;
 
-	public Row[] getRows() {
+	public FormFieldOption[] getRows() {
 		return rows;
 	}
 
-	public void setRows(Row[] rows) {
+	public void setRows(FormFieldOption[] rows) {
 		this.rows = rows;
 	}
 
-	public void setRows(UnsafeSupplier<Row[], Exception> rowsUnsafeSupplier) {
+	public void setRows(
+		UnsafeSupplier<FormFieldOption[], Exception> rowsUnsafeSupplier) {
+
 		try {
 			rows = rowsUnsafeSupplier.get();
 		}
@@ -85,7 +91,12 @@ public class Grid {
 		}
 	}
 
-	protected Row[] rows;
+	protected FormFieldOption[] rows;
+
+	@Override
+	public Grid clone() throws CloneNotSupportedException {
+		return (Grid)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

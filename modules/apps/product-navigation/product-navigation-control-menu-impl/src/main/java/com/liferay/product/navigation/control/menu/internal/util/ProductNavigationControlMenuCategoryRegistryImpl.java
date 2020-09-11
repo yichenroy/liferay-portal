@@ -14,9 +14,9 @@
 
 package com.liferay.product.navigation.control.menu.internal.util;
 
+import com.liferay.osgi.service.tracker.collections.ServiceTrackerMapBuilder;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuCategory;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.util.ProductNavigationControlMenuCategoryRegistry;
-import com.liferay.product.navigation.control.menu.util.ProductNavigationControlMenuCategoryServiceReferenceMapper;
 import com.liferay.product.navigation.control.menu.util.ProductNavigationControlMenuEntryRegistry;
 
 import java.util.ArrayList;
@@ -70,7 +69,7 @@ public class ProductNavigationControlMenuCategoryRegistryImpl
 	public List<ProductNavigationControlMenuCategory>
 		getProductNavigationControlMenuCategories(
 			String productNavigationControlMenuCategoryKey,
-			final HttpServletRequest request) {
+			final HttpServletRequest httpServletRequest) {
 
 		List<ProductNavigationControlMenuCategory>
 			productNavigationControlMenuCategories =
@@ -86,7 +85,7 @@ public class ProductNavigationControlMenuCategoryRegistryImpl
 			productNavigationControlMenuCategory -> {
 				try {
 					if (!productNavigationControlMenuCategory.
-							hasAccessPermission(request)) {
+							hasAccessPermission(httpServletRequest)) {
 
 						return false;
 					}
@@ -96,7 +95,7 @@ public class ProductNavigationControlMenuCategoryRegistryImpl
 							_productNavigationControlMenuEntryRegistry.
 								getProductNavigationControlMenuEntries(
 									productNavigationControlMenuCategory,
-									request);
+									httpServletRequest);
 
 					if (productNavigationControlMenuEntries.isEmpty()) {
 						return false;
@@ -104,8 +103,8 @@ public class ProductNavigationControlMenuCategoryRegistryImpl
 
 					return true;
 				}
-				catch (PortalException pe) {
-					_log.error(pe, pe);
+				catch (PortalException portalException) {
+					_log.error(portalException, portalException);
 				}
 
 				return false;
@@ -115,13 +114,15 @@ public class ProductNavigationControlMenuCategoryRegistryImpl
 	@Activate
 	protected void activate(final BundleContext bundleContext) {
 		_productNavigationControlMenuCategoryServiceTrackerMap =
-			ServiceTrackerMapFactory.openMultiValueMap(
-				bundleContext, ProductNavigationControlMenuCategory.class,
-				"(product.navigation.control.menu.category.key=*)",
-				new ProductNavigationControlMenuCategoryServiceReferenceMapper(),
+			ServiceTrackerMapBuilder.SelectorFactory.newSelector(
+				bundleContext, ProductNavigationControlMenuCategory.class
+			).map(
+				"product.navigation.control.menu.category.key"
+			).collectMultiValue(
 				Collections.reverseOrder(
-					new PropertyServiceReferenceComparator(
-						"product.navigation.control.menu.category.order")));
+					new PropertyServiceReferenceComparator<>(
+						"product.navigation.control.menu.category.order"))
+			).build();
 	}
 
 	@Deactivate

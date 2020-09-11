@@ -14,14 +14,11 @@
 
 package com.liferay.message.boards.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class MessageSubjectException extends PortalException {
 
 	public MessageSubjectException() {
@@ -31,12 +28,12 @@ public class MessageSubjectException extends PortalException {
 		super(msg);
 	}
 
-	public MessageSubjectException(String msg, Throwable cause) {
-		super(msg, cause);
+	public MessageSubjectException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public MessageSubjectException(Throwable cause) {
-		super(cause);
+	public MessageSubjectException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

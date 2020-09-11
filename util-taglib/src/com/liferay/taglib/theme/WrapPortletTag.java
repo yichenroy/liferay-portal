@@ -14,6 +14,7 @@
 
 package com.liferay.taglib.theme;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.servlet.DirectRequestDispatcherFactoryUtil;
@@ -39,11 +40,13 @@ public class WrapPortletTag
 
 	public static String doTag(
 			String wrapPage, String portletPage, ServletContext servletContext,
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Theme theme = themeDisplay.getTheme();
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
@@ -57,29 +60,30 @@ public class WrapPortletTag
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
 		PipingServletResponse pipingServletResponse = new PipingServletResponse(
-			response, unsyncStringWriter);
+			httpServletResponse, unsyncStringWriter);
 
-		requestDispatcher.include(request, pipingServletResponse);
+		requestDispatcher.include(httpServletRequest, pipingServletResponse);
 
 		portletDisplay.setContent(unsyncStringWriter.getStringBundler());
 
 		// Page
 
 		String content = ThemeUtil.include(
-			servletContext, request, response, wrapPage, theme, false);
+			servletContext, httpServletRequest, httpServletResponse, wrapPage,
+			theme, false);
 
-		return _CONTENT_WRAPPER_PRE.concat(
-			content
-		).concat(
-			_CONTENT_WRAPPER_POST
-		);
+		return StringBundler.concat(
+			_CONTENT_WRAPPER_PRE, content, _CONTENT_WRAPPER_POST);
 	}
 
 	@Override
 	public int doEndTag() throws JspException {
 		try {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			HttpServletRequest httpServletRequest = getRequest();
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			Theme theme = themeDisplay.getTheme();
 
@@ -92,14 +96,14 @@ public class WrapPortletTag
 			// Page
 
 			ThemeUtil.include(
-				servletContext, request,
+				getServletContext(), httpServletRequest,
 				PipingServletResponse.createPipingServletResponse(pageContext),
 				getPage(), theme);
 
 			return EVAL_PAGE;
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 		finally {
 			clearParams();

@@ -46,24 +46,25 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetDisplayPagesItemSelectorViewDisplayContext {
 
 	public AssetDisplayPagesItemSelectorViewDisplayContext(
-		HttpServletRequest request,
+		HttpServletRequest httpServletRequest,
 		AssetDisplayPageSelectorCriterion assetDisplayPageSelectorCriterion,
 		String itemSelectedEventName, PortletURL portletURL) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_assetDisplayPageSelectorCriterion = assetDisplayPageSelectorCriterion;
 		_itemSelectedEventName = itemSelectedEventName;
 		_portletURL = portletURL;
 
-		_portletRequest = (PortletRequest)request.getAttribute(
+		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_REQUEST);
-		_portletResponse = (PortletResponse)request.getAttribute(
+		_portletResponse = (PortletResponse)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE);
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public SearchContainer getAssetDisplayPageSearchContainer()
+	public SearchContainer<LayoutPageTemplateEntry>
+			getAssetDisplayPageSearchContainer()
 		throws PortletException {
 
 		if (_assetDisplayPageSearchContainer != null) {
@@ -151,7 +152,8 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -161,7 +163,7 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		return _keywords;
 	}
@@ -196,7 +198,7 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 		}
 
 		_orderByCol = ParamUtil.getString(
-			_request, "orderByCol", "create-date");
+			_httpServletRequest, "orderByCol", "create-date");
 
 		return _orderByCol;
 	}
@@ -212,9 +214,11 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 		return portletURL;
 	}
 
-	private SearchContainer _assetDisplayPageSearchContainer;
+	private SearchContainer<LayoutPageTemplateEntry>
+		_assetDisplayPageSearchContainer;
 	private final AssetDisplayPageSelectorCriterion
 		_assetDisplayPageSelectorCriterion;
+	private final HttpServletRequest _httpServletRequest;
 	private final String _itemSelectedEventName;
 	private String _keywords;
 	private String _orderByCol;
@@ -222,7 +226,6 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 	private final PortletRequest _portletRequest;
 	private final PortletResponse _portletResponse;
 	private final PortletURL _portletURL;
-	private final HttpServletRequest _request;
 	private final ThemeDisplay _themeDisplay;
 
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.changeset.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * The extended model implementation for the ChangesetCollection service.
  * Represents a row in the &quot;ChangesetCollection&quot; database table, with
@@ -29,7 +27,6 @@ import aQute.bnd.annotation.ProviderType;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class ChangesetCollectionImpl extends ChangesetCollectionBaseImpl {
 
 	/**

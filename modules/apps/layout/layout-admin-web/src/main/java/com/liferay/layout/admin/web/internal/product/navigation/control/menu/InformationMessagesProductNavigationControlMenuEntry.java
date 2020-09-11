@@ -61,7 +61,7 @@ public class InformationMessagesProductNavigationControlMenuEntry
 
 	@Override
 	public String getIconJspPath() {
-		return "/control/menu/information_messages.jsp";
+		return "/dynamic_include/information_messages.jsp";
 	}
 
 	public boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay)
@@ -79,31 +79,36 @@ public class InformationMessagesProductNavigationControlMenuEntry
 
 	@Override
 	public boolean includeIcon(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		try {
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				INFORMATION_MESSAGES_LINKED_LAYOUT,
 				isLinkedLayout(themeDisplay));
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				INFORMATION_MESSAGES_MODIFIED_LAYOUT,
 				isModifiedLayout(themeDisplay));
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 		}
 
-		return super.includeIcon(request, response);
+		return super.includeIcon(httpServletRequest, httpServletResponse);
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest request) throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public boolean isShow(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Layout layout = themeDisplay.getLayout();
 
@@ -115,7 +120,7 @@ public class InformationMessagesProductNavigationControlMenuEntry
 			return false;
 		}
 
-		return super.isShow(request);
+		return super.isShow(httpServletRequest);
 	}
 
 	@Override

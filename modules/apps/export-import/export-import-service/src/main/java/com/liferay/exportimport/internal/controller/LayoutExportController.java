@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.controller;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.controller.PortletExportController;
@@ -31,10 +29,9 @@ import com.liferay.exportimport.kernel.lar.PortletDataContextFactory;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
+import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
-import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.portal.background.task.model.BackgroundTask;
 import com.liferay.portal.background.task.service.BackgroundTaskLocalService;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
@@ -48,11 +45,7 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.adapter.ModelAdapterUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.ImageLocalService;
-import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
-import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
-import com.liferay.portal.kernel.service.LayoutSetBranchLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -71,6 +64,7 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.zip.ZipWriter;
+import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.site.model.adapter.StagedGroup;
 
 import java.io.File;
@@ -100,7 +94,6 @@ import org.osgi.service.component.annotations.Reference;
 	property = "model.class.name=com.liferay.portal.kernel.model.Layout",
 	service = {ExportImportController.class, LayoutExportController.class}
 )
-@ProviderType
 public class LayoutExportController implements ExportController {
 
 	@Override
@@ -137,14 +130,8 @@ public class LayoutExportController implements ExportController {
 
 			return file;
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			ExportImportThreadLocal.setLayoutExportInProcess(false);
-
-			if (portletDataContext != null) {
-				ZipWriter zipWriter = portletDataContext.getZipWriter();
-
-				zipWriter.umount();
-			}
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
 				ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_FAILED,
@@ -153,9 +140,9 @@ public class LayoutExportController implements ExportController {
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
 					portletDataContext),
-				t);
+				throwable);
 
-			throw t;
+			throw throwable;
 		}
 	}
 
@@ -340,6 +327,8 @@ public class LayoutExportController implements ExportController {
 		_portletExportController.exportLocks(portletDataContext);
 
 		portletDataContext.addDeletionSystemEventStagedModelTypes(
+			new StagedModelType(SegmentsExperience.class, Layout.class));
+		portletDataContext.addDeletionSystemEventStagedModelTypes(
 			new StagedModelType(StagedAssetLink.class));
 
 		_deletionSystemEventExporter.exportDeletionSystemEvents(
@@ -363,40 +352,6 @@ public class LayoutExportController implements ExportController {
 		ZipWriter zipWriter = portletDataContext.getZipWriter();
 
 		return zipWriter.getFile();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected File doExport(
-			PortletDataContext portletDataContext, long[] layoutIds)
-		throws Exception {
-
-		return doExport(portletDataContext);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void exportLayout(
-			PortletDataContext portletDataContext, long[] layoutIds,
-			Layout layout)
-		throws Exception {
-
-		StagedModelDataHandlerUtil.exportStagedModel(
-			portletDataContext, layout);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void getLayoutPortlets(
-			PortletDataContext portletDataContext, long[] layoutIds,
-			Map<String, Object[]> portletIds, Layout layout)
-		throws Exception {
 	}
 
 	protected PortletDataContext getPortletDataContext(
@@ -449,112 +404,6 @@ public class LayoutExportController implements ExportController {
 
 		return ExportImportLifecycleConstants.
 			PROCESS_FLAG_LAYOUT_EXPORT_IN_PROCESS;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected boolean prepareLayoutStagingHandler(
-		PortletDataContext portletDataContext, Layout layout) {
-
-		return LayoutStagingUtil.prepareLayoutStagingHandler(
-			portletDataContext, layout);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setBackgroundTaskLocalService(
-		BackgroundTaskLocalService backgroundTaskLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setExportImportLifecycleManager(
-		ExportImportLifecycleManager exportImportLifecycleManager) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setImageLocalService(ImageLocalService imageLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutLocalService(
-		LayoutLocalService layoutLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutPrototypeLocalService(
-		LayoutPrototypeLocalService layoutPrototypeLocalService) {
-
-		_layoutPrototypeLocalService = layoutPrototypeLocalService;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutRevisionLocalService(
-		LayoutRevisionLocalService layoutRevisionLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutSetBranchLocalService(
-		LayoutSetBranchLocalService layoutSetBranchLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutSetLocalService(
-		LayoutSetLocalService layoutSetLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutSetPrototypeLocalService(
-		LayoutSetPrototypeLocalService layoutSetPrototypeLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setPortletExportController(
-		PortletExportController portletExportController) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setUserLocalService(UserLocalService userLocalService) {
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

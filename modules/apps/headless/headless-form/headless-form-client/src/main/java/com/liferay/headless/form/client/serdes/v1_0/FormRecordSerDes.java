@@ -14,16 +14,18 @@
 
 package com.liferay.headless.form.client.serdes.v1_0;
 
-import com.liferay.headless.form.client.dto.v1_0.FieldValue;
+import com.liferay.headless.form.client.dto.v1_0.FormFieldValue;
 import com.liferay.headless.form.client.dto.v1_0.FormRecord;
 import com.liferay.headless.form.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import javax.annotation.Generated;
@@ -64,7 +66,7 @@ public class FormRecordSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"creator\":");
+			sb.append("\"creator\": ");
 
 			sb.append(String.valueOf(formRecord.getCreator()));
 		}
@@ -74,7 +76,7 @@ public class FormRecordSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -89,7 +91,7 @@ public class FormRecordSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateModified\":");
+			sb.append("\"dateModified\": ");
 
 			sb.append("\"");
 
@@ -104,7 +106,7 @@ public class FormRecordSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"datePublished\":");
+			sb.append("\"datePublished\": ");
 
 			sb.append("\"");
 
@@ -119,24 +121,24 @@ public class FormRecordSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"draft\":");
+			sb.append("\"draft\": ");
 
 			sb.append(formRecord.getDraft());
 		}
 
-		if (formRecord.getFieldValues() != null) {
+		if (formRecord.getFormFieldValues() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"fieldValues\":");
+			sb.append("\"formFieldValues\": ");
 
 			sb.append("[");
 
-			for (int i = 0; i < formRecord.getFieldValues().length; i++) {
-				sb.append(String.valueOf(formRecord.getFieldValues()[i]));
+			for (int i = 0; i < formRecord.getFormFieldValues().length; i++) {
+				sb.append(String.valueOf(formRecord.getFormFieldValues()[i]));
 
-				if ((i + 1) < formRecord.getFieldValues().length) {
+				if ((i + 1) < formRecord.getFormFieldValues().length) {
 					sb.append(", ");
 				}
 			}
@@ -144,22 +146,12 @@ public class FormRecordSerDes {
 			sb.append("]");
 		}
 
-		if (formRecord.getForm() != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"form\":");
-
-			sb.append(String.valueOf(formRecord.getForm()));
-		}
-
 		if (formRecord.getFormId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"formId\":");
+			sb.append("\"formId\": ");
 
 			sb.append(formRecord.getFormId());
 		}
@@ -169,7 +161,7 @@ public class FormRecordSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(formRecord.getId());
 		}
@@ -179,12 +171,18 @@ public class FormRecordSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		FormRecordJSONParser formRecordJSONParser = new FormRecordJSONParser();
+
+		return formRecordJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(FormRecord formRecord) {
 		if (formRecord == null) {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -196,17 +194,32 @@ public class FormRecordSerDes {
 			map.put("creator", String.valueOf(formRecord.getCreator()));
 		}
 
-		map.put(
-			"dateCreated",
-			liferayToJSONDateFormat.format(formRecord.getDateCreated()));
+		if (formRecord.getDateCreated() == null) {
+			map.put("dateCreated", null);
+		}
+		else {
+			map.put(
+				"dateCreated",
+				liferayToJSONDateFormat.format(formRecord.getDateCreated()));
+		}
 
-		map.put(
-			"dateModified",
-			liferayToJSONDateFormat.format(formRecord.getDateModified()));
+		if (formRecord.getDateModified() == null) {
+			map.put("dateModified", null);
+		}
+		else {
+			map.put(
+				"dateModified",
+				liferayToJSONDateFormat.format(formRecord.getDateModified()));
+		}
 
-		map.put(
-			"datePublished",
-			liferayToJSONDateFormat.format(formRecord.getDatePublished()));
+		if (formRecord.getDatePublished() == null) {
+			map.put("datePublished", null);
+		}
+		else {
+			map.put(
+				"datePublished",
+				liferayToJSONDateFormat.format(formRecord.getDatePublished()));
+		}
 
 		if (formRecord.getDraft() == null) {
 			map.put("draft", null);
@@ -215,18 +228,13 @@ public class FormRecordSerDes {
 			map.put("draft", String.valueOf(formRecord.getDraft()));
 		}
 
-		if (formRecord.getFieldValues() == null) {
-			map.put("fieldValues", null);
+		if (formRecord.getFormFieldValues() == null) {
+			map.put("formFieldValues", null);
 		}
 		else {
-			map.put("fieldValues", String.valueOf(formRecord.getFieldValues()));
-		}
-
-		if (formRecord.getForm() == null) {
-			map.put("form", null);
-		}
-		else {
-			map.put("form", String.valueOf(formRecord.getForm()));
+			map.put(
+				"formFieldValues",
+				String.valueOf(formRecord.getFormFieldValues()));
 		}
 
 		if (formRecord.getFormId() == null) {
@@ -246,13 +254,7 @@ public class FormRecordSerDes {
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class FormRecordJSONParser
+	public static class FormRecordJSONParser
 		extends BaseJSONParser<FormRecord> {
 
 		@Override
@@ -299,22 +301,16 @@ public class FormRecordSerDes {
 					formRecord.setDraft((Boolean)jsonParserFieldValue);
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "fieldValues")) {
+			else if (Objects.equals(jsonParserFieldName, "formFieldValues")) {
 				if (jsonParserFieldValue != null) {
-					formRecord.setFieldValues(
+					formRecord.setFormFieldValues(
 						Stream.of(
 							toStrings((Object[])jsonParserFieldValue)
 						).map(
-							object -> FieldValueSerDes.toDTO((String)object)
+							object -> FormFieldValueSerDes.toDTO((String)object)
 						).toArray(
-							size -> new FieldValue[size]
+							size -> new FormFieldValue[size]
 						));
-				}
-			}
-			else if (Objects.equals(jsonParserFieldName, "form")) {
-				if (jsonParserFieldValue != null) {
-					formRecord.setForm(
-						FormSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "formId")) {
@@ -329,12 +325,80 @@ public class FormRecordSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

@@ -14,9 +14,8 @@
 
 package com.liferay.ratings.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.ratings.kernel.model.RatingsEntry;
 
 /**
  * Provides a wrapper for {@link RatingsEntryService}.
@@ -25,7 +24,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see RatingsEntryService
  * @generated
  */
-@ProviderType
 public class RatingsEntryServiceWrapper
 	implements RatingsEntryService, ServiceWrapper<RatingsEntryService> {
 
@@ -51,7 +49,7 @@ public class RatingsEntryServiceWrapper
 	}
 
 	@Override
-	public com.liferay.ratings.kernel.model.RatingsEntry updateEntry(
+	public RatingsEntry updateEntry(
 			String className, long classPK, double score)
 		throws com.liferay.portal.kernel.exception.PortalException {
 

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -25,9 +23,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.service.http.CompanyServiceSoap}.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class CompanySoap implements Serializable {
 
 	public static CompanySoap toSoapModel(Company model) {
@@ -37,7 +36,6 @@ public class CompanySoap implements Serializable {
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setAccountId(model.getAccountId());
 		soapModel.setWebId(model.getWebId());
-		soapModel.setKey(model.getKey());
 		soapModel.setMx(model.getMx());
 		soapModel.setHomeURL(model.getHomeURL());
 		soapModel.setLogoId(model.getLogoId());
@@ -129,14 +127,6 @@ public class CompanySoap implements Serializable {
 		_webId = webId;
 	}
 
-	public String getKey() {
-		return _key;
-	}
-
-	public void setKey(String key) {
-		_key = key;
-	}
-
 	public String getMx() {
 		return _mx;
 	}
@@ -197,7 +187,6 @@ public class CompanySoap implements Serializable {
 	private long _companyId;
 	private long _accountId;
 	private String _webId;
-	private String _key;
 	private String _mx;
 	private String _homeURL;
 	private long _logoId;

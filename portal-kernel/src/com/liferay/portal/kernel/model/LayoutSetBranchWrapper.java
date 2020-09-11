@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,7 +29,6 @@ import java.util.Map;
  * @see LayoutSetBranch
  * @generated
  */
-@ProviderType
 public class LayoutSetBranchWrapper
 	extends BaseModelWrapper<LayoutSetBranch>
 	implements LayoutSetBranch, ModelWrapper<LayoutSetBranch> {
@@ -665,9 +662,10 @@ public class LayoutSetBranchWrapper
 
 	@Override
 	public void setSettingsProperties(
-		com.liferay.portal.kernel.util.UnicodeProperties settingsProperties) {
+		com.liferay.portal.kernel.util.UnicodeProperties
+			settingsUnicodeProperties) {
 
-		model.setSettingsProperties(settingsProperties);
+		model.setSettingsProperties(settingsUnicodeProperties);
 	}
 
 	/**

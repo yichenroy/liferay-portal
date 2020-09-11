@@ -25,6 +25,7 @@ import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Objects;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -105,8 +106,9 @@ public class HttpAdapter {
 		try {
 			_httpServiceServlet.init(servletConfig);
 		}
-		catch (ServletException se) {
-			_servletContext.log(se.getMessage(), se);
+		catch (ServletException servletException) {
+			_servletContext.log(
+				servletException.getMessage(), servletException);
 
 			return;
 		}
@@ -190,7 +192,7 @@ public class HttpAdapter {
 			if (methodName.equals("getInitParameter") && (args != null) &&
 				(args.length == 1)) {
 
-				if ("osgi.http.endpoint".equals(args[0])) {
+				if (Objects.equals(args[0], "osgi.http.endpoint")) {
 					return _servletContext.getInitParameter((String)args[0]);
 				}
 
@@ -212,8 +214,8 @@ public class HttpAdapter {
 			try {
 				return method.invoke(_servletContext, args);
 			}
-			catch (InvocationTargetException ite) {
-				throw ite.getCause();
+			catch (InvocationTargetException invocationTargetException) {
+				throw invocationTargetException.getCause();
 			}
 		}
 

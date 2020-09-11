@@ -14,11 +14,15 @@
 
 package com.liferay.oauth2.provider.client.test;
 
-import com.liferay.oauth2.provider.test.internal.TestAnnotatedApplication;
-import com.liferay.oauth2.provider.test.internal.activator.BaseTestPreparatorBundleActivator;
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.oauth2.provider.internal.test.TestAnnotatedApplication;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.test.log.CaptureAppender;
+import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Dictionary;
 
@@ -26,30 +30,29 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
+import org.apache.log4j.Level;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.BundleActivator;
 
 /**
  * @author Carlos Sierra Andrés
  */
-@RunAsClient
 @RunWith(Arquillian.class)
 public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
-	@Deployment
-	public static Archive<?> getArchive() throws Exception {
-		return BaseClientTestCase.getArchive(
-			IsolationAccrossCompaniesTestPreparatorBundleActivator.class);
-	}
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new LiferayIntegrationTestRule();
 
 	@Test
-	public void test() throws Exception {
+	public void testAnnotated() throws Exception {
 		WebTarget webTarget = getWebTarget("/annotated");
 
 		String tokenString = getToken("oauthTestApplication", "host1.xyz");
@@ -65,9 +68,41 @@ public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
 		builder = builder.header("Host", "host2.xyz");
 
-		Response response = builder.get();
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
 
-		Assert.assertEquals(403, response.getStatus());
+			Response response = builder.get();
+
+			Assert.assertEquals(403, response.getStatus());
+		}
+	}
+
+	@Test
+	public void testNoScopes() throws Exception {
+		WebTarget webTarget = getWebTarget("/no-scopes");
+
+		String tokenString = getToken("oauthTestApplication", "host1.xyz");
+
+		Invocation.Builder builder = authorize(
+			webTarget.request(), tokenString);
+
+		builder = builder.header("Host", "host1.xyz");
+
+		Assert.assertEquals("everything.read", builder.get(String.class));
+
+		builder = authorize(webTarget.request(), tokenString);
+
+		builder = builder.header("Host", "host2.xyz");
+
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+
+			Response response = builder.get();
+
+			Assert.assertEquals(403, response.getStatus());
+		}
 	}
 
 	public static class IsolationAccrossCompaniesTestPreparatorBundleActivator
@@ -81,6 +116,13 @@ public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
 			registerJaxRsApplication(
 				new TestAnnotatedApplication(), "annotated", properties);
+
+			properties = new HashMapDictionary<>();
+
+			properties.put("oauth2.scope.checker.type", "none");
+
+			registerJaxRsApplication(
+				new TestAnnotatedApplication(), "no-scopes", properties);
 
 			Company company1 = createCompany("host1");
 
@@ -97,6 +139,11 @@ public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 				"oauthTestApplication");
 		}
 
+	}
+
+	@Override
+	protected BundleActivator getBundleActivator() {
+		return new IsolationAccrossCompaniesTestPreparatorBundleActivator();
 	}
 
 }

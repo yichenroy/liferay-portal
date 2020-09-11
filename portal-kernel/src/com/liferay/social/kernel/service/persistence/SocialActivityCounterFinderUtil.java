@@ -14,15 +14,12 @@
 
 package com.liferay.social.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class SocialActivityCounterFinderUtil {
 
 	public static int countU_ByG_N(long groupId, String[] names) {

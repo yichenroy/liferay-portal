@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see KaleoCondition
  * @generated
  */
-@ProviderType
 public class KaleoConditionWrapper
 	extends BaseModelWrapper<KaleoCondition>
 	implements KaleoCondition, ModelWrapper<KaleoCondition> {
@@ -53,6 +50,7 @@ public class KaleoConditionWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
+		attributes.put("kaleoDefinitionId", getKaleoDefinitionId());
 		attributes.put(
 			"kaleoDefinitionVersionId", getKaleoDefinitionVersionId());
 		attributes.put("kaleoNodeId", getKaleoNodeId());
@@ -111,6 +109,12 @@ public class KaleoConditionWrapper
 
 		if (modifiedDate != null) {
 			setModifiedDate(modifiedDate);
+		}
+
+		Long kaleoDefinitionId = (Long)attributes.get("kaleoDefinitionId");
+
+		if (kaleoDefinitionId != null) {
+			setKaleoDefinitionId(kaleoDefinitionId);
 		}
 
 		Long kaleoDefinitionVersionId = (Long)attributes.get(
@@ -184,6 +188,16 @@ public class KaleoConditionWrapper
 	@Override
 	public long getKaleoConditionId() {
 		return model.getKaleoConditionId();
+	}
+
+	/**
+	 * Returns the kaleo definition ID of this kaleo condition.
+	 *
+	 * @return the kaleo definition ID of this kaleo condition
+	 */
+	@Override
+	public long getKaleoDefinitionId() {
+		return model.getKaleoDefinitionId();
 	}
 
 	/**
@@ -339,6 +353,16 @@ public class KaleoConditionWrapper
 	@Override
 	public void setKaleoConditionId(long kaleoConditionId) {
 		model.setKaleoConditionId(kaleoConditionId);
+	}
+
+	/**
+	 * Sets the kaleo definition ID of this kaleo condition.
+	 *
+	 * @param kaleoDefinitionId the kaleo definition ID of this kaleo condition
+	 */
+	@Override
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		model.setKaleoDefinitionId(kaleoDefinitionId);
 	}
 
 	/**

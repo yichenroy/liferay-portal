@@ -14,8 +14,6 @@
 
 package com.liferay.sharing.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,10 +31,9 @@ import java.util.Map;
  * @see SharingEntry
  * @generated
  */
-@ProviderType
 public class SharingEntryWrapper
 	extends BaseModelWrapper<SharingEntry>
-	implements SharingEntry, ModelWrapper<SharingEntry> {
+	implements ModelWrapper<SharingEntry>, SharingEntry {
 
 	public SharingEntryWrapper(SharingEntry sharingEntry) {
 		super(sharingEntry);

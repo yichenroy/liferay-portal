@@ -14,8 +14,6 @@
 
 package com.liferay.asset.display.page.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.display.page.model.AssetDisplayPageEntry;
 import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalServiceU
  * @see AssetDisplayPageEntry
  * @generated
  */
-@ProviderType
 public abstract class AssetDisplayPageEntryBaseImpl
 	extends AssetDisplayPageEntryModelImpl implements AssetDisplayPageEntry {
 

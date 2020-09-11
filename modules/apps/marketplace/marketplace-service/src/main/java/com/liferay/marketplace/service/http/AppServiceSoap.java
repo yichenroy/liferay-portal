@@ -14,8 +14,6 @@
 
 package com.liferay.marketplace.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.marketplace.service.AppServiceUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -59,9 +57,10 @@ import java.rmi.RemoteException;
  *
  * @author Ryan Park
  * @see AppServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class AppServiceSoap {
 
 	public static com.liferay.marketplace.model.AppSoap deleteApp(long appId)
@@ -74,10 +73,10 @@ public class AppServiceSoap {
 			return com.liferay.marketplace.model.AppSoap.toSoapModel(
 				returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -85,10 +84,10 @@ public class AppServiceSoap {
 		try {
 			AppServiceUtil.installApp(remoteAppId);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -96,10 +95,10 @@ public class AppServiceSoap {
 		try {
 			AppServiceUtil.uninstallApp(remoteAppId);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 

@@ -14,10 +14,10 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the Group service. Represents a row in the &quot;Group_&quot; database table, with each column mapped to a property of this class.
@@ -63,7 +63,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	public java.util.List<Group> getChildrenWithLayouts(
 		boolean site, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Group> obc);
+		com.liferay.portal.kernel.util.OrderByComparator<Group>
+			orderByComparator);
 
 	public int getChildrenWithLayoutsCount(boolean site);
 
@@ -160,6 +161,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	public boolean isControlPanel();
 
+	public boolean isDepot();
+
 	public boolean isGuest();
 
 	public boolean isInStagingPortlet(String portletId);
@@ -200,6 +203,6 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	public void setTypeSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties
-			typeSettingsProperties);
+			typeSettingsUnicodeProperties);
 
 }

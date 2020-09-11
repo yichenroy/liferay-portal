@@ -14,7 +14,7 @@
 
 package com.liferay.document.library.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -27,13 +27,6 @@ public interface DLFileEntryFinder {
 
 	public int countByG_F(
 		long groupId, java.util.List<Long> folderIds,
-		com.liferay.portal.kernel.dao.orm.QueryDefinition
-			<com.liferay.document.library.kernel.model.DLFileEntry>
-				queryDefinition);
-
-	public int countByG_M_R(
-		long groupId, com.liferay.portal.kernel.util.DateRange dateRange,
-		long repositoryId,
 		com.liferay.portal.kernel.dao.orm.QueryDefinition
 			<com.liferay.document.library.kernel.model.DLFileEntry>
 				queryDefinition);
@@ -58,9 +51,6 @@ public interface DLFileEntryFinder {
 		com.liferay.portal.kernel.dao.orm.QueryDefinition
 			<com.liferay.document.library.kernel.model.DLFileEntry>
 				queryDefinition);
-
-	public com.liferay.document.library.kernel.model.DLFileEntry
-		fetchByAnyImageId(long imageId);
 
 	public int filterCountByG_F(
 		long groupId, java.util.List<Long> folderIds,
@@ -120,11 +110,6 @@ public interface DLFileEntryFinder {
 				<com.liferay.document.library.kernel.model.DLFileEntry>
 					queryDefinition);
 
-	public com.liferay.document.library.kernel.model.DLFileEntry
-			findByAnyImageId(long imageId)
-		throws com.liferay.document.library.kernel.exception.
-			NoSuchFileEntryException;
-
 	public java.util.List<com.liferay.document.library.kernel.model.DLFileEntry>
 		findByCompanyId(
 			long companyId,
@@ -138,9 +123,6 @@ public interface DLFileEntryFinder {
 
 	public java.util.List<com.liferay.document.library.kernel.model.DLFileEntry>
 		findByDDMStructureIds(long[] ddmStructureIds, int start, int end);
-
-	public java.util.List<com.liferay.document.library.kernel.model.DLFileEntry>
-		findByMisversioned();
 
 	public java.util.List<com.liferay.document.library.kernel.model.DLFileEntry>
 		findByNoAssets();

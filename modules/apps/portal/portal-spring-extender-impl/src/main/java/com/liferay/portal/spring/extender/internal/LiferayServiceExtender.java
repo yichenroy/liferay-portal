@@ -14,21 +14,21 @@
 
 package com.liferay.portal.spring.extender.internal;
 
-import com.liferay.osgi.felix.util.AbstractExtender;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.hibernate.SessionFactoryImpl;
 import com.liferay.portal.dao.orm.hibernate.VerifySessionFactoryWrapper;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.spring.extender.internal.jdbc.DataSourceUtil;
+import com.liferay.portal.spring.extender.internal.loader.ModuleAggregareClassLoader;
 import com.liferay.portal.spring.hibernate.PortletHibernateConfiguration;
 import com.liferay.portal.spring.hibernate.PortletTransactionManager;
+import com.liferay.portal.spring.transaction.DefaultTransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionExecutor;
-import com.liferay.portal.spring.transaction.TransactionExecutorFactory;
+import com.liferay.portal.spring.transaction.TransactionHandler;
 import com.liferay.portal.spring.transaction.TransactionManagerFactory;
 
 import java.util.ArrayList;
@@ -37,17 +37,18 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.apache.felix.utils.extender.Extension;
-
 import org.hibernate.engine.SessionFactoryImplementor;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 import org.springframework.orm.hibernate3.HibernateTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -56,27 +57,14 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @author Preston Crary
  */
 @Component(immediate = true, service = {})
-public class LiferayServiceExtender extends AbstractExtender {
-
-	@Activate
-	protected void activate(BundleContext bundleContext) throws Exception {
-		start(bundleContext);
-	}
-
-	@Deactivate
-	protected void deactivate(BundleContext bundleContext) throws Exception {
-		stop(bundleContext);
-	}
+public class LiferayServiceExtender
+	implements BundleTrackerCustomizer
+		<LiferayServiceExtender.LiferayServiceExtension> {
 
 	@Override
-	protected void debug(Bundle bundle, String s) {
-		if (_log.isDebugEnabled()) {
-			_log.debug(s);
-		}
-	}
+	public LiferayServiceExtension addingBundle(
+		Bundle bundle, BundleEvent bundleEvent) {
 
-	@Override
-	protected Extension doCreateExtension(Bundle bundle) {
 		Dictionary<String, String> headers = bundle.getHeaders(
 			StringPool.BLANK);
 
@@ -86,27 +74,37 @@ public class LiferayServiceExtender extends AbstractExtender {
 			return null;
 		}
 
-		return new LiferayServiceExtension(bundle);
-	}
+		try {
+			LiferayServiceExtension liferayServiceExtension =
+				new LiferayServiceExtension(bundle);
 
-	@Override
-	protected void error(String s, Throwable throwable) {
-		_log.error(s, throwable);
-	}
+			liferayServiceExtension.start();
 
-	@Override
-	protected void warn(Bundle bundle, String s, Throwable throwable) {
-		if (_log.isWarnEnabled()) {
-			_log.warn(s, throwable);
+			return liferayServiceExtension;
 		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+		}
+
+		return null;
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		LiferayServiceExtender.class);
+	@Override
+	public void modifiedBundle(
+		Bundle bundle, BundleEvent bundleEvent,
+		LiferayServiceExtension liferayServiceExtension) {
+	}
 
-	private class LiferayServiceExtension implements Extension {
+	@Override
+	public void removedBundle(
+		Bundle bundle, BundleEvent bundleEvent,
+		LiferayServiceExtension liferayServiceExtension) {
 
-		@Override
+		liferayServiceExtension.destroy();
+	}
+
+	public class LiferayServiceExtension {
+
 		public void destroy() {
 			for (ServiceRegistration<?> serviceRegistration :
 					_serviceRegistrations) {
@@ -117,7 +115,6 @@ public class LiferayServiceExtender extends AbstractExtender {
 			_sessionFactoryImplementor.close();
 		}
 
-		@Override
 		public void start() throws Exception {
 			BundleWiring extendeeBundleWiring = _extendeeBundle.adapt(
 				BundleWiring.class);
@@ -138,17 +135,8 @@ public class LiferayServiceExtender extends AbstractExtender {
 						"origin.bundle.symbolic.name",
 						_extendeeBundle.getSymbolicName())));
 
-			BundleContext extenderBundleContext =
-				LiferayServiceExtender.this.getBundleContext();
-
-			Bundle extenderBundle = extenderBundleContext.getBundle();
-
-			BundleWiring extenderBundleWiring = extenderBundle.adapt(
-				BundleWiring.class);
-
-			ClassLoader classLoader =
-				AggregateClassLoader.getAggregateClassLoader(
-					extendeeClassLoader, extenderBundleWiring.getClassLoader());
+			ClassLoader classLoader = new ModuleAggregareClassLoader(
+				extendeeClassLoader, _extendeeBundle.getSymbolicName());
 
 			PortletHibernateConfiguration portletHibernateConfiguration =
 				new PortletHibernateConfiguration(classLoader, dataSource);
@@ -174,22 +162,26 @@ public class LiferayServiceExtender extends AbstractExtender {
 						"origin.bundle.symbolic.name",
 						_extendeeBundle.getSymbolicName())));
 
-			TransactionExecutor transactionExecutor = _getTransactionExecutor(
-				dataSource, _sessionFactoryImplementor);
+			DefaultTransactionExecutor defaultTransactionExecutor =
+				_getTransactionExecutor(dataSource, _sessionFactoryImplementor);
 
 			_serviceRegistrations.add(
 				extendeeBundleContext.registerService(
-					TransactionExecutor.class, transactionExecutor,
+					new String[] {
+						TransactionExecutor.class.getName(),
+						TransactionHandler.class.getName()
+					},
+					defaultTransactionExecutor,
 					MapUtil.singletonDictionary(
 						"origin.bundle.symbolic.name",
 						_extendeeBundle.getSymbolicName())));
 		}
 
-		private LiferayServiceExtension(Bundle bundle) {
-			_extendeeBundle = bundle;
+		private LiferayServiceExtension(Bundle extendeeBundle) {
+			_extendeeBundle = extendeeBundle;
 		}
 
-		private TransactionExecutor _getTransactionExecutor(
+		private DefaultTransactionExecutor _getTransactionExecutor(
 			DataSource liferayDataSource,
 			SessionFactoryImplementor sessionFactoryImplementor) {
 
@@ -207,8 +199,7 @@ public class LiferayServiceExtender extends AbstractExtender {
 						liferayDataSource, sessionFactoryImplementor);
 			}
 
-			return TransactionExecutorFactory.createTransactionExecutor(
-				platformTransactionManager, false);
+			return new DefaultTransactionExecutor(platformTransactionManager);
 		}
 
 		private final Bundle _extendeeBundle;
@@ -217,5 +208,23 @@ public class LiferayServiceExtender extends AbstractExtender {
 		private SessionFactoryImplementor _sessionFactoryImplementor;
 
 	}
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_bundleTracker = new BundleTracker<>(
+			bundleContext, Bundle.ACTIVE | Bundle.STARTING, this);
+
+		_bundleTracker.open();
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_bundleTracker.close();
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LiferayServiceExtender.class);
+
+	private BundleTracker<?> _bundleTracker;
 
 }

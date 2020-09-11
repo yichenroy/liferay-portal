@@ -14,8 +14,8 @@
 
 package com.liferay.portal.kernel.process;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.io.PathHolder;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.File;
@@ -143,7 +143,7 @@ public class ProcessConfig implements Serializable {
 	}
 
 	private String _merge(PathHolder[] pathHolders) {
-		StringBundler sb = new StringBundler(2 * pathHolders.length - 1);
+		StringBundler sb = new StringBundler((2 * pathHolders.length) - 1);
 
 		for (int i = 0; i < pathHolders.length; i++) {
 			sb.append(pathHolders[i]);

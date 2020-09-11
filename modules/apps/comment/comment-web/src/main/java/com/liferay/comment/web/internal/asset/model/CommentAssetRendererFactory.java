@@ -102,7 +102,7 @@ public class CommentAssetRendererFactory
 		try {
 			liferayPortletURL.setWindowState(windowState);
 		}
-		catch (WindowStateException wse) {
+		catch (WindowStateException windowStateException) {
 		}
 
 		return liferayPortletURL;
@@ -124,18 +124,12 @@ public class CommentAssetRendererFactory
 		return _SELECTABLE;
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.comment.web)", unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
-
 	private static final boolean _SELECTABLE = false;
 
 	@Reference
 	private CommentManager _commentManager;
 
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.comment.web)")
 	private ServletContext _servletContext;
 
 }

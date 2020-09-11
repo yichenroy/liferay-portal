@@ -14,8 +14,8 @@
 
 package com.liferay.sharing.web.internal.portlet.action;
 
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -117,9 +117,9 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 					return null;
 				});
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+			hideDefaultSuccessMessage(actionRequest);
 
-			jsonObject.put(
+			JSONObject jsonObject = JSONUtil.put(
 				"successMessage",
 				LanguageUtil.get(
 					resourceBundle, "the-item-was-shared-successfully"));
@@ -127,28 +127,24 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
 		}
-		catch (Throwable t) {
-			HttpServletResponse response = _portal.getHttpServletResponse(
-				actionResponse);
+		catch (Throwable throwable) {
+			HttpServletResponse httpServletResponse =
+				_portal.getHttpServletResponse(actionResponse);
 
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+			httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 
 			String errorMessage =
 				"an-unexpected-error-occurred-while-sharing-the-item";
 
-			if (t instanceof PrincipalException) {
+			if (throwable instanceof PrincipalException) {
 				errorMessage = "you-do-not-have-permission-to-share-this-item";
 			}
 
-			jsonObject.put(
+			JSONObject jsonObject = JSONUtil.put(
 				"errorMessage", LanguageUtil.get(resourceBundle, errorMessage));
 
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
-
-			return;
 		}
 	}
 

@@ -14,8 +14,6 @@
 
 package com.liferay.counter.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -31,7 +29,6 @@ import java.util.Map;
  * @see Counter
  * @generated
  */
-@ProviderType
 public class CounterWrapper
 	extends BaseModelWrapper<Counter>
 	implements Counter, ModelWrapper<Counter> {

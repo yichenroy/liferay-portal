@@ -1,17 +1,20 @@
 definition {
+
 	macro acceptConditions {
-		if (IsElementPresent.pauseIsElementPresent(locator1 = "GoogleLogin#ALLOW", value1 = "Allow")) {
+		if (IsElementPresent.pauseIsElementPresent(locator1 = "GoogleLogin#ALLOW")) {
 			Click(locator1 = "GoogleLogin#ALLOW");
 		}
 
-		if (IsElementPresent.pauseIsElementPresent(locator1 = "Button#I_AGREE", value1 = "I Agree")) {
+		if (IsElementPresent.pauseIsElementPresent(locator1 = "Button#I_AGREE")) {
 			Click(locator1 = "Button#I_AGREE");
 		}
 
 		if (IsElementPresent.pauseIsElementPresent(locator1 = "TextInput#ANSWER")) {
-			Type(locator1 = "TextInput#ANSWER", value1 = "test");
+			Type(
+				locator1 = "TextInput#ANSWER",
+				value1 = "test");
 
-			KeyPress(locator1 = "TextInput#ANSWER", value1 = "\RETURN");
+			Button.click(button = "Save");
 		}
 
 		SelectWindow.selectWindowTopNoSPARefresh();
@@ -20,17 +23,23 @@ definition {
 	macro accountSignIn {
 		Navigator.openURL();
 
-		AssertClick(locator1 = "UserBar#USER_SIGN_IN", value1 = "Sign In");
+		AssertClick(
+			locator1 = "UserBar#USER_SIGN_IN",
+			value1 = "Sign In");
 
-		Click(locator1 = "Icon#GOOGLE_PLUS");
+		Click(locator1 = "Link#GOOGLE");
 
 		SelectWindow(locator1 = "GoogleLogin#PAGE_TITLE");
 
-		Type(locator1 = "GoogleLogin#LOGIN_EMAIL_FIELD", value1 = "${userEmailAddress}");
+		Type(
+			locator1 = "GoogleLogin#LOGIN_EMAIL_FIELD",
+			value1 = "${userEmailAddress}");
 
 		Click(locator1 = "GoogleLogin#LOGIN_NEXT_BUTTON");
 
-		Type(locator1 = "GoogleLogin#LOGIN_PASSWORD_FIELD", value1 = "${userPassword}");
+		Type(
+			locator1 = "GoogleLogin#LOGIN_PASSWORD_FIELD",
+			value1 = "${userPassword}");
 
 		if (IsElementPresent(locator1 = "GoogleLogin#LOGIN_SIGN_IN_BUTTON")) {
 			Click(locator1 = "GoogleLogin#LOGIN_SIGN_IN_BUTTON");
@@ -39,4 +48,5 @@ definition {
 			Click(locator1 = "GoogleLogin#LOGIN_NEXT_BUTTON");
 		}
 	}
+
 }

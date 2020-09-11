@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocal
  * @see LayoutPageTemplateStructure
  * @generated
  */
-@ProviderType
 public abstract class LayoutPageTemplateStructureBaseImpl
 	extends LayoutPageTemplateStructureModelImpl
 	implements LayoutPageTemplateStructure {

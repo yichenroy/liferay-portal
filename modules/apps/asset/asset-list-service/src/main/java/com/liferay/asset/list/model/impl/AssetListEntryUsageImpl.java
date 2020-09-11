@@ -14,12 +14,9 @@
 
 package com.liferay.asset.list.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class AssetListEntryUsageImpl extends AssetListEntryUsageBaseImpl {
 
 	public AssetListEntryUsageImpl() {

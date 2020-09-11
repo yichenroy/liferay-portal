@@ -19,6 +19,7 @@ import com.liferay.journal.service.base.JournalContentSearchLocalServiceBaseImpl
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.lang.HashUtil;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -38,30 +39,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Wesley Gong
  */
+@Component(
+	property = "model.class.name=com.liferay.journal.model.JournalContentSearch",
+	service = AopService.class
+)
 public class JournalContentSearchLocalServiceImpl
 	extends JournalContentSearchLocalServiceBaseImpl {
-
-	@Override
-	public void afterPropertiesSet() {
-		super.afterPropertiesSet();
-
-		Bundle bundle = FrameworkUtil.getBundle(
-			JournalContentSearchLocalServiceImpl.class);
-
-		BundleContext bundleContext = bundle.getBundleContext();
-
-		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, DisplayInformationProvider.class,
-			"javax.portlet.name");
-	}
 
 	@Override
 	public void checkContentSearches(long companyId) throws PortalException {
@@ -207,13 +199,6 @@ public class JournalContentSearchLocalServiceImpl
 	}
 
 	@Override
-	public void destroy() {
-		super.destroy();
-
-		_serviceTrackerMap.close();
-	}
-
-	@Override
 	public List<JournalContentSearch> getArticleContentSearches() {
 		return journalContentSearchPersistence.findAll();
 	}
@@ -310,9 +295,7 @@ public class JournalContentSearchLocalServiceImpl
 			contentSearch.setArticleId(articleId);
 		}
 
-		journalContentSearchPersistence.update(contentSearch);
-
-		return contentSearch;
+		return journalContentSearchPersistence.update(contentSearch);
 	}
 
 	@Override
@@ -336,6 +319,18 @@ public class JournalContentSearchLocalServiceImpl
 		return contentSearches;
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, DisplayInformationProvider.class,
+			"javax.portlet.name");
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalContentSearchLocalServiceImpl.class);
 
@@ -345,9 +340,9 @@ public class JournalContentSearchLocalServiceImpl
 	private static class JournalContentSearchKey implements Serializable {
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(Object object) {
 			JournalContentSearchKey journalContentSearchKey =
-				(JournalContentSearchKey)obj;
+				(JournalContentSearchKey)object;
 
 			if (Objects.equals(
 					journalContentSearchKey._articleId, _articleId) &&

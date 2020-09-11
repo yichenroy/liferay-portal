@@ -27,7 +27,6 @@ import org.dom4j.DocumentException;
 
 /**
  * @author Leonardo Barros
- * @see    com.liferay.util.xml.XMLUtil
  */
 public class XMLUtil {
 
@@ -50,12 +49,22 @@ public class XMLUtil {
 		try {
 			return document.formattedString(_XML_INDENT);
 		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
 		}
 	}
 
 	public static String formatXML(String xml) {
+
+		// If the closing token of a CDATA container is found inside the CDATA
+		// container, split the CDATA container into two separate CDATA
+		// containers. This is generally accepted method of "escaping" for this
+		// case since there is no real way to escape those characters. See
+		// LPS-85393 for more information.
+
+		xml = StringUtil.replace(xml, "]]><", "[$SPECIAL_CHARACTER$]");
+		xml = StringUtil.replace(xml, "]]>", "]]]]><![CDATA[>");
+		xml = StringUtil.replace(xml, "[$SPECIAL_CHARACTER$]", "]]><");
 
 		// This is only supposed to format your xml, however, it will also
 		// unwantingly change &#169; and other characters like it into their
@@ -68,11 +77,11 @@ public class XMLUtil {
 
 			return xml;
 		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
 		}
-		catch (DocumentException de) {
-			throw new SystemException(de);
+		catch (DocumentException documentException) {
+			throw new SystemException(documentException);
 		}
 	}
 

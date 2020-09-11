@@ -1,23 +1,13 @@
-@import "bourbon";
-@import "mixins";
+#wrapper,
+.control-menu-container {
+	@include media-breakpoint-up(sm) {
+		body.sidenav-transition & {
+			@include transition(padding 0.5s ease);
+		}
 
-body.open-admin-panel {
-	&, .control-menu, .affix {
-		@include sm() {
+		body.open-admin-panel & {
 			padding-right: $admin-panel-width;
 		}
-	}
-
-	.control-menu-level-2 {
-		@include sm() {
-			right: $admin-panel-width;
-		}
-	}
-}
-
-body.open-admin-panel, body.sidenav-transition {
-	@include sm() {
-		overflow-x: hidden;
 	}
 }
 
@@ -32,6 +22,10 @@ body.open-admin-panel, body.sidenav-transition {
 
 		.product-menu {
 			width: $admin-panel-width;
+
+			&.light {
+				background-color: white;
+			}
 		}
 	}
 
@@ -67,19 +61,9 @@ body.open-admin-panel, body.sidenav-transition {
 }
 
 .lfr-add-panel .add-content-menu {
-	.add-portlet-message {
-		background-color: #1B2228;
-		margin: 20px;
-		padding: 5px 20px;
-
-		.info-message {
-			margin: 20px 0;
-		}
-	}
-
 	.add-application-panel .lfr-content-item {
-		height: 40px;
-		padding: 0 16px;
+		margin-bottom: 0.5rem;
+		padding: 0 16px 0 8px;
 
 		&.lfr-archived-setup {
 			padding-left: 30px;
@@ -91,14 +75,54 @@ body.open-admin-panel, body.sidenav-transition {
 	}
 
 	.display-style-bar {
-		padding: 8px 16px;
+		padding: 4px 16px;
 
 		.display-style {
-			padding: 8px;
+			align-items: center;
+			display: inline-flex;
+			height: 32px;
+			justify-content: center;
+			margin-left: 8px;
+			width: 32px;
 
 			&.active {
-				color: #869CAD;
+				color: #869cad;
 			}
 		}
+
+		.dropdown-toggle {
+			align-items: center;
+			display: inline-flex;
+			height: 32px;
+			padding-left: 4px;
+			padding-right: 4px;
+			text-decoration: none;
+
+			.lexicon-icon-caret-double {
+				margin-left: 0.3rem;
+			}
+		}
+	}
+
+	.add-content-button {
+		.nav > li {
+			padding: 4px 16px;
+		}
+
+		.dropdown-toggle {
+			align-items: center;
+			display: inline-flex;
+			height: 32px;
+			line-height: 1;
+			padding: 0 4px;
+
+			.lexicon-icon-caret-bottom {
+				margin-left: 0.3rem;
+			}
+		}
+	}
+
+	.nav > li > a:before {
+		right: 0;
 	}
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.audit.storage.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.security.audit.storage.model.AuditEvent;
 import com.liferay.portal.security.audit.storage.service.AuditEventLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.portal.security.audit.storage.service.AuditEventLocalServiceU
  * @see AuditEvent
  * @generated
  */
-@ProviderType
 public abstract class AuditEventBaseImpl
 	extends AuditEventModelImpl implements AuditEvent {
 

@@ -14,13 +14,13 @@
 
 package com.liferay.portal.kernel.upgrade;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -61,13 +61,14 @@ public abstract class BaseUpgradeLastPublishDate extends UpgradeProcess {
 
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					UnicodeProperties settingsProperties =
+					UnicodeProperties settingsUnicodeProperties =
 						new UnicodeProperties(true);
 
-					settingsProperties.load(rs.getString("settings_"));
+					settingsUnicodeProperties.load(rs.getString("settings_"));
 
 					String lastPublishDateString =
-						settingsProperties.getProperty("last-publish-date");
+						settingsUnicodeProperties.getProperty(
+							"last-publish-date");
 
 					if (Validator.isNotNull(lastPublishDateString)) {
 						return new Date(

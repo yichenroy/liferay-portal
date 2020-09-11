@@ -15,7 +15,7 @@
 package com.liferay.user.groups.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.petra.string.StringPool;
@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usergroupsadmin.search.SetUserUserGroupChecker;
@@ -53,36 +54,32 @@ import javax.servlet.http.HttpServletRequest;
 public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 
 	public EditUserGroupAssignmentsManagementToolbarDisplayContext(
-			HttpServletRequest request, RenderRequest renderRequest,
+			HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 			RenderResponse renderResponse, String displayStyle, String mvcPath)
 		throws PortalException {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_displayStyle = displayStyle;
 		_mvcPath = mvcPath;
 
-		long userGroupId = ParamUtil.getLong(request, "userGroupId");
+		long userGroupId = ParamUtil.getLong(httpServletRequest, "userGroupId");
 
 		_userGroup = UserGroupServiceUtil.fetchUserGroup(userGroupId);
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				if (_hasAddUserGroupPermission()) {
-					add(
-						dropdownItem -> {
-							dropdownItem.setHref("javascript:;");
-							dropdownItem.setIcon("trash");
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "remove"));
-							dropdownItem.setQuickAction(true);
-						});
-				}
+		return DropdownItemListBuilder.add(
+			() -> _hasAddUserGroupPermission(),
+			dropdownItem -> {
+				dropdownItem.setHref("javascript:;");
+				dropdownItem.setIcon("minus-circle");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "remove"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	public String getClearResultsURL() {
@@ -94,30 +91,26 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public String getKeywords() {
 		if (Validator.isNull(_keywords)) {
-			_keywords = ParamUtil.getString(_request, "keywords");
+			_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 		}
 
 		return _keywords;
@@ -126,7 +119,7 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 	public String getOrderByCol() {
 		if (Validator.isNull(_orderByCol)) {
 			_orderByCol = ParamUtil.getString(
-				_request, "orderByCol", "first-name");
+				_httpServletRequest, "orderByCol", "first-name");
 		}
 
 		return _orderByCol;
@@ -134,7 +127,8 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 
 	public String getOrderByType() {
 		if (Validator.isNull(_orderByType)) {
-			_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+			_orderByType = ParamUtil.getString(
+				_httpServletRequest, "orderByType", "asc");
 		}
 
 		return _orderByType;
@@ -147,7 +141,7 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 		portletURL.setParameter(
 			"userGroupId", String.valueOf(_userGroup.getUserGroupId()));
 
-		String redirect = ParamUtil.getString(_request, "redirect");
+		String redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
 		portletURL.setParameter("redirect", redirect);
 
@@ -175,10 +169,13 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 	public String getSearchActionURL() {
 		PortletURL searchActionURL = getPortletURL();
 
+		searchActionURL.setParameter(
+			"redirect", PortalUtil.getCurrentURL(_httpServletRequest));
+
 		return searchActionURL.toString();
 	}
 
-	public SearchContainer getSearchContainer(
+	public SearchContainer<User> getSearchContainer(
 			LinkedHashMap<String, Object> userParams)
 		throws Exception {
 
@@ -197,8 +194,9 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 				new SetUserUserGroupChecker(_renderResponse, _userGroup));
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		UserSearchTerms searchTerms =
 			(UserSearchTerms)userSearch.getSearchTerms();
@@ -245,61 +243,55 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(StringPool.BLANK);
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(true);
+				dropdownItem.setHref(StringPool.BLANK);
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-		};
+		).build();
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "first-name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "first-name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "first-name"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "screen-name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "screen-name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "screen-name"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(getOrderByCol(), "first-name"));
+				dropdownItem.setHref(
+					getPortletURL(), "orderByCol", "first-name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "first-name"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(getOrderByCol(), "screen-name"));
+				dropdownItem.setHref(
+					getPortletURL(), "orderByCol", "screen-name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "screen-name"));
+			}
+		).build();
 	}
 
 	private boolean _hasAddUserGroupPermission() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return PortalPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), ActionKeys.ADD_USER_GROUP);
 	}
 
 	private final String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private final String _mvcPath;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final UserGroup _userGroup;
 	private UserSearch _userSearch;
 

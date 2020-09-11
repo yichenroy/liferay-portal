@@ -14,8 +14,6 @@
 
 package com.liferay.portal.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.RepositoryServiceUtil;
@@ -59,9 +57,10 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see RepositoryServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class RepositoryServiceSoap {
 
 	public static void checkRepository(long repositoryId)
@@ -70,10 +69,10 @@ public class RepositoryServiceSoap {
 		try {
 			RepositoryServiceUtil.checkRepository(repositoryId);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -83,10 +82,10 @@ public class RepositoryServiceSoap {
 		try {
 			RepositoryServiceUtil.deleteRepository(repositoryId);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -101,10 +100,28 @@ public class RepositoryServiceSoap {
 			return com.liferay.portal.kernel.model.RepositorySoap.toSoapModel(
 				returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.portal.kernel.model.RepositorySoap getRepository(
+			long groupId, String portletId)
+		throws RemoteException {
+
+		try {
+			com.liferay.portal.kernel.model.Repository returnValue =
+				RepositoryServiceUtil.getRepository(groupId, portletId);
+
+			return com.liferay.portal.kernel.model.RepositorySoap.toSoapModel(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -118,10 +135,10 @@ public class RepositoryServiceSoap {
 
 			return returnValue;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -133,10 +150,10 @@ public class RepositoryServiceSoap {
 			RepositoryServiceUtil.updateRepository(
 				repositoryId, name, description);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 

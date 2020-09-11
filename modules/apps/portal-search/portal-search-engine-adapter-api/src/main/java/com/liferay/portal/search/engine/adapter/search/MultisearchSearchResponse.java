@@ -14,15 +14,12 @@
 
 package com.liferay.portal.search.engine.adapter.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class MultisearchSearchResponse implements SearchResponse {
 
 	public void addSearchResponse(SearchSearchResponse searchSearchResponse) {

@@ -14,15 +14,12 @@
 
 package com.liferay.portal.search.internal.aggregation.pipeline;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.pipeline.DerivativePipelineAggregationResult;
 import com.liferay.portal.search.internal.aggregation.BaseAggregationResult;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class DerivativePipelineAggregationResultImpl
 	extends BaseAggregationResult
 	implements DerivativePipelineAggregationResult {

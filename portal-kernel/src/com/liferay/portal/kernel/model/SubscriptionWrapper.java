@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -33,10 +31,9 @@ import java.util.Map;
  * @generated
  */
 @Deprecated
-@ProviderType
 public class SubscriptionWrapper
 	extends BaseModelWrapper<Subscription>
-	implements Subscription, ModelWrapper<Subscription> {
+	implements ModelWrapper<Subscription>, Subscription {
 
 	public SubscriptionWrapper(Subscription subscription) {
 		super(subscription);

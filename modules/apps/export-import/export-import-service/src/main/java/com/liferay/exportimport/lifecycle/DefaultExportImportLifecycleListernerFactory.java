@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.lifecycle;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lifecycle.EventAwareExportImportLifecycleListener;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleListener;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleListenerFactory;
@@ -29,7 +27,6 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 	immediate = true, service = ExportImportLifecycleListenerFactory.class
 )
-@ProviderType
 public class DefaultExportImportLifecycleListernerFactory
 	implements ExportImportLifecycleListenerFactory {
 

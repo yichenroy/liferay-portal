@@ -16,12 +16,10 @@ package com.liferay.source.formatter;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.tools.java.parser.JavaParser;
 import com.liferay.source.formatter.checkstyle.util.CheckstyleLogger;
 import com.liferay.source.formatter.checkstyle.util.CheckstyleUtil;
 import com.liferay.source.formatter.util.DebugUtil;
-import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 import com.puppycrawl.tools.checkstyle.api.Configuration;
@@ -83,10 +81,6 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 			Set<String> modifiedMessages)
 		throws Exception {
 
-		if (!_javaParserEnabled) {
-			return content;
-		}
-
 		SourceFormatterArgs sourceFormatterArgs = getSourceFormatterArgs();
 
 		String newContent = JavaParser.parse(
@@ -105,9 +99,8 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 	}
 
 	@Override
-	protected void postFormat() throws CheckstyleException {
-		_processCheckstyle(
-			_ungeneratedFiles.toArray(new File[_ungeneratedFiles.size()]));
+	protected void postFormat() throws CheckstyleException, IOException {
+		_processCheckstyle(_ungeneratedFiles.toArray(new File[0]));
 
 		_ungeneratedFiles.clear();
 
@@ -126,16 +119,10 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 	protected void preFormat() throws CheckstyleException {
 		SourceFormatterArgs sourceFormatterArgs = getSourceFormatterArgs();
 
-		_javaParserEnabled = GetterUtil.getBoolean(
-			SourceFormatterUtil.getPropertyValue(
-				"java.parser.enabled", getPropertiesMap()));
-
 		_checkstyleLogger = new CheckstyleLogger(
 			sourceFormatterArgs.getBaseDirName());
 		_checkstyleConfiguration = CheckstyleUtil.getConfiguration(
 			"checkstyle.xml", getPropertiesMap(), sourceFormatterArgs);
-
-		setCheckstyleConfiguration(_checkstyleConfiguration);
 	}
 
 	private String[] _getPluginExcludes(String pluginDirectoryName) {
@@ -224,19 +211,20 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 	}
 
 	private synchronized void _processCheckstyle(File file)
-		throws CheckstyleException {
+		throws CheckstyleException, IOException {
 
 		_ungeneratedFiles.add(file);
 
 		if (_ungeneratedFiles.size() == CheckstyleUtil.BATCH_SIZE) {
-			_processCheckstyle(
-				_ungeneratedFiles.toArray(new File[_ungeneratedFiles.size()]));
+			_processCheckstyle(_ungeneratedFiles.toArray(new File[0]));
 
 			_ungeneratedFiles.clear();
 		}
 	}
 
-	private void _processCheckstyle(File[] files) throws CheckstyleException {
+	private void _processCheckstyle(File[] files)
+		throws CheckstyleException, IOException {
+
 		if (ArrayUtil.isEmpty(files)) {
 			return;
 		}
@@ -250,7 +238,6 @@ public class JavaSourceProcessor extends BaseSourceProcessor {
 
 	private Configuration _checkstyleConfiguration;
 	private CheckstyleLogger _checkstyleLogger;
-	private boolean _javaParserEnabled;
 	private final Set<SourceFormatterMessage> _sourceFormatterMessages =
 		new TreeSet<>();
 	private final List<File> _ungeneratedFiles = new ArrayList<>();

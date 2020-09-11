@@ -15,6 +15,7 @@
 package com.liferay.portal.sharepoint;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.log.Log;
@@ -23,7 +24,6 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.InstancePool;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webdav.WebDAVException;
@@ -52,9 +52,10 @@ public class SharepointUtil {
 		try {
 			groupId = WebDAVUtil.getGroupId(companyId, path);
 		}
-		catch (WebDAVException wdave) {
+		catch (WebDAVException webDAVException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to get groupId for path " + path, wdave);
+				_log.warn(
+					"Unable to get groupId for path " + path, webDAVException);
 			}
 		}
 
@@ -96,15 +97,15 @@ public class SharepointUtil {
 	}
 
 	public static String getStorageClass(String token) {
-		return _instance._getStorageClass(token);
+		return _sharepointUtil._getStorageClass(token);
 	}
 
 	public static String getStorageToken(String className) {
-		return _instance._getStorageToken(className);
+		return _sharepointUtil._getStorageToken(className);
 	}
 
 	public static Collection<String> getStorageTokens() {
-		return _instance._getStorageTokens();
+		return _sharepointUtil._getStorageTokens();
 	}
 
 	public static String replaceBackSlashes(String value) {
@@ -112,7 +113,7 @@ public class SharepointUtil {
 	}
 
 	public static String stripService(String url, boolean trailingSlash) {
-		return _instance._stripService(url, trailingSlash);
+		return _sharepointUtil._stripService(url, trailingSlash);
 	}
 
 	private SharepointUtil() {
@@ -181,7 +182,7 @@ public class SharepointUtil {
 
 	private static final Log _log = LogFactoryUtil.getLog(SharepointUtil.class);
 
-	private static final SharepointUtil _instance = new SharepointUtil();
+	private static final SharepointUtil _sharepointUtil = new SharepointUtil();
 
 	private final Map<String, String> _storageMap;
 

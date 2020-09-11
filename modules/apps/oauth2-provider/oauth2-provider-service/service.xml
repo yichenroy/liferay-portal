@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.2.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_2_0.dtd">
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.3.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_3_0.dtd">
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" dependency-injector="ds" package-path="com.liferay.oauth2.provider">
 	<namespace>OAuthTwo</namespace>
@@ -21,6 +21,8 @@
 
 		<column db-name="oA2AScopeAliasesId" name="oAuth2ApplicationScopeAliasesId" type="long" />
 		<column name="allowedGrantTypes" type="String" />
+		<column name="clientCredentialUserId" type="long" />
+		<column name="clientCredentialUserName" type="String" />
 		<column name="clientId" type="String" />
 		<column name="clientProfile" type="int" />
 		<column name="clientSecret" type="String" />
@@ -116,9 +118,11 @@
 			<finder-column name="oAuth2ApplicationId" />
 		</finder>
 		<finder name="AccessTokenContentHash" return-type="Collection">
+			<finder-column name="companyId" />
 			<finder-column name="accessTokenContentHash" />
 		</finder>
 		<finder name="RefreshTokenContentHash" return-type="Collection">
+			<finder-column name="companyId" />
 			<finder-column name="refreshTokenContentHash" />
 		</finder>
 
@@ -168,6 +172,7 @@
 	<exceptions>
 		<exception>DuplicateOAuth2ApplicationClientId</exception>
 		<exception>DuplicateOAuth2ScopeGrant</exception>
+		<exception>OAuth2ApplicationClientCredentialUserId</exception>
 		<exception>OAuth2ApplicationClientGrantType</exception>
 		<exception>OAuth2ApplicationHomePageURL</exception>
 		<exception>OAuth2ApplicationHomePageURLScheme</exception>

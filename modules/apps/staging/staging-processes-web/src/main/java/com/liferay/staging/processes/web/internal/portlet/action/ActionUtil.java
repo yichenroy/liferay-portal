@@ -16,7 +16,6 @@ package com.liferay.staging.processes.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletConfigurationLayoutUtil;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
@@ -52,13 +51,16 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class ActionUtil {
 
-	public static Group getGroup(HttpServletRequest request) throws Exception {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public static Group getGroup(HttpServletRequest httpServletRequest)
+		throws Exception {
 
-		String cmd = ParamUtil.getString(request, Constants.CMD);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		long groupId = ParamUtil.getLong(request, "groupId");
+		String cmd = ParamUtil.getString(httpServletRequest, Constants.CMD);
+
+		long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 
 		Group group = null;
 
@@ -69,7 +71,7 @@ public class ActionUtil {
 			group = themeDisplay.getSiteGroup();
 		}
 
-		request.setAttribute(WebKeys.GROUP, group);
+		httpServletRequest.setAttribute(WebKeys.GROUP, group);
 
 		return group;
 	}
@@ -77,10 +79,7 @@ public class ActionUtil {
 	public static Group getGroup(PortletRequest portletRequest)
 		throws Exception {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			portletRequest);
-
-		return getGroup(request);
+		return getGroup(PortalUtil.getHttpServletRequest(portletRequest));
 	}
 
 	public static PortletPreferences getLayoutPortletSetup(
@@ -89,10 +88,8 @@ public class ActionUtil {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Layout layout = themeDisplay.getLayout();
-
 		return PortletPreferencesFactoryUtil.getLayoutPortletSetup(
-			layout, portlet.getPortletId());
+			themeDisplay.getLayout(), portlet.getPortletId());
 	}
 
 	public static Portlet getPortlet(PortletRequest portletRequest)
@@ -107,10 +104,9 @@ public class ActionUtil {
 		String portletId = ParamUtil.getString(
 			portletRequest, "portletResource");
 
-		Layout layout = PortletConfigurationLayoutUtil.getLayout(themeDisplay);
-
 		if (!PortletPermissionUtil.contains(
-				permissionChecker, themeDisplay.getScopeGroupId(), layout,
+				permissionChecker, themeDisplay.getScopeGroupId(),
+				PortletConfigurationLayoutUtil.getLayout(themeDisplay),
 				portletId, ActionKeys.CONFIGURATION)) {
 
 			throw new PrincipalException.MustHavePermission(
@@ -125,25 +121,25 @@ public class ActionUtil {
 	public static String getTitle(Portlet portlet, RenderRequest renderRequest)
 		throws Exception {
 
-		ServletContext servletContext =
-			(ServletContext)renderRequest.getAttribute(WebKeys.CTX);
-
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			renderRequest);
+		HttpServletRequest httpServletRequest =
+			PortalUtil.getHttpServletRequest(renderRequest);
 
 		PortletPreferences portletSetup = getLayoutPortletSetup(
 			renderRequest, portlet);
 
 		portletSetup = getPortletSetup(
-			request, renderRequest.getPreferences(), portletSetup);
+			httpServletRequest, renderRequest.getPreferences(), portletSetup);
 
 		String title = PortletConfigurationUtil.getPortletTitle(
 			portletSetup, themeDisplay.getLanguageId());
 
 		if (Validator.isNull(title)) {
+			ServletContext servletContext =
+				(ServletContext)renderRequest.getAttribute(WebKeys.CTX);
+
 			title = PortalUtil.getPortletTitle(
 				portlet, servletContext, themeDisplay.getLocale());
 		}
@@ -155,11 +151,9 @@ public class ActionUtil {
 			ActionRequest actionRequest, PortletPreferences portletPreferences)
 		throws PortalException {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			actionRequest);
-
 		portletPreferences = getPortletPreferences(
-			request, actionRequest.getPreferences(), portletPreferences);
+			PortalUtil.getHttpServletRequest(actionRequest),
+			actionRequest.getPreferences(), portletPreferences);
 
 		return new ConfigurationActionRequest(
 			actionRequest, portletPreferences);
@@ -169,16 +163,17 @@ public class ActionUtil {
 			RenderRequest renderRequest, PortletPreferences portletPreferences)
 		throws PortalException {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			renderRequest);
+		HttpServletRequest httpServletRequest =
+			PortalUtil.getHttpServletRequest(renderRequest);
 
 		portletPreferences = getPortletPreferences(
-			request, renderRequest.getPreferences(), portletPreferences);
+			httpServletRequest, renderRequest.getPreferences(),
+			portletPreferences);
 
 		renderRequest = new ConfigurationRenderRequest(
 			renderRequest, portletPreferences);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			JavaConstants.JAVAX_PORTLET_REQUEST, renderRequest);
 
 		return renderRequest;
@@ -189,24 +184,22 @@ public class ActionUtil {
 			PortletPreferences portletPreferences)
 		throws PortalException {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			resourceRequest);
-
 		portletPreferences = getPortletPreferences(
-			request, resourceRequest.getPreferences(), portletPreferences);
+			PortalUtil.getHttpServletRequest(resourceRequest),
+			resourceRequest.getPreferences(), portletPreferences);
 
 		return new ConfigurationResourceRequest(
 			resourceRequest, portletPreferences);
 	}
 
 	protected static PortletPreferences getPortletPreferences(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			PortletPreferences portletConfigPortletPreferences,
 			PortletPreferences portletPreferences)
 		throws PortalException {
 
 		String portletResource = ParamUtil.getString(
-			request, "portletResource");
+			httpServletRequest, "portletResource");
 
 		if (Validator.isNull(portletResource)) {
 			return portletConfigPortletPreferences;
@@ -217,17 +210,17 @@ public class ActionUtil {
 		}
 
 		return PortletPreferencesFactoryUtil.getPortletPreferences(
-			request, portletResource);
+			httpServletRequest, portletResource);
 	}
 
 	protected static PortletPreferences getPortletSetup(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			PortletPreferences portletConfigPortletSetup,
 			PortletPreferences portletSetup)
 		throws PortalException {
 
 		String portletResource = ParamUtil.getString(
-			request, "portletResource");
+			httpServletRequest, "portletResource");
 
 		if (Validator.isNull(portletResource)) {
 			return portletConfigPortletSetup;
@@ -238,7 +231,7 @@ public class ActionUtil {
 		}
 
 		return PortletPreferencesFactoryUtil.getPortletSetup(
-			request, portletResource);
+			httpServletRequest, portletResource);
 	}
 
 }

@@ -16,6 +16,7 @@ package com.liferay.password.policies.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.password.policies.admin.web.internal.search.AddOrganizationPasswordPolicyChecker;
@@ -61,47 +62,45 @@ import javax.servlet.http.HttpServletRequest;
 public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 
 	public EditPasswordPolicyAssignmentsManagementToolbarDisplayContext(
-			HttpServletRequest request, RenderRequest renderRequest,
+			HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 			RenderResponse renderResponse, String displayStyle, String mvcPath)
 		throws PortalException {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_displayStyle = displayStyle;
 		_mvcPath = mvcPath;
 
-		long passwordPolicyId = ParamUtil.getLong(request, "passwordPolicyId");
+		long passwordPolicyId = ParamUtil.getLong(
+			httpServletRequest, "passwordPolicyId");
 
 		_passwordPolicy = PasswordPolicyLocalServiceUtil.fetchPasswordPolicy(
 			passwordPolicyId);
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						String methodName = StringPool.BLANK;
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				String methodName = StringPool.BLANK;
 
-						if (_tabs2.equals("users")) {
-							methodName = "deleteUsers();";
-						}
-						else if (_tabs2.equals("organizations")) {
-							methodName = "deleteOrganizations();";
-						}
+				if (_tabs2.equals("users")) {
+					methodName = "deleteUsers();";
+				}
+				else if (_tabs2.equals("organizations")) {
+					methodName = "deleteOrganizations();";
+				}
 
-						dropdownItem.setHref(
-							StringBundler.concat(
-								"javascript:", _renderResponse.getNamespace(),
-								methodName));
-						dropdownItem.setIcon("trash");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+				dropdownItem.setHref(
+					StringBundler.concat(
+						"javascript:", _renderResponse.getNamespace(),
+						methodName));
+				dropdownItem.setIcon("trash");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	public String getClearResultsURL() {
@@ -113,22 +112,18 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
 			}
-		};
+		).build();
 	}
 
 	public String getKeywords() {
 		if (Validator.isNull(_keywords)) {
-			_keywords = ParamUtil.getString(_request, "keywords");
+			_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 		}
 
 		return _keywords;
@@ -137,7 +132,7 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 	public String getOrderByCol() {
 		if (Validator.isNull(_orderByCol)) {
 			_orderByCol = ParamUtil.getString(
-				_request, "orderByCol", _getDefaultOrderByCol());
+				_httpServletRequest, "orderByCol", _getDefaultOrderByCol());
 		}
 
 		if (!ArrayUtil.contains(_getOrderColumns(), _orderByCol)) {
@@ -149,13 +144,14 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 
 	public String getOrderByType() {
 		if (Validator.isNull(_orderByType)) {
-			_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+			_orderByType = ParamUtil.getString(
+				_httpServletRequest, "orderByType", "asc");
 		}
 
 		return _orderByType;
 	}
 
-	public SearchContainer getOrganizationSearchContainer()
+	public SearchContainer<Organization> getOrganizationSearchContainer()
 		throws PortalException {
 
 		OrganizationSearch organizationSearch = new OrganizationSearch(
@@ -178,8 +174,9 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 
 		organizationSearch.setRowChecker(rowChecker);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		long parentOrganizationId =
 			OrganizationConstants.ANY_PARENT_ORGANIZATION_ID;
@@ -216,7 +213,7 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 			"passwordPolicyId",
 			String.valueOf(_passwordPolicy.getPasswordPolicyId()));
 
-		String redirect = ParamUtil.getString(_request, "redirect");
+		String redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
 		portletURL.setParameter("redirect", redirect);
 
@@ -247,7 +244,7 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 		return searchActionURL.toString();
 	}
 
-	public SearchContainer getSearchContainer() throws Exception {
+	public SearchContainer<?> getSearchContainer() throws Exception {
 		if (Objects.equals(getTabs2(), "organizations")) {
 			_searchContainer = getOrganizationSearchContainer();
 		}
@@ -270,13 +267,13 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 
 	public String getTabs2() {
 		if (Validator.isNull(_tabs2)) {
-			_tabs2 = ParamUtil.getString(_request, "tabs2", "users");
+			_tabs2 = ParamUtil.getString(_httpServletRequest, "tabs2", "users");
 		}
 
 		return _tabs2;
 	}
 
-	public SearchContainer getUserSearchContainer() {
+	public SearchContainer<User> getUserSearchContainer() {
 		UserSearch userSearch = new UserSearch(_renderRequest, getPortletURL());
 
 		RowChecker rowChecker = new AddUserPasswordPolicyChecker(
@@ -295,8 +292,9 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 
 		userSearch.setRowChecker(rowChecker);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		UserSearchTerms searchTerms =
 			(UserSearchTerms)userSearch.getSearchTerms();
@@ -345,7 +343,8 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 							dropdownItem.setHref(
 								getPortletURL(), "orderByCol", orderColumn);
 							dropdownItem.setLabel(
-								LanguageUtil.get(_request, orderColumn));
+								LanguageUtil.get(
+									_httpServletRequest, orderColumn));
 						});
 				}
 			}
@@ -365,6 +364,7 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 	}
 
 	private final String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private final String _mvcPath;
 	private String _orderByCol;
@@ -372,8 +372,7 @@ public class EditPasswordPolicyAssignmentsManagementToolbarDisplayContext {
 	private final PasswordPolicy _passwordPolicy;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
-	private SearchContainer _searchContainer;
+	private SearchContainer<?> _searchContainer;
 	private String _tabs2;
 
 }

@@ -67,18 +67,19 @@ public class SiteRedirectActionHandler extends BaseRedirectActionHandler {
 
 	@Override
 	protected String getURL(
-			MDRAction mdrAction, HttpServletRequest request,
-			HttpServletResponse response)
+			MDRAction mdrAction, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws PortalException {
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			mdrAction.getTypeSettingsProperties();
 
 		long plid = GetterUtil.getLong(
-			typeSettingsProperties.getProperty("plid"));
+			typeSettingsUnicodeProperties.getProperty("plid"));
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Layout themeDisplayLayout = themeDisplay.getLayout();
 
@@ -89,7 +90,7 @@ public class SiteRedirectActionHandler extends BaseRedirectActionHandler {
 		Layout layout = _layoutLocalService.fetchLayout(plid);
 
 		long groupId = GetterUtil.getLong(
-			typeSettingsProperties.getProperty("groupId"));
+			typeSettingsUnicodeProperties.getProperty("groupId"));
 
 		if ((layout != null) && (layout.getGroupId() != groupId)) {
 			if (_log.isWarnEnabled()) {

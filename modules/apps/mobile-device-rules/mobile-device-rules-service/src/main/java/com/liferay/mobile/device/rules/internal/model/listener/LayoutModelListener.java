@@ -34,10 +34,6 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 
 	@Override
 	public void onBeforeRemove(Layout layout) throws ModelListenerException {
-		if (!layout.isHead()) {
-			return;
-		}
-
 		try {
 			List<MDRRuleGroupInstance> mdrRuleGroupInstances =
 				_mdrRuleGroupInstanceLocalService.getRuleGroupInstances(
@@ -50,8 +46,8 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 					mdrRuleGroupInstance);
 			}
 		}
-		catch (Exception e) {
-			throw new ModelListenerException(e);
+		catch (Exception exception) {
+			throw new ModelListenerException(exception);
 		}
 	}
 

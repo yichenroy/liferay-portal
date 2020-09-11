@@ -14,11 +14,14 @@
 
 package com.liferay.portal.kernel.internal.service.persistence;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
 import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.PortalCacheManagerProvider;
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
+import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.jdbc.MappingSqlQuery;
 import com.liferay.portal.kernel.dao.jdbc.MappingSqlQueryFactory;
 import com.liferay.portal.kernel.dao.jdbc.MappingSqlQueryFactoryUtil;
@@ -30,9 +33,11 @@ import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.internal.service.persistence.change.tracking.CTTableMapper;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListenerRegistrationUtil;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapperFactory;
@@ -42,7 +47,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.tools.ToolDependencies;
 import com.liferay.portal.util.PropsImpl;
 
@@ -94,7 +98,9 @@ public class TableMapperTest {
 
 	@BeforeClass
 	public static void setUpClass() {
-		ToolDependencies.wireCaches();
+		ToolDependencies.wireBasic();
+
+		DBManagerUtil.setDB(DBType.HYPERSONIC, null);
 	}
 
 	@Before
@@ -114,21 +120,11 @@ public class TableMapperTest {
 
 		sqlUpdateFactoryUtil.setSqlUpdateFactory(new MockSqlUpdateFactory());
 
-		Class<?> clazz = TableMapperTest.class;
-
-		ClassLoader classLoader = clazz.getClassLoader();
-
 		_dataSource = (DataSource)ProxyUtil.newProxyInstance(
-			classLoader, new Class<?>[] {DataSource.class},
-			new InvocationHandler() {
-
-				@Override
-				public Object invoke(Object proxy, Method method, Object[] args)
-					throws Throwable {
-
-					throw new UnsupportedOperationException();
-				}
-
+			TableMapperTest.class.getClassLoader(),
+			new Class<?>[] {DataSource.class},
+			(proxy, method, args) -> {
+				throw new UnsupportedOperationException();
 			});
 
 		_leftBasePersistence = new MockBasePersistence<>(Left.class);
@@ -142,7 +138,7 @@ public class TableMapperTest {
 		_tableMapperImpl = new TableMapperImpl<>(
 			_TABLE_NAME, _COMPANY_COLUMN_NAME, _LEFT_COLUMN_NAME,
 			_RIGHT_COLUMN_NAME, Left.class, Right.class, _leftBasePersistence,
-			_rightBasePersistence);
+			_rightBasePersistence, false);
 	}
 
 	@Test
@@ -177,16 +173,15 @@ public class TableMapperTest {
 
 			Assert.fail();
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(RuntimeException.class, cause.getClass());
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
 			Assert.assertEquals(
 				StringBundler.concat(
 					"Unique key violation for left primary key ",
-					String.valueOf(leftPrimaryKey), " and right primary key ",
-					String.valueOf(rightPrimaryKey)),
-				cause.getMessage());
+					leftPrimaryKey, " and right primary key ", rightPrimaryKey),
+				throwable.getMessage());
 		}
 
 		// Auto recover after error
@@ -248,16 +243,15 @@ public class TableMapperTest {
 
 			Assert.fail();
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(RuntimeException.class, cause.getClass());
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
 			Assert.assertEquals(
 				StringBundler.concat(
 					"Unique key violation for left primary key ",
-					String.valueOf(leftPrimaryKey), " and right primary key ",
-					String.valueOf(rightPrimaryKey)),
-				cause.getMessage());
+					leftPrimaryKey, " and right primary key ", rightPrimaryKey),
+				throwable.getMessage());
 		}
 
 		ModelListenerRegistrationUtil.unregister(leftModelListener);
@@ -334,6 +328,58 @@ public class TableMapperTest {
 			2,
 			_tableMapperImpl.deleteRightPrimaryKeyTableMappings(
 				rightPrimaryKey1));
+	}
+
+	@Test
+	public void testCachelessTableMapper() {
+		_tableMapperImpl = new TableMapperImpl<>(
+			_TABLE_NAME, _COMPANY_COLUMN_NAME, _LEFT_COLUMN_NAME,
+			_RIGHT_COLUMN_NAME, Left.class, Right.class, _leftBasePersistence,
+			_rightBasePersistence, true);
+
+		long leftPrimaryKey = 1;
+		long rightPrimaryKey = 2;
+
+		Assert.assertFalse(
+			_tableMapperImpl.containsTableMapping(
+				leftPrimaryKey, rightPrimaryKey));
+
+		// Contains table mapping
+
+		_mappingStore.put(leftPrimaryKey, new long[] {rightPrimaryKey});
+
+		Assert.assertTrue(
+			_tableMapperImpl.containsTableMapping(
+				leftPrimaryKey, rightPrimaryKey));
+
+		MockContainsTableMappingSQLQuery mockContainsTableMappingSQLQuery =
+			(MockContainsTableMappingSQLQuery)
+				_tableMapperImpl.containsTableMappingSQL;
+
+		mockContainsTableMappingSQLQuery.setDatabaseError(true);
+
+		try {
+			_tableMapperImpl.containsTableMapping(
+				leftPrimaryKey, rightPrimaryKey);
+
+			Assert.fail();
+		}
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
+
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
+
+			Assert.assertEquals("Database error", throwable.getMessage());
+		}
+		finally {
+			mockContainsTableMappingSQLQuery.setDatabaseError(false);
+		}
+
+		mockContainsTableMappingSQLQuery.setEmptyResultSet(true);
+
+		Assert.assertFalse(
+			_tableMapperImpl.containsTableMapping(
+				leftPrimaryKey, rightPrimaryKey));
 	}
 
 	@Test
@@ -562,12 +608,12 @@ public class TableMapperTest {
 
 			Assert.fail();
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(RuntimeException.class, cause.getClass());
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
 
-			Assert.assertEquals("Database error", cause.getMessage());
+			Assert.assertEquals("Database error", throwable.getMessage());
 		}
 		finally {
 			mockDeleteLeftPrimaryKeyTableMappingsSqlUpdate.setDatabaseError(
@@ -735,12 +781,12 @@ public class TableMapperTest {
 
 			Assert.fail();
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(RuntimeException.class, cause.getClass());
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
 
-			Assert.assertEquals("Database error", cause.getMessage());
+			Assert.assertEquals("Database error", throwable.getMessage());
 		}
 		finally {
 			mockDeleteRightPrimaryKeyTableMappingsSqlUpdate.setDatabaseError(
@@ -843,12 +889,12 @@ public class TableMapperTest {
 
 			Assert.fail();
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(RuntimeException.class, cause.getClass());
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
 
-			Assert.assertEquals("Database error", cause.getMessage());
+			Assert.assertEquals("Database error", throwable.getMessage());
 		}
 		finally {
 			mockDeleteSqlUpdate.setDatabaseError(false);
@@ -1107,9 +1153,9 @@ public class TableMapperTest {
 
 		Assert.assertEquals(lefts.toString(), 1, lefts.size());
 
-		Left left = lefts.get(0);
+		Left left3 = lefts.get(0);
 
-		Assert.assertEquals(leftPrimaryKey2, left.getPrimaryKeyObj());
+		Assert.assertEquals(leftPrimaryKey2, left3.getPrimaryKeyObj());
 
 		rightToLeftPortalCache.remove(rightPrimaryKey);
 
@@ -1121,13 +1167,13 @@ public class TableMapperTest {
 			_tableMapperImpl.getLeftBaseModels(
 				rightPrimaryKey, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(NoSuchModelException.class, cause.getClass());
+			Assert.assertSame(NoSuchModelException.class, throwable.getClass());
 
 			Assert.assertEquals(
-				String.valueOf(leftPrimaryKey1), cause.getMessage());
+				String.valueOf(leftPrimaryKey1), throwable.getMessage());
 		}
 		finally {
 			_leftBasePersistence.setNoSuchModelException(false);
@@ -1186,12 +1232,12 @@ public class TableMapperTest {
 		try {
 			_tableMapperImpl.getLeftPrimaryKeys(rightPrimaryKey);
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(RuntimeException.class, cause.getClass());
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
 
-			Assert.assertEquals("Database error", cause.getMessage());
+			Assert.assertEquals("Database error", throwable.getMessage());
 		}
 		finally {
 			mockGetLeftPrimaryKeysByRightPrimaryKeyMappingSqlQuery.
@@ -1295,9 +1341,9 @@ public class TableMapperTest {
 
 		Assert.assertEquals(rights.toString(), 1, rights.size());
 
-		Right right = rights.get(0);
+		Right right3 = rights.get(0);
 
-		Assert.assertEquals(rightPrimaryKey2, right.getPrimaryKeyObj());
+		Assert.assertEquals(rightPrimaryKey2, right3.getPrimaryKeyObj());
 
 		leftToRightPortalCache.remove(leftPrimaryKey);
 
@@ -1309,13 +1355,13 @@ public class TableMapperTest {
 			_tableMapperImpl.getRightBaseModels(
 				leftPrimaryKey, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(NoSuchModelException.class, cause.getClass());
+			Assert.assertSame(NoSuchModelException.class, throwable.getClass());
 
 			Assert.assertEquals(
-				String.valueOf(rightPrimaryKey1), cause.getMessage());
+				String.valueOf(rightPrimaryKey1), throwable.getMessage());
 		}
 		finally {
 			_rightBasePersistence.setNoSuchModelException(false);
@@ -1374,28 +1420,17 @@ public class TableMapperTest {
 		try {
 			_tableMapperImpl.getRightPrimaryKeys(leftPrimaryKey);
 		}
-		catch (SystemException se) {
-			Throwable cause = se.getCause();
+		catch (SystemException systemException) {
+			Throwable throwable = systemException.getCause();
 
-			Assert.assertSame(RuntimeException.class, cause.getClass());
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
 
-			Assert.assertEquals("Database error", cause.getMessage());
+			Assert.assertEquals("Database error", throwable.getMessage());
 		}
 		finally {
 			mockGetRightPrimaryKeysByLeftPrimaryKeyMappingSqlQuery.
 				setDatabaseError(false);
 		}
-	}
-
-	@Test
-	public void testGetSetReverseTableMapper() {
-		TableMapper<Right, Left> tableMapper = new ReverseTableMapper<>(
-			_tableMapperImpl);
-
-		_tableMapperImpl.setReverseTableMapper(tableMapper);
-
-		Assert.assertSame(
-			tableMapper, _tableMapperImpl.getReverseTableMapper());
 	}
 
 	@Test
@@ -1586,10 +1621,10 @@ public class TableMapperTest {
 
 			Assert.fail();
 		}
-		catch (UnsupportedOperationException uoe) {
+		catch (UnsupportedOperationException unsupportedOperationException) {
 			Assert.assertEquals(
 				"The TableMapper only supports BaseModel queries on one side",
-				uoe.getMessage());
+				unsupportedOperationException.getMessage());
 		}
 		finally {
 			_mappingStore.remove(leftPrimaryKey);
@@ -1605,13 +1640,13 @@ public class TableMapperTest {
 
 		// Miss cache
 
-		TableMapperImpl<Right, Left> rightTableMapper =
+		TableMapperImpl<Right, Left> rightTableMapperImpl =
 			(TableMapperImpl<Right, Left>)TableMapperFactory.getTableMapper(
 				rightKey, _TABLE_NAME, _COMPANY_COLUMN_NAME, _RIGHT_COLUMN_NAME,
 				_LEFT_COLUMN_NAME, _rightBasePersistence, Left.class);
 
-		Assert.assertNotSame(tableMapperImpl, rightTableMapper);
-		Assert.assertSame(rightTableMapper, tableMappers.get(rightKey));
+		Assert.assertNotSame(tableMapperImpl, rightTableMapperImpl);
+		Assert.assertSame(rightTableMapperImpl, tableMappers.get(rightKey));
 
 		Assert.assertEquals(tableMappers.toString(), 2, tableMappers.size());
 		Assert.assertNotSame(tableMapperImpl, tableMappers.get(rightKey));
@@ -1628,10 +1663,10 @@ public class TableMapperTest {
 
 		Assert.assertSame(
 			tableMapperImpl.leftToRightPortalCache,
-			rightTableMapper.rightToLeftPortalCache);
+			rightTableMapperImpl.rightToLeftPortalCache);
 		Assert.assertSame(
 			tableMapperImpl.rightToLeftPortalCache,
-			rightTableMapper.leftToRightPortalCache);
+			rightTableMapperImpl.leftToRightPortalCache);
 
 		// Remove
 
@@ -1652,7 +1687,7 @@ public class TableMapperTest {
 				new HashSet<String>() {
 
 					@Override
-					public boolean contains(Object o) {
+					public boolean contains(Object object) {
 						return true;
 					}
 
@@ -1666,6 +1701,47 @@ public class TableMapperTest {
 				TableMapperFactory.class, "_cachelessMappingTableNames",
 				cacheMappingTableNames);
 		}
+	}
+
+	@Test
+	public void testTableMapperFactoryCTModel() {
+		MockBasePersistence<CTLeft> ctLeftBasePersistence =
+			new MockBasePersistence<>(CTLeft.class);
+
+		ctLeftBasePersistence.setDataSource(_dataSource);
+
+		MockBasePersistence<CTRight> ctRightBasePersistence =
+			new MockBasePersistence<>(CTRight.class);
+
+		ctRightBasePersistence.setDataSource(_dataSource);
+
+		TableMapper<CTLeft, Right> tableMapper1 =
+			TableMapperFactory.getTableMapper(
+				_TABLE_NAME, _COMPANY_COLUMN_NAME, _LEFT_COLUMN_NAME,
+				_RIGHT_COLUMN_NAME, ctLeftBasePersistence,
+				_rightBasePersistence);
+
+		Assert.assertFalse(tableMapper1 instanceof CTTableMapper);
+
+		TableMapperFactory.removeTableMapper(_TABLE_NAME);
+
+		TableMapper<Left, CTRight> tableMapper2 =
+			TableMapperFactory.getTableMapper(
+				_TABLE_NAME, _COMPANY_COLUMN_NAME, _LEFT_COLUMN_NAME,
+				_RIGHT_COLUMN_NAME, _leftBasePersistence,
+				ctRightBasePersistence);
+
+		Assert.assertFalse(tableMapper2 instanceof CTTableMapper);
+
+		TableMapperFactory.removeTableMapper(_TABLE_NAME);
+
+		TableMapper<CTLeft, CTRight> ctTableMapper =
+			TableMapperFactory.getTableMapper(
+				_TABLE_NAME, _COMPANY_COLUMN_NAME, _LEFT_COLUMN_NAME,
+				_RIGHT_COLUMN_NAME, ctLeftBasePersistence,
+				ctRightBasePersistence);
+
+		Assert.assertTrue(ctTableMapper instanceof CTTableMapper);
 	}
 
 	protected void testDestroy(TableMapper<?, ?> tableMapper) {
@@ -1884,6 +1960,19 @@ public class TableMapperTest {
 		extends RecorderModelListener<Right> {
 	}
 
+	private interface CTLeft extends CTLeftModel {
+	}
+
+	private interface CTLeftModel extends BaseModel<CTLeft>, CTModel<CTLeft> {
+	}
+
+	private interface CTRight extends CTRightModel {
+	}
+
+	private interface CTRightModel
+		extends BaseModel<CTRight>, CTModel<CTRight> {
+	}
+
 	private class GetPrimaryKeyObjInvocationHandler
 		implements InvocationHandler {
 
@@ -1919,15 +2008,9 @@ public class TableMapperTest {
 	private class MockAddMappingSqlUpdate implements SqlUpdate {
 
 		public MockAddMappingSqlUpdate(
-			DataSource dataSource, String sql, ParamSetter... paramSetters) {
+			DataSource dataSource, ParamSetter... paramSetters) {
 
 			Assert.assertSame(_dataSource, dataSource);
-			Assert.assertEquals(
-				StringBundler.concat(
-					"INSERT INTO ", _TABLE_NAME, " (", _COMPANY_COLUMN_NAME,
-					", ", _LEFT_COLUMN_NAME, ", ", _RIGHT_COLUMN_NAME,
-					") VALUES (?, ?, ?)"),
-				sql);
 			Assert.assertArrayEquals(
 				new ParamSetter[] {
 					ParamSetter.BIGINT, ParamSetter.BIGINT, ParamSetter.BIGINT
@@ -1958,9 +2041,8 @@ public class TableMapperTest {
 				throw new RuntimeException(
 					StringBundler.concat(
 						"Unique key violation for left primary key ",
-						String.valueOf(leftPrimaryKey),
-						" and right primary key ",
-						String.valueOf(rightPrimaryKey)));
+						leftPrimaryKey, " and right primary key ",
+						rightPrimaryKey));
 			}
 			else {
 				rightPrimaryKeys = ArrayUtil.append(
@@ -1991,10 +2073,8 @@ public class TableMapperTest {
 
 			Class<T> modelClass = getModelClass();
 
-			ClassLoader classLoader = modelClass.getClassLoader();
-
 			return (T)ProxyUtil.newProxyInstance(
-				classLoader, new Class<?>[] {modelClass},
+				modelClass.getClassLoader(), new Class<?>[] {modelClass},
 				new GetPrimaryKeyObjInvocationHandler(primaryKey));
 		}
 
@@ -2006,18 +2086,64 @@ public class TableMapperTest {
 
 	}
 
+	private class MockContainsTableMappingSQLQuery
+		implements MappingSqlQuery<Integer> {
+
+		public MockContainsTableMappingSQLQuery(
+			DataSource dataSource, ParamSetter... paramSetters) {
+
+			Assert.assertSame(_dataSource, dataSource);
+			Assert.assertArrayEquals(
+				new ParamSetter[] {ParamSetter.BIGINT, ParamSetter.BIGINT},
+				paramSetters);
+		}
+
+		@Override
+		public List<Integer> execute(Object... params) {
+			Assert.assertEquals(2, params.length);
+			Assert.assertSame(Long.class, params[0].getClass());
+			Assert.assertSame(Long.class, params[1].getClass());
+
+			if (_databaseError) {
+				throw new RuntimeException("Database error");
+			}
+
+			if (_emptyResultSet) {
+				return Collections.emptyList();
+			}
+
+			Long leftPrimaryKey = (Long)params[0];
+			Long rightPrimaryKey = (Long)params[1];
+
+			long[] rightPrimaryKeys = _mappingStore.get(leftPrimaryKey);
+
+			if (ArrayUtil.contains(rightPrimaryKeys, rightPrimaryKey)) {
+				return Collections.singletonList(1);
+			}
+
+			return Collections.singletonList(0);
+		}
+
+		public void setDatabaseError(boolean databaseError) {
+			_databaseError = databaseError;
+		}
+
+		public void setEmptyResultSet(boolean emptyResultSet) {
+			_emptyResultSet = emptyResultSet;
+		}
+
+		private boolean _databaseError;
+		private boolean _emptyResultSet;
+
+	}
+
 	private class MockDeleteLeftPrimaryKeyTableMappingsSqlUpdate
 		implements SqlUpdate {
 
 		public MockDeleteLeftPrimaryKeyTableMappingsSqlUpdate(
-			DataSource dataSource, String sql, ParamSetter... paramSetters) {
+			DataSource dataSource, ParamSetter... paramSetters) {
 
 			Assert.assertSame(_dataSource, dataSource);
-			Assert.assertEquals(
-				StringBundler.concat(
-					"DELETE FROM ", _TABLE_NAME, " WHERE ", _LEFT_COLUMN_NAME,
-					" = ?"),
-				sql);
 			Assert.assertArrayEquals(
 				new ParamSetter[] {ParamSetter.BIGINT}, paramSetters);
 		}
@@ -2053,14 +2179,9 @@ public class TableMapperTest {
 	private class MockDeleteMappingSqlUpdate implements SqlUpdate {
 
 		public MockDeleteMappingSqlUpdate(
-			DataSource dataSource, String sql, ParamSetter... paramSetters) {
+			DataSource dataSource, ParamSetter... paramSetters) {
 
 			Assert.assertSame(_dataSource, dataSource);
-			Assert.assertEquals(
-				StringBundler.concat(
-					"DELETE FROM ", _TABLE_NAME, " WHERE ", _LEFT_COLUMN_NAME,
-					" = ? AND ", _RIGHT_COLUMN_NAME, " = ?"),
-				sql);
 			Assert.assertArrayEquals(
 				new ParamSetter[] {ParamSetter.BIGINT, ParamSetter.BIGINT},
 				paramSetters);
@@ -2110,14 +2231,9 @@ public class TableMapperTest {
 		implements SqlUpdate {
 
 		public MockDeleteRightPrimaryKeyTableMappingsSqlUpdate(
-			DataSource dataSource, String sql, ParamSetter... paramSetters) {
+			DataSource dataSource, ParamSetter... paramSetters) {
 
 			Assert.assertSame(_dataSource, dataSource);
-			Assert.assertEquals(
-				StringBundler.concat(
-					"DELETE FROM ", _TABLE_NAME, " WHERE ", _RIGHT_COLUMN_NAME,
-					" = ?"),
-				sql);
 			Assert.assertArrayEquals(
 				new ParamSetter[] {ParamSetter.BIGINT}, paramSetters);
 		}
@@ -2163,15 +2279,10 @@ public class TableMapperTest {
 		implements MappingSqlQuery<Long> {
 
 		public MockGetLeftPrimaryKeysSqlQuery(
-			DataSource dataSource, String sql, RowMapper<Long> rowMapper,
+			DataSource dataSource, RowMapper<Long> rowMapper,
 			ParamSetter... paramSetters) {
 
 			Assert.assertSame(_dataSource, dataSource);
-			Assert.assertEquals(
-				StringBundler.concat(
-					"SELECT ", _LEFT_COLUMN_NAME, " FROM ", _TABLE_NAME,
-					" WHERE ", _RIGHT_COLUMN_NAME, " = ?"),
-				sql);
 			Assert.assertArrayEquals(
 				new ParamSetter[] {ParamSetter.BIGINT}, paramSetters);
 			Assert.assertSame(RowMapper.PRIMARY_KEY, rowMapper);
@@ -2213,15 +2324,10 @@ public class TableMapperTest {
 		implements MappingSqlQuery<Long> {
 
 		public MockGetRightPrimaryKeysSqlQuery(
-			DataSource dataSource, String sql, RowMapper<Long> rowMapper,
+			DataSource dataSource, RowMapper<Long> rowMapper,
 			ParamSetter... paramSetters) {
 
 			Assert.assertSame(_dataSource, dataSource);
-			Assert.assertEquals(
-				StringBundler.concat(
-					"SELECT ", _RIGHT_COLUMN_NAME, " FROM ", _TABLE_NAME,
-					" WHERE ", _LEFT_COLUMN_NAME, " = ?"),
-				sql);
 			Assert.assertArrayEquals(
 				new ParamSetter[] {ParamSetter.BIGINT}, paramSetters);
 			Assert.assertSame(RowMapper.PRIMARY_KEY, rowMapper);
@@ -2269,22 +2375,40 @@ public class TableMapperTest {
 			DataSource dataSource, String sql, RowMapper<T> rowMapper,
 			ParamSetter... paramSetters) {
 
-			int count = _counter++;
+			if (sql.equals(
+					StringBundler.concat(
+						"SELECT ", _LEFT_COLUMN_NAME, " FROM ", _TABLE_NAME,
+						" WHERE ", _RIGHT_COLUMN_NAME, " = ?"))) {
 
-			if (count == 0) {
 				return (MappingSqlQuery<T>)new MockGetLeftPrimaryKeysSqlQuery(
-					dataSource, sql, RowMapper.PRIMARY_KEY, paramSetters);
+					dataSource, RowMapper.PRIMARY_KEY, paramSetters);
 			}
 
-			if (count == 1) {
+			if (sql.equals(
+					StringBundler.concat(
+						"SELECT ", _RIGHT_COLUMN_NAME, " FROM ", _TABLE_NAME,
+						" WHERE ", _LEFT_COLUMN_NAME, " = ?"))) {
+
 				return (MappingSqlQuery<T>)new MockGetRightPrimaryKeysSqlQuery(
-					dataSource, sql, RowMapper.PRIMARY_KEY, paramSetters);
+					dataSource, RowMapper.PRIMARY_KEY, paramSetters);
 			}
 
-			return null;
-		}
+			if (sql.equals(
+					StringBundler.concat(
+						"SELECT * FROM ", _TABLE_NAME, " WHERE ",
+						_LEFT_COLUMN_NAME, " = ? AND ", _RIGHT_COLUMN_NAME,
+						" = ?"))) {
 
-		private int _counter;
+				return (MappingSqlQuery<T>)new MockContainsTableMappingSQLQuery(
+					dataSource, paramSetters);
+			}
+
+			if (sql.contains("ctCollectionId")) {
+				return null;
+			}
+
+			throw new UnsupportedOperationException(sql);
+		}
 
 	}
 
@@ -2294,32 +2418,66 @@ public class TableMapperTest {
 		public SqlUpdate getSqlUpdate(
 			DataSource dataSource, String sql, ParamSetter... paramSetters) {
 
-			int count = _count++;
+			if (sql.equals(
+					StringBundler.concat(
+						"INSERT INTO ", _TABLE_NAME, " (", _COMPANY_COLUMN_NAME,
+						", ", _LEFT_COLUMN_NAME, ", ", _RIGHT_COLUMN_NAME,
+						") VALUES (?, ?, ?)"))) {
 
-			if (count == 0) {
-				return new MockAddMappingSqlUpdate(
-					dataSource, sql, paramSetters);
+				return new MockAddMappingSqlUpdate(dataSource, paramSetters);
 			}
 
-			if (count == 1) {
+			if (sql.equals(
+					StringBundler.concat(
+						"INSERT INTO ", _TABLE_NAME, " (", _COMPANY_COLUMN_NAME,
+						", ", _RIGHT_COLUMN_NAME, ", ", _LEFT_COLUMN_NAME,
+						") VALUES (?, ?, ?)"))) {
+
+				return null;
+			}
+
+			if (sql.equals(
+					StringBundler.concat(
+						"DELETE FROM ", _TABLE_NAME, " WHERE ",
+						_LEFT_COLUMN_NAME, " = ?"))) {
+
 				return new MockDeleteLeftPrimaryKeyTableMappingsSqlUpdate(
-					dataSource, sql, paramSetters);
+					dataSource, paramSetters);
 			}
 
-			if (count == 2) {
+			if (sql.equals(
+					StringBundler.concat(
+						"DELETE FROM ", _TABLE_NAME, " WHERE ",
+						_RIGHT_COLUMN_NAME, " = ?"))) {
+
 				return new MockDeleteRightPrimaryKeyTableMappingsSqlUpdate(
-					dataSource, sql, paramSetters);
+					dataSource, paramSetters);
 			}
 
-			if (count == 3) {
-				return new MockDeleteMappingSqlUpdate(
-					dataSource, sql, paramSetters);
+			if (sql.equals(
+					StringBundler.concat(
+						"DELETE FROM ", _TABLE_NAME, " WHERE ",
+						_LEFT_COLUMN_NAME, " = ? AND ", _RIGHT_COLUMN_NAME,
+						" = ?"))) {
+
+				return new MockDeleteMappingSqlUpdate(dataSource, paramSetters);
 			}
 
-			return null;
+			if (sql.equals(
+					StringBundler.concat(
+						"DELETE FROM ", _TABLE_NAME, " WHERE ",
+						_RIGHT_COLUMN_NAME, " = ? AND ", _LEFT_COLUMN_NAME,
+						" = ?"))) {
+
+				return null;
+			}
+
+			if (sql.contains("ctCollectionId")) {
+				return null;
+			}
+
+			throw new UnsupportedOperationException(sql);
 		}
-
-		private int _count;
 
 	}
 

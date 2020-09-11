@@ -58,10 +58,11 @@ public class AutocompleteUserMentionsMVCResourceCommand
 		throws PortletException {
 
 		try {
-			HttpServletRequest request = _portal.getOriginalServletRequest(
-				_portal.getHttpServletRequest(resourceRequest));
+			HttpServletRequest httpServletRequest =
+				_portal.getOriginalServletRequest(
+					_portal.getHttpServletRequest(resourceRequest));
 
-			long userId = ParamUtil.getLong(request, "userId");
+			long userId = ParamUtil.getLong(httpServletRequest, "userId");
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)resourceRequest.getAttribute(
@@ -70,15 +71,16 @@ public class AutocompleteUserMentionsMVCResourceCommand
 			JSONArray jsonArray = MicroblogsWebUtil.getJSONRecipients(
 				userId, themeDisplay);
 
-			HttpServletResponse response = _portal.getHttpServletResponse(
-				resourceResponse);
+			HttpServletResponse httpServletResponse =
+				_portal.getHttpServletResponse(resourceResponse);
 
-			response.setContentType(ContentTypes.APPLICATION_JSON);
+			httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-			ServletResponseUtil.write(response, jsonArray.toString());
+			ServletResponseUtil.write(
+				httpServletResponse, jsonArray.toString());
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 

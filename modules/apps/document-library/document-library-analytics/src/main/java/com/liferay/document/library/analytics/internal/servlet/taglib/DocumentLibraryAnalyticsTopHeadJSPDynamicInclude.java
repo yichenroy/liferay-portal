@@ -27,13 +27,14 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Alejandro Tardín
  */
-@Component(immediate = true, service = DynamicInclude.class)
+@Component(service = DynamicInclude.class)
 public class DocumentLibraryAnalyticsTopHeadJSPDynamicInclude
 	extends BaseJSPDynamicInclude {
 
 	@Override
 	public void register(DynamicIncludeRegistry dynamicIncludeRegistry) {
-		dynamicIncludeRegistry.register("/html/common/themes/top_head.jsp#pre");
+		dynamicIncludeRegistry.register(
+			"/html/common/themes/top_head.jsp#post");
 	}
 
 	@Override

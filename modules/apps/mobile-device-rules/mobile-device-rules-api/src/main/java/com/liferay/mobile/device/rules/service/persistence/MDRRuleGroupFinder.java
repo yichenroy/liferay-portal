@@ -14,7 +14,7 @@
 
 package com.liferay.mobile.device.rules.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Edward C. Han
@@ -45,7 +45,8 @@ public interface MDRRuleGroupFinder {
 			long groupId, String keywords,
 			java.util.LinkedHashMap<String, Object> params, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.mobile.device.rules.model.MDRRuleGroup> obc);
+				<com.liferay.mobile.device.rules.model.MDRRuleGroup>
+					orderByComparator);
 
 	public java.util.List<com.liferay.mobile.device.rules.model.MDRRuleGroup>
 		findByG_N(
@@ -71,6 +72,7 @@ public interface MDRRuleGroupFinder {
 			java.util.LinkedHashMap<String, Object> params, boolean andOperator,
 			int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.mobile.device.rules.model.MDRRuleGroup> obc);
+				<com.liferay.mobile.device.rules.model.MDRRuleGroup>
+					orderByComparator);
 
 }

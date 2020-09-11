@@ -17,12 +17,12 @@ package com.liferay.site.memberships.web.internal.servlet.taglib.clay;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.BaseBaseClayCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 import com.liferay.site.memberships.web.internal.constants.SiteMembershipWebKeys;
@@ -53,7 +53,7 @@ public class OrganizationsVerticalCard
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class OrganizationsVerticalCard
 			return organizationActionDropdownItemsProvider.
 				getActionDropdownItems();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return null;
@@ -85,8 +85,9 @@ public class OrganizationsVerticalCard
 
 	@Override
 	public String getImageSrc() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		StringBundler sb = new StringBundler(5);
 
@@ -102,7 +103,7 @@ public class OrganizationsVerticalCard
 
 	@Override
 	public String getSubtitle() {
-		return LanguageUtil.get(_request, _organization.getType());
+		return LanguageUtil.get(_httpServletRequest, _organization.getType());
 	}
 
 	@Override
@@ -110,10 +111,10 @@ public class OrganizationsVerticalCard
 		return _organization.getName();
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private final Organization _organization;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final boolean _showActions;
 
 }

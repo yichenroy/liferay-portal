@@ -14,14 +14,14 @@
 
 package com.liferay.document.library.opener.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the DLOpenerFileEntryReference service. Represents a row in the &quot;DLOpenerFileEntryReference&quot; database table, with each column mapped to a property of this class.
@@ -200,6 +200,21 @@ public interface DLOpenerFileEntryReferenceModel
 	 * @param referenceKey the reference key of this dl opener file entry reference
 	 */
 	public void setReferenceKey(String referenceKey);
+
+	/**
+	 * Returns the reference type of this dl opener file entry reference.
+	 *
+	 * @return the reference type of this dl opener file entry reference
+	 */
+	@AutoEscape
+	public String getReferenceType();
+
+	/**
+	 * Sets the reference type of this dl opener file entry reference.
+	 *
+	 * @param referenceType the reference type of this dl opener file entry reference
+	 */
+	public void setReferenceType(String referenceType);
 
 	/**
 	 * Returns the file entry ID of this dl opener file entry reference.

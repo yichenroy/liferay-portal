@@ -1,5 +1,6 @@
 @component-name = "portal-document-management"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Documents Management";
@@ -13,9 +14,7 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+			portlet = "Pages");
 
 		SitePages.addPublicPage(pageName = "Media Gallery Page");
 
@@ -23,8 +22,7 @@ definition {
 			columnName = "1 Column",
 			pageName = "Media Gallery Page",
 			privacy = "Public Pages",
-			sitePageType = "Widget Page"
-		);
+			sitePageType = "Widget Page");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -54,8 +52,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder Description",
-			mgFolderName = "DM Folder Name"
-		);
+			mgFolderName = "DM Folder Name");
 
 		DMFolder.viewPGViaMG(mgFolderName = "DM Folder Name");
 	}
@@ -66,8 +63,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder Description",
-			mgFolderName = "DM Folder Name"
-		);
+			mgFolderName = "DM Folder Name");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -76,8 +72,7 @@ definition {
 		DMDocument.addPGViaMG(
 			mgDocumentDescription = "DM Document Description",
 			mgDocumentFile = "Document_1.jpg",
-			mgDocumentTitle = "DM Document Title"
-		);
+			mgDocumentTitle = "DM Document Title");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -92,8 +87,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder1 Description",
-			mgFolderName = "DM Folder1 Name"
-		);
+			mgFolderName = "DM Folder1 Name");
 
 		DMFolder.viewPGViaMG(mgFolderName = "DM Folder1 Name");
 
@@ -101,8 +95,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder2 Description",
-			mgFolderName = "DM Folder2 Name"
-		);
+			mgFolderName = "DM Folder2 Name");
 
 		DMFolder.viewPGViaMG(mgFolderName = "DM Folder2 Name");
 
@@ -110,8 +103,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder3 Description",
-			mgFolderName = "DM Folder3 Name"
-		);
+			mgFolderName = "DM Folder3 Name");
 
 		DMFolder.viewPGViaMG(mgFolderName = "DM Folder3 Name");
 	}
@@ -122,23 +114,20 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder Description",
-			mgFolderName = "DM Folder Name"
-		);
+			mgFolderName = "DM Folder Name");
 
 		DMFolder.gotoPGViaMG(mgFolderName = "DM Folder Name");
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Subfolder Description",
-			mgFolderName = "DM Subfolder Name"
-		);
+			mgFolderName = "DM Subfolder Name");
 
 		DMFolder.gotoPGViaMG(mgFolderName = "DM Subfolder Name");
 
 		DMDocument.addPGViaMG(
 			mgDocumentDescription = "DM Document Description",
 			mgDocumentFile = "Document_1.jpg",
-			mgDocumentTitle = "DM Document Title"
-		);
+			mgDocumentTitle = "DM Document Title");
 	}
 
 	@priority = "4"
@@ -147,15 +136,13 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder Description",
-			mgFolderName = "DM Folder Name"
-		);
+			mgFolderName = "DM Folder Name");
 
 		DMFolder.gotoPGViaMG(mgFolderName = "DM Folder Name");
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Subfolder1 Description",
-			mgFolderName = "DM Subfolder1 Name"
-		);
+			mgFolderName = "DM Subfolder1 Name");
 
 		DMFolder.viewPGViaMG(mgFolderName = "DM Subfolder1 Name");
 
@@ -165,8 +152,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Subfolder2 Description",
-			mgFolderName = "DM Subfolder2 Name"
-		);
+			mgFolderName = "DM Subfolder2 Name");
 
 		DMFolder.viewPGViaMG(mgFolderName = "DM Subfolder2 Name");
 
@@ -176,10 +162,55 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Subfolder3 Description",
-			mgFolderName = "DM Subfolder3 Name"
-		);
+			mgFolderName = "DM Subfolder3 Name");
 
 		DMFolder.viewPGViaMG(mgFolderName = "DM Subfolder3 Name");
+	}
+
+	@priority = "3"
+	test ADTDMMediaGallery {
+		Navigator.gotoPage(pageName = "Media Gallery Page");
+
+		DMFolder.addPGViaMG(
+			mgFolderDescription = "DM Folder Description",
+			mgFolderName = "DM Folder Name");
+
+		Navigator.gotoPage(pageName = "Media Gallery Page");
+
+		DMFolder.gotoPGViaMG(mgFolderName = "DM Folder Name");
+
+		DMDocument.addPGViaMG(
+			mgDocumentDescription = "DM Document Description",
+			mgDocumentFile = "Document_1.jpg",
+			mgDocumentTitle = "DM Document Title",
+			mgFolderName = "DM Folder Name");
+
+		Navigator.gotoPage(pageName = "Media Gallery Page");
+
+		DMFolder.gotoPGViaMG(mgFolderName = "DM Folder Name");
+
+		DMDocument.addPGViaMG(
+			mgDocumentDescription = "DM Document Description 2",
+			mgDocumentFile = "Document_2.jpeg",
+			mgDocumentTitle = "DM Document Title 2",
+			mgFolderName = "DM Folder Name");
+
+		Navigator.gotoPage(pageName = "Media Gallery Page");
+
+		ApplicationDisplayTemplates.addPG(
+			adtFile = "adt_media_gallery_carousel.ftl",
+			adtType = "Documents and Media",
+			siteName = "Test Site Name");
+
+		Navigator.gotoPage(pageName = "Media Gallery Page");
+
+		MGPortlet.viewShowAllPG();
+
+		ApplicationDisplayTemplates.selectPortletADT(templateName = "Documents and Media Test ADT");
+
+		Navigator.gotoPage(pageName = "Media Gallery Page");
+
+		MGPortlet.viewCustomADTCarouselPG();
 	}
 
 	@priority = "5"
@@ -190,8 +221,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder Description",
-			mgFolderName = "DM Folder Name"
-		);
+			mgFolderName = "DM Folder Name");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -200,8 +230,7 @@ definition {
 		DMDocument.addPGViaMG(
 			mgDocumentDescription = "DM Document Description",
 			mgDocumentFile = "Document_1.jpg",
-			mgDocumentTitle = "DM Document Title"
-		);
+			mgDocumentTitle = "DM Document Title");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -216,8 +245,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder Description",
-			mgFolderName = "DM Folder Name"
-		);
+			mgFolderName = "DM Folder Name");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -225,8 +253,7 @@ definition {
 			mgFolderDescription = "DM Folder Description Edit",
 			mgFolderDescriptionEdit = "DM Folder Description Edit",
 			mgFolderName = "DM Folder Name Edit",
-			mgFolderNameEdit = "DM Folder Name Edit"
-		);
+			mgFolderNameEdit = "DM Folder Name Edit");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -239,8 +266,7 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder Description",
-			mgFolderName = "DM Folder Name"
-		);
+			mgFolderName = "DM Folder Name");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -249,15 +275,13 @@ definition {
 		DMDocument.addPGViaMG(
 			mgDocumentDescription = "DM Document Description",
 			mgDocumentFile = "Document_1.jpg",
-			mgDocumentTitle = "DM Document Title"
-		);
+			mgDocumentTitle = "DM Document Title");
 
 		DMDocument.editPGViaMG(
 			mgDocumentDescription = "DM Document Description",
 			mgDocumentDescriptionEdit = "DM Document Description Edit",
 			mgDocumentTitle = "DM Document Title",
-			mgDocumentTitleEdit = "DM Document Title Edit"
-		);
+			mgDocumentTitleEdit = "DM Document Title Edit");
 	}
 
 	@priority = "4"
@@ -266,16 +290,14 @@ definition {
 
 		DMFolder.addPGViaMG(
 			mgFolderDescription = "DM Folder Description",
-			mgFolderName = "DM Folder Name"
-		);
+			mgFolderName = "DM Folder Name");
 
 		DMFolder.gotoPGViaMG(mgFolderName = "DM Folder Name");
 
 		DMDocument.addPGViaMG(
 			mgDocumentDescription = "DM Document Description",
 			mgDocumentFile = "Document_1.jpg",
-			mgDocumentTitle = "DM Document Title"
-		);
+			mgDocumentTitle = "DM Document Title");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -283,8 +305,7 @@ definition {
 
 		SearchResultPortlet.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
-			searchAssetType = "Document"
-		);
+			searchAssetType = "Document");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -292,8 +313,7 @@ definition {
 
 		SearchResultPortlet.viewSearchResults(
 			searchAssetTitle = "DM Document Title",
-			searchAssetType = "Document"
-		);
+			searchAssetType = "Document");
 
 		Navigator.gotoPage(pageName = "Media Gallery Page");
 
@@ -301,4 +321,47 @@ definition {
 
 		SearchResultPortlet.viewNoSearchResults(searchTerm = "asdf");
 	}
+
+	@description = "This test covers LPS-89361. It ensures that video can be played via media gallery."
+	@priority = "4"
+	test ViewVideoViaMediaGallery {
+		property custom.properties = "xuggler.enabled=true";
+		property dummy.socket.proxy.disabled = "true";
+		property test.assert.warning.exceptions = "false";
+		property test.name.skip.portal.instance = "PGMediagallery#ViewVideoViaMediaGallery";
+
+		ServerAdministration.openServerAdmin();
+
+		ServerAdministration.configureExternalServices(installXuggler = "true");
+
+		Portlet.shutdownServer();
+
+		Portlet.startServer(deleteLiferayHome = "false");
+
+		ServerAdministration.openServerAdmin();
+
+		ServerAdministration.configureExternalServices(enableXuggler = "true");
+
+		Navigator.gotoPage(pageName = "Media Gallery Page");
+
+		DMDocument.addPGViaMG(
+			mgDocumentDescription = "DM Document Description",
+			mgDocumentFile = "Document_1.mp4",
+			mgDocumentTitle = "DM Document Title");
+
+		Pause(locator1 = "120000");
+
+		Refresh();
+
+		Navigator.gotoPage(pageName = "Media Gallery Page");
+
+		Click(
+			key_mgDocumentTitle = "DM Document Title",
+			locator1 = "MediaGallery#ENTRY_THUMBNAIL");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#SELECT_MEDIA_GALLERY_VIDEO");
+
+		AssertElementPresent(locator1 = "MediaGallery#ENTRY_VIDEO_PLAYED");
+	}
+
 }

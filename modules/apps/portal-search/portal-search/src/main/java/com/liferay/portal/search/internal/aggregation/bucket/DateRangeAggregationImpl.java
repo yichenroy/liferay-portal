@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.aggregation.bucket;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.AggregationVisitor;
 import com.liferay.portal.search.aggregation.bucket.DateRangeAggregation;
 import com.liferay.portal.search.aggregation.bucket.Range;
@@ -23,7 +21,6 @@ import com.liferay.portal.search.aggregation.bucket.Range;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class DateRangeAggregationImpl
 	extends RangeAggregationImpl implements DateRangeAggregation {
 

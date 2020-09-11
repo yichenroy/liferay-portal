@@ -14,7 +14,7 @@
 
 package com.liferay.portal.workflow.web.internal.product.navigation.personal.menu;
 
-import com.liferay.portal.workflow.web.internal.constants.WorkflowPortletKeys;
+import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
 import com.liferay.product.navigation.personal.menu.BasePersonalMenuEntry;
 import com.liferay.product.navigation.personal.menu.PersonalMenuEntry;
 
@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Component;
 public class UserWorkflowPersonalMenuEntry extends BasePersonalMenuEntry {
 
 	@Override
-	protected String getPortletId() {
+	public String getPortletId() {
 		return WorkflowPortletKeys.USER_WORKFLOW;
 	}
 

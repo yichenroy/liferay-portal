@@ -14,8 +14,6 @@
 
 package com.liferay.digital.signature.internal.model.field.builder;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.digital.signature.internal.model.field.LastNameDSFieldImpl;
 import com.liferay.digital.signature.model.field.DSField;
 import com.liferay.digital.signature.model.field.LastNameDSField;
@@ -24,7 +22,6 @@ import com.liferay.digital.signature.model.field.builder.LastNameDSFieldBuilder;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class LastNameDSFieldBuilderImpl
 	extends StyledDSFieldBuilderImpl<LastNameDSField>
 	implements LastNameDSFieldBuilder {

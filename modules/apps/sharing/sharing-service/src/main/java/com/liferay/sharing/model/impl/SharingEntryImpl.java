@@ -14,8 +14,6 @@
 
 package com.liferay.sharing.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.sharing.security.permission.SharingEntryAction;
 
 /**
@@ -31,7 +29,6 @@ import com.liferay.sharing.security.permission.SharingEntryAction;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class SharingEntryImpl extends SharingEntryBaseImpl {
 
 	/**

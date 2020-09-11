@@ -20,10 +20,14 @@
 String redirect = ParamUtil.getString(request, "redirect");
 
 BlogsEntry blogsEntry = (BlogsEntry)request.getAttribute("view_entry_related.jsp-blogs_entry");
+
+BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortletInstanceConfigurationUtil.getBlogsPortletInstanceConfiguration(themeDisplay);
 %>
 
 <c:if test="<%= blogsEntry != null %>">
-	<div class="col-lg-6">
+	<clay:col
+		lg="6"
+	>
 		<div class="card">
 
 			<%
@@ -43,8 +47,12 @@ BlogsEntry blogsEntry = (BlogsEntry)request.getAttribute("view_entry_related.jsp
 			</c:if>
 
 			<div class="card-body widget-topbar">
-				<div class="autofit-row card-title">
-					<div class="autofit-col autofit-col-expand">
+				<clay:content-row
+					cssClass=" card-title"
+				>
+					<clay:content-col
+						expand="<%= true %>"
+					>
 						<portlet:renderURL var="blogsEntryURL">
 							<portlet:param name="mvcRenderCommandName" value="/blogs/view_entry" />
 							<portlet:param name="redirect" value="<%= redirect %>" />
@@ -60,30 +68,38 @@ BlogsEntry blogsEntry = (BlogsEntry)request.getAttribute("view_entry_related.jsp
 						<h3 class="title"><a class="title-link" href="<%= blogsEntryURL %>">
 							<%= HtmlUtil.escape(BlogsEntryUtil.getDisplayTitle(resourceBundle, blogsEntry)) %></a>
 						</h3>
-					</div>
-				</div>
+					</clay:content-col>
+				</clay:content-row>
 
-				<div class="autofit-row widget-metadata">
-					<div class="autofit-col inline-item-before">
+				<clay:content-row
+					cssClass="widget-metadata"
+				>
 
-						<%
-						User blogsEntryUser = UserLocalServiceUtil.fetchUser(blogsEntry.getUserId());
+					<%
+					User blogsEntryUser = UserLocalServiceUtil.fetchUser(blogsEntry.getUserId());
 
-						String blogsEntryUserURL = StringPool.BLANK;
+					String blogsEntryUserURL = StringPool.BLANK;
 
-						if ((blogsEntryUser != null) && !blogsEntryUser.isDefaultUser()) {
-							blogsEntryUserURL = blogsEntryUser.getDisplayURL(themeDisplay);
-						}
-						%>
+					if ((blogsEntryUser != null) && !blogsEntryUser.isDefaultUser()) {
+						blogsEntryUserURL = blogsEntryUser.getDisplayURL(themeDisplay);
+					}
+					%>
 
+					<clay:content-col
+						cssClass="inline-item-before"
+					>
 						<liferay-ui:user-portrait
 							user="<%= blogsEntryUser %>"
 						/>
-					</div>
+					</clay:content-col>
 
-					<div class="autofit-col autofit-col-expand">
-						<div class="autofit-row">
-							<div class="autofit-col autofit-col-expand">
+					<clay:content-col
+						cssClass="inline-item-before"
+					>
+						<clay:content-row>
+							<clay:content-col
+								cssClass="inline-item-before"
+							>
 								<div class="text-truncate-inline">
 									<a class="text-truncate username" href="<%= blogsEntryUserURL %>"><%= HtmlUtil.escape(blogsEntry.getUserName()) %></a>
 								</div>
@@ -95,24 +111,22 @@ BlogsEntry blogsEntry = (BlogsEntry)request.getAttribute("view_entry_related.jsp
 										- <liferay-reading-time:reading-time displayStyle="descriptive" model="<%= blogsEntry %>" />
 									</c:if>
 								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+							</clay:content-col>
+						</clay:content-row>
+					</clay:content-col>
+				</clay:content-row>
 			</div>
 
 			<div class="card-footer">
-				<div class="card-row">
 
-					<%
-					request.setAttribute("entry_toolbar.jsp-entry", blogsEntry);
-					%>
+				<%
+				request.setAttribute("entry_toolbar.jsp-entry", blogsEntry);
+				%>
 
-					<liferay-util:include page="/blogs/entry_toolbar.jsp" servletContext="<%= application %>">
-						<liferay-util:param name="showOnlyIcons" value="<%= Boolean.TRUE.toString() %>" />
-					</liferay-util:include>
-				</div>
+				<liferay-util:include page="/blogs/entry_toolbar.jsp" servletContext="<%= application %>">
+					<liferay-util:param name="showOnlyIcons" value="<%= Boolean.TRUE.toString() %>" />
+				</liferay-util:include>
 			</div>
 		</div>
-	</div>
+	</clay:col>
 </c:if>

@@ -39,12 +39,18 @@ import org.slf4j.LoggerFactory;
 @Component(factory = "JSONWebServiceClient", service = {})
 public class JSONWebServiceClientImpl extends BaseJSONWebServiceClientImpl {
 
+	@Override
+	public void afterPropertiesSet() throws IOReactorException {
+		super.afterPropertiesSet();
+	}
+
 	@Activate
-	public void activate(Map<String, Object> properties)
+	protected void activate(Map<String, Object> properties)
 		throws IOReactorException {
 
 		_setHeaders(getString("headers", properties));
 
+		setClassLoader((ClassLoader)properties.get("classLoader"));
 		setHostName(getString("hostName", properties));
 		setHostPort(Integer.parseInt(getString("hostPort", properties)));
 		setKeyStore((KeyStore)properties.get("keyStore"));
@@ -73,11 +79,6 @@ public class JSONWebServiceClientImpl extends BaseJSONWebServiceClientImpl {
 		}
 
 		afterPropertiesSet();
-	}
-
-	@Override
-	public void afterPropertiesSet() throws IOReactorException {
-		super.afterPropertiesSet();
 	}
 
 	@Deactivate

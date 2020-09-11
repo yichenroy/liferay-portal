@@ -52,6 +52,14 @@ public class RegistryWrapper implements Registry {
 	}
 
 	@Override
+	public <T> ServiceReference<T>[] getAllServiceReferences(
+			String className, String filterString)
+		throws Exception {
+
+		return _registry.getAllServiceReferences(className, filterString);
+	}
+
+	@Override
 	public Filter getFilter(String filterString) throws RuntimeException {
 		return _registry.getFilter(filterString);
 	}
@@ -59,18 +67,6 @@ public class RegistryWrapper implements Registry {
 	@Override
 	public Registry getRegistry() throws SecurityException {
 		return this;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public <T> T getService(Class<T> clazz) {
-		ServiceReference<T> serviceReference = _registry.getServiceReference(
-			clazz);
-
-		return _registry.getService(serviceReference);
 	}
 
 	@Override
@@ -93,18 +89,6 @@ public class RegistryWrapper implements Registry {
 		serviceReferenceCount.incrementAndGet();
 
 		return _registry.getService(serviceReference);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public <T> T getService(String className) {
-		ServiceReference<Object> serviceReference =
-			_registry.getServiceReference(className);
-
-		return (T)_registry.getService(serviceReference);
 	}
 
 	@Override

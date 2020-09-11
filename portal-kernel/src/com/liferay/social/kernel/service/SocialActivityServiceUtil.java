@@ -14,8 +14,6 @@
 
 package com.liferay.social.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
@@ -30,7 +28,6 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
  * @see SocialActivityService
  * @generated
  */
-@ProviderType
 public class SocialActivityServiceUtil {
 
 	/*

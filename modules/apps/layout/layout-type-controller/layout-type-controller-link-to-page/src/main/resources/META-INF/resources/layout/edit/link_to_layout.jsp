@@ -25,40 +25,29 @@
 
 	<aui:button name="selectLayoutButton" value="select" />
 
-	<aui:script use="liferay-item-selector-dialog">
+	<aui:script sandbox="<%= true %>">
 		var selectLayoutButton = document.getElementById('<portlet:namespace />selectLayoutButton');
 
-		if (selectLayoutButton) {
-			selectLayoutButton.addEventListener(
-				'click',
-				function(event) {
-					event.preventDefault();
+		selectLayoutButton.addEventListener(
+			'click',
+			function(event) {
+				event.preventDefault();
 
-					var itemSelectorDialog = new A.LiferayItemSelectorDialog(
-						{
-							eventName: '<%= linkToPageLayoutTypeControllerDisplayContext.getEventName() %>',
-							on: {
-								selectedItemChange: function(event) {
-									var selectedItem = event.newVal;
+				Liferay.Util.openSelectionModal({
+					onSelect: function(selectedItem) {
+						const linkToLayoutName = document.getElementById('<portlet:namespace />linkToLayoutName');
+						const linkToLayoutUuid = document.getElementById('<portlet:namespace />linkToLayoutUuid');
 
-									var linkToLayoutName = document.getElementById('<portlet:namespace />linkToLayoutName');
-									var linkToLayoutUuid = document.getElementById('<portlet:namespace />linkToLayoutUuid');
-
-									if (selectedItem && linkToLayoutName && linkToLayoutUuid) {
-										linkToLayoutName.value = selectedItem.name;
-										linkToLayoutUuid.value = selectedItem.id;
-									}
-								}
-							},
-							'strings.add': '<liferay-ui:message key="done" />',
-							title: '<liferay-ui:message key="select-layout" />',
-							url: '<%= linkToPageLayoutTypeControllerDisplayContext.getItemSelectorURL() %>'
+						if (selectedItem && linkToLayoutName && linkToLayoutUuid) {
+							linkToLayoutName.value = selectedItem.name;
+							linkToLayoutUuid.value = selectedItem.id;
 						}
-					);
-
-					itemSelectorDialog.open();
-				}
-			);
-		}
+					},
+					selectEventName: '<%= linkToPageLayoutTypeControllerDisplayContext.getEventName() %>',
+					title: '<liferay-ui:message key="select-layout" />',
+					url: '<%= linkToPageLayoutTypeControllerDisplayContext.getItemSelectorURL() %>'
+				});
+			}
+		);
 	</aui:script>
 </div>

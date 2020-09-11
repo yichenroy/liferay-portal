@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,10 +29,9 @@ import java.util.Map;
  * @see PasswordTracker
  * @generated
  */
-@ProviderType
 public class PasswordTrackerWrapper
 	extends BaseModelWrapper<PasswordTracker>
-	implements PasswordTracker, ModelWrapper<PasswordTracker> {
+	implements ModelWrapper<PasswordTracker>, PasswordTracker {
 
 	public PasswordTrackerWrapper(PasswordTracker passwordTracker) {
 		super(passwordTracker);

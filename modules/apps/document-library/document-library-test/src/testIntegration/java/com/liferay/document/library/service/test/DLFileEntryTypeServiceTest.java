@@ -34,7 +34,6 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -160,10 +159,10 @@ public class DLFileEntryTypeServiceTest {
 			ddmFormDeserializerDeserializeResponse =
 				_ddmFormDeserializer.deserialize(builder.build());
 
-		DDMForm ddmForm = ddmFormDeserializerDeserializeResponse.getDDMForm();
-
 		serviceContext.setAttribute(
-			"ddmForm", DDMBeanTranslatorUtil.translate(ddmForm));
+			"ddmForm",
+			DDMBeanTranslatorUtil.translate(
+				ddmFormDeserializerDeserializeResponse.getDDMForm()));
 
 		User user = TestPropsValues.getUser();
 
@@ -252,10 +251,8 @@ public class DLFileEntryTypeServiceTest {
 
 	@Test
 	public void testLocalizedSiteAddFileEntryType() throws Exception {
-		Group group = GroupTestUtil.addGroup();
-
 		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(group.getGroupId());
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
 		Locale locale = LocaleThreadLocal.getSiteDefaultLocale();
 
@@ -270,7 +267,7 @@ public class DLFileEntryTypeServiceTest {
 
 			DLFileEntryType dlFileEntryType =
 				DLFileEntryTypeLocalServiceUtil.addFileEntryType(
-					TestPropsValues.getUserId(), group.getGroupId(), name,
+					TestPropsValues.getUserId(), _group.getGroupId(), name,
 					description, new long[] {ddmStructure.getStructureId()},
 					serviceContext);
 
@@ -406,7 +403,7 @@ public class DLFileEntryTypeServiceTest {
 
 	private ServiceContext _getFolderServiceContext(
 			DLFileEntryType... dlFileEntryTypes)
-		throws PortalException {
+		throws Exception {
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());

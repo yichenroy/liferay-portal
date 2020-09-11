@@ -14,12 +14,9 @@
 
 package com.liferay.dynamic.data.mapping.expression.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Pedro Queiroz
  */
-@ProviderType
 public class IntegerLiteral extends Term {
 
 	public IntegerLiteral(String value) {

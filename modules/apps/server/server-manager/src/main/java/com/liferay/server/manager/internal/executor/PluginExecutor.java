@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.deploy.auto.context.AutoDeploymentContext;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.plugin.PluginPackage;
@@ -62,8 +63,8 @@ public class PluginExecutor extends BaseExecutor {
 
 	@Override
 	public void executeCreate(
-			HttpServletRequest request, JSONObject responseJSONObject,
-			Queue<String> arguments)
+			HttpServletRequest httpServletRequest,
+			JSONObject responseJSONObject, Queue<String> arguments)
 		throws Exception {
 
 		AutoDeploymentContext autoDeploymentContext =
@@ -73,7 +74,7 @@ public class PluginExecutor extends BaseExecutor {
 
 		autoDeploymentContext.setContext(context);
 
-		File tempFile = getTempFile(request, responseJSONObject);
+		File tempFile = getTempFile(httpServletRequest, responseJSONObject);
 
 		if (tempFile == null) {
 			return;
@@ -111,8 +112,8 @@ public class PluginExecutor extends BaseExecutor {
 
 	@Override
 	public void executeDelete(
-			HttpServletRequest request, JSONObject responseJSONObject,
-			Queue<String> arguments)
+			HttpServletRequest httpServletRequest,
+			JSONObject responseJSONObject, Queue<String> arguments)
 		throws Exception {
 
 		String context = arguments.poll();
@@ -122,10 +123,8 @@ public class PluginExecutor extends BaseExecutor {
 
 	@Override
 	public void executeRead(
-		HttpServletRequest request, JSONObject responseJSONObject,
+		HttpServletRequest httpServletRequest, JSONObject responseJSONObject,
 		Queue<String> arguments) {
-
-		JSONObject pluginPackageJSONObject = JSONFactoryUtil.createJSONObject();
 
 		String context = arguments.poll();
 
@@ -138,7 +137,8 @@ public class PluginExecutor extends BaseExecutor {
 			installed = false;
 		}
 
-		pluginPackageJSONObject.put("installed", installed);
+		JSONObject pluginPackageJSONObject = JSONUtil.put(
+			"installed", installed);
 
 		boolean started = true;
 
@@ -167,8 +167,8 @@ public class PluginExecutor extends BaseExecutor {
 
 	@Override
 	public void executeUpdate(
-			HttpServletRequest request, JSONObject responseJSONObject,
-			Queue<String> arguments)
+			HttpServletRequest httpServletRequest,
+			JSONObject responseJSONObject, Queue<String> arguments)
 		throws Exception {
 
 		String context = arguments.poll();
@@ -180,14 +180,16 @@ public class PluginExecutor extends BaseExecutor {
 				responseJSONObject.put(
 					JSONKeys.ERROR,
 					"Context directory " + installedDir.getAbsolutePath() +
-						" does not exist");
-				responseJSONObject.put(JSONKeys.STATUS, 1);
+						" does not exist"
+				).put(
+					JSONKeys.STATUS, 1
+				);
 
 				return;
 			}
 		}
 
-		File tempFile = getTempFile(request, responseJSONObject);
+		File tempFile = getTempFile(httpServletRequest, responseJSONObject);
 
 		if (tempFile == null) {
 			return;
@@ -239,7 +241,7 @@ public class PluginExecutor extends BaseExecutor {
 		}
 	}
 
-	protected FileItem getFileItem(HttpServletRequest request)
+	protected FileItem getFileItem(HttpServletRequest httpServletRequest)
 		throws FileUploadException {
 
 		DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
@@ -247,7 +249,8 @@ public class PluginExecutor extends BaseExecutor {
 		ServletFileUpload servletFileUpload = new ServletFileUpload(
 			diskFileItemFactory);
 
-		List<FileItem> fileItems = servletFileUpload.parseRequest(request);
+		List<FileItem> fileItems = servletFileUpload.parseRequest(
+			httpServletRequest);
 
 		for (FileItem fileItem : fileItems) {
 			if (!fileItem.isFormField()) {
@@ -258,10 +261,10 @@ public class PluginExecutor extends BaseExecutor {
 		return null;
 	}
 
-	protected File getFileItemTempFile(HttpServletRequest request)
+	protected File getFileItemTempFile(HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		FileItem fileItem = getFileItem(request);
+		FileItem fileItem = getFileItem(httpServletRequest);
 
 		if (fileItem == null) {
 			return null;
@@ -344,25 +347,28 @@ public class PluginExecutor extends BaseExecutor {
 	}
 
 	protected File getTempFile(
-		HttpServletRequest request, JSONObject responseJSONObject) {
+		HttpServletRequest httpServletRequest, JSONObject responseJSONObject) {
 
 		File tempFile = null;
 
 		String message = "Unable to create temp file for uploaded plugin";
 
 		try {
-			tempFile = getFileItemTempFile(request);
+			tempFile = getFileItemTempFile(httpServletRequest);
 		}
-		catch (Exception e) {
-			_log.error(message, e);
+		catch (Exception exception) {
+			_log.error(message, exception);
 		}
 
 		if (tempFile != null) {
 			return tempFile;
 		}
 
-		responseJSONObject.put(JSONKeys.ERROR, message);
-		responseJSONObject.put(JSONKeys.STATUS, 1);
+		responseJSONObject.put(
+			JSONKeys.ERROR, message
+		).put(
+			JSONKeys.STATUS, 1
+		);
 
 		return null;
 	}

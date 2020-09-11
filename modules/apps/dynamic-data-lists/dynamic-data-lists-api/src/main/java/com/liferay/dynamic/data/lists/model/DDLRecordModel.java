@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.MVCCModel;
@@ -23,6 +21,8 @@ import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the DDLRecord service. Represents a row in the &quot;DDLRecord&quot; database table, with each column mapped to a property of this class.
@@ -304,6 +304,35 @@ public interface DDLRecordModel
 	 * @param recordSetVersion the record set version of this ddl record
 	 */
 	public void setRecordSetVersion(String recordSetVersion);
+
+	/**
+	 * Returns the class name of this ddl record.
+	 *
+	 * @return the class name of this ddl record
+	 */
+	@AutoEscape
+	public String getClassName();
+
+	/**
+	 * Sets the class name of this ddl record.
+	 *
+	 * @param className the class name of this ddl record
+	 */
+	public void setClassName(String className);
+
+	/**
+	 * Returns the class pk of this ddl record.
+	 *
+	 * @return the class pk of this ddl record
+	 */
+	public long getClassPK();
+
+	/**
+	 * Sets the class pk of this ddl record.
+	 *
+	 * @param classPK the class pk of this ddl record
+	 */
+	public void setClassPK(long classPK);
 
 	/**
 	 * Returns the version of this ddl record.

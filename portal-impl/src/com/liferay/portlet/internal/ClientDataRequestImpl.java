@@ -159,12 +159,12 @@ public abstract class ClientDataRequestImpl
 	}
 
 	protected Map<String, String[]> getPortletParameterMap(
-		HttpServletRequest request, String portletNamespace) {
+		HttpServletRequest httpServletRequest, String portletNamespace) {
 
 		Map<String, String[]> portletParameterMap = new LinkedHashMap<>();
 		Map<String, String[]> parameterMap = getParameterMap();
 		Map<String, String[]> servletRequestParameterMap =
-			request.getParameterMap();
+			httpServletRequest.getParameterMap();
 
 		RenderParameters renderParameters = getRenderParameters();
 
@@ -296,8 +296,8 @@ public abstract class ClientDataRequestImpl
 
 				_fileItem.write(file);
 			}
-			catch (Exception e) {
-				throw new IOException(e);
+			catch (Exception exception) {
+				throw new IOException(exception);
 			}
 		}
 

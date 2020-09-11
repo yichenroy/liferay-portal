@@ -14,14 +14,11 @@
 
 package com.liferay.site.navigation.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DuplicateSiteNavigationMenuException extends PortalException {
 
 	public DuplicateSiteNavigationMenuException() {
@@ -31,12 +28,14 @@ public class DuplicateSiteNavigationMenuException extends PortalException {
 		super(msg);
 	}
 
-	public DuplicateSiteNavigationMenuException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DuplicateSiteNavigationMenuException(
+		String msg, Throwable throwable) {
+
+		super(msg, throwable);
 	}
 
-	public DuplicateSiteNavigationMenuException(Throwable cause) {
-		super(cause);
+	public DuplicateSiteNavigationMenuException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

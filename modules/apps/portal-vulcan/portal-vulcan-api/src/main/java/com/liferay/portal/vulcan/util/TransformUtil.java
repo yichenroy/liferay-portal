@@ -41,11 +41,11 @@ public class TransformUtil {
 					list.add(newItem);
 				}
 			}
-			catch (RuntimeException re) {
-				throw re;
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
 			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
 			}
 		}
 
@@ -58,7 +58,7 @@ public class TransformUtil {
 
 		List<R> list = transformToList(array, unsafeFunction);
 
-		return list.toArray((R[])Array.newInstance(clazz, list.size()));
+		return list.toArray((R[])Array.newInstance(clazz, 0));
 	}
 
 	public static <T, R> R[] transformToArray(
@@ -67,7 +67,7 @@ public class TransformUtil {
 
 		List<R> list = transform(collection, unsafeFunction);
 
-		return list.toArray((R[])Array.newInstance(clazz, list.size()));
+		return list.toArray((R[])Array.newInstance(clazz, 0));
 	}
 
 	public static <T, R> List<R> transformToList(
@@ -83,11 +83,11 @@ public class TransformUtil {
 					list.add(newItem);
 				}
 			}
-			catch (RuntimeException re) {
-				throw re;
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
 			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
 			}
 		}
 

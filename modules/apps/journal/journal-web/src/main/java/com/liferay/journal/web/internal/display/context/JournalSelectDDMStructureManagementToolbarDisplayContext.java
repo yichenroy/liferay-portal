@@ -30,15 +30,15 @@ public class JournalSelectDDMStructureManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public JournalSelectDDMStructureManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request,
 			JournalSelectDDMStructureDisplayContext
 				journalSelectDDMStructureDisplayContext)
 		throws Exception {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			journalSelectDDMStructureDisplayContext.getDDMStructureSearch());
 
 		_journalSelectDDMStructureDisplayContext =

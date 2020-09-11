@@ -14,8 +14,6 @@
 
 package com.liferay.marketplace.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.marketplace.model.Module;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
@@ -32,20 +30,19 @@ import java.io.ObjectOutput;
  * @author Ryan Park
  * @generated
  */
-@ProviderType
 public class ModuleCacheModel implements CacheModel<Module>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof ModuleCacheModel)) {
+		if (!(object instanceof ModuleCacheModel)) {
 			return false;
 		}
 
-		ModuleCacheModel moduleCacheModel = (ModuleCacheModel)obj;
+		ModuleCacheModel moduleCacheModel = (ModuleCacheModel)object;
 
 		if (moduleId == moduleCacheModel.moduleId) {
 			return true;

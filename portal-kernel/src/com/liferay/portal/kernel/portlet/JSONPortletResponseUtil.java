@@ -25,7 +25,6 @@ import javax.portlet.MimeResponse;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -35,38 +34,37 @@ public class JSONPortletResponseUtil {
 
 	public static void writeJSON(
 			PortletRequest portletRequest, MimeResponse mimeResponse,
-			Object jsonObj)
+			Object object)
 		throws IOException {
 
 		mimeResponse.setContentType(_getContentType(portletRequest));
 
-		PortletResponseUtil.write(mimeResponse, jsonObj.toString());
+		PortletResponseUtil.write(mimeResponse, object.toString());
 
 		mimeResponse.flushBuffer();
 	}
 
 	public static void writeJSON(
 			PortletRequest portletRequest, PortletResponse portletResponse,
-			Object jsonObj)
+			Object object)
 		throws IOException {
 
-		HttpServletResponse response = PortalUtil.getHttpServletResponse(
-			portletResponse);
+		HttpServletResponse httpServletResponse =
+			PortalUtil.getHttpServletResponse(portletResponse);
 
-		response.setContentType(_getContentType(portletRequest));
+		httpServletResponse.setContentType(_getContentType(portletRequest));
 
-		ServletResponseUtil.write(response, jsonObj.toString());
+		ServletResponseUtil.write(httpServletResponse, object.toString());
 
-		response.flushBuffer();
+		httpServletResponse.flushBuffer();
 	}
 
 	private static String _getContentType(PortletRequest portletRequest) {
 		String contentType = ContentTypes.APPLICATION_JSON;
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			portletRequest);
+		if (BrowserSnifferUtil.isIe(
+				PortalUtil.getHttpServletRequest(portletRequest))) {
 
-		if (BrowserSnifferUtil.isIe(request)) {
 			contentType = ContentTypes.TEXT_PLAIN;
 		}
 

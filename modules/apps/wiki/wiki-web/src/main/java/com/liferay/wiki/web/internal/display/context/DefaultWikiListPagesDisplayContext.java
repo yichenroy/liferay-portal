@@ -92,27 +92,30 @@ public class DefaultWikiListPagesDisplayContext
 	implements WikiListPagesDisplayContext {
 
 	public DefaultWikiListPagesDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
-		WikiNode wikiNode, TrashHelper trashHelper) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, WikiNode wikiNode,
+		TrashHelper trashHelper) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_wikiNode = wikiNode;
 		_trashHelper = trashHelper;
 
-		_wikiRequestHelper = new WikiRequestHelper(request);
+		_wikiRequestHelper = new WikiRequestHelper(httpServletRequest);
 	}
 
 	@Override
 	public String getEmptyResultsMessage() {
-		String keywords = ParamUtil.getString(_request, "keywords");
+		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		if (Validator.isNotNull(keywords)) {
 			return LanguageUtil.format(
-				_request, "no-pages-were-found-that-matched-the-keywords-x",
+				_httpServletRequest,
+				"no-pages-were-found-that-matched-the-keywords-x",
 				"<strong>" + HtmlUtil.escape(keywords) + "</strong>", false);
 		}
 
-		String navigation = ParamUtil.getString(_request, "navigation");
+		String navigation = ParamUtil.getString(
+			_httpServletRequest, "navigation");
 
 		if (navigation.equals("categorized-pages")) {
 			return "there-are-no-pages-with-this-category";
@@ -128,7 +131,7 @@ public class DefaultWikiListPagesDisplayContext
 				wikiWebComponentProvider.getWikiGroupServiceConfiguration();
 
 			return LanguageUtil.format(
-				_request, "there-is-no-x",
+				_httpServletRequest, "there-is-no-x",
 				new String[] {wikiGroupServiceConfiguration.frontPageName()},
 				false);
 		}
@@ -191,18 +194,21 @@ public class DefaultWikiListPagesDisplayContext
 	}
 
 	@Override
-	public void populateResultsAndTotal(SearchContainer searchContainer)
+	public void populateResultsAndTotal(
+			SearchContainer<WikiPage> searchContainer)
 		throws PortalException {
 
-		WikiPage page = (WikiPage)_request.getAttribute(WikiWebKeys.WIKI_PAGE);
+		WikiPage page = (WikiPage)_httpServletRequest.getAttribute(
+			WikiWebKeys.WIKI_PAGE);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		String navigation = ParamUtil.getString(
-			_request, "navigation", "all-pages");
+			_httpServletRequest, "navigation", "all-pages");
 
-		String keywords = ParamUtil.getString(_request, "keywords");
+		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		int total = 0;
 		List<WikiPage> results = new ArrayList<>();
@@ -212,12 +218,13 @@ public class DefaultWikiListPagesDisplayContext
 				WikiPage.class);
 
 			SearchContext searchContext = SearchContextFactory.getInstance(
-				_request);
+				_httpServletRequest);
 
 			searchContext.setAttribute("paginationType", "more");
 			searchContext.setEnd(searchContainer.getEnd());
 			searchContext.setIncludeAttachments(true);
 			searchContext.setIncludeDiscussions(true);
+			searchContext.setIncludeInternalAssetCategories(true);
 			searchContext.setKeywords(keywords);
 			searchContext.setNodeIds(new long[] {_wikiNode.getNodeId()});
 			searchContext.setStart(searchContainer.getStart());
@@ -245,7 +252,7 @@ public class DefaultWikiListPagesDisplayContext
 
 			searchContainer.setTotal(total);
 
-			OrderByComparator<WikiPage> obc =
+			OrderByComparator<WikiPage> orderByComparator =
 				WikiPortletUtil.getPageOrderByComparator(
 					searchContainer.getOrderByCol(),
 					searchContainer.getOrderByType());
@@ -254,7 +261,7 @@ public class DefaultWikiListPagesDisplayContext
 				themeDisplay.getScopeGroupId(), _wikiNode.getNodeId(), true,
 				themeDisplay.getUserId(), true,
 				WorkflowConstants.STATUS_APPROVED, searchContainer.getStart(),
-				searchContainer.getEnd(), obc);
+				searchContainer.getEnd(), orderByComparator);
 
 			PermissionChecker permissionChecker =
 				_wikiRequestHelper.getPermissionChecker();
@@ -276,12 +283,12 @@ public class DefaultWikiListPagesDisplayContext
 						lastPage = WikiPageLocalServiceUtil.getPage(
 							curPage.getResourcePrimKey(), false);
 					}
-					catch (PortalException pe) {
+					catch (PortalException portalException) {
 
 						// LPS-52675
 
 						if (_log.isDebugEnabled()) {
-							_log.debug(pe, pe);
+							_log.debug(portalException, portalException);
 						}
 					}
 
@@ -654,10 +661,12 @@ public class DefaultWikiListPagesDisplayContext
 			url = PermissionsURLTag.doTag(
 				null, WikiPage.class.getName(), wikiPage.getTitle(), null,
 				String.valueOf(wikiPage.getResourcePrimKey()),
-				LiferayWindowState.POP_UP.toString(), null, _request);
+				LiferayWindowState.POP_UP.toString(), null,
+				_httpServletRequest);
 		}
-		catch (Exception e) {
-			throw new SystemException("Unable to create permissions URL", e);
+		catch (Exception exception) {
+			throw new SystemException(
+				"Unable to create permissions URL", exception);
 		}
 
 		urlMenuItem.setURL(url);
@@ -692,7 +701,7 @@ public class DefaultWikiListPagesDisplayContext
 			portletURL.setParameter("viewMode", Constants.PRINT);
 			portletURL.setWindowState(LiferayWindowState.POP_UP);
 
-			sb.append(portletURL.toString());
+			sb.append(HtmlUtil.escapeJS(portletURL.toString()));
 
 			sb.append("', '', 'directories=0,height=480,left=80,location=1,");
 			sb.append("menubar=1,resizable=1,scrollbars=yes,status=0,");
@@ -702,7 +711,7 @@ public class DefaultWikiListPagesDisplayContext
 
 			menuItems.add(javaScriptMenuItem);
 		}
-		catch (WindowStateException wse) {
+		catch (WindowStateException windowStateException) {
 		}
 	}
 
@@ -710,7 +719,7 @@ public class DefaultWikiListPagesDisplayContext
 			List<MenuItem> menuItems, WikiPage wikiPage)
 		throws PortalException {
 
-		ResultRow row = (ResultRow)_request.getAttribute(
+		ResultRow row = (ResultRow)_httpServletRequest.getAttribute(
 			WebKeys.SEARCH_CONTAINER_RESULT_ROW);
 
 		if (row == null) {
@@ -814,7 +823,7 @@ public class DefaultWikiListPagesDisplayContext
 	private static final Log _log = LogFactoryUtil.getLog(
 		DefaultWikiListPagesDisplayContext.class);
 
-	private final HttpServletRequest _request;
+	private final HttpServletRequest _httpServletRequest;
 	private final TrashHelper _trashHelper;
 	private final WikiNode _wikiNode;
 	private final WikiRequestHelper _wikiRequestHelper;

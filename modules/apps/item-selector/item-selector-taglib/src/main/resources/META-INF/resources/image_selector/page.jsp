@@ -50,7 +50,7 @@ if (fileEntryId != 0) {
 	<liferay-util:buffer
 		var="selectFileLink"
 	>
-		<a class="browse-image btn btn-default" href="javascript:;" id="<%= randomNamespace + "browseImage" %>"><liferay-ui:message key="select-file" /></a>
+		<a class="browse-image btn btn-secondary" href="javascript:;" id="<%= randomNamespace + "browseImage" %>"><liferay-ui:message key="select-file" /></a>
 	</liferay-util:buffer>
 
 	<div class="browse-image-controls <%= (fileEntryId != 0) ? "hide" : StringPool.BLANK %>">
@@ -78,12 +78,16 @@ if (fileEntryId != 0) {
 			</c:if>
 
 			<c:if test="<%= maxFileSize != 0 %>">
-				<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(maxFileSize, locale) %>" key="maximum-size-x" />
+				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(maxFileSize, locale) %>" key="maximum-size-x" />
 			</c:if>
 		</div>
 	</div>
 
-	<i class="glyphicon glyphicon-ok"></i>
+	<span class="selection-status">
+		<clay:icon
+			symbol="check"
+		/>
+	</span>
 
 	<liferay-ui:drop-here-info
 		message="drop-files-here"
@@ -110,9 +114,20 @@ if (fileEntryId != 0) {
 	</div>
 
 	<div class="change-image-controls <%= (fileEntryId != 0) ? StringPool.BLANK : "hide" %>">
-		<aui:button cssClass="browse-image btn-monospaced btn-sm" icon="icon-refresh" />
+		<clay:button
+			cssClass="browse-image"
+			displayType="secondary"
+			icon="picture"
+			title="change-image"
+		/>
 
-		<aui:button cssClass="btn-monospaced btn-sm" icon="icon-trash" id='<%= randomNamespace + "removeImage" %>' useNamespace="<%= false %>" />
+		<clay:button
+			displayType="secondary"
+			icon="trash"
+			id='<%= randomNamespace + "removeImage" %>'
+			monospaced="<%= true %>"
+			title="remove-image"
+		/>
 	</div>
 </div>
 
@@ -125,33 +140,28 @@ if (!draggableImage.equals("none")) {
 %>
 
 <aui:script use="<%= modules %>">
-	var imageSelector = new Liferay.ImageSelector(
-		{
-			errorNode: '#<%= randomNamespace + "errorAlert" %>',
-			fileEntryImageNode: '#<%= randomNamespace %>image',
-			itemSelectorEventName: '<%= itemSelectorEventName %>',
-			itemSelectorURL: '<%= itemSelectorURL %>',
-			maxFileSize: <%= maxFileSize %>,
-			namespace: '<%= randomNamespace %>',
-			paramName: '<portlet:namespace /><%= paramName %>',
-			rootNode: '#<%= randomNamespace %>taglibImageSelector',
-			uploadURL: '<%= uploadURL %>',
-			validExtensions: '<%= validExtensions %>'
-		}
-	);
+	var imageSelector = new Liferay.ImageSelector({
+		errorNode: '#<%= randomNamespace + "errorAlert" %>',
+		fileEntryImageNode: '#<%= randomNamespace %>image',
+		itemSelectorEventName: '<%= itemSelectorEventName %>',
+		itemSelectorURL: '<%= itemSelectorURL %>',
+		maxFileSize: <%= maxFileSize %>,
+		namespace: '<%= randomNamespace %>',
+		paramName: '<portlet:namespace /><%= paramName %>',
+		rootNode: '#<%= randomNamespace %>taglibImageSelector',
+		uploadURL: '<%= uploadURL %>',
+		validExtensions: '<%= validExtensions %>',
+	});
 
 	<c:if test='<%= !draggableImage.equals("none") %>'>
-		imageSelector.plug(
-			Liferay.CoverCropper,
-			{
-				direction: '<%= draggableImage %>',
-				imageContainerSelector: '.image-wrapper',
-				imageSelector: '#<%= randomNamespace %>image'
-			}
-		);
+		imageSelector.plug(Liferay.CoverCropper, {
+			direction: '<%= draggableImage %>',
+			imageContainerSelector: '.image-wrapper',
+			imageSelector: '#<%= randomNamespace %>image',
+		});
 	</c:if>
 
-	var destroyInstance = function(event) {
+	var destroyInstance = function (event) {
 		if (event.portletId === '<%= portletDisplay.getRootPortletId() %>') {
 			imageSelector.destroy();
 

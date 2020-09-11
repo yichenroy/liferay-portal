@@ -72,10 +72,11 @@ public class CASAutoLogin extends BaseAutoLogin {
 
 	@Override
 	protected String[] doHandleException(
-		HttpServletRequest request, HttpServletResponse response, Exception e) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, Exception exception) {
 
-		if (e instanceof NoSuchUserException) {
-			HttpSession session = request.getSession();
+		if (exception instanceof NoSuchUserException) {
+			HttpSession session = httpServletRequest.getSession();
 
 			session.removeAttribute(CASWebKeys.CAS_LOGIN);
 
@@ -83,19 +84,18 @@ public class CASAutoLogin extends BaseAutoLogin {
 				CASWebKeys.CAS_NO_SUCH_USER_EXCEPTION, Boolean.TRUE);
 		}
 
-		_log.error(e, e);
+		_log.error(exception, exception);
 
 		return null;
 	}
 
 	@Override
 	protected String[] doLogin(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		HttpSession session = request.getSession();
-
-		long companyId = _portal.getCompanyId(request);
+		long companyId = _portal.getCompanyId(httpServletRequest);
 
 		CASConfiguration casConfiguration =
 			_configurationProvider.getConfiguration(
@@ -106,6 +106,8 @@ public class CASAutoLogin extends BaseAutoLogin {
 		if (!casConfiguration.enabled()) {
 			return null;
 		}
+
+		HttpSession session = httpServletRequest.getSession();
 
 		String login = (String)session.getAttribute(CASWebKeys.CAS_LOGIN);
 
@@ -123,7 +125,8 @@ public class CASAutoLogin extends BaseAutoLogin {
 
 			String redirect = casConfiguration.noSuchUserRedirectURL();
 
-			request.setAttribute(AutoLogin.AUTO_LOGIN_REDIRECT, redirect);
+			httpServletRequest.setAttribute(
+				AutoLogin.AUTO_LOGIN_REDIRECT, redirect);
 
 			return null;
 		}
@@ -145,12 +148,12 @@ public class CASAutoLogin extends BaseAutoLogin {
 						companyId, login, StringPool.BLANK);
 				}
 			}
-			catch (SystemException se) {
+			catch (SystemException systemException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(se, se);
+					_log.debug(systemException, systemException);
 				}
 			}
 		}
@@ -165,7 +168,7 @@ public class CASAutoLogin extends BaseAutoLogin {
 			}
 		}
 
-		addRedirect(request);
+		addRedirect(httpServletRequest);
 
 		String[] credentials = new String[3];
 

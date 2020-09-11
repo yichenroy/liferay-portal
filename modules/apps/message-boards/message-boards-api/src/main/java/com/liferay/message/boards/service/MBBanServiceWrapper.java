@@ -14,8 +14,7 @@
 
 package com.liferay.message.boards.service;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.message.boards.model.MBBan;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,7 +24,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see MBBanService
  * @generated
  */
-@ProviderType
 public class MBBanServiceWrapper
 	implements MBBanService, ServiceWrapper<MBBanService> {
 
@@ -34,7 +32,7 @@ public class MBBanServiceWrapper
 	}
 
 	@Override
-	public com.liferay.message.boards.model.MBBan addBan(
+	public MBBan addBan(
 			long banUserId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {

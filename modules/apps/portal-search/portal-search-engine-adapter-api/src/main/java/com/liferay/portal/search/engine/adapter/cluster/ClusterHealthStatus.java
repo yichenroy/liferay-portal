@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.engine.adapter.cluster;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum ClusterHealthStatus {
 
 	GREEN, RED, YELLOW

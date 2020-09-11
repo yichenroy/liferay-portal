@@ -15,12 +15,12 @@
 package com.liferay.asset.publisher.web.internal.display.context;
 
 import com.liferay.asset.publisher.util.AssetPublisherHelper;
+import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.GroupSearch;
 import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
@@ -39,19 +39,21 @@ public class LayoutScopesItemSelectorViewDisplayContext
 	extends BaseItemSelectorViewDisplayContext {
 
 	public LayoutScopesItemSelectorViewDisplayContext(
-		HttpServletRequest request, AssetPublisherHelper assetPublisherHelper,
+		HttpServletRequest httpServletRequest,
+		AssetPublisherHelper assetPublisherHelper,
 		SiteItemSelectorCriterion siteItemSelectorCriterion,
 		String itemSelectedEventName, PortletURL portletURL) {
 
 		super(
-			request, assetPublisherHelper, siteItemSelectorCriterion,
+			httpServletRequest, assetPublisherHelper, siteItemSelectorCriterion,
 			itemSelectedEventName, portletURL);
 	}
 
 	@Override
 	public GroupSearch getGroupSearch() throws Exception {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		long groupId = getGroupId();
 
@@ -91,7 +93,7 @@ public class LayoutScopesItemSelectorViewDisplayContext
 			return groups;
 		}
 
-		List<Group> filteredGroups = new ArrayList();
+		List<Group> filteredGroups = new ArrayList<>();
 
 		for (Group group : groups) {
 			if (!group.isLayout()) {
@@ -114,7 +116,10 @@ public class LayoutScopesItemSelectorViewDisplayContext
 			return _privateLayout;
 		}
 
-		_privateLayout = ParamUtil.getBoolean(request, "privateLayout");
+		GroupItemSelectorCriterion groupItemSelectorCriterion =
+			getGroupItemSelectorCriterion();
+
+		_privateLayout = groupItemSelectorCriterion.isPrivateLayout();
 
 		return _privateLayout;
 	}

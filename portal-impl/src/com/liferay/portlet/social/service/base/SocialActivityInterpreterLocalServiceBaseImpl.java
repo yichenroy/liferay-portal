@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.social.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -45,10 +43,9 @@ import javax.sql.DataSource;
  * @see com.liferay.portlet.social.service.impl.SocialActivityInterpreterLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class SocialActivityInterpreterLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
-	implements SocialActivityInterpreterLocalService, IdentifiableOSGiService {
+	implements IdentifiableOSGiService, SocialActivityInterpreterLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -264,8 +261,8 @@ public abstract class SocialActivityInterpreterLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 

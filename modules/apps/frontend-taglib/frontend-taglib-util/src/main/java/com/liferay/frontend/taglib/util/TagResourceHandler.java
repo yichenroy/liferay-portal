@@ -85,8 +85,9 @@ public class TagResourceHandler {
 
 			outputResource(Position.BOTTOM, StringUtil.read(url.openStream()));
 		}
-		catch (Exception e) {
-			_log.error("Unable to output NPM resource " + npmResourcePath, e);
+		catch (Exception exception) {
+			_log.error(
+				"Unable to output NPM resource " + npmResourcePath, exception);
 		}
 	}
 
@@ -107,15 +108,17 @@ public class TagResourceHandler {
 
 			outputResource(Position.TOP, sb.toString());
 		}
-		catch (Exception e) {
-			_log.error("Unable to output NPM style sheet " + npmCssPath, e);
+		catch (Exception exception) {
+			_log.error(
+				"Unable to output NPM style sheet " + npmCssPath, exception);
 		}
 	}
 
 	public void outputResource(Position position, String html) {
-		HttpServletRequest request = _getRequest();
+		HttpServletRequest httpServletRequest = _getHttpServletRequest();
 
-		boolean xPjax = GetterUtil.getBoolean(request.getHeader("X-PJAX"));
+		boolean xPjax = GetterUtil.getBoolean(
+			httpServletRequest.getHeader("X-PJAX"));
 
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
@@ -129,8 +132,8 @@ public class TagResourceHandler {
 
 				jspWriter.write(html);
 			}
-			catch (IOException ioe) {
-				_log.error("Unable to output resource", ioe);
+			catch (IOException ioException) {
+				_log.error("Unable to output resource", ioException);
 			}
 		}
 		else {
@@ -150,33 +153,33 @@ public class TagResourceHandler {
 
 	}
 
-	private OutputData _getOutputData() {
-		HttpServletRequest request = _getRequest();
+	private HttpServletRequest _getHttpServletRequest() {
+		return _tagAccessor.getRequest();
+	}
 
-		OutputData outputData = (OutputData)request.getAttribute(
+	private OutputData _getOutputData() {
+		HttpServletRequest httpServletRequest = _getHttpServletRequest();
+
+		OutputData outputData = (OutputData)httpServletRequest.getAttribute(
 			WebKeys.OUTPUT_DATA);
 
 		if (outputData == null) {
 			outputData = new OutputData();
 
-			request.setAttribute(WebKeys.OUTPUT_DATA, outputData);
+			httpServletRequest.setAttribute(WebKeys.OUTPUT_DATA, outputData);
 		}
 
 		return outputData;
 	}
 
-	private HttpServletRequest _getRequest() {
-		return _tagAccessor.getRequest();
-	}
-
 	private ThemeDisplay _getThemeDisplay() {
-		ServletRequest servletRequest = _getRequest();
+		ServletRequest servletRequest = _getHttpServletRequest();
 
 		return (ThemeDisplay)servletRequest.getAttribute(WebKeys.THEME_DISPLAY);
 	}
 
 	private static final EnumMap<Position, String> _webKeysEnumMap =
-		new EnumMap(Position.class) {
+		new EnumMap<Position, String>(Position.class) {
 			{
 				put(Position.BOTTOM, WebKeys.PAGE_BODY_BOTTOM);
 				put(Position.TOP, WebKeys.PAGE_TOP);

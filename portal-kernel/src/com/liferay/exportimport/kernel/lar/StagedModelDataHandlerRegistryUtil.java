@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -39,7 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Brian Wing Shun Chan
  * @since  6.2
  */
-@ProviderType
 public class StagedModelDataHandlerRegistryUtil {
 
 	/**
@@ -52,7 +49,8 @@ public class StagedModelDataHandlerRegistryUtil {
 	public static StagedModelDataHandler<?> getStagedModelDataHandler(
 		String className) {
 
-		return _instance._getStagedModelDataHandler(className);
+		return _stagedModelDataHandlerRegistryUtil._getStagedModelDataHandler(
+			className);
 	}
 
 	/**
@@ -61,7 +59,8 @@ public class StagedModelDataHandlerRegistryUtil {
 	 * @return the registered staged model data handlers
 	 */
 	public static List<StagedModelDataHandler<?>> getStagedModelDataHandlers() {
-		return _instance._getStagedModelDataHandlers();
+		return _stagedModelDataHandlerRegistryUtil.
+			_getStagedModelDataHandlers();
 	}
 
 	/**
@@ -72,7 +71,7 @@ public class StagedModelDataHandlerRegistryUtil {
 	public static void register(
 		StagedModelDataHandler<?> stagedModelDataHandler) {
 
-		_instance._register(stagedModelDataHandler);
+		_stagedModelDataHandlerRegistryUtil._register(stagedModelDataHandler);
 	}
 
 	/**
@@ -99,7 +98,7 @@ public class StagedModelDataHandlerRegistryUtil {
 	public static void unregister(
 		StagedModelDataHandler<?> stagedModelDataHandler) {
 
-		_instance._unregister(stagedModelDataHandler);
+		_stagedModelDataHandlerRegistryUtil._unregister(stagedModelDataHandler);
 	}
 
 	private StagedModelDataHandlerRegistryUtil() {
@@ -147,8 +146,9 @@ public class StagedModelDataHandlerRegistryUtil {
 		}
 	}
 
-	private static final StagedModelDataHandlerRegistryUtil _instance =
-		new StagedModelDataHandlerRegistryUtil();
+	private static final StagedModelDataHandlerRegistryUtil
+		_stagedModelDataHandlerRegistryUtil =
+			new StagedModelDataHandlerRegistryUtil();
 
 	private final ServiceRegistrationMap<StagedModelDataHandler<?>>
 		_serviceRegistrations = new ServiceRegistrationMapImpl<>();

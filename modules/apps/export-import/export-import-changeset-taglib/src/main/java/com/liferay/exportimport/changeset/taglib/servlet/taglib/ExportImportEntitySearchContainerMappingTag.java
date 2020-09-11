@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.changeset.taglib.servlet.taglib;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.changeset.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.taglib.ui.SearchContainerTag;
@@ -28,7 +26,6 @@ import javax.servlet.jsp.PageContext;
 /**
  * @author Akos Thurzo
  */
-@ProviderType
 public class ExportImportEntitySearchContainerMappingTag<R> extends IncludeTag {
 
 	public static final String DEFAULT_SEARCH_CONTAINER_MAPPING_ID =
@@ -78,12 +75,12 @@ public class ExportImportEntitySearchContainerMappingTag<R> extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:" +
 				"export-import-entity-search-container-mapping:searchContainer",
 			_searchContainer);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:" +
 				"export-import-entity-search-container-mapping:" +
 					"searchContainerMappingId",

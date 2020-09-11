@@ -24,7 +24,6 @@ import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.exportimport.kernel.staging.permission.StagingPermission;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.BaseModelPermissionCheckerUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -42,6 +41,7 @@ import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
 import com.liferay.portal.kernel.workflow.permission.WorkflowPermission;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
+import com.liferay.sharing.security.permission.resource.SharingModelResourcePermissionConfigurator;
 
 import java.util.Dictionary;
 
@@ -51,21 +51,24 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Preston Crary
  */
-@Component(immediate = true, service = {})
+@Component(service = {})
 public class DLFileEntryModelResourcePermissionRegistrar {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		properties.put("model.class.name", DLFileEntry.class.getName());
 
 		_serviceRegistration = bundleContext.registerService(
-			ModelResourcePermission.class,
+			(Class<ModelResourcePermission<DLFileEntry>>)
+				(Class<?>)ModelResourcePermission.class,
 			ModelResourcePermissionFactory.create(
 				DLFileEntry.class, DLFileEntry::getFileEntryId,
 				_dlFileEntryLocalService::getDLFileEntry,
@@ -76,8 +79,14 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 							_stagingPermission, DLPortletKeys.DOCUMENT_LIBRARY,
 							DLFileEntry::getFileEntryId));
 					consumer.accept(
-						new DLFileEntryWorkflowedModelPermissionLogic(
+						new DLFileEntryWorkflowedModelResourcePermissionLogic(
 							modelResourcePermission));
+
+					if (_sharingModelResourcePermissionConfigurator != null) {
+						_sharingModelResourcePermissionConfigurator.configure(
+							modelResourcePermission, consumer);
+					}
+
 					consumer.accept(
 						(permissionChecker, name, fileEntry, actionId) -> {
 							String className = fileEntry.getClassName();
@@ -126,7 +135,7 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_serviceRegistration.unregister();
 	}
 
@@ -159,15 +168,18 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 	)
 	private ModelResourcePermission<DLFolder> _dlFolderModelResourcePermission;
 
-	@Reference(
-		target = ModuleServiceLifecycle.DATABASE_INITIALIZED, unbind = "-"
-	)
-	private ModuleServiceLifecycle _moduleServiceLifecycle;
-
 	@Reference(target = "(resource.name=" + DLConstants.RESOURCE_NAME + ")")
 	private PortletResourcePermission _portletResourcePermission;
 
-	private ServiceRegistration<ModelResourcePermission> _serviceRegistration;
+	private ServiceRegistration<ModelResourcePermission<DLFileEntry>>
+		_serviceRegistration;
+
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private SharingModelResourcePermissionConfigurator
+		_sharingModelResourcePermissionConfigurator;
 
 	@Reference
 	private StagingPermission _stagingPermission;
@@ -181,7 +193,7 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 	@Reference
 	private WorkflowPermission _workflowPermission;
 
-	private class DLFileEntryWorkflowedModelPermissionLogic
+	private class DLFileEntryWorkflowedModelResourcePermissionLogic
 		implements ModelResourcePermissionLogic<DLFileEntry> {
 
 		@Override
@@ -223,7 +235,7 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 			return null;
 		}
 
-		private DLFileEntryWorkflowedModelPermissionLogic(
+		private DLFileEntryWorkflowedModelResourcePermissionLogic(
 			ModelResourcePermission<DLFileEntry> modelResourcePermission) {
 
 			_modelResourcePermission = modelResourcePermission;

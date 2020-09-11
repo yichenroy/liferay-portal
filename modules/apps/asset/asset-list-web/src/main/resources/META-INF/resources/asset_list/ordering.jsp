@@ -18,8 +18,12 @@
 
 <liferay-frontend:fieldset-group>
 	<liferay-frontend:fieldset>
-		<aui:row id="ordering">
-			<aui:col width="<%= 50 %>">
+		<clay:row
+			id='<%= liferayPortletResponse.getNamespace() + "ordering" %>'
+		>
+			<clay:col
+				md="6"
+			>
 
 				<%
 				String orderByColumn1 = editAssetListDisplayContext.getOrderByColumn1();
@@ -32,8 +36,6 @@
 					<aui:option label="publish-date" selected='<%= Objects.equals(orderByColumn1, "publishDate") %>' value="publishDate" />
 					<aui:option label="expiration-date" selected='<%= Objects.equals(orderByColumn1, "expirationDate") %>' value="expirationDate" />
 					<aui:option label="priority" selected='<%= Objects.equals(orderByColumn1, "priority") %>' value="priority" />
-					<aui:option label="view-count" selected='<%= Objects.equals(orderByColumn1, "viewCount") %>' value="viewCount" />
-					<aui:option label="ratings" selected='<%= Objects.equals(orderByColumn1, "ratings") %>' value="ratings" />
 				</aui:select>
 
 				<%
@@ -61,9 +63,11 @@
 
 					<aui:input cssClass="order-by-type-field" name="TypeSettingsProperties--orderByType1--" type="hidden" value="<%= orderByType1 %>" />
 				</aui:field-wrapper>
-			</aui:col>
+			</clay:col>
 
-			<aui:col width="<%= 50 %>">
+			<clay:col
+				md="6"
+			>
 
 				<%
 				String orderByColumn2 = editAssetListDisplayContext.getOrderByColumn2();
@@ -76,8 +80,6 @@
 					<aui:option label="publish-date" selected='<%= Objects.equals(orderByColumn2, "publishDate") %>' value="publishDate" />
 					<aui:option label="expiration-date" selected='<%= Objects.equals(orderByColumn2, "expirationDate") %>' value="expirationDate" />
 					<aui:option label="priority" selected='<%= Objects.equals(orderByColumn2, "priority") %>' value="priority" />
-					<aui:option label="view-count" selected='<%= Objects.equals(orderByColumn2, "viewCount") %>' value="viewCount" />
-					<aui:option label="ratings" selected='<%= Objects.equals(orderByColumn2, "ratings") %>' value="ratings" />
 				</aui:select>
 
 				<%
@@ -105,18 +107,20 @@
 
 					<aui:input cssClass="order-by-type-field" name="TypeSettingsProperties--orderByType2--" type="hidden" value="<%= orderByType2 %>" />
 				</aui:field-wrapper>
-			</aui:col>
-		</aui:row>
+			</clay:col>
+		</clay:row>
 	</liferay-frontend:fieldset>
 </liferay-frontend:fieldset-group>
 
 <aui:script use="aui-base">
 	A.one('#<portlet:namespace />ordering').delegate(
 		'click',
-		function(event) {
+		function (event) {
 			var currentTarget = event.currentTarget;
 
-			var orderByTypeContainer = currentTarget.ancestor('.order-by-type-container');
+			var orderByTypeContainer = currentTarget.ancestor(
+				'.order-by-type-container'
+			);
 
 			orderByTypeContainer.all('.icon').toggleClass('hide');
 

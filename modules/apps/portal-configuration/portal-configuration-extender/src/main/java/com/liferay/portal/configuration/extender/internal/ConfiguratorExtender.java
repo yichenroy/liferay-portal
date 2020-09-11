@@ -14,11 +14,16 @@
 
 package com.liferay.portal.configuration.extender.internal;
 
-import com.liferay.osgi.felix.util.AbstractExtender;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.PropertiesUtil;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.net.URL;
 
@@ -27,196 +32,221 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.felix.utils.extender.Extension;
-import org.apache.felix.utils.log.Logger;
+import org.apache.felix.cm.file.ConfigurationHandler;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.BundleTrackerCustomizer;
 
 /**
  * @author Carlos Sierra Andrés
  * @author Miguel Pastor
  */
 @Component(immediate = true, service = {})
-public class ConfiguratorExtender extends AbstractExtender {
-
-	@Activate
-	protected void activate(BundleContext bundleContext) throws Exception {
-		_logger = new Logger(bundleContext);
-
-		start(bundleContext);
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.AT_LEAST_ONE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void addConfigurationDescriptionFactory(
-		ConfigurationDescriptionFactory configurationDescriptionFactory) {
-
-		_configurationDescriptionFactories.add(configurationDescriptionFactory);
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.AT_LEAST_ONE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void addNamedConfigurationContentFactory(
-		NamedConfigurationContentFactory namedConfigurationContentFactory) {
-
-		_namedConfigurationContentFactories.add(
-			namedConfigurationContentFactory);
-	}
-
-	@Deactivate
-	protected void deactivate(BundleContext bundleContext) throws Exception {
-		stop(bundleContext);
-	}
+public class ConfiguratorExtender implements BundleTrackerCustomizer<Bundle> {
 
 	@Override
-	protected void debug(Bundle bundle, String s) {
-		_logger.log(
-			Logger.LOG_DEBUG, StringBundler.concat("[", bundle, "] ", s));
-	}
+	public Bundle addingBundle(Bundle bundle, BundleEvent bundleEvent) {
+		Dictionary<String, String> headers = bundle.getHeaders(
+			StringPool.BLANK);
 
-	@Override
-	protected Extension doCreateExtension(Bundle bundle) throws Exception {
-		Collection<NamedConfigurationContent> namedConfigurationContents =
+		String configurationPath = headers.get("Liferay-Configuration-Path");
+
+		if (configurationPath == null) {
+			return null;
+		}
+
+		List<NamedConfigurationContent> namedConfigurationContents =
 			new ArrayList<>();
 
-		for (NamedConfigurationContentFactory namedConfigurationContentFactory :
-				_namedConfigurationContentFactories) {
+		_addNamedConfigurations(
+			bundle, configurationPath, namedConfigurationContents,
+			inputStream -> ConfigurationHandler.read(inputStream), "*.config");
 
-			try {
-				List<NamedConfigurationContent> contents =
-					namedConfigurationContentFactory.create(
-						new BundleStorageImpl(bundle));
-
-				if (contents != null) {
-					namedConfigurationContents.addAll(contents);
-				}
-			}
-			catch (Throwable t) {
-				_logger.log(Logger.LOG_INFO, t.getMessage(), t);
-			}
-		}
+		_addNamedConfigurations(
+			bundle, configurationPath, namedConfigurationContents,
+			inputStream -> PropertiesUtil.load(inputStream, "UTF-8"),
+			"*.properties");
 
 		if (namedConfigurationContents.isEmpty()) {
 			return null;
 		}
 
-		return new ConfiguratorExtension(
-			_configurationAdmin, new Logger(bundle.getBundleContext()),
-			bundle.getSymbolicName(), namedConfigurationContents,
-			_configurationDescriptionFactories);
+		_process(
+			_configurationAdmin, bundle.getSymbolicName(),
+			namedConfigurationContents);
+
+		return bundle;
 	}
 
 	@Override
-	protected void error(String s, Throwable throwable) {
-		_logger.log(Logger.LOG_ERROR, s, throwable);
-	}
-
-	protected void removeConfigurationDescriptionFactory(
-		ConfigurationDescriptionFactory configurationDescriptionFactory) {
-
-		_configurationDescriptionFactories.remove(
-			configurationDescriptionFactory);
-	}
-
-	protected void removeNamedConfigurationContentFactory(
-		NamedConfigurationContentFactory namedConfigurationContentFactory) {
-
-		_namedConfigurationContentFactories.remove(
-			namedConfigurationContentFactory);
-	}
-
-	@Reference(unbind = "-")
-	protected void setConfigurationAdmin(
-		ConfigurationAdmin configurationAdmin) {
-
-		_configurationAdmin = configurationAdmin;
+	public void modifiedBundle(
+		Bundle bundle, BundleEvent bundleEvent, Bundle trackedBundle) {
 	}
 
 	@Override
-	protected void warn(Bundle bundle, String s, Throwable throwable) {
-		_logger.log(
-			Logger.LOG_WARNING, StringBundler.concat("[", bundle, "] ", s));
+	public void removedBundle(
+		Bundle bundle, BundleEvent bundleEvent, Bundle trackedBundle) {
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_bundleTracker = new BundleTracker<>(
+			bundleContext, Bundle.ACTIVE | Bundle.STARTING, this);
+
+		_bundleTracker.open();
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_bundleTracker.close();
+	}
+
+	private static void _process(
+		ConfigurationAdmin configurationAdmin, String symbolicName,
+		Collection<NamedConfigurationContent> namedConfigurationContents) {
+
+		for (NamedConfigurationContent namedConfigurationContent :
+				namedConfigurationContents) {
+
+			try {
+				_process(
+					configurationAdmin, symbolicName,
+					namedConfigurationContent);
+			}
+			catch (Exception exception) {
+				_log.error(exception, exception);
+			}
+		}
+	}
+
+	private static void _process(
+			ConfigurationAdmin configurationAdmin, String symbolicName,
+			NamedConfigurationContent namedConfigurationContent)
+		throws InvalidSyntaxException, IOException {
+
+		Configuration configuration = null;
+		String configuratorURL = null;
+
+		if (namedConfigurationContent.getFactoryPid() == null) {
+			String pid = namedConfigurationContent.getPid();
+
+			if (ArrayUtil.isNotEmpty(
+					configurationAdmin.listConfigurations(
+						"(service.pid=" + pid + ")"))) {
+
+				return;
+			}
+
+			configuration = configurationAdmin.getConfiguration(
+				pid, StringPool.QUESTION);
+		}
+		else {
+			configuratorURL =
+				symbolicName + "#" + namedConfigurationContent.getPid();
+
+			if (ArrayUtil.isNotEmpty(
+					configurationAdmin.listConfigurations(
+						"(configurator.url=" + configuratorURL + ")"))) {
+
+				return;
+			}
+
+			configuration = configurationAdmin.createFactoryConfiguration(
+				namedConfigurationContent.getFactoryPid(), StringPool.QUESTION);
+		}
+
+		Dictionary<String, Object> properties = null;
+
+		try {
+			properties = namedConfigurationContent.getProperties();
+		}
+		catch (Throwable throwable) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					StringBundler.concat(
+						"Supplier from description ", namedConfigurationContent,
+						" threw an exception: "),
+					throwable);
+			}
+
+			return;
+		}
+
+		if (configuratorURL != null) {
+			properties.put("configurator.url", configuratorURL);
+		}
+
+		configuration.update(properties);
+	}
+
+	private void _addNamedConfigurations(
+		Bundle bundle, String configurationPath,
+		List<NamedConfigurationContent> namedConfigurationContents,
+		UnsafeFunction<InputStream, Dictionary<?, ?>, IOException>
+			propertyFunction,
+		String filePattern) {
+
+		Enumeration<URL> enumeration = bundle.findEntries(
+			configurationPath, filePattern, true);
+
+		if (enumeration == null) {
+			return;
+		}
+
+		while (enumeration.hasMoreElements()) {
+			URL url = enumeration.nextElement();
+
+			String name = url.getFile();
+
+			int lastIndexOfSlash = name.lastIndexOf('/');
+
+			if (lastIndexOfSlash < 0) {
+				lastIndexOfSlash = 0;
+			}
+
+			String factoryPid = null;
+			String pid = null;
+
+			int index = name.lastIndexOf('-');
+
+			if (index > lastIndexOfSlash) {
+				factoryPid = name.substring(lastIndexOfSlash, index);
+				pid = name.substring(
+					index + 1, name.length() + 1 - filePattern.length());
+			}
+			else {
+				pid = name.substring(
+					lastIndexOfSlash, name.length() + 1 - filePattern.length());
+			}
+
+			namedConfigurationContents.add(
+				new NamedConfigurationContent(
+					factoryPid, pid,
+					() -> {
+						try (InputStream inputStream = url.openStream()) {
+							return propertyFunction.apply(inputStream);
+						}
+					}));
+		}
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ConfiguratorExtender.class);
+
+	private BundleTracker<?> _bundleTracker;
+
+	@Reference
 	private ConfigurationAdmin _configurationAdmin;
-	private final Collection<ConfigurationDescriptionFactory>
-		_configurationDescriptionFactories = new CopyOnWriteArrayList<>();
-	private Logger _logger;
-	private final Collection<NamedConfigurationContentFactory>
-		_namedConfigurationContentFactories = new CopyOnWriteArrayList<>();
-
-	private static class BundleStorageImpl implements BundleStorage {
-
-		public BundleStorageImpl(Bundle bundle) {
-			_bundle = bundle;
-		}
-
-		@Override
-		public Enumeration<URL> findEntries(
-			String root, String pattern, boolean recurse) {
-
-			return _bundle.findEntries(root, pattern, recurse);
-		}
-
-		@Override
-		public long getBundleId() {
-			return _bundle.getBundleId();
-		}
-
-		@Override
-		public URL getEntry(String name) {
-			return _bundle.getEntry(name);
-		}
-
-		@Override
-		public Enumeration<String> getEntryPaths(String name) {
-			return _bundle.getEntryPaths(name);
-		}
-
-		@Override
-		public Dictionary<String, String> getHeaders() {
-			return _bundle.getHeaders(StringPool.BLANK);
-		}
-
-		@Override
-		public String getLocation() {
-			return _bundle.getLocation();
-		}
-
-		@Override
-		public URL getResource(String name) {
-			return _bundle.getResource(name);
-		}
-
-		@Override
-		public Enumeration<URL> getResources(String name) throws IOException {
-			return _bundle.getResources(name);
-		}
-
-		@Override
-		public String getSymbolicName() {
-			return _bundle.getSymbolicName();
-		}
-
-		private final Bundle _bundle;
-
-	}
 
 }

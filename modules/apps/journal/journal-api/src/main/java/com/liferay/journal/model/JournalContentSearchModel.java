@@ -14,11 +14,13 @@
 
 package com.liferay.journal.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the JournalContentSearch service. Represents a row in the &quot;JournalContentSearch&quot; database table, with each column mapped to a property of this class.
@@ -33,7 +35,8 @@ import com.liferay.portal.kernel.model.ShardedModel;
  */
 @ProviderType
 public interface JournalContentSearchModel
-	extends BaseModel<JournalContentSearch>, ShardedModel {
+	extends BaseModel<JournalContentSearch>, CTModel<JournalContentSearch>,
+			MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -46,6 +49,7 @@ public interface JournalContentSearchModel
 	 *
 	 * @return the primary key of this journal content search
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -53,7 +57,40 @@ public interface JournalContentSearchModel
 	 *
 	 * @param primaryKey the primary key of this journal content search
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this journal content search.
+	 *
+	 * @return the mvcc version of this journal content search
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this journal content search.
+	 *
+	 * @param mvccVersion the mvcc version of this journal content search
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this journal content search.
+	 *
+	 * @return the ct collection ID of this journal content search
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this journal content search.
+	 *
+	 * @param ctCollectionId the ct collection ID of this journal content search
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the content search ID of this journal content search.

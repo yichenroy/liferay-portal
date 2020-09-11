@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
@@ -34,7 +32,6 @@ import javax.servlet.http.HttpSession;
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class PortletPreferencesFactoryUtil {
 
 	public static void checkControlPanelPortletPreferences(
@@ -102,9 +99,10 @@ public class PortletPreferencesFactoryUtil {
 	}
 
 	public static PortalPreferences getPortalPreferences(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
-		return getPortletPreferencesFactory().getPortalPreferences(request);
+		return getPortletPreferencesFactory().getPortalPreferences(
+			httpServletRequest);
 	}
 
 	public static PortalPreferences getPortalPreferences(
@@ -129,11 +127,11 @@ public class PortletPreferencesFactoryUtil {
 	}
 
 	public static PortletPreferences getPortletPreferences(
-			HttpServletRequest request, String portletId)
+			HttpServletRequest httpServletRequest, String portletId)
 		throws PortalException {
 
 		return getPortletPreferencesFactory().getPortletPreferences(
-			request, portletId);
+			httpServletRequest, portletId);
 	}
 
 	public static PortletPreferencesFactory getPortletPreferencesFactory() {
@@ -141,19 +139,20 @@ public class PortletPreferencesFactoryUtil {
 	}
 
 	public static PortletPreferencesIds getPortletPreferencesIds(
-			HttpServletRequest request, Layout selLayout, String portletId)
+			HttpServletRequest httpServletRequest, Layout selLayout,
+			String portletId)
 		throws PortalException {
 
 		return getPortletPreferencesFactory().getPortletPreferencesIds(
-			request, selLayout, portletId);
+			httpServletRequest, selLayout, portletId);
 	}
 
 	public static PortletPreferencesIds getPortletPreferencesIds(
-			HttpServletRequest request, String portletId)
+			HttpServletRequest httpServletRequest, String portletId)
 		throws PortalException {
 
 		return getPortletPreferencesFactory().getPortletPreferencesIds(
-			request, portletId);
+			httpServletRequest, portletId);
 	}
 
 	public static PortletPreferencesIds getPortletPreferencesIds(
@@ -174,20 +173,20 @@ public class PortletPreferencesFactoryUtil {
 	}
 
 	public static PortletPreferences getPortletSetup(
-			HttpServletRequest request, String portletId)
+			HttpServletRequest httpServletRequest, String portletId)
 		throws PortalException {
 
 		return getPortletPreferencesFactory().getPortletSetup(
-			request, portletId);
+			httpServletRequest, portletId);
 	}
 
 	public static PortletPreferences getPortletSetup(
-			HttpServletRequest request, String portletId,
+			HttpServletRequest httpServletRequest, String portletId,
 			String defaultPreferences)
 		throws PortalException {
 
 		return getPortletPreferencesFactory().getPortletSetup(
-			request, portletId, defaultPreferences);
+			httpServletRequest, portletId, defaultPreferences);
 	}
 
 	public static PortletPreferences getPortletSetup(
@@ -229,9 +228,10 @@ public class PortletPreferencesFactoryUtil {
 	}
 
 	public static PortletPreferences getPreferences(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
-		return getPortletPreferencesFactory().getPreferences(request);
+		return getPortletPreferencesFactory().getPreferences(
+			httpServletRequest);
 	}
 
 	public static PreferencesValidator getPreferencesValidator(

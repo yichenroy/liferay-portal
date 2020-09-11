@@ -16,21 +16,23 @@ package com.liferay.portal.background.task.service.impl;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.background.task.internal.BackgroundTaskImpl;
+import com.liferay.portal.background.task.internal.lock.BackgroundTaskLockHelper;
 import com.liferay.portal.background.task.model.BackgroundTask;
 import com.liferay.portal.background.task.service.base.BackgroundTaskLocalServiceBaseImpl;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskLockHelperUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatus;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusRegistry;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocalManager;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.lock.LockManager;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
@@ -44,7 +46,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.File;
 import java.io.InputStream;
@@ -56,10 +57,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Daniel Kocsis
  * @author Michael C. Han
  */
+@Component(
+	property = "model.class.name=com.liferay.portal.background.task.model.BackgroundTask",
+	service = AopService.class
+)
 public class BackgroundTaskLocalServiceImpl
 	extends BackgroundTaskLocalServiceBaseImpl {
 
@@ -196,9 +205,7 @@ public class BackgroundTaskLocalServiceImpl
 			backgroundTask.setStatusMessage(statusMessage);
 		}
 
-		backgroundTaskPersistence.update(backgroundTask);
-
-		return backgroundTask;
+		return backgroundTaskPersistence.update(backgroundTask);
 	}
 
 	@Clusterable(onMaster = true)
@@ -208,10 +215,10 @@ public class BackgroundTaskLocalServiceImpl
 			backgroundTaskId);
 
 		try {
-			BackgroundTaskLockHelperUtil.unlockBackgroundTask(
+			_backgroundTaskLockHelper.unlockBackgroundTask(
 				new BackgroundTaskImpl(backgroundTask));
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		TransactionCommitCallbackUtil.registerCallback(
@@ -230,7 +237,7 @@ public class BackgroundTaskLocalServiceImpl
 						"taskExecutorClassName",
 						backgroundTask.getTaskExecutorClassName());
 
-					MessageBusUtil.sendMessage(
+					_messageBus.sendMessage(
 						DestinationNames.BACKGROUND_TASK_STATUS, message);
 
 					return null;
@@ -252,7 +259,8 @@ public class BackgroundTaskLocalServiceImpl
 				backgroundTask.setCompleted(true);
 				backgroundTask.setStatus(BackgroundTaskConstants.STATUS_FAILED);
 
-				backgroundTaskPersistence.update(backgroundTask);
+				backgroundTask = backgroundTaskPersistence.update(
+					backgroundTask);
 			}
 
 			cleanUpBackgroundTask(
@@ -653,7 +661,7 @@ public class BackgroundTaskLocalServiceImpl
 		message.put(
 			BackgroundTaskConstants.BACKGROUND_TASK_ID, backgroundTaskId);
 
-		MessageBusUtil.sendMessage(DestinationNames.BACKGROUND_TASK, message);
+		_messageBus.sendMessage(DestinationNames.BACKGROUND_TASK, message);
 	}
 
 	@Clusterable(onMaster = true)
@@ -669,7 +677,12 @@ public class BackgroundTaskLocalServiceImpl
 		message.put(
 			BackgroundTaskConstants.BACKGROUND_TASK_ID, backgroundTaskId);
 
-		MessageBusUtil.sendMessage(DestinationNames.BACKGROUND_TASK, message);
+		_messageBus.sendMessage(DestinationNames.BACKGROUND_TASK, message);
+	}
+
+	@Activate
+	protected void activate() {
+		_backgroundTaskLockHelper = new BackgroundTaskLockHelper(_lockManager);
 	}
 
 	protected BackgroundTask addBackgroundTask(
@@ -720,7 +733,7 @@ public class BackgroundTaskLocalServiceImpl
 
 		backgroundTask.setStatus(BackgroundTaskConstants.STATUS_NEW);
 
-		backgroundTaskPersistence.update(backgroundTask);
+		backgroundTask = backgroundTaskPersistence.update(backgroundTask);
 
 		TransactionCommitCallbackUtil.registerCallback(
 			new Callable<Void>() {
@@ -738,25 +751,21 @@ public class BackgroundTaskLocalServiceImpl
 		return backgroundTask;
 	}
 
-	protected void setBackgroundTaskStatusRegistry(
-		BackgroundTaskStatusRegistry backgroundTaskStatusRegistry) {
-
-		_backgroundTaskStatusRegistry = backgroundTaskStatusRegistry;
-	}
-
-	protected void setBackgroundTaskThreadLocalManager(
-		BackgroundTaskThreadLocalManager backgroundTaskThreadLocalManager) {
-
-		_backgroundTaskThreadLocalManager = backgroundTaskThreadLocalManager;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		BackgroundTaskLocalServiceImpl.class);
 
-	@ServiceReference(type = BackgroundTaskStatusRegistry.class)
+	private BackgroundTaskLockHelper _backgroundTaskLockHelper;
+
+	@Reference
 	private BackgroundTaskStatusRegistry _backgroundTaskStatusRegistry;
 
-	@ServiceReference(type = BackgroundTaskThreadLocalManager.class)
+	@Reference
 	private BackgroundTaskThreadLocalManager _backgroundTaskThreadLocalManager;
+
+	@Reference
+	private LockManager _lockManager;
+
+	@Reference
+	private MessageBus _messageBus;
 
 }

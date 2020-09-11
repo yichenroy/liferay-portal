@@ -15,6 +15,7 @@
 package com.liferay.site.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -35,8 +36,8 @@ import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -49,7 +50,6 @@ import com.liferay.site.util.GroupSearchProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.portlet.PortletURL;
@@ -63,15 +63,17 @@ import javax.servlet.http.HttpServletRequest;
 public class SiteAdminDisplayContext {
 
 	public SiteAdminDisplayContext(
-		HttpServletRequest request, LiferayPortletRequest liferayPortletRequest,
+		HttpServletRequest httpServletRequest,
+		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 
-		_groupSearchProvider = (GroupSearchProvider)request.getAttribute(
-			SiteWebKeys.GROUP_SEARCH_PROVIDER);
+		_groupSearchProvider =
+			(GroupSearchProvider)httpServletRequest.getAttribute(
+				SiteWebKeys.GROUP_SEARCH_PROVIDER);
 	}
 
 	public List<DropdownItem> getActionDropdownItems(Group group)
@@ -89,7 +91,8 @@ public class SiteAdminDisplayContext {
 
 		BreadcrumbEntry breadcrumbEntry = new BreadcrumbEntry();
 
-		breadcrumbEntry.setTitle(LanguageUtil.get(_request, "sites"));
+		breadcrumbEntry.setTitle(
+			LanguageUtil.get(_httpServletRequest, "sites"));
 
 		PortletURL mainURL = _liferayPortletResponse.createRenderURL();
 
@@ -143,7 +146,8 @@ public class SiteAdminDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
@@ -161,51 +165,14 @@ public class SiteAdminDisplayContext {
 	public long getGroupId() {
 		if (_groupId <= 0) {
 			_groupId = ParamUtil.getLong(
-				_request, "groupId", GroupConstants.DEFAULT_PARENT_GROUP_ID);
+				_httpServletRequest, "groupId",
+				GroupConstants.DEFAULT_PARENT_GROUP_ID);
 		}
 
 		return _groupId;
 	}
 
-	public int getOrganizationsCount(Group group) {
-		LinkedHashMap<String, Object> organizationParams =
-			new LinkedHashMap<>();
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		Company company = themeDisplay.getCompany();
-
-		organizationParams.put("groupOrganization", group.getGroupId());
-		organizationParams.put("organizationsGroups", group.getGroupId());
-
-		return OrganizationLocalServiceUtil.searchCount(
-			company.getCompanyId(),
-			OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null, null, null,
-			null, organizationParams);
-	}
-
-	public int getPendingRequestsCount(Group group) {
-		int pendingRequests = 0;
-
-		if (group.getType() == GroupConstants.TYPE_SITE_RESTRICTED) {
-			pendingRequests = MembershipRequestLocalServiceUtil.searchCount(
-				group.getGroupId(), MembershipRequestConstants.STATUS_PENDING);
-		}
-
-		return pendingRequests;
-	}
-
-	public PortletURL getPortletURL() {
-		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter("groupId", String.valueOf(getGroupId()));
-		portletURL.setParameter("displayStyle", getDisplayStyle());
-
-		return portletURL;
-	}
-
-	public GroupSearch getSearchContainer() throws PortalException {
+	public GroupSearch getGroupSearch() throws PortalException {
 		GroupSearch groupSearch = _groupSearchProvider.getGroupSearch(
 			_liferayPortletRequest, getPortletURL());
 
@@ -228,43 +195,81 @@ public class SiteAdminDisplayContext {
 		return groupSearch;
 	}
 
-	public int getUserGroupsCount(Group group) {
-		LinkedHashMap<String, Object> userGroupParams = new LinkedHashMap<>();
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public int getOrganizationsCount(Group group) {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Company company = themeDisplay.getCompany();
 
-		userGroupParams.put(
-			UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_GROUPS,
-			group.getGroupId());
+		return OrganizationLocalServiceUtil.searchCount(
+			company.getCompanyId(),
+			OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null, null, null,
+			null,
+			LinkedHashMapBuilder.<String, Object>put(
+				"groupOrganization", group.getGroupId()
+			).put(
+				"organizationsGroups", group.getGroupId()
+			).build());
+	}
+
+	public int getPendingRequestsCount(Group group) {
+		int pendingRequests = 0;
+
+		if (group.getType() == GroupConstants.TYPE_SITE_RESTRICTED) {
+			pendingRequests = MembershipRequestLocalServiceUtil.searchCount(
+				group.getGroupId(), MembershipRequestConstants.STATUS_PENDING);
+		}
+
+		return pendingRequests;
+	}
+
+	public PortletURL getPortletURL() {
+		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
+
+		portletURL.setParameter("groupId", String.valueOf(getGroupId()));
+		portletURL.setParameter("displayStyle", getDisplayStyle());
+
+		return portletURL;
+	}
+
+	public int getUserGroupsCount(Group group) {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		Company company = themeDisplay.getCompany();
 
 		return UserGroupLocalServiceUtil.searchCount(
-			company.getCompanyId(), null, userGroupParams);
+			company.getCompanyId(), null,
+			LinkedHashMapBuilder.<String, Object>put(
+				UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_GROUPS,
+				group.getGroupId()
+			).build());
 	}
 
 	public int getUsersCount(Group group) {
-		LinkedHashMap<String, Object> userParams = new LinkedHashMap<>();
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Company company = themeDisplay.getCompany();
 
-		userParams.put("inherit", Boolean.TRUE);
-		userParams.put("usersGroups", group.getGroupId());
-
 		return UserLocalServiceUtil.searchCount(
 			company.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
-			userParams);
+			LinkedHashMapBuilder.<String, Object>put(
+				"inherit", Boolean.TRUE
+			).put(
+				"usersGroups", group.getGroupId()
+			).build());
 	}
 
 	public boolean hasAddChildSitePermission(Group group)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PermissionChecker permissionChecker =
 			themeDisplay.getPermissionChecker();
@@ -285,8 +290,8 @@ public class SiteAdminDisplayContext {
 	private Group _group;
 	private long _groupId;
 	private final GroupSearchProvider _groupSearchProvider;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
-	private final HttpServletRequest _request;
 
 }

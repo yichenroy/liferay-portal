@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.aggregation.pipeline;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.pipeline.BucketSelectorPipelineAggregation;
 import com.liferay.portal.search.aggregation.pipeline.GapPolicy;
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregationVisitor;
@@ -28,7 +26,6 @@ import java.util.Map;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class BucketSelectorPipelineAggregationImpl
 	extends BasePipelineAggregation
 	implements BucketSelectorPipelineAggregation {

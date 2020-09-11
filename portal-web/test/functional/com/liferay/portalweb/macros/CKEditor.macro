@@ -1,10 +1,46 @@
 definition {
+
 	macro addContent {
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-		KeyPress(locator1 = "CKEditor#BODY", value1 = "${content}");
+		if (isSet(kbArticleContentEdit)) {
+			Type(
+				locator1 = "CKEditor#BODY",
+				value1 = "${kbArticleContentEdit}");
+		}
+		else {
+			KeyPress.keyPressCKEditorWaitForCKEditor(
+				locator1 = "CKEditor#BODY",
+				value1 = "${content}");
+		}
 
 		SelectFrame(value1 = "relative=top");
+	}
+
+	macro addEntryExternalURL {
+		Click(
+			key_fieldLabel = "${fieldLabel}",
+			locator1 = "CKEditor#TOOLBAR_LINK_BUTTON");
+
+		Type(
+			key_text = "Display Text",
+			locator1 = "TextInput#ANY",
+			value1 = "${displayText}");
+
+		Type(
+			key_text = "URL",
+			locator1 = "TextInput#ANY",
+			value1 = "${entryExternalURL}");
+
+		Click(locator1 = "CKEditor#OK_BUTTON");
+	}
+
+	macro addSourceContent {
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
+
+		Type.typeCodeMirrorEditorNoError(
+			locator1 = "CKEditor#BODY_FIELD_SOURCE_ON",
+			value1 = "${content}");
 	}
 
 	macro assertEditorPresent {
@@ -12,6 +48,19 @@ definition {
 	}
 
 	macro viewEntryContent {
-		AssertTextEquals(locator1 = "CKEditor#BODY", value1 = "${content}");
+		AssertTextEquals(
+			locator1 = "CKEditor#BODY",
+			value1 = "${content}");
 	}
+
+	macro viewEntryContentImage {
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		AssertVisible(
+			key_contentImageName = "${contentImageName}",
+			locator1 = "Wiki#CONTENT_IMAGE_NAME");
+
+		SelectFrame(value1 = "relative=top");
+	}
+
 }

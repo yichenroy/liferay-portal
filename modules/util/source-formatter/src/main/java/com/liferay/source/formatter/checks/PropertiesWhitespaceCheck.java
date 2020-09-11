@@ -14,10 +14,12 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
 
@@ -45,11 +47,13 @@ public class PropertiesWhitespaceCheck extends WhitespaceCheck {
 				lineNumber++;
 
 				if (line.startsWith(StringPool.TAB)) {
-					line = line.replace(StringPool.TAB, StringPool.FOUR_SPACES);
+					line = StringUtil.replace(
+						line, CharPool.TAB, StringPool.FOUR_SPACES);
 				}
 
 				if (line.contains(" \t")) {
-					line = line.replace(" \t", " " + StringPool.FOUR_SPACES);
+					line = StringUtil.replace(
+						line, " \t", " " + StringPool.FOUR_SPACES);
 				}
 
 				sb.append(line);
@@ -89,6 +93,17 @@ public class PropertiesWhitespaceCheck extends WhitespaceCheck {
 		content = sb.toString();
 
 		return super.doProcess(fileName, absolutePath, content);
+	}
+
+	@Override
+	protected boolean isAllowTrailingSpaces(String line) {
+		String trimmedLine = StringUtil.removeChar(line, CharPool.SPACE);
+
+		if (trimmedLine.endsWith(StringPool.EQUAL)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private int _getLeadingSpaceCount(String line) {

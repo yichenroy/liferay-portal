@@ -16,6 +16,7 @@ package com.liferay.social.bookmark.facebook;
 
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.social.bookmarks.SocialBookmark;
 
 import java.io.IOException;
@@ -54,19 +55,21 @@ public class FacebookSocialBookmark implements SocialBookmark {
 
 	@Override
 	public String getPostURL(String title, String url) {
-		return String.format("http://www.facebook.com/sharer.php?u=%s", url);
+		return String.format(
+			"http://www.facebook.com/sharer.php?u=%s", URLCodec.encodeURL(url));
 	}
 
 	@Override
 	public void render(
-			String target, String title, String url, HttpServletRequest request,
-			HttpServletResponse response)
+			String target, String title, String url,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher("/page.jsp");
 
-		requestDispatcher.include(request, response);
+		requestDispatcher.include(httpServletRequest, httpServletResponse);
 	}
 
 	@Reference(

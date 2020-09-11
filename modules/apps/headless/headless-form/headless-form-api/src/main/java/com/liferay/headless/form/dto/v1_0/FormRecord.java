@@ -20,9 +20,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -30,9 +30,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
+
+import javax.validation.Valid;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -46,6 +51,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "FormRecord")
 public class FormRecord {
 
+	public static FormRecord toDTO(String json) {
+		return ObjectMapperUtil.readValue(FormRecord.class, json);
+	}
+
+	@Schema
+	@Valid
 	public Creator getCreator() {
 		return creator;
 	}
@@ -73,6 +84,7 @@ public class FormRecord {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Creator creator;
 
+	@Schema
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -97,9 +109,10 @@ public class FormRecord {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
+	@Schema
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -124,9 +137,10 @@ public class FormRecord {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
+	@Schema
 	public Date getDatePublished() {
 		return datePublished;
 	}
@@ -151,9 +165,10 @@ public class FormRecord {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date datePublished;
 
+	@Schema
 	public Boolean getDraft() {
 		return draft;
 	}
@@ -181,21 +196,23 @@ public class FormRecord {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean draft;
 
-	@Schema(description = "https://www.schema.org/FormFieldValue")
-	public FieldValue[] getFieldValues() {
-		return fieldValues;
+	@Schema
+	@Valid
+	public FormFieldValue[] getFormFieldValues() {
+		return formFieldValues;
 	}
 
-	public void setFieldValues(FieldValue[] fieldValues) {
-		this.fieldValues = fieldValues;
+	public void setFormFieldValues(FormFieldValue[] formFieldValues) {
+		this.formFieldValues = formFieldValues;
 	}
 
 	@JsonIgnore
-	public void setFieldValues(
-		UnsafeSupplier<FieldValue[], Exception> fieldValuesUnsafeSupplier) {
+	public void setFormFieldValues(
+		UnsafeSupplier<FormFieldValue[], Exception>
+			formFieldValuesUnsafeSupplier) {
 
 		try {
-			fieldValues = fieldValuesUnsafeSupplier.get();
+			formFieldValues = formFieldValuesUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -207,33 +224,9 @@ public class FormRecord {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected FieldValue[] fieldValues;
+	protected FormFieldValue[] formFieldValues;
 
-	public Form getForm() {
-		return form;
-	}
-
-	public void setForm(Form form) {
-		this.form = form;
-	}
-
-	@JsonIgnore
-	public void setForm(UnsafeSupplier<Form, Exception> formUnsafeSupplier) {
-		try {
-			form = formUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Form form;
-
+	@Schema
 	public Long getFormId() {
 		return formId;
 	}
@@ -261,6 +254,7 @@ public class FormRecord {
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	protected Long formId;
 
+	@Schema
 	public Long getId() {
 		return id;
 	}
@@ -283,7 +277,7 @@ public class FormRecord {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
 	@Override
@@ -321,7 +315,7 @@ public class FormRecord {
 				sb.append(", ");
 			}
 
-			sb.append("\"creator\":");
+			sb.append("\"creator\": ");
 
 			sb.append(String.valueOf(creator));
 		}
@@ -331,7 +325,7 @@ public class FormRecord {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -345,7 +339,7 @@ public class FormRecord {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateModified\":");
+			sb.append("\"dateModified\": ");
 
 			sb.append("\"");
 
@@ -359,7 +353,7 @@ public class FormRecord {
 				sb.append(", ");
 			}
 
-			sb.append("\"datePublished\":");
+			sb.append("\"datePublished\": ");
 
 			sb.append("\"");
 
@@ -373,24 +367,24 @@ public class FormRecord {
 				sb.append(", ");
 			}
 
-			sb.append("\"draft\":");
+			sb.append("\"draft\": ");
 
 			sb.append(draft);
 		}
 
-		if (fieldValues != null) {
+		if (formFieldValues != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"fieldValues\":");
+			sb.append("\"formFieldValues\": ");
 
 			sb.append("[");
 
-			for (int i = 0; i < fieldValues.length; i++) {
-				sb.append(String.valueOf(fieldValues[i]));
+			for (int i = 0; i < formFieldValues.length; i++) {
+				sb.append(String.valueOf(formFieldValues[i]));
 
-				if ((i + 1) < fieldValues.length) {
+				if ((i + 1) < formFieldValues.length) {
 					sb.append(", ");
 				}
 			}
@@ -398,22 +392,12 @@ public class FormRecord {
 			sb.append("]");
 		}
 
-		if (form != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"form\":");
-
-			sb.append(String.valueOf(form));
-		}
-
 		if (formId != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"formId\":");
+			sb.append("\"formId\": ");
 
 			sb.append(formId);
 		}
@@ -423,7 +407,7 @@ public class FormRecord {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(id);
 		}
@@ -433,10 +417,88 @@ public class FormRecord {
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.form.dto.v1_0.FormRecord",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

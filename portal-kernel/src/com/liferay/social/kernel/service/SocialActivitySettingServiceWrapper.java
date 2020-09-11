@@ -14,9 +14,8 @@
 
 package com.liferay.social.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.social.kernel.model.SocialActivitySetting;
 
 /**
  * Provides a wrapper for {@link SocialActivitySettingService}.
@@ -25,10 +24,9 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see SocialActivitySettingService
  * @generated
  */
-@ProviderType
 public class SocialActivitySettingServiceWrapper
-	implements SocialActivitySettingService,
-			   ServiceWrapper<SocialActivitySettingService> {
+	implements ServiceWrapper<SocialActivitySettingService>,
+			   SocialActivitySettingService {
 
 	public SocialActivitySettingServiceWrapper(
 		SocialActivitySettingService socialActivitySettingService) {
@@ -57,8 +55,8 @@ public class SocialActivitySettingServiceWrapper
 	}
 
 	@Override
-	public java.util.List<com.liferay.social.kernel.model.SocialActivitySetting>
-			getActivitySettings(long groupId)
+	public java.util.List<SocialActivitySetting> getActivitySettings(
+			long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _socialActivitySettingService.getActivitySettings(groupId);

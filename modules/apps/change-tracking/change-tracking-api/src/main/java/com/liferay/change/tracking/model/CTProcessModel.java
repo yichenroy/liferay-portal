@@ -14,12 +14,13 @@
 
 package com.liferay.change.tracking.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the CTProcess service. Represents a row in the &quot;CTProcess&quot; database table, with each column mapped to a property of this class.
@@ -33,7 +34,8 @@ import java.util.Date;
  * @generated
  */
 @ProviderType
-public interface CTProcessModel extends BaseModel<CTProcess>, ShardedModel {
+public interface CTProcessModel
+	extends BaseModel<CTProcess>, MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -54,6 +56,22 @@ public interface CTProcessModel extends BaseModel<CTProcess>, ShardedModel {
 	 * @param primaryKey the primary key of this ct process
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this ct process.
+	 *
+	 * @return the mvcc version of this ct process
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this ct process.
+	 *
+	 * @param mvccVersion the mvcc version of this ct process
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the ct process ID of this ct process.

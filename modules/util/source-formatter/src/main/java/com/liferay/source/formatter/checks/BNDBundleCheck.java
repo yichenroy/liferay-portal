@@ -14,14 +14,19 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.source.formatter.SourceFormatterExcludes;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
+import com.liferay.source.formatter.util.FileUtil;
+import com.liferay.source.formatter.util.SourceFormatterUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.io.File;
+import java.io.IOException;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -30,20 +35,19 @@ import java.util.regex.Pattern;
  */
 public class BNDBundleCheck extends BaseFileCheck {
 
-	public void setAllowedFileNames(String allowedFileNames) {
-		Collections.addAll(
-			_allowedFileNames, StringUtil.split(allowedFileNames));
-	}
-
 	@Override
 	protected String doProcess(
-		String fileName, String absolutePath, String content) {
+			String fileName, String absolutePath, String content)
+		throws IOException {
 
 		if (!absolutePath.endsWith("/app.bnd")) {
 			return content;
 		}
 
-		for (String allowedFileName : _allowedFileNames) {
+		List<String> allowedFileNames = getAttributeValues(
+			_ALLOWED_FILE_NAMES_KEY, absolutePath);
+
+		for (String allowedFileName : allowedFileNames) {
 			if (absolutePath.endsWith(allowedFileName)) {
 				return content;
 			}
@@ -68,8 +72,27 @@ public class BNDBundleCheck extends BaseFileCheck {
 
 		content = BNDSourceUtil.updateInstruction(
 			content, "Liferay-Releng-Public", "${liferay.releng.public}");
-		content = BNDSourceUtil.updateInstruction(
-			content, "Liferay-Releng-Restart-Required", "true");
+
+		String liferayRelengRestartRequired = BNDSourceUtil.getDefinitionValue(
+			content, "Liferay-Releng-Restart-Required");
+
+		if (StringUtil.equals(liferayRelengRestartRequired, "false")) {
+			if (!_isHotDeployOSGiAppIncludes(
+					BNDSourceUtil.getModuleName(absolutePath))) {
+
+				addMessage(
+					fileName,
+					"The 'Liferay-Releng-Restart-Required' can only be set " +
+						"to false if a POSHI tests exists");
+
+				return content;
+			}
+		}
+		else {
+			content = BNDSourceUtil.updateInstruction(
+				content, "Liferay-Releng-Restart-Required", "true");
+		}
+
 		content = BNDSourceUtil.updateInstruction(
 			content, "Liferay-Releng-Support-Url", "http://www.liferay.com");
 		content = BNDSourceUtil.updateInstruction(
@@ -109,6 +132,43 @@ public class BNDBundleCheck extends BaseFileCheck {
 		return TextFormatter.format(shortDirName, TextFormatter.J);
 	}
 
+	private boolean _isHotDeployOSGiAppIncludes(String moduleName)
+		throws IOException {
+
+		String testcaseDirLocation =
+			"/portal-web/test/functional/com/liferay/portalweb/tests";
+
+		File file = new File(getPortalDir() + testcaseDirLocation);
+
+		if (!file.exists()) {
+			return false;
+		}
+
+		List<String> testcaseFileNames = SourceFormatterUtil.scanForFiles(
+			getPortalDir() + testcaseDirLocation, new String[0],
+			new String[] {"**/*.testcase"}, new SourceFormatterExcludes(),
+			true);
+
+		for (String testcaseFileName : testcaseFileNames) {
+			testcaseFileName = StringUtil.replace(
+				testcaseFileName, CharPool.BACK_SLASH, CharPool.SLASH);
+
+			String content = FileUtil.read(new File(testcaseFileName));
+
+			if (content.contains(
+					StringBundler.concat(
+						"property hot.deploy.osgi.app.includes = \"",
+						moduleName, "\""))) {
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static final String _ALLOWED_FILE_NAMES_KEY = "allowedFileNames";
+
 	private static final String[] _REQUIRED_INSTRUCTIONS = {
 		"Liferay-Releng-App-Description", "Liferay-Releng-App-Title",
 		"Liferay-Releng-Bundle", "Liferay-Releng-Category",
@@ -118,7 +178,5 @@ public class BNDBundleCheck extends BaseFileCheck {
 		"Liferay-Releng-Public", "Liferay-Releng-Restart-Required",
 		"Liferay-Releng-Support-Url", "Liferay-Releng-Supported"
 	};
-
-	private final List<String> _allowedFileNames = new ArrayList<>();
 
 }

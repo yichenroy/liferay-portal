@@ -14,14 +14,11 @@
 
 package com.liferay.message.boards.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class BannedUserException extends PortalException {
 
 	public BannedUserException() {
@@ -31,12 +28,12 @@ public class BannedUserException extends PortalException {
 		super(msg);
 	}
 
-	public BannedUserException(String msg, Throwable cause) {
-		super(msg, cause);
+	public BannedUserException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public BannedUserException(Throwable cause) {
-		super(cause);
+	public BannedUserException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

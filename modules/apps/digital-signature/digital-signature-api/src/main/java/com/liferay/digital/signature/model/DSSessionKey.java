@@ -14,8 +14,6 @@
 
 package com.liferay.digital.signature.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -28,7 +26,6 @@ import java.util.Objects;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class DSSessionKey {
 
 	public DSSessionKey(String dsSessionKeyString) {

@@ -15,8 +15,6 @@
 package com.liferay.portal.servlet;
 
 import com.liferay.portal.kernel.servlet.SharedSession;
-import com.liferay.portal.kernel.util.ServerDetector;
-import com.liferay.portal.resiliency.spi.agent.SPIAgentRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -28,16 +26,9 @@ public class SharedSessionImpl implements SharedSession {
 
 	@Override
 	public HttpSession getSharedSessionWrapper(
-		HttpSession portalSession, HttpServletRequest request) {
+		HttpSession portalSession, HttpServletRequest httpServletRequest) {
 
-		HttpSession portletSession = request.getSession();
-
-		SPIAgentRequest.populatePortletSessionAttributes(
-			request, portalSession);
-
-		if (ServerDetector.isJetty()) {
-			return new JettySharedSessionWrapper(portalSession, portletSession);
-		}
+		HttpSession portletSession = httpServletRequest.getSession();
 
 		return new SharedSessionWrapper(portalSession, portletSession);
 	}

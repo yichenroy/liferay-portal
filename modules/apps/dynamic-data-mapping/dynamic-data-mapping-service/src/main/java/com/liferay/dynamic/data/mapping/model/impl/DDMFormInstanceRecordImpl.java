@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalServiceUtil;
@@ -26,7 +24,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DDMFormInstanceRecordImpl extends DDMFormInstanceRecordBaseImpl {
 
 	@Override
@@ -73,6 +70,13 @@ public class DDMFormInstanceRecordImpl extends DDMFormInstanceRecordBaseImpl {
 			getFormInstanceRecordVersion();
 
 		return ddmFormInstanceRecordVersion.getStatus();
+	}
+
+	@Override
+	public String getStorageType() throws PortalException {
+		DDMFormInstance ddmFormInstance = getFormInstance();
+
+		return ddmFormInstance.getStorageType();
 	}
 
 }

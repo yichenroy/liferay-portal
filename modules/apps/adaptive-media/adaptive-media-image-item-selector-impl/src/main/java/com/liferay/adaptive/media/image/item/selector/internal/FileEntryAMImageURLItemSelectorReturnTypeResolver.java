@@ -24,7 +24,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 
@@ -61,8 +62,6 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 	public String getValue(FileEntry fileEntry, ThemeDisplay themeDisplay)
 		throws Exception {
 
-		JSONObject fileEntryJSONObject = JSONFactoryUtil.createJSONObject();
-
 		String previewURL = null;
 
 		if (fileEntry.getGroupId() == fileEntry.getRepositoryId()) {
@@ -71,15 +70,17 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 				StringPool.BLANK, false, false);
 		}
 		else {
-			previewURL = PortletFileRepositoryUtil.getPortletFileEntryURL(
+			previewURL = _portletFileRepository.getPortletFileEntryURL(
 				themeDisplay, fileEntry, "&imagePreview=1", false);
 		}
 
-		fileEntryJSONObject.put("defaultSource", previewURL);
+		JSONObject fileEntryJSONObject = JSONUtil.put(
+			"defaultSource", previewURL
+		).put(
+			"fileEntryId", fileEntry.getFileEntryId()
+		);
 
-		fileEntryJSONObject.put("fileEntryId", fileEntry.getFileEntryId());
-
-		JSONArray sourcesArray = JSONFactoryUtil.createJSONArray();
+		JSONArray sourcesJSONArray = JSONFactoryUtil.createJSONArray();
 
 		List<MediaQuery> mediaQueries = _mediaQueryProvider.getMediaQueries(
 			fileEntry);
@@ -89,17 +90,15 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 		mediaQueryStream.map(
 			this::_getSourceJSONObject
 		).forEach(
-			sourcesArray::put
+			sourcesJSONArray::put
 		);
 
-		fileEntryJSONObject.put("sources", sourcesArray);
+		fileEntryJSONObject.put("sources", sourcesJSONArray);
 
 		return fileEntryJSONObject.toString();
 	}
 
 	private JSONObject _getSourceJSONObject(MediaQuery mediaQuery) {
-		JSONObject sourceJSONObject = JSONFactoryUtil.createJSONObject();
-
 		JSONObject attributesJSONObject = JSONFactoryUtil.createJSONObject();
 
 		for (Condition condition : mediaQuery.getConditions()) {
@@ -107,11 +106,11 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 				condition.getAttribute(), condition.getValue());
 		}
 
-		sourceJSONObject.put("attributes", attributesJSONObject);
-
-		sourceJSONObject.put("src", mediaQuery.getSrc());
-
-		return sourceJSONObject;
+		return JSONUtil.put(
+			"attributes", attributesJSONObject
+		).put(
+			"src", mediaQuery.getSrc()
+		);
 	}
 
 	@Reference
@@ -119,5 +118,8 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 
 	@Reference
 	private MediaQueryProvider _mediaQueryProvider;
+
+	@Reference
+	private PortletFileRepository _portletFileRepository;
 
 }

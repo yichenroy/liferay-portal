@@ -20,7 +20,7 @@
 </tr>
 <tr>
 	<td>ASSET_ELLIPSIS_ICON</td>
-	<td>//div[@class='asset-abstract '][//a[normalize-space(./text())='${key_assetTitle}']]//a[span/*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
+	<td>//div[contains(@class,'asset-abstract')]//div[contains(.,'${key_assetTitle}')]//a[contains(@class,'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -69,7 +69,12 @@
 <!--ASSET_ABSTRACT-->
 <tr>
 	<td>ASSET_ABSTRACT_TITLE</td>
-	<td>//section[@class='portlet']//h4[contains(@class,'component-title')][contains(.,'${key_assetTitle}')]</td>
+	<td>//section[@class='portlet']//h4/*[contains(@class,'asset-title')][contains(.,'${key_assetTitle}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSET_ABSTRACT_TITLE_EXACT_MATCH</td>
+	<td>//section[@class='portlet']//h4/*[contains(@class,'asset-title')][normalize-space(text())='${key_assetTitle}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -94,12 +99,17 @@
 </tr>
 <tr>
 	<td>ASSET_ABSTRACT_DESCRIPTION</td>
-	<td>//div[contains(@class,'asset-abstract')][contains(.,'${key_assetTitle}')]/div[contains(@class,'asset-content')]</td>
+	<td>//section[@class='portlet']//h4/*[contains(@class,'asset-title')][contains(.,'${key_assetTitle}')]/../../../div[contains(@class,'asset-content')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSET_ABSTRACT_DESCRIPTION_EXACT_MATCH</td>
+	<td>//section[@class='portlet']//h4/*[contains(@class,'asset-title')][normalize-space(text())='${key_assetTitle}']/../../../div[contains(@class,'asset-content')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CUSTOM_ASSET_ABSTRACT_DESCRIPTION</td>
-	<td>//div[@class='asset-abstract' and h3[contains(.,'${key_assetTitle}')]]/div[contains(@class,'asset-content')]</td>
+	<td>//div[contains(@class,'asset-abstract') and h3[contains(.,'${key_assetTitle}')]]/div[contains(@class,'asset-content')]/div[contains(@class,'asset-summary')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -206,6 +216,11 @@
 <tr>
 	<td>METADATA_CATEGORY</td>
 	<td>//div[contains(@class,'categories')]/span/a[contains(.,'${key_categoryName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>METADATA_PRIORITY</td>
+	<td>//div[contains(@class,'asset-priority') and contains(.,'${key_assetPriority}')]</td>
 	<td></td>
 </tr>
 <tr>

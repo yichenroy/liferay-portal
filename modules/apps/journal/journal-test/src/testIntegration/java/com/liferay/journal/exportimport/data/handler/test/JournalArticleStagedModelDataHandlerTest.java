@@ -26,16 +26,17 @@ import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.test.util.lar.BaseWorkflowedStagedModelDataHandlerTestCase;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalArticleResource;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleResourceLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.service.persistence.JournalArticleResourceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
@@ -150,6 +151,19 @@ public class JournalArticleStagedModelDataHandlerTest
 		journalArticle = JournalTestUtil.updateArticle(journalArticle);
 
 		exportImportStagedModel(journalArticle);
+	}
+
+	@Override
+	@Test
+	public void testCleanAssetCategoriesAndTags() throws Exception {
+		ExportImportThreadLocal.setLayoutImportInProcess(true);
+
+		try {
+			super.testCleanAssetCategoriesAndTags();
+		}
+		finally {
+			ExportImportThreadLocal.setLayoutImportInProcess(false);
+		}
 	}
 
 	@Test
@@ -329,7 +343,7 @@ public class JournalArticleStagedModelDataHandlerTest
 
 		return JournalTestUtil.addArticleWithXMLContent(
 			group.getGroupId(), folder.getFolderId(),
-			JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			DDMStructureTestUtil.getSampleStructuredContent(),
 			ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey());
 	}
@@ -375,14 +389,11 @@ public class JournalArticleStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return JournalArticleLocalServiceUtil.
-				getJournalArticleByUuidAndGroupId(uuid, group.getGroupId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return JournalArticleLocalServiceUtil.getJournalArticleByUuidAndGroupId(
+			uuid, group.getGroupId());
 	}
 
 	@Override

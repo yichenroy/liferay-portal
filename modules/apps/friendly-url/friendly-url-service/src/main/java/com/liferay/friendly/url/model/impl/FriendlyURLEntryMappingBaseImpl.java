@@ -14,8 +14,6 @@
 
 package com.liferay.friendly.url.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.friendly.url.model.FriendlyURLEntryMapping;
 
 /**
@@ -30,7 +28,6 @@ import com.liferay.friendly.url.model.FriendlyURLEntryMapping;
  * @see FriendlyURLEntryMapping
  * @generated
  */
-@ProviderType
 public abstract class FriendlyURLEntryMappingBaseImpl
 	extends FriendlyURLEntryMappingModelImpl
 	implements FriendlyURLEntryMapping {

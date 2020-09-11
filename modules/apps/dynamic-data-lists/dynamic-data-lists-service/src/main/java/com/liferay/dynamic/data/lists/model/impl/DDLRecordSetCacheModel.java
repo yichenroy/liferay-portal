@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
@@ -35,22 +33,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class DDLRecordSetCacheModel
 	implements CacheModel<DDLRecordSet>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DDLRecordSetCacheModel)) {
+		if (!(object instanceof DDLRecordSetCacheModel)) {
 			return false;
 		}
 
 		DDLRecordSetCacheModel ddlRecordSetCacheModel =
-			(DDLRecordSetCacheModel)obj;
+			(DDLRecordSetCacheModel)object;
 
 		if ((recordSetId == ddlRecordSetCacheModel.recordSetId) &&
 			(mvccVersion == ddlRecordSetCacheModel.mvccVersion)) {
@@ -259,7 +256,7 @@ public class DDLRecordSetCacheModel
 		minDisplayRows = objectInput.readInt();
 
 		scope = objectInput.readInt();
-		settings = objectInput.readUTF();
+		settings = (String)objectInput.readObject();
 		lastPublishDate = objectInput.readLong();
 
 		_ddmFormValues =
@@ -340,10 +337,10 @@ public class DDLRecordSetCacheModel
 		objectOutput.writeInt(scope);
 
 		if (settings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(settings);
+			objectOutput.writeObject(settings);
 		}
 
 		objectOutput.writeLong(lastPublishDate);

@@ -100,15 +100,15 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 				setWorkflowDefinitionRenderRequestAttribute(renderRequest);
 			}
 		}
-		catch (Exception e) {
-			if (workflowPreprocessorHelper.isSessionErrorException(e)) {
+		catch (Exception exception) {
+			if (workflowPreprocessorHelper.isSessionErrorException(exception)) {
 				workflowPreprocessorHelper.hideDefaultErrorMessage(
 					renderRequest);
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
 			}
 			else {
-				throw new PortletException(e);
+				throw new PortletException(exception);
 			}
 		}
 	}
@@ -142,14 +142,14 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 			RenderRequest renderRequest)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		String name = ParamUtil.getString(renderRequest, "name");
 
 		if (Validator.isNull(name)) {
 			return;
 		}
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		int version = ParamUtil.getInteger(renderRequest, "version");
 

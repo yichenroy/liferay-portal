@@ -14,24 +14,32 @@
 
 package com.liferay.document.library.web.internal.display.context;
 
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalServiceUtil;
+import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
-import com.liferay.petra.string.StringPool;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
+import java.util.Locale;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -52,11 +60,35 @@ public class DLViewMoreMenuItemsDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 	}
 
 	public String getClearResultsURL() {
 		return getSearchActionURL();
+	}
+
+	public String getDLFileEntryTypeScopeName(
+			DLFileEntryType dlFileEntryType, Locale locale)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		Group scopeGroup = themeDisplay.getScopeGroup();
+
+		if (dlFileEntryType.getGroupId() == scopeGroup.getGroupId()) {
+			if (scopeGroup.isDepot()) {
+				return LanguageUtil.get(
+					_httpServletRequest, "current-asset-library");
+			}
+
+			return LanguageUtil.get(_httpServletRequest, "current-site");
+		}
+
+		Group dlFileEntryTypeGroup = GroupLocalServiceUtil.getGroup(
+			dlFileEntryType.getGroupId());
+
+		return dlFileEntryTypeGroup.getName(locale);
 	}
 
 	public String getEventName() {
@@ -72,17 +104,13 @@ public class DLViewMoreMenuItemsDisplayContext {
 	}
 
 	public List<NavigationItem> getNavigationItems() {
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(StringPool.BLANK);
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "document-types"));
-					});
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(true);
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "document-types"));
 			}
-		};
+		).build();
 	}
 
 	public PortletURL getPortletURL() {
@@ -100,21 +128,25 @@ public class DLViewMoreMenuItemsDisplayContext {
 		return String.valueOf(getPortletURL());
 	}
 
-	public SearchContainer getSearchContainer() throws PortalException {
+	public SearchContainer<DLFileEntryType> getSearchContainer()
+		throws PortalException {
+
 		if (_searchContainer != null) {
 			return _searchContainer;
 		}
 
-		SearchContainer searchContainer = new SearchContainer(
-			_renderRequest, new DisplayTerms(_request),
-			new DisplayTerms(_request), SearchContainer.DEFAULT_CUR_PARAM,
-			SearchContainer.DEFAULT_DELTA, getPortletURL(), null,
-			LanguageUtil.get(_request, "there-are-no-results"));
+		SearchContainer<DLFileEntryType> searchContainer = new SearchContainer(
+			_renderRequest, new DisplayTerms(_httpServletRequest),
+			new DisplayTerms(_httpServletRequest),
+			SearchContainer.DEFAULT_CUR_PARAM, SearchContainer.DEFAULT_DELTA,
+			getPortletURL(), null,
+			LanguageUtil.get(_httpServletRequest, "there-are-no-results"));
 
 		DisplayTerms searchTerms = searchContainer.getSearchTerms();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		long folderId = _getPrimaryFolderId(_folderId);
 		boolean includeBasicFileEntryType = ParamUtil.getBoolean(
@@ -123,7 +155,7 @@ public class DLViewMoreMenuItemsDisplayContext {
 		searchContainer.setResults(
 			DLFileEntryTypeServiceUtil.search(
 				themeDisplay.getCompanyId(), folderId,
-				PortalUtil.getCurrentAndAncestorSiteGroupIds(
+				_getCurrentAndAncestorSiteAndDepotGroupIds(
 					themeDisplay.getScopeGroupId()),
 				searchTerms.getKeywords(), includeBasicFileEntryType,
 				_inherited, searchContainer.getStart(),
@@ -131,7 +163,7 @@ public class DLViewMoreMenuItemsDisplayContext {
 		searchContainer.setTotal(
 			DLFileEntryTypeServiceUtil.searchCount(
 				themeDisplay.getCompanyId(), folderId,
-				PortalUtil.getCurrentAndAncestorSiteGroupIds(
+				_getCurrentAndAncestorSiteAndDepotGroupIds(
 					themeDisplay.getScopeGroupId()),
 				searchTerms.getKeywords(), includeBasicFileEntryType,
 				_inherited));
@@ -142,9 +174,20 @@ public class DLViewMoreMenuItemsDisplayContext {
 	}
 
 	public int getTotalItems() throws PortalException {
-		SearchContainer searchContainer = getSearchContainer();
+		SearchContainer<DLFileEntryType> searchContainer = getSearchContainer();
 
 		return searchContainer.getTotal();
+	}
+
+	private long[] _getCurrentAndAncestorSiteAndDepotGroupIds(long groupId)
+		throws PortalException {
+
+		return ArrayUtil.append(
+			PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId),
+			ListUtil.toLongArray(
+				DepotEntryLocalServiceUtil.getGroupConnectedDepotEntries(
+					groupId, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+				DepotEntry::getGroupId));
 	}
 
 	private long _getPrimaryFolderId(long folderId) throws PortalException {
@@ -172,10 +215,10 @@ public class DLViewMoreMenuItemsDisplayContext {
 
 	private String _eventName;
 	private final long _folderId;
+	private final HttpServletRequest _httpServletRequest;
 	private boolean _inherited = true;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
-	private SearchContainer _searchContainer;
+	private SearchContainer<DLFileEntryType> _searchContainer;
 
 }

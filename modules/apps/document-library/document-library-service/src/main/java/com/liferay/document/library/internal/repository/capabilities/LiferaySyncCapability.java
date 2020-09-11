@@ -17,11 +17,12 @@ package com.liferay.document.library.internal.repository.capabilities;
 import com.liferay.document.library.sync.constants.DLSyncConstants;
 import com.liferay.document.library.sync.model.DLSyncEvent;
 import com.liferay.document.library.sync.service.DLSyncEventLocalService;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.capabilities.SyncCapability;
 import com.liferay.portal.kernel.repository.event.RepositoryEventAware;
@@ -34,12 +35,11 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.repository.registry.RepositoryEventRegistry;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.repository.capabilities.util.GroupServiceAdapter;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
@@ -50,10 +50,12 @@ public class LiferaySyncCapability
 
 	public LiferaySyncCapability(
 		GroupServiceAdapter groupServiceAdapter,
-		DLSyncEventLocalService dlSyncEventLocalService) {
+		DLSyncEventLocalService dlSyncEventLocalService,
+		MessageBus messageBus) {
 
 		_groupServiceAdapter = groupServiceAdapter;
 		_dlSyncEventLocalService = dlSyncEventLocalService;
+		_messageBus = messageBus;
 	}
 
 	@Override
@@ -107,7 +109,7 @@ public class LiferaySyncCapability
 
 			return group.isStagingGroup();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return false;
 		}
 	}
@@ -115,7 +117,8 @@ public class LiferaySyncCapability
 	protected void registerDLSyncEventCallback(
 		String event, FileEntry fileEntry) {
 
-		if (isStagingGroup(fileEntry.getGroupId()) ||
+		if (!CTCollectionThreadLocal.isProductionMode() ||
+			isStagingGroup(fileEntry.getGroupId()) ||
 			!(fileEntry instanceof LiferayFileEntry)) {
 
 			return;
@@ -128,8 +131,8 @@ public class LiferaySyncCapability
 				return;
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		registerDLSyncEventCallback(
@@ -137,7 +140,8 @@ public class LiferaySyncCapability
 	}
 
 	protected void registerDLSyncEventCallback(String event, Folder folder) {
-		if (isStagingGroup(folder.getGroupId()) ||
+		if (!CTCollectionThreadLocal.isProductionMode() ||
+			isStagingGroup(folder.getGroupId()) ||
 			!(folder instanceof LiferayFolder)) {
 
 			return;
@@ -162,16 +166,18 @@ public class LiferaySyncCapability
 				public Void call() throws Exception {
 					Message message = new Message();
 
-					Map<String, Object> values = new HashMap<>(4);
+					message.setValues(
+						HashMapBuilder.<String, Object>put(
+							"event", event
+						).put(
+							"modifiedTime", modifiedTime
+						).put(
+							"type", type
+						).put(
+							"typePK", typePK
+						).build());
 
-					values.put("event", event);
-					values.put("modifiedTime", modifiedTime);
-					values.put("type", type);
-					values.put("typePK", typePK);
-
-					message.setValues(values);
-
-					MessageBusUtil.sendMessage(
+					_messageBus.sendMessage(
 						DestinationNames.DOCUMENT_LIBRARY_SYNC_EVENT_PROCESSOR,
 						message);
 
@@ -196,6 +202,7 @@ public class LiferaySyncCapability
 			DLSyncConstants.EVENT_DELETE);
 	private final DLSyncEventLocalService _dlSyncEventLocalService;
 	private final GroupServiceAdapter _groupServiceAdapter;
+	private final MessageBus _messageBus;
 	private final RepositoryEventListener<RepositoryEventType.Move, FileEntry>
 		_moveFileEntryEventListener =
 			new SyncFileEntryRepositoryEventListener<>(

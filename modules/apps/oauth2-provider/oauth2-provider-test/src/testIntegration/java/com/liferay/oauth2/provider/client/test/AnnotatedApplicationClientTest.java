@@ -14,14 +14,18 @@
 
 package com.liferay.oauth2.provider.client.test;
 
-import com.liferay.oauth2.provider.test.internal.TestAnnotatedApplication;
-import com.liferay.oauth2.provider.test.internal.TestAnnotatedApplicationInterface;
-import com.liferay.oauth2.provider.test.internal.activator.BaseTestPreparatorBundleActivator;
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.oauth2.provider.internal.test.TestAnnotatedApplication;
+import com.liferay.oauth2.provider.internal.test.TestInterfaceAnnotatedApplication;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.log.CaptureAppender;
+import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -30,35 +34,39 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
+import org.apache.log4j.Level;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.BundleActivator;
 
 /**
  * @author Carlos Sierra Andrés
  */
-@RunAsClient
 @RunWith(Arquillian.class)
 public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 
-	@Deployment
-	public static Archive<?> getArchive() throws Exception {
-		return BaseClientTestCase.getArchive(
-			AnnotatedApplicationTestPreparatorBundleActivator.class);
-	}
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new LiferayIntegrationTestRule();
 
 	@Test
 	public void test() throws Exception {
-		testNoScopeAnnotation("/annotated-impl/no-scope");
-		testRequiresScopeAnnotation("/annotated-impl");
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
 
-		testNoScopeAnnotation("/annotated-interface/no-scope");
-		testRequiresScopeAnnotation("/annotated-interface");
+			testNoScopeAnnotation("/annotated-impl/no-scope");
+			testRequiresScopeAnnotation("/annotated-impl");
+
+			testNoScopeAnnotation("/annotated-interface/no-scope");
+			testRequiresScopeAnnotation("/annotated-interface");
+		}
 	}
 
 	public static class AnnotatedApplicationTestPreparatorBundleActivator
@@ -72,10 +80,11 @@ public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 
 			Dictionary<String, Object> properties = new HashMapDictionary<>();
 
+			properties.put("auth.verifier.guest.allowed", false);
 			properties.put("oauth2.scope.checker.type", "annotations");
 
 			registerJaxRsApplication(
-				new TestAnnotatedApplicationInterface(), "annotated-interface",
+				new TestInterfaceAnnotatedApplication(), "annotated-interface",
 				properties);
 
 			registerJaxRsApplication(
@@ -87,6 +96,11 @@ public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 					"everything", "everything.read", "everything.write"));
 		}
 
+	}
+
+	@Override
+	protected BundleActivator getBundleActivator() {
+		return new AnnotatedApplicationTestPreparatorBundleActivator();
 	}
 
 	protected void testNoScopeAnnotation(String path) {
@@ -105,7 +119,7 @@ public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 				getClientCredentialsResponseBiFunction(StringPool.BLANK),
 				this::parseTokenString));
 
-		response = invocationBuilder.get();
+		invocationBuilder.get();
 
 		Assert.assertEquals("no-scope", invocationBuilder.get(String.class));
 	}
@@ -137,7 +151,7 @@ public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 				getClientCredentialsResponseBiFunction("everything.read"),
 				this::parseTokenString));
 
-		response = invocationBuilder.get();
+		invocationBuilder.get();
 
 		Assert.assertEquals(
 			"everything.read", invocationBuilder.get(String.class));

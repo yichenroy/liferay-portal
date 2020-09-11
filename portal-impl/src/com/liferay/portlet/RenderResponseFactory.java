@@ -14,8 +14,6 @@
 
 package com.liferay.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.portlet.LiferayRenderResponse;
 import com.liferay.portlet.internal.RenderRequestImpl;
 import com.liferay.portlet.internal.RenderResponseImpl;
@@ -29,7 +27,6 @@ import javax.servlet.http.HttpServletResponse;
  * @author Brian Wing Shun Chan
  * @author Neil Griffin
  */
-@ProviderType
 public class RenderResponseFactory {
 
 	public static LiferayRenderResponse create() {
@@ -37,7 +34,7 @@ public class RenderResponseFactory {
 	}
 
 	public static LiferayRenderResponse create(
-		RenderRequest renderRequest, HttpServletResponse response) {
+		HttpServletResponse httpServletResponse, RenderRequest renderRequest) {
 
 		while (renderRequest instanceof RenderRequestWrapper) {
 			RenderRequestWrapper renderRequestWrapper =
@@ -48,9 +45,21 @@ public class RenderResponseFactory {
 
 		RenderResponseImpl renderResponseImpl = new RenderResponseImpl();
 
-		renderResponseImpl.init((RenderRequestImpl)renderRequest, response);
+		renderResponseImpl.init(
+			(RenderRequestImpl)renderRequest, httpServletResponse);
 
 		return renderResponseImpl;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #create(HttpServletResponse, RenderRequest)}
+	 */
+	@Deprecated
+	public static LiferayRenderResponse create(
+		RenderRequest renderRequest, HttpServletResponse httpServletResponse) {
+
+		return create(httpServletResponse, renderRequest);
 	}
 
 }

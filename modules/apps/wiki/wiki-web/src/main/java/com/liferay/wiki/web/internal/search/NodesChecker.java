@@ -60,14 +60,14 @@ public class NodesChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public String getAllRowsCheckBox(HttpServletRequest request) {
+	public String getAllRowsCheckBox(HttpServletRequest httpServletRequest) {
 		return null;
 	}
 
 	@Override
 	public String getRowCheckBox(
-		HttpServletRequest request, boolean checked, boolean disabled,
-		String primaryKey) {
+		HttpServletRequest httpServletRequest, boolean checked,
+		boolean disabled, String primaryKey) {
 
 		long nodeId = GetterUtil.getLong(primaryKey);
 
@@ -76,12 +76,12 @@ public class NodesChecker extends EmptyOnClickRowChecker {
 		try {
 			node = WikiNodeServiceUtil.getNode(nodeId);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return StringPool.BLANK;
@@ -96,9 +96,9 @@ public class NodesChecker extends EmptyOnClickRowChecker {
 				showInput = true;
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(pe, pe);
+				_log.warn(portalException, portalException);
 			}
 		}
 
@@ -121,7 +121,7 @@ public class NodesChecker extends EmptyOnClickRowChecker {
 		String checkBoxRowIds = sb.toString();
 
 		return getRowCheckBox(
-			request, checked, disabled,
+			httpServletRequest, checked, disabled,
 			StringBundler.concat(
 				_liferayPortletResponse.getNamespace(), RowChecker.ROW_IDS,
 				name, ""),

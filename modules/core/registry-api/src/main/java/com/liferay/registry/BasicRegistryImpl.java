@@ -19,6 +19,9 @@ import com.liferay.registry.util.StringPlus;
 import com.liferay.registry.util.UnmodifiableCaseInsensitiveMapDictionary;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,6 +74,14 @@ public class BasicRegistryImpl implements Registry {
 	}
 
 	@Override
+	public <T> ServiceReference<T>[] getAllServiceReferences(
+			String className, String filterString)
+		throws Exception {
+
+		return getServiceReferences(className, filterString);
+	}
+
+	@Override
 	public Filter getFilter(String filterString) throws RuntimeException {
 		return new BasicFilter(filterString);
 	}
@@ -78,15 +89,6 @@ public class BasicRegistryImpl implements Registry {
 	@Override
 	public Registry getRegistry() throws SecurityException {
 		return this;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public <T> T getService(Class<T> clazz) {
-		return getService(clazz.getName());
 	}
 
 	@Override
@@ -98,25 +100,6 @@ public class BasicRegistryImpl implements Registry {
 				_services.entrySet()) {
 
 			if (basicServiceReference.matches(entry.getKey())) {
-				return (T)entry.getValue();
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public <T> T getService(String className) {
-		Filter filter = getFilter("(objectClass=" + className + ")");
-
-		for (Map.Entry<ServiceReference<?>, Object> entry :
-				_services.entrySet()) {
-
-			if (filter.matches(entry.getKey())) {
 				return (T)entry.getValue();
 			}
 		}
@@ -170,6 +153,10 @@ public class BasicRegistryImpl implements Registry {
 		throws Exception {
 
 		List<ServiceReference<T>> serviceReferences = new ArrayList<>();
+
+		if ((filterString == null) || filterString.isEmpty()) {
+			filterString = "(objectClass=" + className + ")";
+		}
 
 		Filter filter = new BasicFilter(filterString);
 
@@ -452,8 +439,8 @@ public class BasicRegistryImpl implements Registry {
 			try {
 				serviceTracker.addingService(basicServiceReference);
 			}
-			catch (Throwable t) {
-				t.printStackTrace();
+			catch (Throwable throwable) {
+				throwable.printStackTrace();
 			}
 		}
 	}
@@ -482,8 +469,8 @@ public class BasicRegistryImpl implements Registry {
 			try {
 				serviceTracker.modifiedService(basicServiceReference, service);
 			}
-			catch (Throwable t) {
-				t.printStackTrace();
+			catch (Throwable throwable) {
+				throwable.printStackTrace();
 			}
 		}
 	}
@@ -506,8 +493,8 @@ public class BasicRegistryImpl implements Registry {
 			try {
 				serviceTracker.remove(basicServiceReference);
 			}
-			catch (Throwable t) {
-				t.printStackTrace();
+			catch (Throwable throwable) {
+				throwable.printStackTrace();
 			}
 		}
 	}
@@ -522,8 +509,20 @@ public class BasicRegistryImpl implements Registry {
 
 	private static class BasicFilter implements Filter {
 
+		public static <T> T throwException(Throwable throwable) {
+			return BasicFilter.<T, RuntimeException>_throwException(throwable);
+		}
+
 		public BasicFilter(String filterString) {
-			_filter = new aQute.lib.filter.Filter(filterString);
+			try {
+				_filter = _filterConstructor.newInstance(filterString);
+			}
+			catch (InvocationTargetException invocationTargetException) {
+				throwException(invocationTargetException.getCause());
+			}
+			catch (ReflectiveOperationException reflectiveOperationException) {
+				throw new RuntimeException(reflectiveOperationException);
+			}
 		}
 
 		@Override
@@ -531,7 +530,15 @@ public class BasicRegistryImpl implements Registry {
 			Dictionary<String, Object> dictionary =
 				new UnmodifiableCaseInsensitiveMapDictionary<>(properties);
 
-			return _filter.match(dictionary);
+			try {
+				return (boolean)_matchMethod.invoke(_filter, dictionary);
+			}
+			catch (InvocationTargetException invocationTargetException) {
+				return throwException(invocationTargetException.getCause());
+			}
+			catch (ReflectiveOperationException reflectiveOperationException) {
+				throw new RuntimeException(reflectiveOperationException);
+			}
 		}
 
 		@Override
@@ -543,7 +550,15 @@ public class BasicRegistryImpl implements Registry {
 				new UnmodifiableCaseInsensitiveMapDictionary<>(
 					basicServiceReference._properties);
 
-			return _filter.match(dictionary);
+			try {
+				return (boolean)_matchMethod.invoke(_filter, dictionary);
+			}
+			catch (InvocationTargetException invocationTargetException) {
+				return throwException(invocationTargetException.getCause());
+			}
+			catch (ReflectiveOperationException reflectiveOperationException) {
+				throw new RuntimeException(reflectiveOperationException);
+			}
 		}
 
 		@Override
@@ -556,7 +571,32 @@ public class BasicRegistryImpl implements Registry {
 			return _filter.toString();
 		}
 
-		private aQute.lib.filter.Filter _filter;
+		@SuppressWarnings("unchecked")
+		private static <T, E extends Throwable> T _throwException(
+				Throwable throwable)
+			throws E {
+
+			throw (E)throwable;
+		}
+
+		private static final Constructor<?> _filterConstructor;
+		private static final Method _matchMethod;
+
+		static {
+			try {
+				Class<?> filterClass = Class.forName("aQute.lib.filter.Filter");
+
+				_filterConstructor = filterClass.getConstructor(String.class);
+
+				_matchMethod = filterClass.getMethod("match", Dictionary.class);
+			}
+			catch (ReflectiveOperationException reflectiveOperationException) {
+				throw new ExceptionInInitializerError(
+					reflectiveOperationException);
+			}
+		}
+
+		private Object _filter;
 
 	}
 
@@ -638,7 +678,7 @@ public class BasicRegistryImpl implements Registry {
 		public String[] getPropertyKeys() {
 			Set<String> set = _properties.keySet();
 
-			return set.toArray(new String[set.size()]);
+			return set.toArray(new String[0]);
 		}
 
 		public boolean matches(ServiceReference<?> serviceReference) {
@@ -659,7 +699,6 @@ public class BasicRegistryImpl implements Registry {
 			}
 
 			for (Map.Entry<String, Object> entry : entrySet) {
-				String key = entry.getKey();
 				Object value = entry.getValue();
 
 				Object[] array = null;
@@ -679,6 +718,8 @@ public class BasicRegistryImpl implements Registry {
 				}
 
 				if (array.length > 0) {
+					String key = entry.getKey();
+
 					for (Object object : array) {
 						stringBuilder.append('(');
 						stringBuilder.append(key);

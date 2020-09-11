@@ -14,8 +14,6 @@
 
 package com.liferay.reading.time.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * Provides the HTTP utility for the
  * <code>com.liferay.reading.time.service.ReadingTimeEntryServiceUtil</code> service
@@ -43,6 +41,5 @@ import aQute.bnd.annotation.ProviderType;
  * @see ReadingTimeEntryServiceSoap
  * @generated
  */
-@ProviderType
 public class ReadingTimeEntryServiceHttp {
 }

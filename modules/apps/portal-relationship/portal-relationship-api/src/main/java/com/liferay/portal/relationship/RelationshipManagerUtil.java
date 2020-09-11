@@ -14,8 +14,6 @@
 
 package com.liferay.portal.relationship;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ClassedModel;
 
 import java.util.Collection;
@@ -23,7 +21,6 @@ import java.util.Collection;
 /**
  * @author Máté Thurzó
  */
-@ProviderType
 public class RelationshipManagerUtil {
 
 	public static <T extends ClassedModel> Collection<? extends ClassedModel>

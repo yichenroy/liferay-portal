@@ -39,8 +39,8 @@ import com.liferay.portal.kernel.service.persistence.LayoutPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutPrototypePersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutSetPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutSetPrototypePersistence;
-import com.liferay.portal.kernel.service.persistence.LayoutVersionPersistence;
 import com.liferay.portal.kernel.service.persistence.PluginSettingPersistence;
+import com.liferay.portal.kernel.service.persistence.PortalPreferencesPersistence;
 import com.liferay.portal.kernel.service.persistence.PortletPreferencesFinder;
 import com.liferay.portal.kernel.service.persistence.PortletPreferencesPersistence;
 import com.liferay.portal.kernel.service.persistence.ResourcePermissionFinder;
@@ -49,8 +49,8 @@ import com.liferay.portal.kernel.service.persistence.UserFinder;
 import com.liferay.portal.kernel.service.persistence.UserGroupFinder;
 import com.liferay.portal.kernel.service.persistence.UserGroupPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.persistence.WorkflowDefinitionLinkPersistence;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.ratings.kernel.service.persistence.RatingsStatsFinder;
 import com.liferay.ratings.kernel.service.persistence.RatingsStatsPersistence;
 
 import javax.sql.DataSource;
@@ -67,7 +67,7 @@ import javax.sql.DataSource;
  * @generated
  */
 public abstract class LayoutServiceBaseImpl
-	extends BaseServiceImpl implements LayoutService, IdentifiableOSGiService {
+	extends BaseServiceImpl implements IdentifiableOSGiService, LayoutService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -645,44 +645,6 @@ public abstract class LayoutServiceBaseImpl
 	}
 
 	/**
-	 * Returns the ratings stats finder.
-	 *
-	 * @return the ratings stats finder
-	 */
-	public RatingsStatsFinder getRatingsStatsFinder() {
-		return ratingsStatsFinder;
-	}
-
-	/**
-	 * Sets the ratings stats finder.
-	 *
-	 * @param ratingsStatsFinder the ratings stats finder
-	 */
-	public void setRatingsStatsFinder(RatingsStatsFinder ratingsStatsFinder) {
-		this.ratingsStatsFinder = ratingsStatsFinder;
-	}
-
-	/**
-	 * Returns the layout version persistence.
-	 *
-	 * @return the layout version persistence
-	 */
-	public LayoutVersionPersistence getLayoutVersionPersistence() {
-		return layoutVersionPersistence;
-	}
-
-	/**
-	 * Sets the layout version persistence.
-	 *
-	 * @param layoutVersionPersistence the layout version persistence
-	 */
-	public void setLayoutVersionPersistence(
-		LayoutVersionPersistence layoutVersionPersistence) {
-
-		this.layoutVersionPersistence = layoutVersionPersistence;
-	}
-
-	/**
 	 * Returns the layout friendly url local service.
 	 *
 	 * @return the layout friendly url local service
@@ -986,6 +948,49 @@ public abstract class LayoutServiceBaseImpl
 		PluginSettingPersistence pluginSettingPersistence) {
 
 		this.pluginSettingPersistence = pluginSettingPersistence;
+	}
+
+	/**
+	 * Returns the portal preferences local service.
+	 *
+	 * @return the portal preferences local service
+	 */
+	public com.liferay.portal.kernel.service.PortalPreferencesLocalService
+		getPortalPreferencesLocalService() {
+
+		return portalPreferencesLocalService;
+	}
+
+	/**
+	 * Sets the portal preferences local service.
+	 *
+	 * @param portalPreferencesLocalService the portal preferences local service
+	 */
+	public void setPortalPreferencesLocalService(
+		com.liferay.portal.kernel.service.PortalPreferencesLocalService
+			portalPreferencesLocalService) {
+
+		this.portalPreferencesLocalService = portalPreferencesLocalService;
+	}
+
+	/**
+	 * Returns the portal preferences persistence.
+	 *
+	 * @return the portal preferences persistence
+	 */
+	public PortalPreferencesPersistence getPortalPreferencesPersistence() {
+		return portalPreferencesPersistence;
+	}
+
+	/**
+	 * Sets the portal preferences persistence.
+	 *
+	 * @param portalPreferencesPersistence the portal preferences persistence
+	 */
+	public void setPortalPreferencesPersistence(
+		PortalPreferencesPersistence portalPreferencesPersistence) {
+
+		this.portalPreferencesPersistence = portalPreferencesPersistence;
 	}
 
 	/**
@@ -1344,6 +1349,53 @@ public abstract class LayoutServiceBaseImpl
 		this.userGroupFinder = userGroupFinder;
 	}
 
+	/**
+	 * Returns the workflow definition link local service.
+	 *
+	 * @return the workflow definition link local service
+	 */
+	public com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
+		getWorkflowDefinitionLinkLocalService() {
+
+		return workflowDefinitionLinkLocalService;
+	}
+
+	/**
+	 * Sets the workflow definition link local service.
+	 *
+	 * @param workflowDefinitionLinkLocalService the workflow definition link local service
+	 */
+	public void setWorkflowDefinitionLinkLocalService(
+		com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
+			workflowDefinitionLinkLocalService) {
+
+		this.workflowDefinitionLinkLocalService =
+			workflowDefinitionLinkLocalService;
+	}
+
+	/**
+	 * Returns the workflow definition link persistence.
+	 *
+	 * @return the workflow definition link persistence
+	 */
+	public WorkflowDefinitionLinkPersistence
+		getWorkflowDefinitionLinkPersistence() {
+
+		return workflowDefinitionLinkPersistence;
+	}
+
+	/**
+	 * Sets the workflow definition link persistence.
+	 *
+	 * @param workflowDefinitionLinkPersistence the workflow definition link persistence
+	 */
+	public void setWorkflowDefinitionLinkPersistence(
+		WorkflowDefinitionLinkPersistence workflowDefinitionLinkPersistence) {
+
+		this.workflowDefinitionLinkPersistence =
+			workflowDefinitionLinkPersistence;
+	}
+
 	public void afterPropertiesSet() {
 	}
 
@@ -1387,8 +1439,8 @@ public abstract class LayoutServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
@@ -1512,12 +1564,6 @@ public abstract class LayoutServiceBaseImpl
 	@BeanReference(type = RatingsStatsPersistence.class)
 	protected RatingsStatsPersistence ratingsStatsPersistence;
 
-	@BeanReference(type = RatingsStatsFinder.class)
-	protected RatingsStatsFinder ratingsStatsFinder;
-
-	@BeanReference(type = LayoutVersionPersistence.class)
-	protected LayoutVersionPersistence layoutVersionPersistence;
-
 	@BeanReference(
 		type = com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService.class
 	)
@@ -1586,6 +1632,15 @@ public abstract class LayoutServiceBaseImpl
 
 	@BeanReference(type = PluginSettingPersistence.class)
 	protected PluginSettingPersistence pluginSettingPersistence;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.PortalPreferencesLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.PortalPreferencesLocalService
+		portalPreferencesLocalService;
+
+	@BeanReference(type = PortalPreferencesPersistence.class)
+	protected PortalPreferencesPersistence portalPreferencesPersistence;
 
 	@BeanReference(
 		type = com.liferay.portal.kernel.service.PortletPreferencesLocalService.class
@@ -1661,5 +1716,16 @@ public abstract class LayoutServiceBaseImpl
 
 	@BeanReference(type = UserGroupFinder.class)
 	protected UserGroupFinder userGroupFinder;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService.class
+	)
+	protected
+		com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
+			workflowDefinitionLinkLocalService;
+
+	@BeanReference(type = WorkflowDefinitionLinkPersistence.class)
+	protected WorkflowDefinitionLinkPersistence
+		workflowDefinitionLinkPersistence;
 
 }

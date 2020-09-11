@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
@@ -25,7 +23,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 /**
  * @author Leonardo Barros
  */
-@ProviderType
 public class DDLRecordSetVersionImpl extends DDLRecordSetVersionBaseImpl {
 
 	@Override

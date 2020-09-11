@@ -15,12 +15,12 @@
 package com.liferay.portal.tools;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.DummyOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
@@ -115,7 +115,7 @@ public class PortalClientBuilder {
 	}
 
 	private HttpServlet _createAxisHttpServlet(final File docRootDir)
-		throws ServletException {
+		throws Exception {
 
 		AxisServlet axisServlet = new AxisServlet();
 
@@ -168,8 +168,8 @@ public class PortalClientBuilder {
 			_axisHttpServlet.service(
 				mockHttpServletRequest, mockHttpServletResponse);
 		}
-		catch (ServletException se) {
-			throw new IOException(se);
+		catch (ServletException servletException) {
+			throw new IOException(servletException);
 		}
 
 		return mockHttpServletResponse.getContentAsByteArray();

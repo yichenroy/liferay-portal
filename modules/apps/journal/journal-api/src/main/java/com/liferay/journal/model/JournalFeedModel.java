@@ -14,14 +14,16 @@
 
 package com.liferay.journal.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the JournalFeed service. Represents a row in the &quot;JournalFeed&quot; database table, with each column mapped to a property of this class.
@@ -36,7 +38,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface JournalFeedModel
-	extends BaseModel<JournalFeed>, ShardedModel, StagedGroupedModel {
+	extends BaseModel<JournalFeed>, CTModel<JournalFeed>, MVCCModel,
+			ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -49,6 +52,7 @@ public interface JournalFeedModel
 	 *
 	 * @return the primary key of this journal feed
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -56,7 +60,40 @@ public interface JournalFeedModel
 	 *
 	 * @param primaryKey the primary key of this journal feed
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this journal feed.
+	 *
+	 * @return the mvcc version of this journal feed
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this journal feed.
+	 *
+	 * @param mvccVersion the mvcc version of this journal feed
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this journal feed.
+	 *
+	 * @return the ct collection ID of this journal feed
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this journal feed.
+	 *
+	 * @param ctCollectionId the ct collection ID of this journal feed
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this journal feed.

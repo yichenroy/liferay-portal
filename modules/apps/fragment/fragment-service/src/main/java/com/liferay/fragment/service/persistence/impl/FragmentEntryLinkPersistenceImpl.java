@@ -14,14 +14,17 @@
 
 package com.liferay.fragment.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.fragment.exception.NoSuchEntryLinkException;
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.model.FragmentEntryLinkTable;
 import com.liferay.fragment.model.impl.FragmentEntryLinkImpl;
 import com.liferay.fragment.model.impl.FragmentEntryLinkModelImpl;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkPersistence;
+import com.liferay.fragment.service.persistence.impl.constants.FragmentPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
+import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -29,31 +32,47 @@ import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
+import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.sql.DataSource;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The persistence implementation for the fragment entry link service.
@@ -65,7 +84,7 @@ import java.util.Set;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
+@Component(service = FragmentEntryLinkPersistence.class)
 public class FragmentEntryLinkPersistenceImpl
 	extends BasePersistenceImpl<FragmentEntryLink>
 	implements FragmentEntryLinkPersistence {
@@ -106,7 +125,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns a range of all the fragment entry links where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -123,7 +142,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -144,43 +163,46 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching fragment entry links
 	 */
 	@Override
 	public List<FragmentEntryLink> findByUuid(
 		String uuid, int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUuid;
-			finderArgs = new Object[] {uuid};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByUuid;
+				finderArgs = new Object[] {uuid};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByUuid;
 			finderArgs = new Object[] {uuid, start, end, orderByComparator};
 		}
 
 		List<FragmentEntryLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<FragmentEntryLink>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -196,73 +218,63 @@ public class FragmentEntryLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_UUID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				if (!pagination) {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -292,16 +304,16 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -345,16 +357,16 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -421,8 +433,8 @@ public class FragmentEntryLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -434,28 +446,28 @@ public class FragmentEntryLinkPersistenceImpl
 		OrderByComparator<FragmentEntryLink> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_UUID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -463,72 +475,72 @@ public class FragmentEntryLinkPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
 		if (orderByComparator != null) {
@@ -536,11 +548,11 @@ public class FragmentEntryLinkPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						fragmentEntryLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<FragmentEntryLink> list = q.list();
+		List<FragmentEntryLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -574,51 +586,61 @@ public class FragmentEntryLinkPersistenceImpl
 	public int countByUuid(String uuid) {
 		uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = _finderPathCountByUuid;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
 
-		Object[] finderArgs = new Object[] {uuid};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUuid;
+
+			finderArgs = new Object[] {uuid};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_UUID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -652,23 +674,23 @@ public class FragmentEntryLinkPersistenceImpl
 		FragmentEntryLink fragmentEntryLink = fetchByUUID_G(uuid, groupId);
 
 		if (fragmentEntryLink == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("uuid=");
-			msg.append(uuid);
+			sb.append("uuid=");
+			sb.append(uuid);
 
-			msg.append(", groupId=");
-			msg.append(groupId);
+			sb.append(", groupId=");
+			sb.append(groupId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchEntryLinkException(msg.toString());
+			throw new NoSuchEntryLinkException(sb.toString());
 		}
 
 		return fragmentEntryLink;
@@ -691,20 +713,27 @@ public class FragmentEntryLinkPersistenceImpl
 	 *
 	 * @param uuid the uuid
 	 * @param groupId the group ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
 	 */
 	@Override
 	public FragmentEntryLink fetchByUUID_G(
-		String uuid, long groupId, boolean retrieveFromCache) {
+		String uuid, long groupId, boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] {uuid, groupId};
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {uuid, groupId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G, finderArgs, this);
 		}
@@ -720,45 +749,47 @@ public class FragmentEntryLinkPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_G_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_G_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+			sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				List<FragmentEntryLink> list = q.list();
+				List<FragmentEntryLink> list = query.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(
-						_finderPathFetchByUUID_G, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						finderCache.putResult(
+							_finderPathFetchByUUID_G, finderArgs, list);
+					}
 				}
 				else {
 					FragmentEntryLink fragmentEntryLink = list.get(0);
@@ -768,10 +799,8 @@ public class FragmentEntryLinkPersistenceImpl
 					cacheResult(fragmentEntryLink);
 				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(_finderPathFetchByUUID_G, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -813,55 +842,65 @@ public class FragmentEntryLinkPersistenceImpl
 	public int countByUUID_G(String uuid, long groupId) {
 		uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = _finderPathCountByUUID_G;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
 
-		Object[] finderArgs = new Object[] {uuid, groupId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUUID_G;
+
+			finderArgs = new Object[] {uuid, groupId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_G_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_G_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+			sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -901,7 +940,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns a range of all the fragment entry links where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -921,7 +960,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -944,7 +983,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -952,29 +991,32 @@ public class FragmentEntryLinkPersistenceImpl
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching fragment entry links
 	 */
 	@Override
 	public List<FragmentEntryLink> findByUuid_C(
 		String uuid, long companyId, int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUuid_C;
-			finderArgs = new Object[] {uuid, companyId};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByUuid_C;
+				finderArgs = new Object[] {uuid, companyId};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByUuid_C;
 			finderArgs = new Object[] {
 				uuid, companyId, start, end, orderByComparator
@@ -983,7 +1025,7 @@ public class FragmentEntryLinkPersistenceImpl
 
 		List<FragmentEntryLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<FragmentEntryLink>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -1001,77 +1043,67 @@ public class FragmentEntryLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1103,19 +1135,19 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -1163,19 +1195,19 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -1247,8 +1279,8 @@ public class FragmentEntryLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1260,117 +1292,117 @@ public class FragmentEntryLinkPersistenceImpl
 		long companyId, OrderByComparator<FragmentEntryLink> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						fragmentEntryLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<FragmentEntryLink> list = q.list();
+		List<FragmentEntryLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1408,55 +1440,65 @@ public class FragmentEntryLinkPersistenceImpl
 	public int countByUuid_C(String uuid, long companyId) {
 		uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = _finderPathCountByUuid_C;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
 
-		Object[] finderArgs = new Object[] {uuid, companyId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUuid_C;
+
+			finderArgs = new Object[] {uuid, companyId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1495,7 +1537,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns a range of all the fragment entry links where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1514,7 +1556,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1535,47 +1577,50 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching fragment entry links
 	 */
 	@Override
 	public List<FragmentEntryLink> findByGroupId(
 		long groupId, int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByGroupId;
-			finderArgs = new Object[] {groupId};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByGroupId;
+				finderArgs = new Object[] {groupId};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByGroupId;
 			finderArgs = new Object[] {groupId, start, end, orderByComparator};
 		}
 
 		List<FragmentEntryLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<FragmentEntryLink>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (FragmentEntryLink fragmentEntryLink : list) {
-					if ((groupId != fragmentEntryLink.getGroupId())) {
+					if (groupId != fragmentEntryLink.getGroupId()) {
 						list = null;
 
 						break;
@@ -1585,62 +1630,52 @@ public class FragmentEntryLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				if (!pagination) {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1671,16 +1706,16 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -1725,16 +1760,16 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -1799,8 +1834,8 @@ public class FragmentEntryLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1812,102 +1847,102 @@ public class FragmentEntryLinkPersistenceImpl
 		OrderByComparator<FragmentEntryLink> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+		sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						fragmentEntryLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<FragmentEntryLink> list = q.list();
+		List<FragmentEntryLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1940,40 +1975,50 @@ public class FragmentEntryLinkPersistenceImpl
 	 */
 	@Override
 	public int countByGroupId(long groupId) {
-		FinderPath finderPath = _finderPathCountByGroupId;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
 
-		Object[] finderArgs = new Object[] {groupId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByGroupId;
+
+			finderArgs = new Object[] {groupId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1985,6 +2030,1098 @@ public class FragmentEntryLinkPersistenceImpl
 
 	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 =
 		"fragmentEntryLink.groupId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByFragmentEntryId;
+	private FinderPath _finderPathWithoutPaginationFindByFragmentEntryId;
+	private FinderPath _finderPathCountByFragmentEntryId;
+
+	/**
+	 * Returns all the fragment entry links where fragmentEntryId = &#63;.
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @return the matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByFragmentEntryId(long fragmentEntryId) {
+		return findByFragmentEntryId(
+			fragmentEntryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the fragment entry links where fragmentEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @return the range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByFragmentEntryId(
+		long fragmentEntryId, int start, int end) {
+
+		return findByFragmentEntryId(fragmentEntryId, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where fragmentEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByFragmentEntryId(
+		long fragmentEntryId, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		return findByFragmentEntryId(
+			fragmentEntryId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where fragmentEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByFragmentEntryId(
+		long fragmentEntryId, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByFragmentEntryId;
+				finderArgs = new Object[] {fragmentEntryId};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByFragmentEntryId;
+			finderArgs = new Object[] {
+				fragmentEntryId, start, end, orderByComparator
+			};
+		}
+
+		List<FragmentEntryLink> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<FragmentEntryLink>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (FragmentEntryLink fragmentEntryLink : list) {
+					if (fragmentEntryId !=
+							fragmentEntryLink.getFragmentEntryId()) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(3);
+			}
+
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_FRAGMENTENTRYID_FRAGMENTENTRYID_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(fragmentEntryId);
+
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where fragmentEntryId = &#63;.
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByFragmentEntryId_First(
+			long fragmentEntryId,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByFragmentEntryId_First(
+			fragmentEntryId, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("fragmentEntryId=");
+		sb.append(fragmentEntryId);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where fragmentEntryId = &#63;.
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByFragmentEntryId_First(
+		long fragmentEntryId,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		List<FragmentEntryLink> list = findByFragmentEntryId(
+			fragmentEntryId, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where fragmentEntryId = &#63;.
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByFragmentEntryId_Last(
+			long fragmentEntryId,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByFragmentEntryId_Last(
+			fragmentEntryId, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("fragmentEntryId=");
+		sb.append(fragmentEntryId);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where fragmentEntryId = &#63;.
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByFragmentEntryId_Last(
+		long fragmentEntryId,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		int count = countByFragmentEntryId(fragmentEntryId);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<FragmentEntryLink> list = findByFragmentEntryId(
+			fragmentEntryId, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the fragment entry links before and after the current fragment entry link in the ordered set where fragmentEntryId = &#63;.
+	 *
+	 * @param fragmentEntryLinkId the primary key of the current fragment entry link
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next fragment entry link
+	 * @throws NoSuchEntryLinkException if a fragment entry link with the primary key could not be found
+	 */
+	@Override
+	public FragmentEntryLink[] findByFragmentEntryId_PrevAndNext(
+			long fragmentEntryLinkId, long fragmentEntryId,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = findByPrimaryKey(
+			fragmentEntryLinkId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			FragmentEntryLink[] array = new FragmentEntryLinkImpl[3];
+
+			array[0] = getByFragmentEntryId_PrevAndNext(
+				session, fragmentEntryLink, fragmentEntryId, orderByComparator,
+				true);
+
+			array[1] = fragmentEntryLink;
+
+			array[2] = getByFragmentEntryId_PrevAndNext(
+				session, fragmentEntryLink, fragmentEntryId, orderByComparator,
+				false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected FragmentEntryLink getByFragmentEntryId_PrevAndNext(
+		Session session, FragmentEntryLink fragmentEntryLink,
+		long fragmentEntryId,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(3);
+		}
+
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+		sb.append(_FINDER_COLUMN_FRAGMENTENTRYID_FRAGMENTENTRYID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(fragmentEntryId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						fragmentEntryLink)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<FragmentEntryLink> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the fragment entry links where fragmentEntryId = &#63; from the database.
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 */
+	@Override
+	public void removeByFragmentEntryId(long fragmentEntryId) {
+		for (FragmentEntryLink fragmentEntryLink :
+				findByFragmentEntryId(
+					fragmentEntryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
+			remove(fragmentEntryLink);
+		}
+	}
+
+	/**
+	 * Returns the number of fragment entry links where fragmentEntryId = &#63;.
+	 *
+	 * @param fragmentEntryId the fragment entry ID
+	 * @return the number of matching fragment entry links
+	 */
+	@Override
+	public int countByFragmentEntryId(long fragmentEntryId) {
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByFragmentEntryId;
+
+			finderArgs = new Object[] {fragmentEntryId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(2);
+
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_FRAGMENTENTRYID_FRAGMENTENTRYID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(fragmentEntryId);
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String
+		_FINDER_COLUMN_FRAGMENTENTRYID_FRAGMENTENTRYID_2 =
+			"fragmentEntryLink.fragmentEntryId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByRendererKey;
+	private FinderPath _finderPathWithoutPaginationFindByRendererKey;
+	private FinderPath _finderPathCountByRendererKey;
+
+	/**
+	 * Returns all the fragment entry links where rendererKey = &#63;.
+	 *
+	 * @param rendererKey the renderer key
+	 * @return the matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByRendererKey(String rendererKey) {
+		return findByRendererKey(
+			rendererKey, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the fragment entry links where rendererKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param rendererKey the renderer key
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @return the range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByRendererKey(
+		String rendererKey, int start, int end) {
+
+		return findByRendererKey(rendererKey, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where rendererKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param rendererKey the renderer key
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByRendererKey(
+		String rendererKey, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		return findByRendererKey(
+			rendererKey, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where rendererKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param rendererKey the renderer key
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByRendererKey(
+		String rendererKey, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean useFinderCache) {
+
+		rendererKey = Objects.toString(rendererKey, "");
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByRendererKey;
+				finderArgs = new Object[] {rendererKey};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByRendererKey;
+			finderArgs = new Object[] {
+				rendererKey, start, end, orderByComparator
+			};
+		}
+
+		List<FragmentEntryLink> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<FragmentEntryLink>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (FragmentEntryLink fragmentEntryLink : list) {
+					if (!rendererKey.equals(
+							fragmentEntryLink.getRendererKey())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(3);
+			}
+
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+			boolean bindRendererKey = false;
+
+			if (rendererKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_RENDERERKEY_RENDERERKEY_3);
+			}
+			else {
+				bindRendererKey = true;
+
+				sb.append(_FINDER_COLUMN_RENDERERKEY_RENDERERKEY_2);
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				if (bindRendererKey) {
+					queryPos.add(rendererKey);
+				}
+
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where rendererKey = &#63;.
+	 *
+	 * @param rendererKey the renderer key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByRendererKey_First(
+			String rendererKey,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByRendererKey_First(
+			rendererKey, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("rendererKey=");
+		sb.append(rendererKey);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where rendererKey = &#63;.
+	 *
+	 * @param rendererKey the renderer key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByRendererKey_First(
+		String rendererKey,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		List<FragmentEntryLink> list = findByRendererKey(
+			rendererKey, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where rendererKey = &#63;.
+	 *
+	 * @param rendererKey the renderer key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByRendererKey_Last(
+			String rendererKey,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByRendererKey_Last(
+			rendererKey, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("rendererKey=");
+		sb.append(rendererKey);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where rendererKey = &#63;.
+	 *
+	 * @param rendererKey the renderer key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByRendererKey_Last(
+		String rendererKey,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		int count = countByRendererKey(rendererKey);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<FragmentEntryLink> list = findByRendererKey(
+			rendererKey, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the fragment entry links before and after the current fragment entry link in the ordered set where rendererKey = &#63;.
+	 *
+	 * @param fragmentEntryLinkId the primary key of the current fragment entry link
+	 * @param rendererKey the renderer key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next fragment entry link
+	 * @throws NoSuchEntryLinkException if a fragment entry link with the primary key could not be found
+	 */
+	@Override
+	public FragmentEntryLink[] findByRendererKey_PrevAndNext(
+			long fragmentEntryLinkId, String rendererKey,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		rendererKey = Objects.toString(rendererKey, "");
+
+		FragmentEntryLink fragmentEntryLink = findByPrimaryKey(
+			fragmentEntryLinkId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			FragmentEntryLink[] array = new FragmentEntryLinkImpl[3];
+
+			array[0] = getByRendererKey_PrevAndNext(
+				session, fragmentEntryLink, rendererKey, orderByComparator,
+				true);
+
+			array[1] = fragmentEntryLink;
+
+			array[2] = getByRendererKey_PrevAndNext(
+				session, fragmentEntryLink, rendererKey, orderByComparator,
+				false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected FragmentEntryLink getByRendererKey_PrevAndNext(
+		Session session, FragmentEntryLink fragmentEntryLink,
+		String rendererKey,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(3);
+		}
+
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+		boolean bindRendererKey = false;
+
+		if (rendererKey.isEmpty()) {
+			sb.append(_FINDER_COLUMN_RENDERERKEY_RENDERERKEY_3);
+		}
+		else {
+			bindRendererKey = true;
+
+			sb.append(_FINDER_COLUMN_RENDERERKEY_RENDERERKEY_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		if (bindRendererKey) {
+			queryPos.add(rendererKey);
+		}
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						fragmentEntryLink)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<FragmentEntryLink> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the fragment entry links where rendererKey = &#63; from the database.
+	 *
+	 * @param rendererKey the renderer key
+	 */
+	@Override
+	public void removeByRendererKey(String rendererKey) {
+		for (FragmentEntryLink fragmentEntryLink :
+				findByRendererKey(
+					rendererKey, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
+			remove(fragmentEntryLink);
+		}
+	}
+
+	/**
+	 * Returns the number of fragment entry links where rendererKey = &#63;.
+	 *
+	 * @param rendererKey the renderer key
+	 * @return the number of matching fragment entry links
+	 */
+	@Override
+	public int countByRendererKey(String rendererKey) {
+		rendererKey = Objects.toString(rendererKey, "");
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByRendererKey;
+
+			finderArgs = new Object[] {rendererKey};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(2);
+
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+
+			boolean bindRendererKey = false;
+
+			if (rendererKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_RENDERERKEY_RENDERERKEY_3);
+			}
+			else {
+				bindRendererKey = true;
+
+				sb.append(_FINDER_COLUMN_RENDERERKEY_RENDERERKEY_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				if (bindRendererKey) {
+					queryPos.add(rendererKey);
+				}
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_RENDERERKEY_RENDERERKEY_2 =
+		"fragmentEntryLink.rendererKey = ?";
+
+	private static final String _FINDER_COLUMN_RENDERERKEY_RENDERERKEY_3 =
+		"(fragmentEntryLink.rendererKey IS NULL OR fragmentEntryLink.rendererKey = '')";
 
 	private FinderPath _finderPathWithPaginationFindByG_F;
 	private FinderPath _finderPathWithoutPaginationFindByG_F;
@@ -2010,7 +3147,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns a range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2030,7 +3167,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2053,7 +3190,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2061,27 +3198,30 @@ public class FragmentEntryLinkPersistenceImpl
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching fragment entry links
 	 */
 	@Override
 	public List<FragmentEntryLink> findByG_F(
 		long groupId, long fragmentEntryId, int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByG_F;
-			finderArgs = new Object[] {groupId, fragmentEntryId};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByG_F;
+				finderArgs = new Object[] {groupId, fragmentEntryId};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByG_F;
 			finderArgs = new Object[] {
 				groupId, fragmentEntryId, start, end, orderByComparator
@@ -2090,7 +3230,7 @@ public class FragmentEntryLinkPersistenceImpl
 
 		List<FragmentEntryLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<FragmentEntryLink>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -2109,66 +3249,56 @@ public class FragmentEntryLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_G_F_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_F_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_G_F_FRAGMENTENTRYID_2);
+			sb.append(_FINDER_COLUMN_G_F_FRAGMENTENTRYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(fragmentEntryId);
+				queryPos.add(fragmentEntryId);
 
-				if (!pagination) {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2200,19 +3330,19 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", fragmentEntryId=");
-		msg.append(fragmentEntryId);
+		sb.append(", fragmentEntryId=");
+		sb.append(fragmentEntryId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -2260,19 +3390,19 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", fragmentEntryId=");
-		msg.append(fragmentEntryId);
+		sb.append(", fragmentEntryId=");
+		sb.append(fragmentEntryId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -2342,8 +3472,8 @@ public class FragmentEntryLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2356,106 +3486,106 @@ public class FragmentEntryLinkPersistenceImpl
 		OrderByComparator<FragmentEntryLink> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_G_F_GROUPID_2);
+		sb.append(_FINDER_COLUMN_G_F_GROUPID_2);
 
-		query.append(_FINDER_COLUMN_G_F_FRAGMENTENTRYID_2);
+		sb.append(_FINDER_COLUMN_G_F_FRAGMENTENTRYID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
-		qPos.add(fragmentEntryId);
+		queryPos.add(fragmentEntryId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						fragmentEntryLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<FragmentEntryLink> list = q.list();
+		List<FragmentEntryLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2491,44 +3621,54 @@ public class FragmentEntryLinkPersistenceImpl
 	 */
 	@Override
 	public int countByG_F(long groupId, long fragmentEntryId) {
-		FinderPath finderPath = _finderPathCountByG_F;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
 
-		Object[] finderArgs = new Object[] {groupId, fragmentEntryId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_F;
+
+			finderArgs = new Object[] {groupId, fragmentEntryId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_G_F_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_F_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_G_F_FRAGMENTENTRYID_2);
+			sb.append(_FINDER_COLUMN_G_F_FRAGMENTENTRYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(fragmentEntryId);
+				queryPos.add(fragmentEntryId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2543,6 +3683,561 @@ public class FragmentEntryLinkPersistenceImpl
 
 	private static final String _FINDER_COLUMN_G_F_FRAGMENTENTRYID_2 =
 		"fragmentEntryLink.fragmentEntryId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByG_P;
+	private FinderPath _finderPathWithoutPaginationFindByG_P;
+	private FinderPath _finderPathCountByG_P;
+
+	/**
+	 * Returns all the fragment entry links where groupId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @return the matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_P(long groupId, long plid) {
+		return findByG_P(
+			groupId, plid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the fragment entry links where groupId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @return the range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_P(
+		long groupId, long plid, int start, int end) {
+
+		return findByG_P(groupId, plid, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_P(
+		long groupId, long plid, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		return findByG_P(groupId, plid, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_P(
+		long groupId, long plid, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByG_P;
+				finderArgs = new Object[] {groupId, plid};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByG_P;
+			finderArgs = new Object[] {
+				groupId, plid, start, end, orderByComparator
+			};
+		}
+
+		List<FragmentEntryLink> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<FragmentEntryLink>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (FragmentEntryLink fragmentEntryLink : list) {
+					if ((groupId != fragmentEntryLink.getGroupId()) ||
+						(plid != fragmentEntryLink.getPlid())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(4);
+			}
+
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_P_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_P_PLID_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(plid);
+
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where groupId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByG_P_First(
+			long groupId, long plid,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByG_P_First(
+			groupId, plid, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", plid=");
+		sb.append(plid);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where groupId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByG_P_First(
+		long groupId, long plid,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		List<FragmentEntryLink> list = findByG_P(
+			groupId, plid, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where groupId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByG_P_Last(
+			long groupId, long plid,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByG_P_Last(
+			groupId, plid, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", plid=");
+		sb.append(plid);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where groupId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByG_P_Last(
+		long groupId, long plid,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		int count = countByG_P(groupId, plid);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<FragmentEntryLink> list = findByG_P(
+			groupId, plid, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the fragment entry links before and after the current fragment entry link in the ordered set where groupId = &#63; and plid = &#63;.
+	 *
+	 * @param fragmentEntryLinkId the primary key of the current fragment entry link
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next fragment entry link
+	 * @throws NoSuchEntryLinkException if a fragment entry link with the primary key could not be found
+	 */
+	@Override
+	public FragmentEntryLink[] findByG_P_PrevAndNext(
+			long fragmentEntryLinkId, long groupId, long plid,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = findByPrimaryKey(
+			fragmentEntryLinkId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			FragmentEntryLink[] array = new FragmentEntryLinkImpl[3];
+
+			array[0] = getByG_P_PrevAndNext(
+				session, fragmentEntryLink, groupId, plid, orderByComparator,
+				true);
+
+			array[1] = fragmentEntryLink;
+
+			array[2] = getByG_P_PrevAndNext(
+				session, fragmentEntryLink, groupId, plid, orderByComparator,
+				false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected FragmentEntryLink getByG_P_PrevAndNext(
+		Session session, FragmentEntryLink fragmentEntryLink, long groupId,
+		long plid, OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+		sb.append(_FINDER_COLUMN_G_P_GROUPID_2);
+
+		sb.append(_FINDER_COLUMN_G_P_PLID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(groupId);
+
+		queryPos.add(plid);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						fragmentEntryLink)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<FragmentEntryLink> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the fragment entry links where groupId = &#63; and plid = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 */
+	@Override
+	public void removeByG_P(long groupId, long plid) {
+		for (FragmentEntryLink fragmentEntryLink :
+				findByG_P(
+					groupId, plid, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
+			remove(fragmentEntryLink);
+		}
+	}
+
+	/**
+	 * Returns the number of fragment entry links where groupId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param plid the plid
+	 * @return the number of matching fragment entry links
+	 */
+	@Override
+	public int countByG_P(long groupId, long plid) {
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_P;
+
+			finderArgs = new Object[] {groupId, plid};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_P_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_P_PLID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(plid);
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_G_P_GROUPID_2 =
+		"fragmentEntryLink.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_P_PLID_2 =
+		"fragmentEntryLink.plid = ?";
 
 	private FinderPath _finderPathWithPaginationFindByG_F_C;
 	private FinderPath _finderPathWithoutPaginationFindByG_F_C;
@@ -2569,7 +4264,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns a range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and classNameId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2592,7 +4287,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and classNameId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2617,7 +4312,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and classNameId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2626,27 +4321,32 @@ public class FragmentEntryLinkPersistenceImpl
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching fragment entry links
 	 */
 	@Override
 	public List<FragmentEntryLink> findByG_F_C(
 		long groupId, long fragmentEntryId, long classNameId, int start,
 		int end, OrderByComparator<FragmentEntryLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByG_F_C;
-			finderArgs = new Object[] {groupId, fragmentEntryId, classNameId};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByG_F_C;
+				finderArgs = new Object[] {
+					groupId, fragmentEntryId, classNameId
+				};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByG_F_C;
 			finderArgs = new Object[] {
 				groupId, fragmentEntryId, classNameId, start, end,
@@ -2656,7 +4356,7 @@ public class FragmentEntryLinkPersistenceImpl
 
 		List<FragmentEntryLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<FragmentEntryLink>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -2676,70 +4376,60 @@ public class FragmentEntryLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_G_F_C_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_FRAGMENTENTRYID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_FRAGMENTENTRYID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_CLASSNAMEID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(fragmentEntryId);
+				queryPos.add(fragmentEntryId);
 
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 
-				if (!pagination) {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2772,22 +4462,22 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", fragmentEntryId=");
-		msg.append(fragmentEntryId);
+		sb.append(", fragmentEntryId=");
+		sb.append(fragmentEntryId);
 
-		msg.append(", classNameId=");
-		msg.append(classNameId);
+		sb.append(", classNameId=");
+		sb.append(classNameId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -2837,22 +4527,22 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", fragmentEntryId=");
-		msg.append(fragmentEntryId);
+		sb.append(", fragmentEntryId=");
+		sb.append(fragmentEntryId);
 
-		msg.append(", classNameId=");
-		msg.append(classNameId);
+		sb.append(", classNameId=");
+		sb.append(classNameId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -2926,8 +4616,8 @@ public class FragmentEntryLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2940,110 +4630,110 @@ public class FragmentEntryLinkPersistenceImpl
 		OrderByComparator<FragmentEntryLink> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_G_F_C_GROUPID_2);
+		sb.append(_FINDER_COLUMN_G_F_C_GROUPID_2);
 
-		query.append(_FINDER_COLUMN_G_F_C_FRAGMENTENTRYID_2);
+		sb.append(_FINDER_COLUMN_G_F_C_FRAGMENTENTRYID_2);
 
-		query.append(_FINDER_COLUMN_G_F_C_CLASSNAMEID_2);
+		sb.append(_FINDER_COLUMN_G_F_C_CLASSNAMEID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
-		qPos.add(fragmentEntryId);
+		queryPos.add(fragmentEntryId);
 
-		qPos.add(classNameId);
+		queryPos.add(classNameId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						fragmentEntryLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<FragmentEntryLink> list = q.list();
+		List<FragmentEntryLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -3085,50 +4775,58 @@ public class FragmentEntryLinkPersistenceImpl
 	public int countByG_F_C(
 		long groupId, long fragmentEntryId, long classNameId) {
 
-		FinderPath finderPath = _finderPathCountByG_F_C;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
 
-		Object[] finderArgs = new Object[] {
-			groupId, fragmentEntryId, classNameId
-		};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_F_C;
+
+			finderArgs = new Object[] {groupId, fragmentEntryId, classNameId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_G_F_C_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_FRAGMENTENTRYID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_FRAGMENTENTRYID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_CLASSNAMEID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(fragmentEntryId);
+				queryPos.add(fragmentEntryId);
 
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3146,6 +4844,1205 @@ public class FragmentEntryLinkPersistenceImpl
 
 	private static final String _FINDER_COLUMN_G_F_C_CLASSNAMEID_2 =
 		"fragmentEntryLink.classNameId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByG_F_P;
+	private FinderPath _finderPathWithoutPaginationFindByG_F_P;
+	private FinderPath _finderPathCountByG_F_P;
+
+	/**
+	 * Returns all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @return the matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_F_P(
+		long groupId, long fragmentEntryId, long plid) {
+
+		return findByG_F_P(
+			groupId, fragmentEntryId, plid, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @return the range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_F_P(
+		long groupId, long fragmentEntryId, long plid, int start, int end) {
+
+		return findByG_F_P(groupId, fragmentEntryId, plid, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_F_P(
+		long groupId, long fragmentEntryId, long plid, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		return findByG_F_P(
+			groupId, fragmentEntryId, plid, start, end, orderByComparator,
+			true);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_F_P(
+		long groupId, long fragmentEntryId, long plid, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByG_F_P;
+				finderArgs = new Object[] {groupId, fragmentEntryId, plid};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByG_F_P;
+			finderArgs = new Object[] {
+				groupId, fragmentEntryId, plid, start, end, orderByComparator
+			};
+		}
+
+		List<FragmentEntryLink> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<FragmentEntryLink>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (FragmentEntryLink fragmentEntryLink : list) {
+					if ((groupId != fragmentEntryLink.getGroupId()) ||
+						(fragmentEntryId !=
+							fragmentEntryLink.getFragmentEntryId()) ||
+						(plid != fragmentEntryLink.getPlid())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					5 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(5);
+			}
+
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_F_P_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_F_P_FRAGMENTENTRYID_2);
+
+			sb.append(_FINDER_COLUMN_G_F_P_PLID_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(fragmentEntryId);
+
+				queryPos.add(plid);
+
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByG_F_P_First(
+			long groupId, long fragmentEntryId, long plid,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByG_F_P_First(
+			groupId, fragmentEntryId, plid, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(8);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", fragmentEntryId=");
+		sb.append(fragmentEntryId);
+
+		sb.append(", plid=");
+		sb.append(plid);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByG_F_P_First(
+		long groupId, long fragmentEntryId, long plid,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		List<FragmentEntryLink> list = findByG_F_P(
+			groupId, fragmentEntryId, plid, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByG_F_P_Last(
+			long groupId, long fragmentEntryId, long plid,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByG_F_P_Last(
+			groupId, fragmentEntryId, plid, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(8);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", fragmentEntryId=");
+		sb.append(fragmentEntryId);
+
+		sb.append(", plid=");
+		sb.append(plid);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByG_F_P_Last(
+		long groupId, long fragmentEntryId, long plid,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		int count = countByG_F_P(groupId, fragmentEntryId, plid);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<FragmentEntryLink> list = findByG_F_P(
+			groupId, fragmentEntryId, plid, count - 1, count,
+			orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the fragment entry links before and after the current fragment entry link in the ordered set where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * @param fragmentEntryLinkId the primary key of the current fragment entry link
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next fragment entry link
+	 * @throws NoSuchEntryLinkException if a fragment entry link with the primary key could not be found
+	 */
+	@Override
+	public FragmentEntryLink[] findByG_F_P_PrevAndNext(
+			long fragmentEntryLinkId, long groupId, long fragmentEntryId,
+			long plid, OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = findByPrimaryKey(
+			fragmentEntryLinkId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			FragmentEntryLink[] array = new FragmentEntryLinkImpl[3];
+
+			array[0] = getByG_F_P_PrevAndNext(
+				session, fragmentEntryLink, groupId, fragmentEntryId, plid,
+				orderByComparator, true);
+
+			array[1] = fragmentEntryLink;
+
+			array[2] = getByG_F_P_PrevAndNext(
+				session, fragmentEntryLink, groupId, fragmentEntryId, plid,
+				orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected FragmentEntryLink getByG_F_P_PrevAndNext(
+		Session session, FragmentEntryLink fragmentEntryLink, long groupId,
+		long fragmentEntryId, long plid,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(5);
+		}
+
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+		sb.append(_FINDER_COLUMN_G_F_P_GROUPID_2);
+
+		sb.append(_FINDER_COLUMN_G_F_P_FRAGMENTENTRYID_2);
+
+		sb.append(_FINDER_COLUMN_G_F_P_PLID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(groupId);
+
+		queryPos.add(fragmentEntryId);
+
+		queryPos.add(plid);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						fragmentEntryLink)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<FragmentEntryLink> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 */
+	@Override
+	public void removeByG_F_P(long groupId, long fragmentEntryId, long plid) {
+		for (FragmentEntryLink fragmentEntryLink :
+				findByG_F_P(
+					groupId, fragmentEntryId, plid, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
+			remove(fragmentEntryLink);
+		}
+	}
+
+	/**
+	 * Returns the number of fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param fragmentEntryId the fragment entry ID
+	 * @param plid the plid
+	 * @return the number of matching fragment entry links
+	 */
+	@Override
+	public int countByG_F_P(long groupId, long fragmentEntryId, long plid) {
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_F_P;
+
+			finderArgs = new Object[] {groupId, fragmentEntryId, plid};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_F_P_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_F_P_FRAGMENTENTRYID_2);
+
+			sb.append(_FINDER_COLUMN_G_F_P_PLID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(fragmentEntryId);
+
+				queryPos.add(plid);
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_G_F_P_GROUPID_2 =
+		"fragmentEntryLink.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_F_P_FRAGMENTENTRYID_2 =
+		"fragmentEntryLink.fragmentEntryId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_F_P_PLID_2 =
+		"fragmentEntryLink.plid = ?";
+
+	private FinderPath _finderPathWithPaginationFindByG_S_P;
+	private FinderPath _finderPathWithoutPaginationFindByG_S_P;
+	private FinderPath _finderPathCountByG_S_P;
+
+	/**
+	 * Returns all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @return the matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_S_P(
+		long groupId, long segmentsExperienceId, long plid) {
+
+		return findByG_S_P(
+			groupId, segmentsExperienceId, plid, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @return the range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_S_P(
+		long groupId, long segmentsExperienceId, long plid, int start,
+		int end) {
+
+		return findByG_S_P(
+			groupId, segmentsExperienceId, plid, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_S_P(
+		long groupId, long segmentsExperienceId, long plid, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		return findByG_S_P(
+			groupId, segmentsExperienceId, plid, start, end, orderByComparator,
+			true);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_S_P(
+		long groupId, long segmentsExperienceId, long plid, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByG_S_P;
+				finderArgs = new Object[] {groupId, segmentsExperienceId, plid};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByG_S_P;
+			finderArgs = new Object[] {
+				groupId, segmentsExperienceId, plid, start, end,
+				orderByComparator
+			};
+		}
+
+		List<FragmentEntryLink> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<FragmentEntryLink>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (FragmentEntryLink fragmentEntryLink : list) {
+					if ((groupId != fragmentEntryLink.getGroupId()) ||
+						(segmentsExperienceId !=
+							fragmentEntryLink.getSegmentsExperienceId()) ||
+						(plid != fragmentEntryLink.getPlid())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					5 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(5);
+			}
+
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_S_P_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_P_SEGMENTSEXPERIENCEID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_P_PLID_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(segmentsExperienceId);
+
+				queryPos.add(plid);
+
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByG_S_P_First(
+			long groupId, long segmentsExperienceId, long plid,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByG_S_P_First(
+			groupId, segmentsExperienceId, plid, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(8);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", segmentsExperienceId=");
+		sb.append(segmentsExperienceId);
+
+		sb.append(", plid=");
+		sb.append(plid);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByG_S_P_First(
+		long groupId, long segmentsExperienceId, long plid,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		List<FragmentEntryLink> list = findByG_S_P(
+			groupId, segmentsExperienceId, plid, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByG_S_P_Last(
+			long groupId, long segmentsExperienceId, long plid,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByG_S_P_Last(
+			groupId, segmentsExperienceId, plid, orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(8);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", segmentsExperienceId=");
+		sb.append(segmentsExperienceId);
+
+		sb.append(", plid=");
+		sb.append(plid);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByG_S_P_Last(
+		long groupId, long segmentsExperienceId, long plid,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		int count = countByG_S_P(groupId, segmentsExperienceId, plid);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<FragmentEntryLink> list = findByG_S_P(
+			groupId, segmentsExperienceId, plid, count - 1, count,
+			orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the fragment entry links before and after the current fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * @param fragmentEntryLinkId the primary key of the current fragment entry link
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next fragment entry link
+	 * @throws NoSuchEntryLinkException if a fragment entry link with the primary key could not be found
+	 */
+	@Override
+	public FragmentEntryLink[] findByG_S_P_PrevAndNext(
+			long fragmentEntryLinkId, long groupId, long segmentsExperienceId,
+			long plid, OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = findByPrimaryKey(
+			fragmentEntryLinkId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			FragmentEntryLink[] array = new FragmentEntryLinkImpl[3];
+
+			array[0] = getByG_S_P_PrevAndNext(
+				session, fragmentEntryLink, groupId, segmentsExperienceId, plid,
+				orderByComparator, true);
+
+			array[1] = fragmentEntryLink;
+
+			array[2] = getByG_S_P_PrevAndNext(
+				session, fragmentEntryLink, groupId, segmentsExperienceId, plid,
+				orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected FragmentEntryLink getByG_S_P_PrevAndNext(
+		Session session, FragmentEntryLink fragmentEntryLink, long groupId,
+		long segmentsExperienceId, long plid,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(5);
+		}
+
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+		sb.append(_FINDER_COLUMN_G_S_P_GROUPID_2);
+
+		sb.append(_FINDER_COLUMN_G_S_P_SEGMENTSEXPERIENCEID_2);
+
+		sb.append(_FINDER_COLUMN_G_S_P_PLID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(groupId);
+
+		queryPos.add(segmentsExperienceId);
+
+		queryPos.add(plid);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						fragmentEntryLink)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<FragmentEntryLink> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 */
+	@Override
+	public void removeByG_S_P(
+		long groupId, long segmentsExperienceId, long plid) {
+
+		for (FragmentEntryLink fragmentEntryLink :
+				findByG_S_P(
+					groupId, segmentsExperienceId, plid, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
+			remove(fragmentEntryLink);
+		}
+	}
+
+	/**
+	 * Returns the number of fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and plid = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param plid the plid
+	 * @return the number of matching fragment entry links
+	 */
+	@Override
+	public int countByG_S_P(
+		long groupId, long segmentsExperienceId, long plid) {
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_S_P;
+
+			finderArgs = new Object[] {groupId, segmentsExperienceId, plid};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_S_P_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_P_SEGMENTSEXPERIENCEID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_P_PLID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(segmentsExperienceId);
+
+				queryPos.add(plid);
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_G_S_P_GROUPID_2 =
+		"fragmentEntryLink.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_S_P_SEGMENTSEXPERIENCEID_2 =
+		"fragmentEntryLink.segmentsExperienceId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_S_P_PLID_2 =
+		"fragmentEntryLink.plid = ?";
 
 	private FinderPath _finderPathWithPaginationFindByG_C_C;
 	private FinderPath _finderPathWithoutPaginationFindByG_C_C;
@@ -3172,7 +6069,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns a range of all the fragment entry links where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -3193,7 +6090,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -3217,7 +6114,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and classNameId = &#63; and classPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -3226,27 +6123,30 @@ public class FragmentEntryLinkPersistenceImpl
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching fragment entry links
 	 */
 	@Override
 	public List<FragmentEntryLink> findByG_C_C(
 		long groupId, long classNameId, long classPK, int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByG_C_C;
-			finderArgs = new Object[] {groupId, classNameId, classPK};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByG_C_C;
+				finderArgs = new Object[] {groupId, classNameId, classPK};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByG_C_C;
 			finderArgs = new Object[] {
 				groupId, classNameId, classPK, start, end, orderByComparator
@@ -3255,7 +6155,7 @@ public class FragmentEntryLinkPersistenceImpl
 
 		List<FragmentEntryLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<FragmentEntryLink>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -3274,70 +6174,60 @@ public class FragmentEntryLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_G_C_C_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_C_C_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_G_C_C_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_G_C_C_CLASSNAMEID_2);
 
-			query.append(_FINDER_COLUMN_G_C_C_CLASSPK_2);
+			sb.append(_FINDER_COLUMN_G_C_C_CLASSPK_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 
-				qPos.add(classPK);
+				queryPos.add(classPK);
 
-				if (!pagination) {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3370,22 +6260,22 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", classNameId=");
-		msg.append(classNameId);
+		sb.append(", classNameId=");
+		sb.append(classNameId);
 
-		msg.append(", classPK=");
-		msg.append(classPK);
+		sb.append(", classPK=");
+		sb.append(classPK);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -3435,22 +6325,22 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", classNameId=");
-		msg.append(classNameId);
+		sb.append(", classNameId=");
+		sb.append(classNameId);
 
-		msg.append(", classPK=");
-		msg.append(classPK);
+		sb.append(", classPK=");
+		sb.append(classPK);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -3523,8 +6413,8 @@ public class FragmentEntryLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -3537,110 +6427,110 @@ public class FragmentEntryLinkPersistenceImpl
 		OrderByComparator<FragmentEntryLink> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_G_C_C_GROUPID_2);
+		sb.append(_FINDER_COLUMN_G_C_C_GROUPID_2);
 
-		query.append(_FINDER_COLUMN_G_C_C_CLASSNAMEID_2);
+		sb.append(_FINDER_COLUMN_G_C_C_CLASSNAMEID_2);
 
-		query.append(_FINDER_COLUMN_G_C_C_CLASSPK_2);
+		sb.append(_FINDER_COLUMN_G_C_C_CLASSPK_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
-		qPos.add(classNameId);
+		queryPos.add(classNameId);
 
-		qPos.add(classPK);
+		queryPos.add(classPK);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						fragmentEntryLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<FragmentEntryLink> list = q.list();
+		List<FragmentEntryLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -3678,48 +6568,58 @@ public class FragmentEntryLinkPersistenceImpl
 	 */
 	@Override
 	public int countByG_C_C(long groupId, long classNameId, long classPK) {
-		FinderPath finderPath = _finderPathCountByG_C_C;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
 
-		Object[] finderArgs = new Object[] {groupId, classNameId, classPK};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_C_C;
+
+			finderArgs = new Object[] {groupId, classNameId, classPK};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_G_C_C_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_C_C_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_G_C_C_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_G_C_C_CLASSNAMEID_2);
 
-			query.append(_FINDER_COLUMN_G_C_C_CLASSPK_2);
+			sb.append(_FINDER_COLUMN_G_C_C_CLASSPK_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 
-				qPos.add(classPK);
+				queryPos.add(classPK);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3764,7 +6664,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns a range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and classNameId = &#63; and classPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -3788,7 +6688,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and classNameId = &#63; and classPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -3815,7 +6715,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and fragmentEntryId = &#63; and classNameId = &#63; and classPK = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -3825,7 +6725,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching fragment entry links
 	 */
 	@Override
@@ -3833,22 +6733,25 @@ public class FragmentEntryLinkPersistenceImpl
 		long groupId, long fragmentEntryId, long classNameId, long classPK,
 		int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByG_F_C_C;
-			finderArgs = new Object[] {
-				groupId, fragmentEntryId, classNameId, classPK
-			};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByG_F_C_C;
+				finderArgs = new Object[] {
+					groupId, fragmentEntryId, classNameId, classPK
+				};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByG_F_C_C;
 			finderArgs = new Object[] {
 				groupId, fragmentEntryId, classNameId, classPK, start, end,
@@ -3858,7 +6761,7 @@ public class FragmentEntryLinkPersistenceImpl
 
 		List<FragmentEntryLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<FragmentEntryLink>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -3879,74 +6782,64 @@ public class FragmentEntryLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					6 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(6);
+				sb = new StringBundler(6);
 			}
 
-			query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_G_F_C_C_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_C_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_C_FRAGMENTENTRYID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_C_FRAGMENTENTRYID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_C_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_C_CLASSNAMEID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_C_CLASSPK_2);
+			sb.append(_FINDER_COLUMN_G_F_C_C_CLASSPK_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(fragmentEntryId);
+				queryPos.add(fragmentEntryId);
 
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 
-				qPos.add(classPK);
+				queryPos.add(classPK);
 
-				if (!pagination) {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3980,25 +6873,25 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(10);
+		StringBundler sb = new StringBundler(10);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", fragmentEntryId=");
-		msg.append(fragmentEntryId);
+		sb.append(", fragmentEntryId=");
+		sb.append(fragmentEntryId);
 
-		msg.append(", classNameId=");
-		msg.append(classNameId);
+		sb.append(", classNameId=");
+		sb.append(classNameId);
 
-		msg.append(", classPK=");
-		msg.append(classPK);
+		sb.append(", classPK=");
+		sb.append(classPK);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -4051,25 +6944,25 @@ public class FragmentEntryLinkPersistenceImpl
 			return fragmentEntryLink;
 		}
 
-		StringBundler msg = new StringBundler(10);
+		StringBundler sb = new StringBundler(10);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", fragmentEntryId=");
-		msg.append(fragmentEntryId);
+		sb.append(", fragmentEntryId=");
+		sb.append(fragmentEntryId);
 
-		msg.append(", classNameId=");
-		msg.append(classNameId);
+		sb.append(", classNameId=");
+		sb.append(classNameId);
 
-		msg.append(", classPK=");
-		msg.append(classPK);
+		sb.append(", classPK=");
+		sb.append(classPK);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchEntryLinkException(msg.toString());
+		throw new NoSuchEntryLinkException(sb.toString());
 	}
 
 	/**
@@ -4146,8 +7039,8 @@ public class FragmentEntryLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -4160,114 +7053,114 @@ public class FragmentEntryLinkPersistenceImpl
 		OrderByComparator<FragmentEntryLink> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				7 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(6);
+			sb = new StringBundler(6);
 		}
 
-		query.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_G_F_C_C_GROUPID_2);
+		sb.append(_FINDER_COLUMN_G_F_C_C_GROUPID_2);
 
-		query.append(_FINDER_COLUMN_G_F_C_C_FRAGMENTENTRYID_2);
+		sb.append(_FINDER_COLUMN_G_F_C_C_FRAGMENTENTRYID_2);
 
-		query.append(_FINDER_COLUMN_G_F_C_C_CLASSNAMEID_2);
+		sb.append(_FINDER_COLUMN_G_F_C_C_CLASSNAMEID_2);
 
-		query.append(_FINDER_COLUMN_G_F_C_C_CLASSPK_2);
+		sb.append(_FINDER_COLUMN_G_F_C_C_CLASSPK_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
-		qPos.add(fragmentEntryId);
+		queryPos.add(fragmentEntryId);
 
-		qPos.add(classNameId);
+		queryPos.add(classNameId);
 
-		qPos.add(classPK);
+		queryPos.add(classPK);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						fragmentEntryLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<FragmentEntryLink> list = q.list();
+		List<FragmentEntryLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -4311,54 +7204,64 @@ public class FragmentEntryLinkPersistenceImpl
 	public int countByG_F_C_C(
 		long groupId, long fragmentEntryId, long classNameId, long classPK) {
 
-		FinderPath finderPath = _finderPathCountByG_F_C_C;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
 
-		Object[] finderArgs = new Object[] {
-			groupId, fragmentEntryId, classNameId, classPK
-		};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_F_C_C;
+
+			finderArgs = new Object[] {
+				groupId, fragmentEntryId, classNameId, classPK
+			};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(5);
+			StringBundler sb = new StringBundler(5);
 
-			query.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_G_F_C_C_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_C_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_C_FRAGMENTENTRYID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_C_FRAGMENTENTRYID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_C_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_G_F_C_C_CLASSNAMEID_2);
 
-			query.append(_FINDER_COLUMN_G_F_C_C_CLASSPK_2);
+			sb.append(_FINDER_COLUMN_G_F_C_C_CLASSPK_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(fragmentEntryId);
+				queryPos.add(fragmentEntryId);
 
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 
-				qPos.add(classPK);
+				queryPos.add(classPK);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4380,18 +7283,672 @@ public class FragmentEntryLinkPersistenceImpl
 	private static final String _FINDER_COLUMN_G_F_C_C_CLASSPK_2 =
 		"fragmentEntryLink.classPK = ?";
 
+	private FinderPath _finderPathWithPaginationFindByG_S_C_C;
+	private FinderPath _finderPathWithoutPaginationFindByG_S_C_C;
+	private FinderPath _finderPathCountByG_S_C_C;
+
+	/**
+	 * Returns all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_S_C_C(
+		long groupId, long segmentsExperienceId, long classNameId,
+		long classPK) {
+
+		return findByG_S_C_C(
+			groupId, segmentsExperienceId, classNameId, classPK,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @return the range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_S_C_C(
+		long groupId, long segmentsExperienceId, long classNameId, long classPK,
+		int start, int end) {
+
+		return findByG_S_C_C(
+			groupId, segmentsExperienceId, classNameId, classPK, start, end,
+			null);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_S_C_C(
+		long groupId, long segmentsExperienceId, long classNameId, long classPK,
+		int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		return findByG_S_C_C(
+			groupId, segmentsExperienceId, classNameId, classPK, start, end,
+			orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param start the lower bound of the range of fragment entry links
+	 * @param end the upper bound of the range of fragment entry links (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching fragment entry links
+	 */
+	@Override
+	public List<FragmentEntryLink> findByG_S_C_C(
+		long groupId, long segmentsExperienceId, long classNameId, long classPK,
+		int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByG_S_C_C;
+				finderArgs = new Object[] {
+					groupId, segmentsExperienceId, classNameId, classPK
+				};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByG_S_C_C;
+			finderArgs = new Object[] {
+				groupId, segmentsExperienceId, classNameId, classPK, start, end,
+				orderByComparator
+			};
+		}
+
+		List<FragmentEntryLink> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<FragmentEntryLink>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (FragmentEntryLink fragmentEntryLink : list) {
+					if ((groupId != fragmentEntryLink.getGroupId()) ||
+						(segmentsExperienceId !=
+							fragmentEntryLink.getSegmentsExperienceId()) ||
+						(classNameId != fragmentEntryLink.getClassNameId()) ||
+						(classPK != fragmentEntryLink.getClassPK())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					6 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(6);
+			}
+
+			sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_S_C_C_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_C_C_SEGMENTSEXPERIENCEID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_C_C_CLASSNAMEID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_C_C_CLASSPK_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(segmentsExperienceId);
+
+				queryPos.add(classNameId);
+
+				queryPos.add(classPK);
+
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByG_S_C_C_First(
+			long groupId, long segmentsExperienceId, long classNameId,
+			long classPK,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByG_S_C_C_First(
+			groupId, segmentsExperienceId, classNameId, classPK,
+			orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(10);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", segmentsExperienceId=");
+		sb.append(segmentsExperienceId);
+
+		sb.append(", classNameId=");
+		sb.append(classNameId);
+
+		sb.append(", classPK=");
+		sb.append(classPK);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the first fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByG_S_C_C_First(
+		long groupId, long segmentsExperienceId, long classNameId, long classPK,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		List<FragmentEntryLink> list = findByG_S_C_C(
+			groupId, segmentsExperienceId, classNameId, classPK, 0, 1,
+			orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link
+	 * @throws NoSuchEntryLinkException if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink findByG_S_C_C_Last(
+			long groupId, long segmentsExperienceId, long classNameId,
+			long classPK,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = fetchByG_S_C_C_Last(
+			groupId, segmentsExperienceId, classNameId, classPK,
+			orderByComparator);
+
+		if (fragmentEntryLink != null) {
+			return fragmentEntryLink;
+		}
+
+		StringBundler sb = new StringBundler(10);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("groupId=");
+		sb.append(groupId);
+
+		sb.append(", segmentsExperienceId=");
+		sb.append(segmentsExperienceId);
+
+		sb.append(", classNameId=");
+		sb.append(classNameId);
+
+		sb.append(", classPK=");
+		sb.append(classPK);
+
+		sb.append("}");
+
+		throw new NoSuchEntryLinkException(sb.toString());
+	}
+
+	/**
+	 * Returns the last fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching fragment entry link, or <code>null</code> if a matching fragment entry link could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByG_S_C_C_Last(
+		long groupId, long segmentsExperienceId, long classNameId, long classPK,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		int count = countByG_S_C_C(
+			groupId, segmentsExperienceId, classNameId, classPK);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<FragmentEntryLink> list = findByG_S_C_C(
+			groupId, segmentsExperienceId, classNameId, classPK, count - 1,
+			count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the fragment entry links before and after the current fragment entry link in the ordered set where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param fragmentEntryLinkId the primary key of the current fragment entry link
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next fragment entry link
+	 * @throws NoSuchEntryLinkException if a fragment entry link with the primary key could not be found
+	 */
+	@Override
+	public FragmentEntryLink[] findByG_S_C_C_PrevAndNext(
+			long fragmentEntryLinkId, long groupId, long segmentsExperienceId,
+			long classNameId, long classPK,
+			OrderByComparator<FragmentEntryLink> orderByComparator)
+		throws NoSuchEntryLinkException {
+
+		FragmentEntryLink fragmentEntryLink = findByPrimaryKey(
+			fragmentEntryLinkId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			FragmentEntryLink[] array = new FragmentEntryLinkImpl[3];
+
+			array[0] = getByG_S_C_C_PrevAndNext(
+				session, fragmentEntryLink, groupId, segmentsExperienceId,
+				classNameId, classPK, orderByComparator, true);
+
+			array[1] = fragmentEntryLink;
+
+			array[2] = getByG_S_C_C_PrevAndNext(
+				session, fragmentEntryLink, groupId, segmentsExperienceId,
+				classNameId, classPK, orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected FragmentEntryLink getByG_S_C_C_PrevAndNext(
+		Session session, FragmentEntryLink fragmentEntryLink, long groupId,
+		long segmentsExperienceId, long classNameId, long classPK,
+		OrderByComparator<FragmentEntryLink> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				7 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(6);
+		}
+
+		sb.append(_SQL_SELECT_FRAGMENTENTRYLINK_WHERE);
+
+		sb.append(_FINDER_COLUMN_G_S_C_C_GROUPID_2);
+
+		sb.append(_FINDER_COLUMN_G_S_C_C_SEGMENTSEXPERIENCEID_2);
+
+		sb.append(_FINDER_COLUMN_G_S_C_C_CLASSNAMEID_2);
+
+		sb.append(_FINDER_COLUMN_G_S_C_C_CLASSPK_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(groupId);
+
+		queryPos.add(segmentsExperienceId);
+
+		queryPos.add(classNameId);
+
+		queryPos.add(classPK);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						fragmentEntryLink)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<FragmentEntryLink> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 */
+	@Override
+	public void removeByG_S_C_C(
+		long groupId, long segmentsExperienceId, long classNameId,
+		long classPK) {
+
+		for (FragmentEntryLink fragmentEntryLink :
+				findByG_S_C_C(
+					groupId, segmentsExperienceId, classNameId, classPK,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
+			remove(fragmentEntryLink);
+		}
+	}
+
+	/**
+	 * Returns the number of fragment entry links where groupId = &#63; and segmentsExperienceId = &#63; and classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param segmentsExperienceId the segments experience ID
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the number of matching fragment entry links
+	 */
+	@Override
+	public int countByG_S_C_C(
+		long groupId, long segmentsExperienceId, long classNameId,
+		long classPK) {
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_S_C_C;
+
+			finderArgs = new Object[] {
+				groupId, segmentsExperienceId, classNameId, classPK
+			};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(5);
+
+			sb.append(_SQL_COUNT_FRAGMENTENTRYLINK_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_S_C_C_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_C_C_SEGMENTSEXPERIENCEID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_C_C_CLASSNAMEID_2);
+
+			sb.append(_FINDER_COLUMN_G_S_C_C_CLASSPK_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(segmentsExperienceId);
+
+				queryPos.add(classNameId);
+
+				queryPos.add(classPK);
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_G_S_C_C_GROUPID_2 =
+		"fragmentEntryLink.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_S_C_C_SEGMENTSEXPERIENCEID_2 =
+		"fragmentEntryLink.segmentsExperienceId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_S_C_C_CLASSNAMEID_2 =
+		"fragmentEntryLink.classNameId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_S_C_C_CLASSPK_2 =
+		"fragmentEntryLink.classPK = ?";
+
 	public FragmentEntryLinkPersistenceImpl() {
-		setModelClass(FragmentEntryLink.class);
-
-		setModelImplClass(FragmentEntryLinkImpl.class);
-		setModelPKClass(long.class);
-		setEntityCacheEnabled(FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED);
-
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
 		dbColumnNames.put("uuid", "uuid_");
 
 		setDBColumnNames(dbColumnNames);
+
+		setModelClass(FragmentEntryLink.class);
+
+		setModelImplClass(FragmentEntryLinkImpl.class);
+		setModelPKClass(long.class);
+
+		setTable(FragmentEntryLinkTable.INSTANCE);
 	}
 
 	/**
@@ -4401,8 +7958,11 @@ public class FragmentEntryLinkPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(FragmentEntryLink fragmentEntryLink) {
+		if (fragmentEntryLink.getCtCollectionId() != 0) {
+			return;
+		}
+
 		entityCache.putResult(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
 			FragmentEntryLinkImpl.class, fragmentEntryLink.getPrimaryKey(),
 			fragmentEntryLink);
 
@@ -4412,8 +7972,6 @@ public class FragmentEntryLinkPersistenceImpl
 				fragmentEntryLink.getUuid(), fragmentEntryLink.getGroupId()
 			},
 			fragmentEntryLink);
-
-		fragmentEntryLink.resetOriginalValues();
 	}
 
 	/**
@@ -4424,15 +7982,15 @@ public class FragmentEntryLinkPersistenceImpl
 	@Override
 	public void cacheResult(List<FragmentEntryLink> fragmentEntryLinks) {
 		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
+			if (fragmentEntryLink.getCtCollectionId() != 0) {
+				continue;
+			}
+
 			if (entityCache.getResult(
-					FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
 					FragmentEntryLinkImpl.class,
 					fragmentEntryLink.getPrimaryKey()) == null) {
 
 				cacheResult(fragmentEntryLink);
-			}
-			else {
-				fragmentEntryLink.resetOriginalValues();
 			}
 		}
 	}
@@ -4463,28 +8021,25 @@ public class FragmentEntryLinkPersistenceImpl
 	@Override
 	public void clearCache(FragmentEntryLink fragmentEntryLink) {
 		entityCache.removeResult(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, fragmentEntryLink.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache(
-			(FragmentEntryLinkModelImpl)fragmentEntryLink, true);
+			FragmentEntryLinkImpl.class, fragmentEntryLink);
 	}
 
 	@Override
 	public void clearCache(List<FragmentEntryLink> fragmentEntryLinks) {
+		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
+			entityCache.removeResult(
+				FragmentEntryLinkImpl.class, fragmentEntryLink);
+		}
+	}
+
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
-		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
-			entityCache.removeResult(
-				FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-				FragmentEntryLinkImpl.class, fragmentEntryLink.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(FragmentEntryLinkModelImpl)fragmentEntryLink, true);
+		for (Serializable primaryKey : primaryKeys) {
+			entityCache.removeResult(FragmentEntryLinkImpl.class, primaryKey);
 		}
 	}
 
@@ -4500,33 +8055,6 @@ public class FragmentEntryLinkPersistenceImpl
 			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
 		finderCache.putResult(
 			_finderPathFetchByUUID_G, args, fragmentEntryLinkModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		FragmentEntryLinkModelImpl fragmentEntryLinkModelImpl,
-		boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				fragmentEntryLinkModelImpl.getUuid(),
-				fragmentEntryLinkModelImpl.getGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if ((fragmentEntryLinkModelImpl.getColumnBitmask() &
-			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				fragmentEntryLinkModelImpl.getOriginalUuid(),
-				fragmentEntryLinkModelImpl.getOriginalGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G, args);
-		}
 	}
 
 	/**
@@ -4546,7 +8074,7 @@ public class FragmentEntryLinkPersistenceImpl
 
 		fragmentEntryLink.setUuid(uuid);
 
-		fragmentEntryLink.setCompanyId(companyProvider.getCompanyId());
+		fragmentEntryLink.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return fragmentEntryLink;
 	}
@@ -4596,11 +8124,11 @@ public class FragmentEntryLinkPersistenceImpl
 
 			return remove(fragmentEntryLink);
 		}
-		catch (NoSuchEntryLinkException nsee) {
-			throw nsee;
+		catch (NoSuchEntryLinkException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -4622,12 +8150,14 @@ public class FragmentEntryLinkPersistenceImpl
 					fragmentEntryLink.getPrimaryKeyObj());
 			}
 
-			if (fragmentEntryLink != null) {
+			if ((fragmentEntryLink != null) &&
+				ctPersistenceHelper.isRemove(fragmentEntryLink)) {
+
 				session.delete(fragmentEntryLink);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -4700,264 +8230,46 @@ public class FragmentEntryLinkPersistenceImpl
 		try {
 			session = openSession();
 
-			if (fragmentEntryLink.isNew()) {
-				session.save(fragmentEntryLink);
+			if (ctPersistenceHelper.isInsert(fragmentEntryLink)) {
+				if (!isNew) {
+					session.evict(
+						FragmentEntryLinkImpl.class,
+						fragmentEntryLink.getPrimaryKeyObj());
+				}
 
-				fragmentEntryLink.setNew(false);
+				session.save(fragmentEntryLink);
 			}
 			else {
 				fragmentEntryLink = (FragmentEntryLink)session.merge(
 					fragmentEntryLink);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!FragmentEntryLinkModelImpl.COLUMN_BITMASK_ENABLED) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {fragmentEntryLinkModelImpl.getUuid()};
-
-			finderCache.removeResult(_finderPathCountByUuid, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid, args);
-
-			args = new Object[] {
-				fragmentEntryLinkModelImpl.getUuid(),
-				fragmentEntryLinkModelImpl.getCompanyId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUuid_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C, args);
-
-			args = new Object[] {fragmentEntryLinkModelImpl.getGroupId()};
-
-			finderCache.removeResult(_finderPathCountByGroupId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByGroupId, args);
-
-			args = new Object[] {
-				fragmentEntryLinkModelImpl.getGroupId(),
-				fragmentEntryLinkModelImpl.getFragmentEntryId()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_F, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_F, args);
-
-			args = new Object[] {
-				fragmentEntryLinkModelImpl.getGroupId(),
-				fragmentEntryLinkModelImpl.getFragmentEntryId(),
-				fragmentEntryLinkModelImpl.getClassNameId()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_F_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_F_C, args);
-
-			args = new Object[] {
-				fragmentEntryLinkModelImpl.getGroupId(),
-				fragmentEntryLinkModelImpl.getClassNameId(),
-				fragmentEntryLinkModelImpl.getClassPK()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_C_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_C_C, args);
-
-			args = new Object[] {
-				fragmentEntryLinkModelImpl.getGroupId(),
-				fragmentEntryLinkModelImpl.getFragmentEntryId(),
-				fragmentEntryLinkModelImpl.getClassNameId(),
-				fragmentEntryLinkModelImpl.getClassPK()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_F_C_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_F_C_C, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((fragmentEntryLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					fragmentEntryLinkModelImpl.getOriginalUuid()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-
-				args = new Object[] {fragmentEntryLinkModelImpl.getUuid()};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
+		if (fragmentEntryLink.getCtCollectionId() != 0) {
+			if (isNew) {
+				fragmentEntryLink.setNew(false);
 			}
 
-			if ((fragmentEntryLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
-					 0) {
+			fragmentEntryLink.resetOriginalValues();
 
-				Object[] args = new Object[] {
-					fragmentEntryLinkModelImpl.getOriginalUuid(),
-					fragmentEntryLinkModelImpl.getOriginalCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-
-				args = new Object[] {
-					fragmentEntryLinkModelImpl.getUuid(),
-					fragmentEntryLinkModelImpl.getCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-			}
-
-			if ((fragmentEntryLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					fragmentEntryLinkModelImpl.getOriginalGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-
-				args = new Object[] {fragmentEntryLinkModelImpl.getGroupId()};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-			}
-
-			if ((fragmentEntryLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_F.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					fragmentEntryLinkModelImpl.getOriginalGroupId(),
-					fragmentEntryLinkModelImpl.getOriginalFragmentEntryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_F, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_F, args);
-
-				args = new Object[] {
-					fragmentEntryLinkModelImpl.getGroupId(),
-					fragmentEntryLinkModelImpl.getFragmentEntryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_F, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_F, args);
-			}
-
-			if ((fragmentEntryLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_F_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					fragmentEntryLinkModelImpl.getOriginalGroupId(),
-					fragmentEntryLinkModelImpl.getOriginalFragmentEntryId(),
-					fragmentEntryLinkModelImpl.getOriginalClassNameId()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_F_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_F_C, args);
-
-				args = new Object[] {
-					fragmentEntryLinkModelImpl.getGroupId(),
-					fragmentEntryLinkModelImpl.getFragmentEntryId(),
-					fragmentEntryLinkModelImpl.getClassNameId()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_F_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_F_C, args);
-			}
-
-			if ((fragmentEntryLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_C_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					fragmentEntryLinkModelImpl.getOriginalGroupId(),
-					fragmentEntryLinkModelImpl.getOriginalClassNameId(),
-					fragmentEntryLinkModelImpl.getOriginalClassPK()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_C_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_C_C, args);
-
-				args = new Object[] {
-					fragmentEntryLinkModelImpl.getGroupId(),
-					fragmentEntryLinkModelImpl.getClassNameId(),
-					fragmentEntryLinkModelImpl.getClassPK()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_C_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_C_C, args);
-			}
-
-			if ((fragmentEntryLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_F_C_C.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					fragmentEntryLinkModelImpl.getOriginalGroupId(),
-					fragmentEntryLinkModelImpl.getOriginalFragmentEntryId(),
-					fragmentEntryLinkModelImpl.getOriginalClassNameId(),
-					fragmentEntryLinkModelImpl.getOriginalClassPK()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_F_C_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_F_C_C, args);
-
-				args = new Object[] {
-					fragmentEntryLinkModelImpl.getGroupId(),
-					fragmentEntryLinkModelImpl.getFragmentEntryId(),
-					fragmentEntryLinkModelImpl.getClassNameId(),
-					fragmentEntryLinkModelImpl.getClassPK()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_F_C_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_F_C_C, args);
-			}
+			return fragmentEntryLink;
 		}
 
 		entityCache.putResult(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, fragmentEntryLink.getPrimaryKey(),
-			fragmentEntryLink, false);
+			FragmentEntryLinkImpl.class, fragmentEntryLinkModelImpl, false,
+			true);
 
-		clearUniqueFindersCache(fragmentEntryLinkModelImpl, false);
 		cacheUniqueFindersCache(fragmentEntryLinkModelImpl);
+
+		if (isNew) {
+			fragmentEntryLink.setNew(false);
+		}
 
 		fragmentEntryLink.resetOriginalValues();
 
@@ -5006,12 +8318,122 @@ public class FragmentEntryLinkPersistenceImpl
 	/**
 	 * Returns the fragment entry link with the primary key or returns <code>null</code> if it could not be found.
 	 *
+	 * @param primaryKey the primary key of the fragment entry link
+	 * @return the fragment entry link, or <code>null</code> if a fragment entry link with the primary key could not be found
+	 */
+	@Override
+	public FragmentEntryLink fetchByPrimaryKey(Serializable primaryKey) {
+		if (ctPersistenceHelper.isProductionMode(FragmentEntryLink.class)) {
+			return super.fetchByPrimaryKey(primaryKey);
+		}
+
+		FragmentEntryLink fragmentEntryLink = null;
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			fragmentEntryLink = (FragmentEntryLink)session.get(
+				FragmentEntryLinkImpl.class, primaryKey);
+
+			if (fragmentEntryLink != null) {
+				cacheResult(fragmentEntryLink);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return fragmentEntryLink;
+	}
+
+	/**
+	 * Returns the fragment entry link with the primary key or returns <code>null</code> if it could not be found.
+	 *
 	 * @param fragmentEntryLinkId the primary key of the fragment entry link
 	 * @return the fragment entry link, or <code>null</code> if a fragment entry link with the primary key could not be found
 	 */
 	@Override
 	public FragmentEntryLink fetchByPrimaryKey(long fragmentEntryLinkId) {
 		return fetchByPrimaryKey((Serializable)fragmentEntryLinkId);
+	}
+
+	@Override
+	public Map<Serializable, FragmentEntryLink> fetchByPrimaryKeys(
+		Set<Serializable> primaryKeys) {
+
+		if (ctPersistenceHelper.isProductionMode(FragmentEntryLink.class)) {
+			return super.fetchByPrimaryKeys(primaryKeys);
+		}
+
+		if (primaryKeys.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		Map<Serializable, FragmentEntryLink> map =
+			new HashMap<Serializable, FragmentEntryLink>();
+
+		if (primaryKeys.size() == 1) {
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			Serializable primaryKey = iterator.next();
+
+			FragmentEntryLink fragmentEntryLink = fetchByPrimaryKey(primaryKey);
+
+			if (fragmentEntryLink != null) {
+				map.put(primaryKey, fragmentEntryLink);
+			}
+
+			return map;
+		}
+
+		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
+
+		sb.append(getSelectSQL());
+		sb.append(" WHERE ");
+		sb.append(getPKDBName());
+		sb.append(" IN (");
+
+		for (Serializable primaryKey : primaryKeys) {
+			sb.append((long)primaryKey);
+
+			sb.append(",");
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		sb.append(")");
+
+		String sql = sb.toString();
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Query query = session.createQuery(sql);
+
+			for (FragmentEntryLink fragmentEntryLink :
+					(List<FragmentEntryLink>)query.list()) {
+
+				map.put(
+					fragmentEntryLink.getPrimaryKeyObj(), fragmentEntryLink);
+
+				cacheResult(fragmentEntryLink);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return map;
 	}
 
 	/**
@@ -5028,7 +8450,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns a range of all the fragment entry links.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of fragment entry links
@@ -5044,7 +8466,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of fragment entry links
@@ -5064,65 +8486,66 @@ public class FragmentEntryLinkPersistenceImpl
 	 * Returns an ordered range of all the fragment entry links.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>FragmentEntryLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of fragment entry links
 	 */
 	@Override
 	public List<FragmentEntryLink> findAll(
 		int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindAll;
-			finderArgs = FINDER_ARGS_EMPTY;
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<FragmentEntryLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<FragmentEntryLink>)finderCache.getResult(
 				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_FRAGMENTENTRYLINK);
+				sb.append(_SQL_SELECT_FRAGMENTENTRYLINK);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_FRAGMENTENTRYLINK;
 
-				if (pagination) {
-					sql = sql.concat(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(FragmentEntryLinkModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -5130,29 +8553,19 @@ public class FragmentEntryLinkPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<FragmentEntryLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<FragmentEntryLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5180,8 +8593,15 @@ public class FragmentEntryLinkPersistenceImpl
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			FragmentEntryLink.class);
+
+		Long count = null;
+
+		if (productionMode) {
+			count = (Long)finderCache.getResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		}
 
 		if (count == null) {
 			Session session = null;
@@ -5189,18 +8609,17 @@ public class FragmentEntryLinkPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_FRAGMENTENTRYLINK);
+				Query query = session.createQuery(_SQL_COUNT_FRAGMENTENTRYLINK);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				if (productionMode) {
+					finderCache.putResult(
+						_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5231,276 +8650,461 @@ public class FragmentEntryLinkPersistenceImpl
 	}
 
 	@Override
-	protected Map<String, Integer> getTableColumnsMap() {
+	public Set<String> getCTColumnNames(
+		CTColumnResolutionType ctColumnResolutionType) {
+
+		return _ctColumnNamesMap.get(ctColumnResolutionType);
+	}
+
+	@Override
+	public List<String> getMappingTableNames() {
+		return _mappingTableNames;
+	}
+
+	@Override
+	public Map<String, Integer> getTableColumnsMap() {
 		return FragmentEntryLinkModelImpl.TABLE_COLUMNS_MAP;
+	}
+
+	@Override
+	public String getTableName() {
+		return "FragmentEntryLink";
+	}
+
+	@Override
+	public List<String[]> getUniqueIndexColumnNames() {
+		return _uniqueIndexColumnNames;
+	}
+
+	private static final Map<CTColumnResolutionType, Set<String>>
+		_ctColumnNamesMap = new EnumMap<CTColumnResolutionType, Set<String>>(
+			CTColumnResolutionType.class);
+	private static final List<String> _mappingTableNames =
+		new ArrayList<String>();
+	private static final List<String[]> _uniqueIndexColumnNames =
+		new ArrayList<String[]>();
+
+	static {
+		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
+		Set<String> ctStrictColumnNames = new HashSet<String>();
+
+		ctControlColumnNames.add("mvccVersion");
+		ctControlColumnNames.add("ctCollectionId");
+		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("groupId");
+		ctStrictColumnNames.add("companyId");
+		ctStrictColumnNames.add("userId");
+		ctStrictColumnNames.add("userName");
+		ctStrictColumnNames.add("createDate");
+		ctIgnoreColumnNames.add("modifiedDate");
+		ctStrictColumnNames.add("originalFragmentEntryLinkId");
+		ctStrictColumnNames.add("fragmentEntryId");
+		ctStrictColumnNames.add("segmentsExperienceId");
+		ctStrictColumnNames.add("classNameId");
+		ctStrictColumnNames.add("classPK");
+		ctStrictColumnNames.add("plid");
+		ctStrictColumnNames.add("css");
+		ctStrictColumnNames.add("html");
+		ctStrictColumnNames.add("js");
+		ctStrictColumnNames.add("configuration");
+		ctStrictColumnNames.add("editableValues");
+		ctStrictColumnNames.add("namespace");
+		ctStrictColumnNames.add("position");
+		ctStrictColumnNames.add("rendererKey");
+		ctStrictColumnNames.add("lastPropagationDate");
+		ctStrictColumnNames.add("lastPublishDate");
+
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.PK,
+			Collections.singleton("fragmentEntryLinkId"));
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.STRICT, ctStrictColumnNames);
+
+		_uniqueIndexColumnNames.add(new String[] {"uuid_", "groupId"});
 	}
 
 	/**
 	 * Initializes the fragment entry link persistence.
 	 */
-	public void afterPropertiesSet() {
-		_finderPathWithPaginationFindAll = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findAll", new String[0]);
+	@Activate
+	public void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
 
-		_finderPathWithoutPaginationFindAll = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+		_argumentsResolverServiceRegistration = _bundleContext.registerService(
+			ArgumentsResolver.class,
+			new FragmentEntryLinkModelArgumentsResolver(),
+			MapUtil.singletonDictionary(
+				"model.class.name", FragmentEntryLink.class.getName()));
 
-		_finderPathCountAll = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathWithPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathWithoutPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathCountAll = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByUuid = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUuid",
+		_finderPathWithPaginationFindByUuid = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class,
+		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] {String.class.getName()},
-			FragmentEntryLinkModelImpl.UUID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSPK_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.POSITION_COLUMN_BITMASK);
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			true);
 
-		_finderPathCountByUuid = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUuid = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			false);
 
-		_finderPathFetchByUUID_G = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByUUID_G",
+		_finderPathFetchByUUID_G = _createFinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			FragmentEntryLinkModelImpl.UUID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.GROUPID_COLUMN_BITMASK);
+			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUUID_G = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "groupId"}, false);
 
-		_finderPathWithPaginationFindByUuid_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUuid_C",
+		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class,
+		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			FragmentEntryLinkModelImpl.UUID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.COMPANYID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSPK_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.POSITION_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUuid_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindByGroupId = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByGroupId",
+		_finderPathWithPaginationFindByGroupId = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId"}, true);
 
-		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class,
+		_finderPathWithoutPaginationFindByGroupId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
-			new String[] {Long.class.getName()},
-			FragmentEntryLinkModelImpl.GROUPID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSPK_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.POSITION_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			true);
 
-		_finderPathCountByGroupId = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByGroupId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			false);
 
-		_finderPathWithPaginationFindByG_F = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByG_F",
+		_finderPathWithPaginationFindByFragmentEntryId = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByFragmentEntryId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"fragmentEntryId"}, true);
+
+		_finderPathWithoutPaginationFindByFragmentEntryId = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByFragmentEntryId",
+			new String[] {Long.class.getName()},
+			new String[] {"fragmentEntryId"}, true);
+
+		_finderPathCountByFragmentEntryId = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByFragmentEntryId",
+			new String[] {Long.class.getName()},
+			new String[] {"fragmentEntryId"}, false);
+
+		_finderPathWithPaginationFindByRendererKey = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByRendererKey",
+			new String[] {
+				String.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"rendererKey"}, true);
+
+		_finderPathWithoutPaginationFindByRendererKey = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByRendererKey",
+			new String[] {String.class.getName()}, new String[] {"rendererKey"},
+			true);
+
+		_finderPathCountByRendererKey = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByRendererKey",
+			new String[] {String.class.getName()}, new String[] {"rendererKey"},
+			false);
+
+		_finderPathWithPaginationFindByG_F = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_F",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "fragmentEntryId"}, true);
 
-		_finderPathWithoutPaginationFindByG_F = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class,
+		_finderPathWithoutPaginationFindByG_F = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_F",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			FragmentEntryLinkModelImpl.GROUPID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.FRAGMENTENTRYID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSPK_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.POSITION_COLUMN_BITMASK);
+			new String[] {"groupId", "fragmentEntryId"}, true);
 
-		_finderPathCountByG_F = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByG_F = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_F",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "fragmentEntryId"}, false);
 
-		_finderPathWithPaginationFindByG_F_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByG_F_C",
+		_finderPathWithPaginationFindByG_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {"groupId", "plid"}, true);
+
+		_finderPathWithoutPaginationFindByG_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_P",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "plid"}, true);
+
+		_finderPathCountByG_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "plid"}, false);
+
+		_finderPathWithPaginationFindByG_F_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_F_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "fragmentEntryId", "classNameId"}, true);
 
-		_finderPathWithoutPaginationFindByG_F_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class,
+		_finderPathWithoutPaginationFindByG_F_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_F_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
-			FragmentEntryLinkModelImpl.GROUPID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.FRAGMENTENTRYID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSPK_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.POSITION_COLUMN_BITMASK);
+			new String[] {"groupId", "fragmentEntryId", "classNameId"}, true);
 
-		_finderPathCountByG_F_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByG_F_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_F_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {"groupId", "fragmentEntryId", "classNameId"}, false);
 
-		_finderPathWithPaginationFindByG_C_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByG_C_C",
+		_finderPathWithPaginationFindByG_F_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_F_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "fragmentEntryId", "plid"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class,
+		_finderPathWithoutPaginationFindByG_F_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_F_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(), Long.class.getName()
+			},
+			new String[] {"groupId", "fragmentEntryId", "plid"}, true);
+
+		_finderPathCountByG_F_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_F_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(), Long.class.getName()
+			},
+			new String[] {"groupId", "fragmentEntryId", "plid"}, false);
+
+		_finderPathWithPaginationFindByG_S_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"groupId", "segmentsExperienceId", "plid"}, true);
+
+		_finderPathWithoutPaginationFindByG_S_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_S_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(), Long.class.getName()
+			},
+			new String[] {"groupId", "segmentsExperienceId", "plid"}, true);
+
+		_finderPathCountByG_S_P = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(), Long.class.getName()
+			},
+			new String[] {"groupId", "segmentsExperienceId", "plid"}, false);
+
+		_finderPathWithPaginationFindByG_C_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"groupId", "classNameId", "classPK"}, true);
+
+		_finderPathWithoutPaginationFindByG_C_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
-			FragmentEntryLinkModelImpl.GROUPID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSPK_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.POSITION_COLUMN_BITMASK);
+			new String[] {"groupId", "classNameId", "classPK"}, true);
 
-		_finderPathCountByG_C_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByG_C_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {"groupId", "classNameId", "classPK"}, false);
 
-		_finderPathWithPaginationFindByG_F_C_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByG_F_C_C",
+		_finderPathWithPaginationFindByG_F_C_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_F_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {
+				"groupId", "fragmentEntryId", "classNameId", "classPK"
+			},
+			true);
 
-		_finderPathWithoutPaginationFindByG_F_C_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED,
-			FragmentEntryLinkImpl.class,
+		_finderPathWithoutPaginationFindByG_F_C_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_F_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Long.class.getName()
 			},
-			FragmentEntryLinkModelImpl.GROUPID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.FRAGMENTENTRYID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.CLASSPK_COLUMN_BITMASK |
-			FragmentEntryLinkModelImpl.POSITION_COLUMN_BITMASK);
+			new String[] {
+				"groupId", "fragmentEntryId", "classNameId", "classPK"
+			},
+			true);
 
-		_finderPathCountByG_F_C_C = new FinderPath(
-			FragmentEntryLinkModelImpl.ENTITY_CACHE_ENABLED,
-			FragmentEntryLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByG_F_C_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_F_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {
+				"groupId", "fragmentEntryId", "classNameId", "classPK"
+			},
+			false);
+
+		_finderPathWithPaginationFindByG_S_C_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S_C_C",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Long.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {
+				"groupId", "segmentsExperienceId", "classNameId", "classPK"
+			},
+			true);
+
+		_finderPathWithoutPaginationFindByG_S_C_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_S_C_C",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Long.class.getName(), Long.class.getName()
+			},
+			new String[] {
+				"groupId", "segmentsExperienceId", "classNameId", "classPK"
+			},
+			true);
+
+		_finderPathCountByG_S_C_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S_C_C",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Long.class.getName(), Long.class.getName()
+			},
+			new String[] {
+				"groupId", "segmentsExperienceId", "classNameId", "classPK"
+			},
+			false);
 	}
 
-	public void destroy() {
+	@Deactivate
+	public void deactivate() {
 		entityCache.removeCache(FragmentEntryLinkImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		_argumentsResolverServiceRegistration.unregister();
+
+		for (ServiceRegistration<FinderPath> serviceRegistration :
+				_serviceRegistrations) {
+
+			serviceRegistration.unregister();
+		}
 	}
 
-	@ServiceReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
+	@Override
+	@Reference(
+		target = FragmentPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+	}
 
-	@ServiceReference(type = EntityCache.class)
+	@Override
+	@Reference(
+		target = FragmentPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
+	}
+
+	@Override
+	@Reference(
+		target = FragmentPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	private BundleContext _bundleContext;
+
+	@Reference
+	protected CTPersistenceHelper ctPersistenceHelper;
+
+	@Reference
 	protected EntityCache entityCache;
 
-	@ServiceReference(type = FinderCache.class)
+	@Reference
 	protected FinderCache finderCache;
 
 	private static final String _SQL_SELECT_FRAGMENTENTRYLINK =
@@ -5528,5 +9132,115 @@ public class FragmentEntryLinkPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid"});
+
+	static {
+		try {
+			Class.forName(FragmentPersistenceConstants.class.getName());
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
+		}
+	}
+
+	private FinderPath _createFinderPath(
+		String cacheName, String methodName, String[] params,
+		String[] columnNames, boolean baseModelResult) {
+
+		FinderPath finderPath = new FinderPath(
+			cacheName, methodName, params, columnNames, baseModelResult);
+
+		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+			_serviceRegistrations.add(
+				_bundleContext.registerService(
+					FinderPath.class, finderPath,
+					MapUtil.singletonDictionary("cache.name", cacheName)));
+		}
+
+		return finderPath;
+	}
+
+	private ServiceRegistration<ArgumentsResolver>
+		_argumentsResolverServiceRegistration;
+	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
+		new HashSet<>();
+
+	private static class FragmentEntryLinkModelArgumentsResolver
+		implements ArgumentsResolver {
+
+		@Override
+		public Object[] getArguments(
+			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
+			boolean original) {
+
+			String[] columnNames = finderPath.getColumnNames();
+
+			if ((columnNames == null) || (columnNames.length == 0)) {
+				if (baseModel.isNew()) {
+					return FINDER_ARGS_EMPTY;
+				}
+
+				return null;
+			}
+
+			FragmentEntryLinkModelImpl fragmentEntryLinkModelImpl =
+				(FragmentEntryLinkModelImpl)baseModel;
+
+			long columnBitmask = fragmentEntryLinkModelImpl.getColumnBitmask();
+
+			if (!checkColumn || (columnBitmask == 0)) {
+				return _getValue(
+					fragmentEntryLinkModelImpl, columnNames, original);
+			}
+
+			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
+				finderPath);
+
+			if (finderPathColumnBitmask == null) {
+				finderPathColumnBitmask = 0L;
+
+				for (String columnName : columnNames) {
+					finderPathColumnBitmask |=
+						fragmentEntryLinkModelImpl.getColumnBitmask(columnName);
+				}
+
+				_finderPathColumnBitmasksCache.put(
+					finderPath, finderPathColumnBitmask);
+			}
+
+			if ((columnBitmask & finderPathColumnBitmask) != 0) {
+				return _getValue(
+					fragmentEntryLinkModelImpl, columnNames, original);
+			}
+
+			return null;
+		}
+
+		private Object[] _getValue(
+			FragmentEntryLinkModelImpl fragmentEntryLinkModelImpl,
+			String[] columnNames, boolean original) {
+
+			Object[] arguments = new Object[columnNames.length];
+
+			for (int i = 0; i < arguments.length; i++) {
+				String columnName = columnNames[i];
+
+				if (original) {
+					arguments[i] =
+						fragmentEntryLinkModelImpl.getColumnOriginalValue(
+							columnName);
+				}
+				else {
+					arguments[i] = fragmentEntryLinkModelImpl.getColumnValue(
+						columnName);
+				}
+			}
+
+			return arguments;
+		}
+
+		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
+			new ConcurrentHashMap<>();
+
+	}
 
 }

@@ -14,14 +14,16 @@
 
 package com.liferay.asset.category.property.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the AssetCategoryProperty service. Represents a row in the &quot;AssetCategoryProperty&quot; database table, with each column mapped to a property of this class.
@@ -36,7 +38,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface AssetCategoryPropertyModel
-	extends AuditedModel, BaseModel<AssetCategoryProperty>, ShardedModel {
+	extends AuditedModel, BaseModel<AssetCategoryProperty>,
+			CTModel<AssetCategoryProperty>, MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -49,6 +52,7 @@ public interface AssetCategoryPropertyModel
 	 *
 	 * @return the primary key of this asset category property
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -56,7 +60,40 @@ public interface AssetCategoryPropertyModel
 	 *
 	 * @param primaryKey the primary key of this asset category property
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this asset category property.
+	 *
+	 * @return the mvcc version of this asset category property
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this asset category property.
+	 *
+	 * @param mvccVersion the mvcc version of this asset category property
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this asset category property.
+	 *
+	 * @return the ct collection ID of this asset category property
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this asset category property.
+	 *
+	 * @param ctCollectionId the ct collection ID of this asset category property
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the category property ID of this asset category property.

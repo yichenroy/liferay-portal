@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.web.portlet.shared.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -27,6 +25,8 @@ import java.util.Optional;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author André de Oliveira
@@ -40,12 +40,6 @@ public interface PortletSharedSearchResponse {
 
 	public SearchResponse getFederatedSearchResponse(
 		Optional<String> federatedSearchKeyOptional);
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public String[] getHighlights();
 
 	public Optional<String> getKeywordsOptional();
 
@@ -61,14 +55,6 @@ public interface PortletSharedSearchResponse {
 
 	public Optional<PortletPreferences> getPortletPreferences(
 		RenderRequest renderRequest);
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #getSearchResponse()} and {@link
-	 *             SearchResponse#getRequestString()}
-	 */
-	@Deprecated
-	public String getQueryString();
 
 	public List<String> getRelatedQueriesSuggestions();
 

@@ -1,8 +1,9 @@
 @component-name = "portal-collaboration"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column";
+	property custom.properties = "default.layout.template.id=1_column${line.separator}jsonws.web.service.paths.excludes=";
 	property testray.main.component.name = "Notifications";
 	var pageName = "Message Boards Page";
 	var portletName = "Message Boards";
@@ -14,21 +15,11 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+			portlet = "Pages");
 
 		SitePages.addPublicPage(
 			pageName = "Message Boards Page",
-			sitePageType = "Widget Page"
-		);
-
-		SitePages.configurePage(
-			columnName = "1 Column",
-			pageName = "Message Boards Page",
-			privacy = "Public Pages",
-			sitePageType = "Widget Page"
-		);
+			sitePageType = "Widget Page");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
@@ -38,28 +29,21 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+			portlet = "Users and Organizations");
 
-		User.editPasswordCP(
-			password = "password",
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn"
-		);
-
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
-
-		User.assignRegularRoleCP(roleTitle = "Administrator", userScreenName = "usersn");
+		User.assignRegularRoleCP(
+			roleTitle = "Administrator",
+			userScreenName = "usersn");
 	}
 
 	tearDown {
@@ -79,7 +63,7 @@ definition {
 
 			NotificationsPortlet.tearDownUserDeliveries();
 
-			User.tearDownCP();
+			JSONUser.tearDownNonAdminUsers();
 		}
 	}
 
@@ -91,30 +75,31 @@ definition {
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "userea@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
 		MessageboardsThread.addPG(
 			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject1"
-		);
+			threadSubject = "MB Thread Message Subject1");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
 		MessageboardsThread.addPG(
 			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject2"
-		);
+			threadSubject = "MB Thread Message Subject2");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "test@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "test@liferay.com");
 
 		Notifications.viewBadgeCount(
 			activePanel = "Notifications",
-			notificationCount = "2"
-		);
+			notificationCount = "2");
 
 		Notifications.gotoNotifications();
 
@@ -127,14 +112,12 @@ definition {
 		Notifications.viewNewContent(
 			assetType = "message boards message",
 			contentBody = "MB Thread Message Subject1",
-			user = "userfn userln"
-		);
+			user = "userfn userln");
 
 		Notifications.viewNewContent(
 			assetType = "message boards message",
 			contentBody = "MB Thread Message Subject2",
-			user = "userfn userln"
-		);
+			user = "userfn userln");
 
 		PortletEntry.selectAll();
 
@@ -161,19 +144,25 @@ definition {
 	test ViewNoWebsiteNotificationForNewThreadInCategory {
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
-		NotificationsPortlet.gotoNotificationDelivery();
+		Navigator.gotoNotifications();
+
+		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
 		IFrame.selectConfigurationFrame();
 
 		NotificationsPortlet.disableUserDeliveries(
 			actionType = "Adds",
 			contentType = "Message Boards",
-			notificationType = "Website"
-		);
+			notificationType = "Website");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
-		MessageboardsCategory.addPG(categoryName = "MB Category Name");
+		JSONMBMessage.addCategory(
+			categoryDescription = "MB Category Description",
+			categoryName = "MB Category Name",
+			userEmailAddress = "test@liferay.com");
+
+		Refresh();
 
 		MessageboardsCategory.subscribePG(categoryName = "MB Category Name");
 
@@ -181,7 +170,9 @@ definition {
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "userea@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
@@ -189,14 +180,15 @@ definition {
 
 		MessageboardsThread.addPG(
 			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject"
-		);
+			threadSubject = "MB Thread Message Subject");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "test@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "test@liferay.com");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 	}
@@ -205,19 +197,25 @@ definition {
 	test ViewNoWebsiteNotificationForUpdatedThreadInCategory {
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
-		NotificationsPortlet.gotoNotificationDelivery();
+		Navigator.gotoNotifications();
+
+		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
 		IFrame.selectConfigurationFrame();
 
 		NotificationsPortlet.disableUserDeliveries(
 			actionType = "Updates",
 			contentType = "Message Boards",
-			notificationType = "Website"
-		);
+			notificationType = "Website");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
-		MessageboardsCategory.addPG(categoryName = "MB Category Name");
+		JSONMBMessage.addCategory(
+			categoryDescription = "MB Category Description",
+			categoryName = "MB Category Name",
+			userEmailAddress = "test@liferay.com");
+
+		Refresh();
 
 		MessageboardsCategory.subscribePG(categoryName = "MB Category Name");
 
@@ -225,14 +223,15 @@ definition {
 
 		MessageboardsThread.addPG(
 			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject"
-		);
+			threadSubject = "MB Thread Message Subject");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "userea@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
@@ -242,20 +241,20 @@ definition {
 			lastPostUserName = "Test Test",
 			replyCount = "0",
 			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject"
-		);
+			threadSubject = "MB Thread Message Subject");
 
 		MessageboardsThread.editPG(
 			threadBodyEdit = "MB Thread Message Body Edit",
 			threadSubject = "MB Thread Message Subject",
-			threadSubjectEdit = "MB Thread Message Subject Edit"
-		);
+			threadSubjectEdit = "MB Thread Message Subject Edit");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "test@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "test@liferay.com");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 	}
@@ -264,7 +263,12 @@ definition {
 	test ViewWebsiteNotificationForNewThreadInCategory {
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
-		MessageboardsCategory.addPG(categoryName = "MB Category Name");
+		JSONMBMessage.addCategory(
+			categoryDescription = "MB Category Description",
+			categoryName = "MB Category Name",
+			userEmailAddress = "test@liferay.com");
+
+		Refresh();
 
 		MessageboardsCategory.subscribePG(categoryName = "MB Category Name");
 
@@ -272,7 +276,9 @@ definition {
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "userea@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
@@ -280,14 +286,15 @@ definition {
 
 		MessageboardsThread.addPG(
 			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject"
-		);
+			threadSubject = "MB Thread Message Subject");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "test@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "test@liferay.com");
 
 		Notifications.viewBadgeCount(notificationCount = "1");
 
@@ -296,16 +303,14 @@ definition {
 		Notifications.viewNewContent(
 			assetType = "message boards message",
 			contentBody = "MB Thread Message Subject",
-			user = "userfn userln"
-		);
+			user = "userfn userln");
 
 		Notifications.navigateToContent(contentBody = "MB Thread Message Subject");
 
 		MessageboardsThread.viewPG(
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject",
-			userName = "userfn userln"
-		);
+			userName = "userfn userln");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 	}
@@ -314,7 +319,12 @@ definition {
 	test ViewWebsiteNotificationForUpdatedThreadInCategory {
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
-		MessageboardsCategory.addPG(categoryName = "MB Category Name");
+		JSONMBMessage.addCategory(
+			categoryDescription = "MB Category Description",
+			categoryName = "MB Category Name",
+			userEmailAddress = "test@liferay.com");
+
+		Refresh();
 
 		MessageboardsCategory.subscribePG(categoryName = "MB Category Name");
 
@@ -322,14 +332,15 @@ definition {
 
 		MessageboardsThread.addPG(
 			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject"
-		);
+			threadSubject = "MB Thread Message Subject");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "userea@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
@@ -339,20 +350,20 @@ definition {
 			lastPostUserName = "Test Test",
 			replyCount = "0",
 			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject"
-		);
+			threadSubject = "MB Thread Message Subject");
 
 		MessageboardsThread.editPG(
 			threadBodyEdit = "MB Thread Message Body Edit",
 			threadSubject = "MB Thread Message Subject",
-			threadSubjectEdit = "MB Thread Message Subject Edit"
-		);
+			threadSubjectEdit = "MB Thread Message Subject Edit");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "test@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "test@liferay.com");
 
 		Notifications.viewBadgeCount(notificationCount = "1");
 
@@ -361,16 +372,15 @@ definition {
 		Notifications.viewUpdatedContent(
 			assetType = "message boards message",
 			contentBody = "MB Thread Message Subject Edit",
-			user = "userfn userln"
-		);
+			user = "userfn userln");
 
 		Notifications.navigateToContent(contentBody = "MB Thread Message Subject Edit");
 
 		MessageboardsThread.viewPG(
 			threadBody = "MB Thread Message Body Edit",
-			threadSubject = "MB Thread Message Subject Edit"
-		);
+			threadSubject = "MB Thread Message Subject Edit");
 
 		Notifications.viewBadgeCount(notificationCount = "0");
 	}
+
 }

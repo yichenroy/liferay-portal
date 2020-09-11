@@ -21,8 +21,6 @@ import com.liferay.expando.kernel.model.ExpandoTableConstants;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.util.ExpandoBridgeIndexerUtil;
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
@@ -42,10 +40,12 @@ import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.odata.entity.BooleanEntityField;
 import com.liferay.portal.odata.entity.DateTimeEntityField;
+import com.liferay.portal.odata.entity.DoubleEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
-import com.liferay.portal.odata.normalizer.Normalizer;
+import com.liferay.segments.internal.odata.entity.EntityModelFieldMapper;
 import com.liferay.segments.internal.odata.entity.UserEntityModel;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 
@@ -67,25 +67,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = ModelListener.class)
 public class UserExpandoColumnModelListener
 	extends BaseModelListener<ExpandoColumn> {
-
-	@Activate
-	public void activate(BundleContext bundleContext) {
-		try {
-			_bundleContext = bundleContext;
-
-			_userEntityFields = _getUserEntityFields();
-
-			_serviceRegistration = _register(_bundleContext, _userEntityFields);
-		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
-		}
-	}
-
-	@Deactivate
-	public void deactivate() {
-		_unregister(_serviceRegistration);
-	}
 
 	@Override
 	public void onAfterCreate(ExpandoColumn expandoColumn)
@@ -109,8 +90,8 @@ public class UserExpandoColumnModelListener
 						_userEntityFields);
 				});
 		}
-		catch (PortalException pe) {
-			throw new ModelListenerException(pe);
+		catch (PortalException portalException) {
+			throw new ModelListenerException(portalException);
 		}
 	}
 
@@ -143,11 +124,23 @@ public class UserExpandoColumnModelListener
 		onAfterCreate(expandoColumn);
 	}
 
-	private String _encodeName(ExpandoColumn expandoColumn) {
-		return StringBundler.concat(
-			StringPool.UNDERLINE, expandoColumn.getColumnId(),
-			StringPool.UNDERLINE,
-			Normalizer.normalizeIdentifier(expandoColumn.getName()));
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		try {
+			_bundleContext = bundleContext;
+
+			_userEntityFields = _getUserEntityFields();
+
+			_serviceRegistration = _register(_bundleContext, _userEntityFields);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
+		}
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_unregister(_serviceRegistration);
 	}
 
 	private DynamicQuery _getTableDynamicQuery(long classNameId, String name) {
@@ -180,7 +173,9 @@ public class UserExpandoColumnModelListener
 			return Optional.empty();
 		}
 
-		String encodedName = _encodeName(expandoColumn);
+		String encodedName =
+			_entityModelFieldMapper.getExpandoColumnEntityFieldName(
+				expandoColumn);
 
 		String encodedIndexedFieldName =
 			ExpandoBridgeIndexerUtil.encodeFieldName(
@@ -197,6 +192,29 @@ public class UserExpandoColumnModelListener
 				encodedName,
 				locale -> Field.getSortableFieldName(encodedIndexedFieldName),
 				locale -> encodedIndexedFieldName);
+		}
+		else if ((expandoColumn.getType() == ExpandoColumnConstants.DOUBLE) ||
+				 (expandoColumn.getType() ==
+					 ExpandoColumnConstants.DOUBLE_ARRAY) ||
+				 (expandoColumn.getType() == ExpandoColumnConstants.FLOAT) ||
+				 (expandoColumn.getType() ==
+					 ExpandoColumnConstants.FLOAT_ARRAY)) {
+
+			entityField = new DoubleEntityField(
+				encodedName, locale -> encodedIndexedFieldName);
+		}
+		else if ((expandoColumn.getType() == ExpandoColumnConstants.INTEGER) ||
+				 (expandoColumn.getType() ==
+					 ExpandoColumnConstants.INTEGER_ARRAY) ||
+				 (expandoColumn.getType() == ExpandoColumnConstants.LONG) ||
+				 (expandoColumn.getType() ==
+					 ExpandoColumnConstants.LONG_ARRAY) ||
+				 (expandoColumn.getType() == ExpandoColumnConstants.SHORT) ||
+				 (expandoColumn.getType() ==
+					 ExpandoColumnConstants.SHORT_ARRAY)) {
+
+			entityField = new IntegerEntityField(
+				encodedName, locale -> encodedIndexedFieldName);
 		}
 		else if (expandoColumn.getType() ==
 					ExpandoColumnConstants.STRING_LOCALIZED) {
@@ -310,6 +328,9 @@ public class UserExpandoColumnModelListener
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private EntityModelFieldMapper _entityModelFieldMapper;
 
 	@Reference
 	private ExpandoColumnLocalService _expandoColumnLocalService;

@@ -17,6 +17,7 @@ package com.liferay.segments.web.internal.field.customizer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -54,19 +55,23 @@ public class RoleSegmentsFieldCustomizer extends BaseSegmentsFieldCustomizer {
 	public static final String KEY = "role";
 
 	@Override
+	public ClassedModel getClassedModel(String fieldValue) {
+		return _getRole(fieldValue);
+	}
+
+	@Override
+	public String getClassName() {
+		return Role.class.getName();
+	}
+
+	@Override
 	public List<String> getFieldNames() {
 		return _fieldNames;
 	}
 
 	@Override
 	public String getFieldValueName(String fieldValue, Locale locale) {
-		long roleId = GetterUtil.getLong(fieldValue);
-
-		if (roleId == 0) {
-			return fieldValue;
-		}
-
-		Role role = _roleLocalService.fetchRole(roleId);
+		Role role = _getRole(fieldValue);
 
 		if (role == null) {
 			return fieldValue;
@@ -75,9 +80,11 @@ public class RoleSegmentsFieldCustomizer extends BaseSegmentsFieldCustomizer {
 		try {
 			return role.getDescriptiveName();
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to get name for role " + fieldValue, pe);
+				_log.warn(
+					"Unable to get name for role " + fieldValue,
+					portalException);
 			}
 
 			return fieldValue;
@@ -109,20 +116,30 @@ public class RoleSegmentsFieldCustomizer extends BaseSegmentsFieldCustomizer {
 					_portal.getLocale(portletRequest), Role.class.getName()),
 				portletURL.toString(), false);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to get select entity", e);
+				_log.warn("Unable to get select entity", exception);
 			}
 
 			return null;
 		}
 	}
 
+	private Role _getRole(String fieldValue) {
+		long roleId = GetterUtil.getLong(fieldValue);
+
+		if (roleId == 0) {
+			return null;
+		}
+
+		return _roleLocalService.fetchRole(roleId);
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		RoleSegmentsFieldCustomizer.class);
 
 	private static final List<String> _fieldNames = ListUtil.fromArray(
-		new String[] {"roleIds"});
+		"roleIds");
 
 	@Reference
 	private Portal _portal;

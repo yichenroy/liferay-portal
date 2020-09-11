@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.util.HashMapDictionary;
 import java.lang.reflect.Method;
 
 import java.util.Dictionary;
+import java.util.Objects;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -64,8 +65,9 @@ public class ConfigurationDDMFormDeclarationUtilTest {
 		Bundle bundle = null;
 
 		for (Bundle installedBundle : _bundleContext.getBundles()) {
-			if ("com.liferay.configuration.admin.web".equals(
-					installedBundle.getSymbolicName())) {
+			if (Objects.equals(
+					installedBundle.getSymbolicName(),
+					"com.liferay.configuration.admin.web")) {
 
 				bundle = installedBundle;
 
@@ -118,7 +120,8 @@ public class ConfigurationDDMFormDeclarationUtilTest {
 	private BundleContext _bundleContext;
 	private Configuration _configuration;
 	private Method _method;
-	private ServiceRegistration _serviceRegistration;
+	private ServiceRegistration<ConfigurationDDMFormDeclaration>
+		_serviceRegistration;
 
 	private class TestConfigurationForm {
 	}

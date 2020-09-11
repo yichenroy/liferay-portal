@@ -14,8 +14,7 @@
 
 package com.liferay.social.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.service.BaseLocalService;
@@ -25,6 +24,8 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.social.kernel.model.SocialRequest;
 import com.liferay.social.kernel.model.SocialRequestFeedEntry;
 import com.liferay.social.kernel.model.SocialRequestInterpreter;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the local service interface for SocialRequestInterpreter. Methods of this
@@ -36,6 +37,7 @@ import com.liferay.social.kernel.model.SocialRequestInterpreter;
  * @see SocialRequestInterpreterLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -46,7 +48,7 @@ public interface SocialRequestInterpreterLocalService extends BaseLocalService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SocialRequestInterpreterLocalServiceUtil} to access the social request interpreter local service. Add custom service methods to <code>com.liferay.portlet.social.service.impl.SocialRequestInterpreterLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.social.service.impl.SocialRequestInterpreterLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the social request interpreter local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SocialRequestInterpreterLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**

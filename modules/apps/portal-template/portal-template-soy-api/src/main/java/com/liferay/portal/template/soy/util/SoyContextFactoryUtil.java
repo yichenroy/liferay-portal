@@ -14,14 +14,11 @@
 
 package com.liferay.portal.template.soy.util;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Map;
 
 /**
  * @author Máté Thurzó
  */
-@ProviderType
 public class SoyContextFactoryUtil {
 
 	public static SoyContext createSoyContext() {

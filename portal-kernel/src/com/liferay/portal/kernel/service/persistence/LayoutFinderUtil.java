@@ -14,22 +14,13 @@
 
 package com.liferay.portal.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class LayoutFinderUtil {
-
-	public static java.util.List<com.liferay.portal.kernel.model.Layout>
-		findByNoPermissions(long roleId) {
-
-		return getFinder().findByNoPermissions(roleId);
-	}
 
 	public static java.util.List<com.liferay.portal.kernel.model.Layout>
 		findByNullFriendlyURL() {

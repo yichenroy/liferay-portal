@@ -33,8 +33,8 @@ import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.exportimport.UserImporter;
-import com.liferay.portal.security.sso.token.internal.configuration.TokenConfiguration;
-import com.liferay.portal.security.sso.token.internal.constants.TokenConstants;
+import com.liferay.portal.security.sso.token.configuration.TokenConfiguration;
+import com.liferay.portal.security.sso.token.constants.TokenConstants;
 import com.liferay.portal.security.sso.token.security.auth.TokenRetriever;
 import com.liferay.portal.util.PropsValues;
 
@@ -79,10 +79,11 @@ public class TokenAutoLogin extends BaseAutoLogin {
 
 	@Override
 	protected String[] doLogin(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		long companyId = _portal.getCompanyId(request);
+		long companyId = _portal.getCompanyId(httpServletRequest);
 
 		TokenConfiguration tokenCompanyServiceSettings =
 			_configurationProvider.getConfiguration(
@@ -109,7 +110,8 @@ public class TokenAutoLogin extends BaseAutoLogin {
 			return null;
 		}
 
-		String login = tokenRetriever.getLoginToken(request, userTokenName);
+		String login = tokenRetriever.getLoginToken(
+			httpServletRequest, userTokenName);
 
 		if (Validator.isNull(login)) {
 			if (_log.isInfoEnabled()) {
@@ -121,7 +123,7 @@ public class TokenAutoLogin extends BaseAutoLogin {
 
 		User user = getUser(companyId, login, tokenCompanyServiceSettings);
 
-		addRedirect(request);
+		addRedirect(httpServletRequest);
 
 		String[] credentials = new String[3];
 
@@ -169,9 +171,9 @@ public class TokenAutoLogin extends BaseAutoLogin {
 					}
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Unable to import from LDAP", e);
+					_log.warn("Unable to import from LDAP", exception);
 				}
 			}
 		}

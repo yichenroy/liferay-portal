@@ -66,11 +66,11 @@ public class TrashHelperImpl implements TrashHelper {
 			group.getCompanyId(), PropsKeys.TRASH_ENTRIES_MAX_AGE,
 			PropsValues.TRASH_ENTRIES_MAX_AGE);
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			group.getParentLiveGroupTypeSettingsProperties();
 
 		return GetterUtil.getInteger(
-			typeSettingsProperties.getProperty("trashEntriesMaxAge"),
+			typeSettingsUnicodeProperties.getProperty("trashEntriesMaxAge"),
 			trashEntriesMaxAge);
 	}
 
@@ -123,7 +123,8 @@ public class TrashHelperImpl implements TrashHelper {
 
 	@Override
 	public PortletURL getViewContentURL(
-			HttpServletRequest request, String className, long classPK)
+			HttpServletRequest httpServletRequest, String className,
+			long classPK)
 		throws PortalException {
 
 		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
@@ -145,11 +146,13 @@ public class TrashHelperImpl implements TrashHelper {
 			return null;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletURL portletURL = PortletProviderUtil.getPortletURL(
-			request, TrashEntry.class.getName(), PortletProvider.Action.VIEW);
+			httpServletRequest, TrashEntry.class.getName(),
+			PortletProvider.Action.VIEW);
 
 		portletURL.setParameter("mvcPath", "/view_content.jsp");
 		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
@@ -180,11 +183,11 @@ public class TrashHelperImpl implements TrashHelper {
 			return false;
 		}
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			group.getParentLiveGroupTypeSettingsProperties();
 
 		return GetterUtil.getBoolean(
-			typeSettingsProperties.getProperty("trashEnabled"), true);
+			typeSettingsUnicodeProperties.getProperty("trashEnabled"), true);
 	}
 
 	@Override
@@ -231,7 +234,7 @@ public class TrashHelperImpl implements TrashHelper {
 				title = trashEntry.getTypeSettingsProperty(paramName);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"No trash entry or trash version exists with ID " +

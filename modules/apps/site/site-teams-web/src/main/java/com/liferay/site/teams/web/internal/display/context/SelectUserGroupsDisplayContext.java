@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.TeamLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -48,12 +49,12 @@ import javax.servlet.http.HttpServletRequest;
 public class SelectUserGroupsDisplayContext {
 
 	public SelectUserGroupsDisplayContext(
-		RenderRequest renderRequest, RenderResponse renderResponse,
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse) {
 
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-		_request = request;
 	}
 
 	public String getDisplayStyle() {
@@ -61,7 +62,8 @@ public class SelectUserGroupsDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
@@ -72,7 +74,7 @@ public class SelectUserGroupsDisplayContext {
 		}
 
 		_eventName = ParamUtil.getString(
-			_request, "eventName",
+			_httpServletRequest, "eventName",
 			_renderResponse.getNamespace() + "selectUserGroup");
 
 		return _eventName;
@@ -83,7 +85,7 @@ public class SelectUserGroupsDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		return _keywords;
 	}
@@ -93,7 +95,8 @@ public class SelectUserGroupsDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
@@ -103,7 +106,8 @@ public class SelectUserGroupsDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -142,7 +146,7 @@ public class SelectUserGroupsDisplayContext {
 			return _redirect;
 		}
 
-		_redirect = ParamUtil.getString(_request, "redirect");
+		_redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
 		return _redirect;
 	}
@@ -162,21 +166,22 @@ public class SelectUserGroupsDisplayContext {
 			return _teamId;
 		}
 
-		_teamId = ParamUtil.getLong(_request, "teamId");
+		_teamId = ParamUtil.getLong(_httpServletRequest, "teamId");
 
 		return _teamId;
 	}
 
-	public SearchContainer getUserGroupSearchContainer() {
+	public SearchContainer<UserGroup> getUserGroupSearchContainer() {
 		if (_userGroupSearchContainer != null) {
 			return _userGroupSearchContainer;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		SearchContainer userGroupSearchContainer = new UserGroupSearch(
-			_renderRequest, getPortletURL());
+		SearchContainer<UserGroup> userGroupSearchContainer =
+			new UserGroupSearch(_renderRequest, getPortletURL());
 
 		OrderByComparator<UserGroup> orderByComparator =
 			UsersAdminUtil.getUserGroupOrderByComparator(
@@ -194,17 +199,20 @@ public class SelectUserGroupsDisplayContext {
 		UserGroupDisplayTerms searchTerms =
 			(UserGroupDisplayTerms)userGroupSearchContainer.getSearchTerms();
 
-		LinkedHashMap<String, Object> userGroupParams = new LinkedHashMap<>();
+		LinkedHashMap<String, Object> userGroupParams =
+			LinkedHashMapBuilder.<String, Object>put(
+				UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_GROUPS,
+				() -> {
+					Group group = GroupLocalServiceUtil.fetchGroup(
+						team.getGroupId());
 
-		Group group = GroupLocalServiceUtil.fetchGroup(team.getGroupId());
+					if (group != null) {
+						group = StagingUtil.getLiveGroup(group.getGroupId());
+					}
 
-		if (group != null) {
-			group = StagingUtil.getLiveGroup(group.getGroupId());
-		}
-
-		userGroupParams.put(
-			UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_GROUPS,
-			Long.valueOf(group.getGroupId()));
+					return Long.valueOf(group.getGroupId());
+				}
+			).build();
 
 		int userGroupsCount = UserGroupLocalServiceUtil.searchCount(
 			themeDisplay.getCompanyId(), searchTerms.getKeywords(),
@@ -227,15 +235,15 @@ public class SelectUserGroupsDisplayContext {
 
 	private String _displayStyle;
 	private String _eventName;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private String _redirect;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private Team _team;
 	private Long _teamId;
-	private SearchContainer _userGroupSearchContainer;
+	private SearchContainer<UserGroup> _userGroupSearchContainer;
 
 }

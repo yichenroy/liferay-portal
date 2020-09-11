@@ -14,14 +14,11 @@
 
 package com.liferay.calendar.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Eduardo Lundgren
  */
-@ProviderType
 public class CalendarBookingRecurrenceException extends PortalException {
 
 	public CalendarBookingRecurrenceException() {
@@ -31,12 +28,12 @@ public class CalendarBookingRecurrenceException extends PortalException {
 		super(msg);
 	}
 
-	public CalendarBookingRecurrenceException(String msg, Throwable cause) {
-		super(msg, cause);
+	public CalendarBookingRecurrenceException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public CalendarBookingRecurrenceException(Throwable cause) {
-		super(cause);
+	public CalendarBookingRecurrenceException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

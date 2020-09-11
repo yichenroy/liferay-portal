@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.social.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.social.kernel.service.SocialActivitySettingServiceUtil;
@@ -59,9 +57,10 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see SocialActivitySettingServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class SocialActivitySettingServiceSoap {
 
 	public static com.liferay.social.kernel.model.SocialActivitySettingSoap[]
@@ -78,10 +77,10 @@ public class SocialActivitySettingServiceSoap {
 			return com.liferay.social.kernel.model.SocialActivitySettingSoap.
 				toSoapModels(returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -96,10 +95,10 @@ public class SocialActivitySettingServiceSoap {
 
 			return returnValue.toString();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -111,10 +110,10 @@ public class SocialActivitySettingServiceSoap {
 			SocialActivitySettingServiceUtil.updateActivitySetting(
 				groupId, className, enabled);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -128,10 +127,10 @@ public class SocialActivitySettingServiceSoap {
 			SocialActivitySettingServiceUtil.updateActivitySetting(
 				groupId, className, activityType, activityCounterDefinition);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -146,10 +145,10 @@ public class SocialActivitySettingServiceSoap {
 			SocialActivitySettingServiceUtil.updateActivitySettings(
 				groupId, className, activityType, activityCounterDefinitions);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 

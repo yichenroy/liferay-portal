@@ -14,8 +14,10 @@
 
 package com.liferay.poshi.runner;
 
+import com.liferay.poshi.runner.util.FileUtil;
 import com.liferay.poshi.runner.util.OSDetector;
 import com.liferay.poshi.runner.util.PropsValues;
+import com.liferay.poshi.runner.util.StringUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -1310,12 +1312,12 @@ public class PoshiRunnerValidationTest extends TestCase {
 
 		Element element = document.addElement("if");
 
-		Element thenElement = element.addElement("then");
+		Element thenElement1 = element.addElement("then");
 
-		Element thenChildElement = thenElement.addElement("execute");
+		Element thenChildElement1 = thenElement1.addElement("execute");
 
-		thenChildElement.addAttribute("function", "Click");
-		thenChildElement.addAttribute("locator1", "//here");
+		thenChildElement1.addAttribute("function", "Click");
+		thenChildElement1.addAttribute("locator1", "//here");
 
 		PoshiRunnerValidation.validateThenElement(
 			element, "ValidateThenElement.macro");
@@ -1338,19 +1340,19 @@ public class PoshiRunnerValidationTest extends TestCase {
 
 		element = document.addElement("if");
 
-		Element thenElement1 = element.addElement("then");
-
-		Element thenChildElement1 = thenElement1.addElement("execute");
-
-		thenChildElement1.addAttribute("function", "Click");
-		thenChildElement1.addAttribute("locator1", "//here");
-
 		Element thenElement2 = element.addElement("then");
 
 		Element thenChildElement2 = thenElement2.addElement("execute");
 
 		thenChildElement2.addAttribute("function", "Click");
 		thenChildElement2.addAttribute("locator1", "//here");
+
+		Element thenElement3 = element.addElement("then");
+
+		Element thenChildElement3 = thenElement3.addElement("execute");
+
+		thenChildElement3.addAttribute("function", "Click");
+		thenChildElement3.addAttribute("locator1", "//here");
 
 		PoshiRunnerValidation.validateThenElement(
 			element, "ValidateThenElement.macro");
@@ -1486,13 +1488,13 @@ public class PoshiRunnerValidationTest extends TestCase {
 	}
 
 	protected String getFilePath(String fileName) {
-		String filePath = PoshiRunnerGetterUtil.getCanonicalPath(
+		String filePath = FileUtil.getCanonicalPath(
 			PropsValues.TEST_BASE_DIR_NAME +
 				"resources/com/liferay/poshi/runner/dependencies/validation/" +
 					fileName);
 
 		if (OSDetector.isWindows()) {
-			filePath = filePath.replace("/", "\\");
+			filePath = StringUtil.replace(filePath, "/", "\\");
 		}
 
 		return filePath;

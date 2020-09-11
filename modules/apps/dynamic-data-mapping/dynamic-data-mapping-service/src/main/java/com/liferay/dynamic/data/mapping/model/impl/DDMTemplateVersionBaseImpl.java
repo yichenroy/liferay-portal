@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMTemplateVersion;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateVersionLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateVersionLocalServiceUt
  * @see DDMTemplateVersion
  * @generated
  */
-@ProviderType
 public abstract class DDMTemplateVersionBaseImpl
 	extends DDMTemplateVersionModelImpl implements DDMTemplateVersion {
 

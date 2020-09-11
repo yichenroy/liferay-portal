@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.BasePortletProvider;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.ViewPortletProvider;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.site.navigation.breadcrumb.web.internal.constants.SiteNavigationBreadcrumbPortletKeys;
 
 import javax.portlet.PortletRequest;
@@ -46,20 +45,12 @@ public class SiteNavigationBreadcrumbEntryViewPortletProvider
 	}
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request, Group group)
+	public PortletURL getPortletURL(
+			HttpServletRequest httpServletRequest, Group group)
 		throws PortalException {
 
 		return PortletURLFactoryUtil.create(
-			request, getPortletName(), PortletRequest.RENDER_PHASE);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	protected long getPlid(ThemeDisplay themeDisplay) throws PortalException {
-		return themeDisplay.getPlid();
+			httpServletRequest, getPortletName(), PortletRequest.RENDER_PHASE);
 	}
 
 }

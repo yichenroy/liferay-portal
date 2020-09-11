@@ -14,11 +14,10 @@
 
 package com.liferay.portal.search.engine.adapter.index;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.search.engine.adapter.ccr.CrossClusterRequest;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,8 +26,12 @@ import java.util.Set;
 /**
  * @author Michael C. Han
  */
-@ProviderType
-public class AnalyzeIndexRequest implements IndexRequest<AnalyzeIndexResponse> {
+public class AnalyzeIndexRequest
+	extends CrossClusterRequest implements IndexRequest<AnalyzeIndexResponse> {
+
+	public AnalyzeIndexRequest() {
+		setPreferLocalCluster(true);
+	}
 
 	@Override
 	public AnalyzeIndexResponse accept(
@@ -82,7 +85,7 @@ public class AnalyzeIndexRequest implements IndexRequest<AnalyzeIndexResponse> {
 			return StringPool.EMPTY_ARRAY;
 		}
 
-		return _attributes.toArray(new String[_attributes.size()]);
+		return _attributes.toArray(new String[0]);
 	}
 
 	public Set<String> getCharFilters() {
@@ -104,18 +107,6 @@ public class AnalyzeIndexRequest implements IndexRequest<AnalyzeIndexResponse> {
 	@Override
 	public String[] getIndexNames() {
 		return new String[] {_indexName};
-	}
-
-	/**
-	 * @return
-	 * @deprecated As of Judson (7.1.x), with no direct replacement. This method
-	 *             should not be in the parent interface.  Only certain
-	 *             IndexRequests work with mappings.
-	 */
-	@Deprecated
-	@Override
-	public String getMappingName() {
-		throw new UnsupportedOperationException();
 	}
 
 	public String getNormalizer() {

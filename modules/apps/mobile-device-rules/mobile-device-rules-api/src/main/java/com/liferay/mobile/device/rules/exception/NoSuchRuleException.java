@@ -14,14 +14,11 @@
 
 package com.liferay.mobile.device.rules.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Edward C. Han
  */
-@ProviderType
 public class NoSuchRuleException extends NoSuchModelException {
 
 	public NoSuchRuleException() {
@@ -31,12 +28,12 @@ public class NoSuchRuleException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchRuleException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchRuleException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchRuleException(Throwable cause) {
-		super(cause);
+	public NoSuchRuleException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

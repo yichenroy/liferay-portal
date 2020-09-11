@@ -14,15 +14,16 @@
 
 package com.liferay.announcements.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedAuditedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the AnnouncementsEntry service. Represents a row in the &quot;AnnouncementsEntry&quot; database table, with each column mapped to a property of this class.
@@ -37,8 +38,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface AnnouncementsEntryModel
-	extends AttachedModel, BaseModel<AnnouncementsEntry>, ShardedModel,
-			StagedAuditedModel {
+	extends AttachedModel, BaseModel<AnnouncementsEntry>, MVCCModel,
+			ShardedModel, StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -59,6 +60,22 @@ public interface AnnouncementsEntryModel
 	 * @param primaryKey the primary key of this announcements entry
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this announcements entry.
+	 *
+	 * @return the mvcc version of this announcements entry
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this announcements entry.
+	 *
+	 * @param mvccVersion the mvcc version of this announcements entry
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this announcements entry.

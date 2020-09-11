@@ -14,8 +14,6 @@
 
 package com.liferay.asset.display.page.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * The extended model implementation for the AssetDisplayPageEntry service.
  * Represents a row in the &quot;AssetDisplayPageEntry&quot; database table,
@@ -30,7 +28,6 @@ import aQute.bnd.annotation.ProviderType;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class AssetDisplayPageEntryImpl extends AssetDisplayPageEntryBaseImpl {
 
 	/**

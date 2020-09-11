@@ -14,13 +14,13 @@
 
 package com.liferay.portlet.asset.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.exception.NoSuchLinkException;
 import com.liferay.asset.kernel.model.AssetLink;
+import com.liferay.asset.kernel.model.AssetLinkTable;
 import com.liferay.asset.kernel.service.persistence.AssetLinkPersistence;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
@@ -31,24 +31,34 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
+import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portlet.asset.model.impl.AssetLinkImpl;
 import com.liferay.portlet.asset.model.impl.AssetLinkModelImpl;
+import com.liferay.registry.Registry;
+import com.liferay.registry.RegistryUtil;
+import com.liferay.registry.ServiceRegistration;
 
 import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The persistence implementation for the asset link service.
@@ -60,7 +70,6 @@ import java.util.Set;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class AssetLinkPersistenceImpl
 	extends BasePersistenceImpl<AssetLink> implements AssetLinkPersistence {
 
@@ -100,7 +109,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns a range of all the asset links where entryId1 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
@@ -117,7 +126,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId1 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
@@ -138,47 +147,50 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId1 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
 	 * @param start the lower bound of the range of asset links
 	 * @param end the upper bound of the range of asset links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset links
 	 */
 	@Override
 	public List<AssetLink> findByE1(
 		long entryId1, int start, int end,
 		OrderByComparator<AssetLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByE1;
-			finderArgs = new Object[] {entryId1};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByE1;
+				finderArgs = new Object[] {entryId1};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByE1;
 			finderArgs = new Object[] {entryId1, start, end, orderByComparator};
 		}
 
 		List<AssetLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetLink>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AssetLink assetLink : list) {
-					if ((entryId1 != assetLink.getEntryId1())) {
+					if (entryId1 != assetLink.getEntryId1()) {
 						list = null;
 
 						break;
@@ -188,62 +200,52 @@ public class AssetLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_ASSETLINK_WHERE);
+			sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E1_ENTRYID1_2);
+			sb.append(_FINDER_COLUMN_E1_ENTRYID1_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId1);
+				queryPos.add(entryId1);
 
-				if (!pagination) {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -272,16 +274,16 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId1=");
-		msg.append(entryId1);
+		sb.append("entryId1=");
+		sb.append(entryId1);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -323,16 +325,16 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId1=");
-		msg.append(entryId1);
+		sb.append("entryId1=");
+		sb.append(entryId1);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -396,8 +398,8 @@ public class AssetLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -408,101 +410,101 @@ public class AssetLinkPersistenceImpl
 		Session session, AssetLink assetLink, long entryId1,
 		OrderByComparator<AssetLink> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_ASSETLINK_WHERE);
+		sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_E1_ENTRYID1_2);
+		sb.append(_FINDER_COLUMN_E1_ENTRYID1_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(entryId1);
+		queryPos.add(entryId1);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(assetLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<AssetLink> list = q.list();
+		List<AssetLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -535,41 +537,51 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public int countByE1(long entryId1) {
-		FinderPath finderPath = _finderPathCountByE1;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
 
-		Object[] finderArgs = new Object[] {entryId1};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByE1;
+
+			finderArgs = new Object[] {entryId1};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_ASSETLINK_WHERE);
+			sb.append(_SQL_COUNT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E1_ENTRYID1_2);
+			sb.append(_FINDER_COLUMN_E1_ENTRYID1_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId1);
+				queryPos.add(entryId1);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -601,7 +613,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns a range of all the asset links where entryId2 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId2 the entry id2
@@ -618,7 +630,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId2 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId2 the entry id2
@@ -639,47 +651,50 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId2 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId2 the entry id2
 	 * @param start the lower bound of the range of asset links
 	 * @param end the upper bound of the range of asset links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset links
 	 */
 	@Override
 	public List<AssetLink> findByE2(
 		long entryId2, int start, int end,
 		OrderByComparator<AssetLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByE2;
-			finderArgs = new Object[] {entryId2};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByE2;
+				finderArgs = new Object[] {entryId2};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByE2;
 			finderArgs = new Object[] {entryId2, start, end, orderByComparator};
 		}
 
 		List<AssetLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetLink>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AssetLink assetLink : list) {
-					if ((entryId2 != assetLink.getEntryId2())) {
+					if (entryId2 != assetLink.getEntryId2()) {
 						list = null;
 
 						break;
@@ -689,62 +704,52 @@ public class AssetLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_ASSETLINK_WHERE);
+			sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E2_ENTRYID2_2);
+			sb.append(_FINDER_COLUMN_E2_ENTRYID2_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId2);
+				queryPos.add(entryId2);
 
-				if (!pagination) {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -773,16 +778,16 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId2=");
-		msg.append(entryId2);
+		sb.append("entryId2=");
+		sb.append(entryId2);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -824,16 +829,16 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId2=");
-		msg.append(entryId2);
+		sb.append("entryId2=");
+		sb.append(entryId2);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -897,8 +902,8 @@ public class AssetLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -909,101 +914,101 @@ public class AssetLinkPersistenceImpl
 		Session session, AssetLink assetLink, long entryId2,
 		OrderByComparator<AssetLink> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_ASSETLINK_WHERE);
+		sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_E2_ENTRYID2_2);
+		sb.append(_FINDER_COLUMN_E2_ENTRYID2_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(entryId2);
+		queryPos.add(entryId2);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(assetLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<AssetLink> list = q.list();
+		List<AssetLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1036,41 +1041,51 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public int countByE2(long entryId2) {
-		FinderPath finderPath = _finderPathCountByE2;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
 
-		Object[] finderArgs = new Object[] {entryId2};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByE2;
+
+			finderArgs = new Object[] {entryId2};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_ASSETLINK_WHERE);
+			sb.append(_SQL_COUNT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E2_ENTRYID2_2);
+			sb.append(_FINDER_COLUMN_E2_ENTRYID2_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId2);
+				queryPos.add(entryId2);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1104,7 +1119,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns a range of all the asset links where entryId1 = &#63; and entryId2 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
@@ -1124,7 +1139,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId1 = &#63; and entryId2 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
@@ -1147,7 +1162,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId1 = &#63; and entryId2 = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
@@ -1155,27 +1170,30 @@ public class AssetLinkPersistenceImpl
 	 * @param start the lower bound of the range of asset links
 	 * @param end the upper bound of the range of asset links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset links
 	 */
 	@Override
 	public List<AssetLink> findByE_E(
 		long entryId1, long entryId2, int start, int end,
 		OrderByComparator<AssetLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByE_E;
-			finderArgs = new Object[] {entryId1, entryId2};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByE_E;
+				finderArgs = new Object[] {entryId1, entryId2};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByE_E;
 			finderArgs = new Object[] {
 				entryId1, entryId2, start, end, orderByComparator
@@ -1184,7 +1202,7 @@ public class AssetLinkPersistenceImpl
 
 		List<AssetLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetLink>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -1202,66 +1220,56 @@ public class AssetLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_ASSETLINK_WHERE);
+			sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E_E_ENTRYID1_2);
+			sb.append(_FINDER_COLUMN_E_E_ENTRYID1_2);
 
-			query.append(_FINDER_COLUMN_E_E_ENTRYID2_2);
+			sb.append(_FINDER_COLUMN_E_E_ENTRYID2_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId1);
+				queryPos.add(entryId1);
 
-				qPos.add(entryId2);
+				queryPos.add(entryId2);
 
-				if (!pagination) {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1293,19 +1301,19 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId1=");
-		msg.append(entryId1);
+		sb.append("entryId1=");
+		sb.append(entryId1);
 
-		msg.append(", entryId2=");
-		msg.append(entryId2);
+		sb.append(", entryId2=");
+		sb.append(entryId2);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -1353,19 +1361,19 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId1=");
-		msg.append(entryId1);
+		sb.append("entryId1=");
+		sb.append(entryId1);
 
-		msg.append(", entryId2=");
-		msg.append(entryId2);
+		sb.append(", entryId2=");
+		sb.append(entryId2);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -1434,8 +1442,8 @@ public class AssetLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1446,105 +1454,105 @@ public class AssetLinkPersistenceImpl
 		Session session, AssetLink assetLink, long entryId1, long entryId2,
 		OrderByComparator<AssetLink> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_ASSETLINK_WHERE);
+		sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_E_E_ENTRYID1_2);
+		sb.append(_FINDER_COLUMN_E_E_ENTRYID1_2);
 
-		query.append(_FINDER_COLUMN_E_E_ENTRYID2_2);
+		sb.append(_FINDER_COLUMN_E_E_ENTRYID2_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(entryId1);
+		queryPos.add(entryId1);
 
-		qPos.add(entryId2);
+		queryPos.add(entryId2);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(assetLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<AssetLink> list = q.list();
+		List<AssetLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1580,45 +1588,55 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public int countByE_E(long entryId1, long entryId2) {
-		FinderPath finderPath = _finderPathCountByE_E;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
 
-		Object[] finderArgs = new Object[] {entryId1, entryId2};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByE_E;
+
+			finderArgs = new Object[] {entryId1, entryId2};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ASSETLINK_WHERE);
+			sb.append(_SQL_COUNT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E_E_ENTRYID1_2);
+			sb.append(_FINDER_COLUMN_E_E_ENTRYID1_2);
 
-			query.append(_FINDER_COLUMN_E_E_ENTRYID2_2);
+			sb.append(_FINDER_COLUMN_E_E_ENTRYID2_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId1);
+				queryPos.add(entryId1);
 
-				qPos.add(entryId2);
+				queryPos.add(entryId2);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1655,7 +1673,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns a range of all the asset links where entryId1 = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
@@ -1675,7 +1693,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId1 = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
@@ -1697,7 +1715,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId1 = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId1 the entry id1
@@ -1705,27 +1723,30 @@ public class AssetLinkPersistenceImpl
 	 * @param start the lower bound of the range of asset links
 	 * @param end the upper bound of the range of asset links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset links
 	 */
 	@Override
 	public List<AssetLink> findByE1_T(
 		long entryId1, int type, int start, int end,
 		OrderByComparator<AssetLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByE1_T;
-			finderArgs = new Object[] {entryId1, type};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByE1_T;
+				finderArgs = new Object[] {entryId1, type};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByE1_T;
 			finderArgs = new Object[] {
 				entryId1, type, start, end, orderByComparator
@@ -1734,7 +1755,7 @@ public class AssetLinkPersistenceImpl
 
 		List<AssetLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetLink>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -1752,66 +1773,56 @@ public class AssetLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_ASSETLINK_WHERE);
+			sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E1_T_ENTRYID1_2);
+			sb.append(_FINDER_COLUMN_E1_T_ENTRYID1_2);
 
-			query.append(_FINDER_COLUMN_E1_T_TYPE_2);
+			sb.append(_FINDER_COLUMN_E1_T_TYPE_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId1);
+				queryPos.add(entryId1);
 
-				qPos.add(type);
+				queryPos.add(type);
 
-				if (!pagination) {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1843,19 +1854,19 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId1=");
-		msg.append(entryId1);
+		sb.append("entryId1=");
+		sb.append(entryId1);
 
-		msg.append(", type=");
-		msg.append(type);
+		sb.append(", type=");
+		sb.append(type);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -1903,19 +1914,19 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId1=");
-		msg.append(entryId1);
+		sb.append("entryId1=");
+		sb.append(entryId1);
 
-		msg.append(", type=");
-		msg.append(type);
+		sb.append(", type=");
+		sb.append(type);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -1982,8 +1993,8 @@ public class AssetLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1994,105 +2005,105 @@ public class AssetLinkPersistenceImpl
 		Session session, AssetLink assetLink, long entryId1, int type,
 		OrderByComparator<AssetLink> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_ASSETLINK_WHERE);
+		sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_E1_T_ENTRYID1_2);
+		sb.append(_FINDER_COLUMN_E1_T_ENTRYID1_2);
 
-		query.append(_FINDER_COLUMN_E1_T_TYPE_2);
+		sb.append(_FINDER_COLUMN_E1_T_TYPE_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(entryId1);
+		queryPos.add(entryId1);
 
-		qPos.add(type);
+		queryPos.add(type);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(assetLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<AssetLink> list = q.list();
+		List<AssetLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2128,45 +2139,55 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public int countByE1_T(long entryId1, int type) {
-		FinderPath finderPath = _finderPathCountByE1_T;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
 
-		Object[] finderArgs = new Object[] {entryId1, type};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByE1_T;
+
+			finderArgs = new Object[] {entryId1, type};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ASSETLINK_WHERE);
+			sb.append(_SQL_COUNT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E1_T_ENTRYID1_2);
+			sb.append(_FINDER_COLUMN_E1_T_ENTRYID1_2);
 
-			query.append(_FINDER_COLUMN_E1_T_TYPE_2);
+			sb.append(_FINDER_COLUMN_E1_T_TYPE_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId1);
+				queryPos.add(entryId1);
 
-				qPos.add(type);
+				queryPos.add(type);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2203,7 +2224,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns a range of all the asset links where entryId2 = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId2 the entry id2
@@ -2223,7 +2244,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId2 = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId2 the entry id2
@@ -2245,7 +2266,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links where entryId2 = &#63; and type = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param entryId2 the entry id2
@@ -2253,27 +2274,30 @@ public class AssetLinkPersistenceImpl
 	 * @param start the lower bound of the range of asset links
 	 * @param end the upper bound of the range of asset links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset links
 	 */
 	@Override
 	public List<AssetLink> findByE2_T(
 		long entryId2, int type, int start, int end,
 		OrderByComparator<AssetLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByE2_T;
-			finderArgs = new Object[] {entryId2, type};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByE2_T;
+				finderArgs = new Object[] {entryId2, type};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByE2_T;
 			finderArgs = new Object[] {
 				entryId2, type, start, end, orderByComparator
@@ -2282,7 +2306,7 @@ public class AssetLinkPersistenceImpl
 
 		List<AssetLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetLink>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -2300,66 +2324,56 @@ public class AssetLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_ASSETLINK_WHERE);
+			sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E2_T_ENTRYID2_2);
+			sb.append(_FINDER_COLUMN_E2_T_ENTRYID2_2);
 
-			query.append(_FINDER_COLUMN_E2_T_TYPE_2);
+			sb.append(_FINDER_COLUMN_E2_T_TYPE_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId2);
+				queryPos.add(entryId2);
 
-				qPos.add(type);
+				queryPos.add(type);
 
-				if (!pagination) {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2391,19 +2405,19 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId2=");
-		msg.append(entryId2);
+		sb.append("entryId2=");
+		sb.append(entryId2);
 
-		msg.append(", type=");
-		msg.append(type);
+		sb.append(", type=");
+		sb.append(type);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -2451,19 +2465,19 @@ public class AssetLinkPersistenceImpl
 			return assetLink;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("entryId2=");
-		msg.append(entryId2);
+		sb.append("entryId2=");
+		sb.append(entryId2);
 
-		msg.append(", type=");
-		msg.append(type);
+		sb.append(", type=");
+		sb.append(type);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLinkException(msg.toString());
+		throw new NoSuchLinkException(sb.toString());
 	}
 
 	/**
@@ -2530,8 +2544,8 @@ public class AssetLinkPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2542,105 +2556,105 @@ public class AssetLinkPersistenceImpl
 		Session session, AssetLink assetLink, long entryId2, int type,
 		OrderByComparator<AssetLink> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_ASSETLINK_WHERE);
+		sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_E2_T_ENTRYID2_2);
+		sb.append(_FINDER_COLUMN_E2_T_ENTRYID2_2);
 
-		query.append(_FINDER_COLUMN_E2_T_TYPE_2);
+		sb.append(_FINDER_COLUMN_E2_T_TYPE_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(AssetLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(AssetLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(entryId2);
+		queryPos.add(entryId2);
 
-		qPos.add(type);
+		queryPos.add(type);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(assetLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<AssetLink> list = q.list();
+		List<AssetLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2676,45 +2690,55 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public int countByE2_T(long entryId2, int type) {
-		FinderPath finderPath = _finderPathCountByE2_T;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
 
-		Object[] finderArgs = new Object[] {entryId2, type};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByE2_T;
+
+			finderArgs = new Object[] {entryId2, type};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ASSETLINK_WHERE);
+			sb.append(_SQL_COUNT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E2_T_ENTRYID2_2);
+			sb.append(_FINDER_COLUMN_E2_T_ENTRYID2_2);
 
-			query.append(_FINDER_COLUMN_E2_T_TYPE_2);
+			sb.append(_FINDER_COLUMN_E2_T_TYPE_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId2);
+				queryPos.add(entryId2);
 
-				qPos.add(type);
+				queryPos.add(type);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2749,26 +2773,26 @@ public class AssetLinkPersistenceImpl
 		AssetLink assetLink = fetchByE_E_T(entryId1, entryId2, type);
 
 		if (assetLink == null) {
-			StringBundler msg = new StringBundler(8);
+			StringBundler sb = new StringBundler(8);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("entryId1=");
-			msg.append(entryId1);
+			sb.append("entryId1=");
+			sb.append(entryId1);
 
-			msg.append(", entryId2=");
-			msg.append(entryId2);
+			sb.append(", entryId2=");
+			sb.append(entryId2);
 
-			msg.append(", type=");
-			msg.append(type);
+			sb.append(", type=");
+			sb.append(type);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchLinkException(msg.toString());
+			throw new NoSuchLinkException(sb.toString());
 		}
 
 		return assetLink;
@@ -2793,18 +2817,25 @@ public class AssetLinkPersistenceImpl
 	 * @param entryId1 the entry id1
 	 * @param entryId2 the entry id2
 	 * @param type the type
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching asset link, or <code>null</code> if a matching asset link could not be found
 	 */
 	@Override
 	public AssetLink fetchByE_E_T(
-		long entryId1, long entryId2, int type, boolean retrieveFromCache) {
+		long entryId1, long entryId2, int type, boolean useFinderCache) {
 
-		Object[] finderArgs = new Object[] {entryId1, entryId2, type};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {entryId1, entryId2, type};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByE_E_T, finderArgs, this);
 		}
@@ -2821,38 +2852,40 @@ public class AssetLinkPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(5);
+			StringBundler sb = new StringBundler(5);
 
-			query.append(_SQL_SELECT_ASSETLINK_WHERE);
+			sb.append(_SQL_SELECT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E_E_T_ENTRYID1_2);
+			sb.append(_FINDER_COLUMN_E_E_T_ENTRYID1_2);
 
-			query.append(_FINDER_COLUMN_E_E_T_ENTRYID2_2);
+			sb.append(_FINDER_COLUMN_E_E_T_ENTRYID2_2);
 
-			query.append(_FINDER_COLUMN_E_E_T_TYPE_2);
+			sb.append(_FINDER_COLUMN_E_E_T_TYPE_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId1);
+				queryPos.add(entryId1);
 
-				qPos.add(entryId2);
+				queryPos.add(entryId2);
 
-				qPos.add(type);
+				queryPos.add(type);
 
-				List<AssetLink> list = q.list();
+				List<AssetLink> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByE_E_T, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByE_E_T, finderArgs, list);
+					}
 				}
 				else {
 					AssetLink assetLink = list.get(0);
@@ -2862,11 +2895,8 @@ public class AssetLinkPersistenceImpl
 					cacheResult(assetLink);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByE_E_T, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2908,49 +2938,59 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public int countByE_E_T(long entryId1, long entryId2, int type) {
-		FinderPath finderPath = _finderPathCountByE_E_T;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
 
-		Object[] finderArgs = new Object[] {entryId1, entryId2, type};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByE_E_T;
+
+			finderArgs = new Object[] {entryId1, entryId2, type};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_ASSETLINK_WHERE);
+			sb.append(_SQL_COUNT_ASSETLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_E_E_T_ENTRYID1_2);
+			sb.append(_FINDER_COLUMN_E_E_T_ENTRYID1_2);
 
-			query.append(_FINDER_COLUMN_E_E_T_ENTRYID2_2);
+			sb.append(_FINDER_COLUMN_E_E_T_ENTRYID2_2);
 
-			query.append(_FINDER_COLUMN_E_E_T_TYPE_2);
+			sb.append(_FINDER_COLUMN_E_E_T_TYPE_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(entryId1);
+				queryPos.add(entryId1);
 
-				qPos.add(entryId2);
+				queryPos.add(entryId2);
 
-				qPos.add(type);
+				queryPos.add(type);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2970,17 +3010,18 @@ public class AssetLinkPersistenceImpl
 		"assetLink.type = ?";
 
 	public AssetLinkPersistenceImpl() {
-		setModelClass(AssetLink.class);
-
-		setModelImplClass(AssetLinkImpl.class);
-		setModelPKClass(long.class);
-		setEntityCacheEnabled(AssetLinkModelImpl.ENTITY_CACHE_ENABLED);
-
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
 		dbColumnNames.put("type", "type_");
 
 		setDBColumnNames(dbColumnNames);
+
+		setModelClass(AssetLink.class);
+
+		setModelImplClass(AssetLinkImpl.class);
+		setModelPKClass(long.class);
+
+		setTable(AssetLinkTable.INSTANCE);
 	}
 
 	/**
@@ -2990,9 +3031,12 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(AssetLink assetLink) {
+		if (assetLink.getCtCollectionId() != 0) {
+			return;
+		}
+
 		EntityCacheUtil.putResult(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED, AssetLinkImpl.class,
-			assetLink.getPrimaryKey(), assetLink);
+			AssetLinkImpl.class, assetLink.getPrimaryKey(), assetLink);
 
 		FinderCacheUtil.putResult(
 			_finderPathFetchByE_E_T,
@@ -3001,8 +3045,6 @@ public class AssetLinkPersistenceImpl
 				assetLink.getType()
 			},
 			assetLink);
-
-		assetLink.resetOriginalValues();
 	}
 
 	/**
@@ -3013,14 +3055,14 @@ public class AssetLinkPersistenceImpl
 	@Override
 	public void cacheResult(List<AssetLink> assetLinks) {
 		for (AssetLink assetLink : assetLinks) {
+			if (assetLink.getCtCollectionId() != 0) {
+				continue;
+			}
+
 			if (EntityCacheUtil.getResult(
-					AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
 					AssetLinkImpl.class, assetLink.getPrimaryKey()) == null) {
 
 				cacheResult(assetLink);
-			}
-			else {
-				assetLink.resetOriginalValues();
 			}
 		}
 	}
@@ -3050,27 +3092,24 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public void clearCache(AssetLink assetLink) {
-		EntityCacheUtil.removeResult(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED, AssetLinkImpl.class,
-			assetLink.getPrimaryKey());
-
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache((AssetLinkModelImpl)assetLink, true);
+		EntityCacheUtil.removeResult(AssetLinkImpl.class, assetLink);
 	}
 
 	@Override
 	public void clearCache(List<AssetLink> assetLinks) {
+		for (AssetLink assetLink : assetLinks) {
+			EntityCacheUtil.removeResult(AssetLinkImpl.class, assetLink);
+		}
+	}
+
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
-		for (AssetLink assetLink : assetLinks) {
-			EntityCacheUtil.removeResult(
-				AssetLinkModelImpl.ENTITY_CACHE_ENABLED, AssetLinkImpl.class,
-				assetLink.getPrimaryKey());
-
-			clearUniqueFindersCache((AssetLinkModelImpl)assetLink, true);
+		for (Serializable primaryKey : primaryKeys) {
+			EntityCacheUtil.removeResult(AssetLinkImpl.class, primaryKey);
 		}
 	}
 
@@ -3088,33 +3127,6 @@ public class AssetLinkPersistenceImpl
 			_finderPathFetchByE_E_T, args, assetLinkModelImpl, false);
 	}
 
-	protected void clearUniqueFindersCache(
-		AssetLinkModelImpl assetLinkModelImpl, boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				assetLinkModelImpl.getEntryId1(),
-				assetLinkModelImpl.getEntryId2(), assetLinkModelImpl.getType()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByE_E_T, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByE_E_T, args);
-		}
-
-		if ((assetLinkModelImpl.getColumnBitmask() &
-			 _finderPathFetchByE_E_T.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				assetLinkModelImpl.getOriginalEntryId1(),
-				assetLinkModelImpl.getOriginalEntryId2(),
-				assetLinkModelImpl.getOriginalType()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByE_E_T, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByE_E_T, args);
-		}
-	}
-
 	/**
 	 * Creates a new asset link with the primary key. Does not add the asset link to the database.
 	 *
@@ -3128,7 +3140,7 @@ public class AssetLinkPersistenceImpl
 		assetLink.setNew(true);
 		assetLink.setPrimaryKey(linkId);
 
-		assetLink.setCompanyId(companyProvider.getCompanyId());
+		assetLink.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return assetLink;
 	}
@@ -3175,11 +3187,11 @@ public class AssetLinkPersistenceImpl
 
 			return remove(assetLink);
 		}
-		catch (NoSuchLinkException nsee) {
-			throw nsee;
+		catch (NoSuchLinkException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -3198,12 +3210,14 @@ public class AssetLinkPersistenceImpl
 					AssetLinkImpl.class, assetLink.getPrimaryKeyObj());
 			}
 
-			if (assetLink != null) {
+			if ((assetLink != null) &&
+				CTPersistenceHelperUtil.isRemove(assetLink)) {
+
 				session.delete(assetLink);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -3243,186 +3257,43 @@ public class AssetLinkPersistenceImpl
 		try {
 			session = openSession();
 
-			if (assetLink.isNew()) {
-				session.save(assetLink);
+			if (CTPersistenceHelperUtil.isInsert(assetLink)) {
+				if (!isNew) {
+					session.evict(
+						AssetLinkImpl.class, assetLink.getPrimaryKeyObj());
+				}
 
-				assetLink.setNew(false);
+				session.save(assetLink);
 			}
 			else {
 				assetLink = (AssetLink)session.merge(assetLink);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!AssetLinkModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {assetLinkModelImpl.getEntryId1()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByE1, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByE1, args);
-
-			args = new Object[] {assetLinkModelImpl.getEntryId2()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByE2, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByE2, args);
-
-			args = new Object[] {
-				assetLinkModelImpl.getEntryId1(),
-				assetLinkModelImpl.getEntryId2()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByE_E, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByE_E, args);
-
-			args = new Object[] {
-				assetLinkModelImpl.getEntryId1(), assetLinkModelImpl.getType()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByE1_T, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByE1_T, args);
-
-			args = new Object[] {
-				assetLinkModelImpl.getEntryId2(), assetLinkModelImpl.getType()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByE2_T, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByE2_T, args);
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((assetLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByE1.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					assetLinkModelImpl.getOriginalEntryId1()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE1, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE1, args);
-
-				args = new Object[] {assetLinkModelImpl.getEntryId1()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE1, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE1, args);
+		if (assetLink.getCtCollectionId() != 0) {
+			if (isNew) {
+				assetLink.setNew(false);
 			}
 
-			if ((assetLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByE2.getColumnBitmask()) !=
-					 0) {
+			assetLink.resetOriginalValues();
 
-				Object[] args = new Object[] {
-					assetLinkModelImpl.getOriginalEntryId2()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE2, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE2, args);
-
-				args = new Object[] {assetLinkModelImpl.getEntryId2()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE2, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE2, args);
-			}
-
-			if ((assetLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByE_E.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					assetLinkModelImpl.getOriginalEntryId1(),
-					assetLinkModelImpl.getOriginalEntryId2()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE_E, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE_E, args);
-
-				args = new Object[] {
-					assetLinkModelImpl.getEntryId1(),
-					assetLinkModelImpl.getEntryId2()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE_E, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE_E, args);
-			}
-
-			if ((assetLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByE1_T.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					assetLinkModelImpl.getOriginalEntryId1(),
-					assetLinkModelImpl.getOriginalType()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE1_T, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE1_T, args);
-
-				args = new Object[] {
-					assetLinkModelImpl.getEntryId1(),
-					assetLinkModelImpl.getType()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE1_T, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE1_T, args);
-			}
-
-			if ((assetLinkModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByE2_T.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					assetLinkModelImpl.getOriginalEntryId2(),
-					assetLinkModelImpl.getOriginalType()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE2_T, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE2_T, args);
-
-				args = new Object[] {
-					assetLinkModelImpl.getEntryId2(),
-					assetLinkModelImpl.getType()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByE2_T, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByE2_T, args);
-			}
+			return assetLink;
 		}
 
 		EntityCacheUtil.putResult(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED, AssetLinkImpl.class,
-			assetLink.getPrimaryKey(), assetLink, false);
+			AssetLinkImpl.class, assetLinkModelImpl, false, true);
 
-		clearUniqueFindersCache(assetLinkModelImpl, false);
 		cacheUniqueFindersCache(assetLinkModelImpl);
+
+		if (isNew) {
+			assetLink.setNew(false);
+		}
 
 		assetLink.resetOriginalValues();
 
@@ -3469,12 +3340,118 @@ public class AssetLinkPersistenceImpl
 	/**
 	 * Returns the asset link with the primary key or returns <code>null</code> if it could not be found.
 	 *
+	 * @param primaryKey the primary key of the asset link
+	 * @return the asset link, or <code>null</code> if a asset link with the primary key could not be found
+	 */
+	@Override
+	public AssetLink fetchByPrimaryKey(Serializable primaryKey) {
+		if (CTPersistenceHelperUtil.isProductionMode(AssetLink.class)) {
+			return super.fetchByPrimaryKey(primaryKey);
+		}
+
+		AssetLink assetLink = null;
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			assetLink = (AssetLink)session.get(AssetLinkImpl.class, primaryKey);
+
+			if (assetLink != null) {
+				cacheResult(assetLink);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return assetLink;
+	}
+
+	/**
+	 * Returns the asset link with the primary key or returns <code>null</code> if it could not be found.
+	 *
 	 * @param linkId the primary key of the asset link
 	 * @return the asset link, or <code>null</code> if a asset link with the primary key could not be found
 	 */
 	@Override
 	public AssetLink fetchByPrimaryKey(long linkId) {
 		return fetchByPrimaryKey((Serializable)linkId);
+	}
+
+	@Override
+	public Map<Serializable, AssetLink> fetchByPrimaryKeys(
+		Set<Serializable> primaryKeys) {
+
+		if (CTPersistenceHelperUtil.isProductionMode(AssetLink.class)) {
+			return super.fetchByPrimaryKeys(primaryKeys);
+		}
+
+		if (primaryKeys.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		Map<Serializable, AssetLink> map =
+			new HashMap<Serializable, AssetLink>();
+
+		if (primaryKeys.size() == 1) {
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			Serializable primaryKey = iterator.next();
+
+			AssetLink assetLink = fetchByPrimaryKey(primaryKey);
+
+			if (assetLink != null) {
+				map.put(primaryKey, assetLink);
+			}
+
+			return map;
+		}
+
+		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
+
+		sb.append(getSelectSQL());
+		sb.append(" WHERE ");
+		sb.append(getPKDBName());
+		sb.append(" IN (");
+
+		for (Serializable primaryKey : primaryKeys) {
+			sb.append((long)primaryKey);
+
+			sb.append(",");
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		sb.append(")");
+
+		String sql = sb.toString();
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Query query = session.createQuery(sql);
+
+			for (AssetLink assetLink : (List<AssetLink>)query.list()) {
+				map.put(assetLink.getPrimaryKeyObj(), assetLink);
+
+				cacheResult(assetLink);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return map;
 	}
 
 	/**
@@ -3491,7 +3468,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns a range of all the asset links.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of asset links
@@ -3507,7 +3484,7 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of asset links
@@ -3526,64 +3503,65 @@ public class AssetLinkPersistenceImpl
 	 * Returns an ordered range of all the asset links.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetLinkModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of asset links
 	 * @param end the upper bound of the range of asset links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of asset links
 	 */
 	@Override
 	public List<AssetLink> findAll(
 		int start, int end, OrderByComparator<AssetLink> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindAll;
-			finderArgs = FINDER_ARGS_EMPTY;
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<AssetLink> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetLink>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_ASSETLINK);
+				sb.append(_SQL_SELECT_ASSETLINK);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_ASSETLINK;
 
-				if (pagination) {
-					sql = sql.concat(AssetLinkModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(AssetLinkModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -3591,29 +3569,19 @@ public class AssetLinkPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetLink>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetLink>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3641,8 +3609,15 @@ public class AssetLinkPersistenceImpl
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)FinderCacheUtil.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			AssetLink.class);
+
+		Long count = null;
+
+		if (productionMode) {
+			count = (Long)FinderCacheUtil.getResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		}
 
 		if (count == null) {
 			Session session = null;
@@ -3650,18 +3625,17 @@ public class AssetLinkPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_ASSETLINK);
+				Query query = session.createQuery(_SQL_COUNT_ASSETLINK);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(
+						_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3692,183 +3666,216 @@ public class AssetLinkPersistenceImpl
 	}
 
 	@Override
-	protected Map<String, Integer> getTableColumnsMap() {
+	public Set<String> getCTColumnNames(
+		CTColumnResolutionType ctColumnResolutionType) {
+
+		return _ctColumnNamesMap.get(ctColumnResolutionType);
+	}
+
+	@Override
+	public List<String> getMappingTableNames() {
+		return _mappingTableNames;
+	}
+
+	@Override
+	public Map<String, Integer> getTableColumnsMap() {
 		return AssetLinkModelImpl.TABLE_COLUMNS_MAP;
+	}
+
+	@Override
+	public String getTableName() {
+		return "AssetLink";
+	}
+
+	@Override
+	public List<String[]> getUniqueIndexColumnNames() {
+		return _uniqueIndexColumnNames;
+	}
+
+	private static final Map<CTColumnResolutionType, Set<String>>
+		_ctColumnNamesMap = new EnumMap<CTColumnResolutionType, Set<String>>(
+			CTColumnResolutionType.class);
+	private static final List<String> _mappingTableNames =
+		new ArrayList<String>();
+	private static final List<String[]> _uniqueIndexColumnNames =
+		new ArrayList<String[]>();
+
+	static {
+		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
+		Set<String> ctStrictColumnNames = new HashSet<String>();
+
+		ctControlColumnNames.add("mvccVersion");
+		ctControlColumnNames.add("ctCollectionId");
+		ctStrictColumnNames.add("companyId");
+		ctStrictColumnNames.add("userId");
+		ctStrictColumnNames.add("userName");
+		ctStrictColumnNames.add("createDate");
+		ctStrictColumnNames.add("entryId1");
+		ctStrictColumnNames.add("entryId2");
+		ctStrictColumnNames.add("type_");
+		ctStrictColumnNames.add("weight");
+
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.PK, Collections.singleton("linkId"));
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.STRICT, ctStrictColumnNames);
+
+		_uniqueIndexColumnNames.add(
+			new String[] {"entryId1", "entryId2", "type_"});
 	}
 
 	/**
 	 * Initializes the asset link persistence.
 	 */
 	public void afterPropertiesSet() {
-		_finderPathWithPaginationFindAll = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+		Registry registry = RegistryUtil.getRegistry();
 
-		_finderPathWithoutPaginationFindAll = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+		_argumentsResolverServiceRegistration = registry.registerService(
+			ArgumentsResolver.class, new AssetLinkModelArgumentsResolver(),
+			HashMapBuilder.<String, Object>put(
+				"model.class.name", AssetLink.class.getName()
+			).build());
 
-		_finderPathCountAll = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathWithPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathWithoutPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathCountAll = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByE1 = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithPaginationFindByE1 = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByE1",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"entryId1"}, true);
 
-		_finderPathWithoutPaginationFindByE1 = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithoutPaginationFindByE1 = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByE1",
-			new String[] {Long.class.getName()},
-			AssetLinkModelImpl.ENTRYID1_COLUMN_BITMASK |
-			AssetLinkModelImpl.WEIGHT_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"entryId1"},
+			true);
 
-		_finderPathCountByE1 = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByE1 = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByE1",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"entryId1"},
+			false);
 
-		_finderPathWithPaginationFindByE2 = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithPaginationFindByE2 = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByE2",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"entryId2"}, true);
 
-		_finderPathWithoutPaginationFindByE2 = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithoutPaginationFindByE2 = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByE2",
-			new String[] {Long.class.getName()},
-			AssetLinkModelImpl.ENTRYID2_COLUMN_BITMASK |
-			AssetLinkModelImpl.WEIGHT_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"entryId2"},
+			true);
 
-		_finderPathCountByE2 = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByE2 = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByE2",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"entryId2"},
+			false);
 
-		_finderPathWithPaginationFindByE_E = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithPaginationFindByE_E = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByE_E",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"entryId1", "entryId2"}, true);
 
-		_finderPathWithoutPaginationFindByE_E = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithoutPaginationFindByE_E = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByE_E",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			AssetLinkModelImpl.ENTRYID1_COLUMN_BITMASK |
-			AssetLinkModelImpl.ENTRYID2_COLUMN_BITMASK |
-			AssetLinkModelImpl.WEIGHT_COLUMN_BITMASK);
+			new String[] {"entryId1", "entryId2"}, true);
 
-		_finderPathCountByE_E = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByE_E = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByE_E",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"entryId1", "entryId2"}, false);
 
-		_finderPathWithPaginationFindByE1_T = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithPaginationFindByE1_T = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByE1_T",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"entryId1", "type_"}, true);
 
-		_finderPathWithoutPaginationFindByE1_T = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithoutPaginationFindByE1_T = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByE1_T",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			AssetLinkModelImpl.ENTRYID1_COLUMN_BITMASK |
-			AssetLinkModelImpl.TYPE_COLUMN_BITMASK |
-			AssetLinkModelImpl.WEIGHT_COLUMN_BITMASK);
+			new String[] {"entryId1", "type_"}, true);
 
-		_finderPathCountByE1_T = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByE1_T = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByE1_T",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"entryId1", "type_"}, false);
 
-		_finderPathWithPaginationFindByE2_T = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithPaginationFindByE2_T = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByE2_T",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"entryId2", "type_"}, true);
 
-		_finderPathWithoutPaginationFindByE2_T = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathWithoutPaginationFindByE2_T = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByE2_T",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			AssetLinkModelImpl.ENTRYID2_COLUMN_BITMASK |
-			AssetLinkModelImpl.TYPE_COLUMN_BITMASK |
-			AssetLinkModelImpl.WEIGHT_COLUMN_BITMASK);
+			new String[] {"entryId2", "type_"}, true);
 
-		_finderPathCountByE2_T = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByE2_T = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByE2_T",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"entryId2", "type_"}, false);
 
-		_finderPathFetchByE_E_T = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, AssetLinkImpl.class,
+		_finderPathFetchByE_E_T = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByE_E_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
 			},
-			AssetLinkModelImpl.ENTRYID1_COLUMN_BITMASK |
-			AssetLinkModelImpl.ENTRYID2_COLUMN_BITMASK |
-			AssetLinkModelImpl.TYPE_COLUMN_BITMASK);
+			new String[] {"entryId1", "entryId2", "type_"}, true);
 
-		_finderPathCountByE_E_T = new FinderPath(
-			AssetLinkModelImpl.ENTITY_CACHE_ENABLED,
-			AssetLinkModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByE_E_T = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByE_E_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"entryId1", "entryId2", "type_"}, false);
 	}
 
 	public void destroy() {
 		EntityCacheUtil.removeCache(AssetLinkImpl.class.getName());
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-	}
 
-	@BeanReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
+		_argumentsResolverServiceRegistration.unregister();
+
+		for (ServiceRegistration<FinderPath> serviceRegistration :
+				_serviceRegistrations) {
+
+			serviceRegistration.unregister();
+		}
+	}
 
 	private static final String _SQL_SELECT_ASSETLINK =
 		"SELECT assetLink FROM AssetLink assetLink";
@@ -3895,5 +3902,107 @@ public class AssetLinkPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"type"});
+
+	private FinderPath _createFinderPath(
+		String cacheName, String methodName, String[] params,
+		String[] columnNames, boolean baseModelResult) {
+
+		FinderPath finderPath = new FinderPath(
+			cacheName, methodName, params, columnNames, baseModelResult);
+
+		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+			Registry registry = RegistryUtil.getRegistry();
+
+			_serviceRegistrations.add(
+				registry.registerService(
+					FinderPath.class, finderPath,
+					HashMapBuilder.<String, Object>put(
+						"cache.name", cacheName
+					).build()));
+		}
+
+		return finderPath;
+	}
+
+	private ServiceRegistration<ArgumentsResolver>
+		_argumentsResolverServiceRegistration;
+	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
+		new HashSet<>();
+
+	private static class AssetLinkModelArgumentsResolver
+		implements ArgumentsResolver {
+
+		@Override
+		public Object[] getArguments(
+			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
+			boolean original) {
+
+			String[] columnNames = finderPath.getColumnNames();
+
+			if ((columnNames == null) || (columnNames.length == 0)) {
+				if (baseModel.isNew()) {
+					return FINDER_ARGS_EMPTY;
+				}
+
+				return null;
+			}
+
+			AssetLinkModelImpl assetLinkModelImpl =
+				(AssetLinkModelImpl)baseModel;
+
+			long columnBitmask = assetLinkModelImpl.getColumnBitmask();
+
+			if (!checkColumn || (columnBitmask == 0)) {
+				return _getValue(assetLinkModelImpl, columnNames, original);
+			}
+
+			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
+				finderPath);
+
+			if (finderPathColumnBitmask == null) {
+				finderPathColumnBitmask = 0L;
+
+				for (String columnName : columnNames) {
+					finderPathColumnBitmask |=
+						assetLinkModelImpl.getColumnBitmask(columnName);
+				}
+
+				_finderPathColumnBitmasksCache.put(
+					finderPath, finderPathColumnBitmask);
+			}
+
+			if ((columnBitmask & finderPathColumnBitmask) != 0) {
+				return _getValue(assetLinkModelImpl, columnNames, original);
+			}
+
+			return null;
+		}
+
+		private Object[] _getValue(
+			AssetLinkModelImpl assetLinkModelImpl, String[] columnNames,
+			boolean original) {
+
+			Object[] arguments = new Object[columnNames.length];
+
+			for (int i = 0; i < arguments.length; i++) {
+				String columnName = columnNames[i];
+
+				if (original) {
+					arguments[i] = assetLinkModelImpl.getColumnOriginalValue(
+						columnName);
+				}
+				else {
+					arguments[i] = assetLinkModelImpl.getColumnValue(
+						columnName);
+				}
+			}
+
+			return arguments;
+		}
+
+		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
+			new ConcurrentHashMap<>();
+
+	}
 
 }

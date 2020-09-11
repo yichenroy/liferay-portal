@@ -14,8 +14,7 @@
 
 package com.liferay.document.library.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,7 +24,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see DLFileVersionService
  * @generated
  */
-@ProviderType
 public class DLFileVersionServiceWrapper
 	implements DLFileVersionService, ServiceWrapper<DLFileVersionService> {
 
@@ -36,18 +34,16 @@ public class DLFileVersionServiceWrapper
 	}
 
 	@Override
-	public com.liferay.document.library.kernel.model.DLFileVersion
-			getFileVersion(long fileVersionId)
+	public DLFileVersion getFileVersion(long fileVersionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFileVersionService.getFileVersion(fileVersionId);
 	}
 
 	@Override
-	public java.util.List
-		<com.liferay.document.library.kernel.model.DLFileVersion>
-				getFileVersions(long fileEntryId, int status)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public java.util.List<DLFileVersion> getFileVersions(
+			long fileEntryId, int status)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFileVersionService.getFileVersions(fileEntryId, status);
 	}
@@ -60,16 +56,15 @@ public class DLFileVersionServiceWrapper
 	}
 
 	@Override
-	public com.liferay.document.library.kernel.model.DLFileVersion
-			getLatestFileVersion(long fileEntryId)
+	public DLFileVersion getLatestFileVersion(long fileEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFileVersionService.getLatestFileVersion(fileEntryId);
 	}
 
 	@Override
-	public com.liferay.document.library.kernel.model.DLFileVersion
-			getLatestFileVersion(long fileEntryId, boolean excludeWorkingCopy)
+	public DLFileVersion getLatestFileVersion(
+			long fileEntryId, boolean excludeWorkingCopy)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFileVersionService.getLatestFileVersion(

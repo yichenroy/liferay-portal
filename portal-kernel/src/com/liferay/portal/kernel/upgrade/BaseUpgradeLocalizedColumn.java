@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.upgrade;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -22,7 +23,6 @@ import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -54,7 +54,7 @@ public abstract class BaseUpgradeLocalizedColumn extends UpgradeProcess {
 		try {
 			String tableName = getTableName(tableClass);
 
-			if (!hasColumnType(tableClass, columnName, "CLOB null") &&
+			if (!hasColumnType(tableName, columnName, "TEXT null") &&
 				!_alteredTableNameColumnNames.contains(
 					tableName + StringPool.POUND + columnName)) {
 
@@ -71,36 +71,8 @@ public abstract class BaseUpgradeLocalizedColumn extends UpgradeProcess {
 					companyId);
 			}
 		}
-		catch (Exception e) {
-			throw new SQLException(e);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), use {@link
-	 *             BaseUpgradeLocalizedColumn#upgradeLocalizedColumn(
-	 *             ResourceBundleLoader, Class, String, String, String, String,
-	 *             long[])}
-	 */
-	@Deprecated
-	protected void upgradeLocalizedColumn(
-			ResourceBundleLoader resourceBundleLoader, String tableName,
-			String columnName, String originalContent,
-			String localizationMapKey, String localizationXMLKey,
-			long[] companyIds)
-		throws SQLException {
-
-		Class<?> clazz = getClass();
-
-		resourceBundleLoader = new AggregateResourceBundleLoader(
-			ResourceBundleUtil.getResourceBundleLoader(
-				"content.Language", clazz.getClassLoader()),
-			resourceBundleLoader);
-
-		for (long companyId : companyIds) {
-			_upgrade(
-				resourceBundleLoader, tableName, columnName, originalContent,
-				localizationMapKey, localizationXMLKey, companyId);
+		catch (Exception exception) {
+			throw new SQLException(exception);
 		}
 	}
 
@@ -118,11 +90,9 @@ public abstract class BaseUpgradeLocalizedColumn extends UpgradeProcess {
 				ResourceBundleUtil.getLocalizationMap(
 					resourceBundleLoader, localizationMapKey);
 
-			String defaultLanguageId = UpgradeProcessUtil.getDefaultLanguageId(
-				companyId);
-
 			return LocalizationUtil.updateLocalization(
-				localizationMap, "", localizationXMLKey, defaultLanguageId);
+				localizationMap, "", localizationXMLKey,
+				UpgradeProcessUtil.getDefaultLanguageId(companyId));
 		}
 		finally {
 			CompanyThreadLocal.setCompanyId(originalCompanyId);
@@ -163,8 +133,8 @@ public abstract class BaseUpgradeLocalizedColumn extends UpgradeProcess {
 
 			ps.executeUpdate();
 		}
-		catch (SQLException sqle) {
-			throw new SystemException(sqle);
+		catch (SQLException sqlException) {
+			throw new SystemException(sqlException);
 		}
 	}
 

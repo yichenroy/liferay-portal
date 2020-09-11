@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,10 +28,9 @@ import java.util.Map;
  * @see PortalPreferences
  * @generated
  */
-@ProviderType
 public class PortalPreferencesWrapper
 	extends BaseModelWrapper<PortalPreferences>
-	implements PortalPreferences, ModelWrapper<PortalPreferences> {
+	implements ModelWrapper<PortalPreferences>, PortalPreferences {
 
 	public PortalPreferencesWrapper(PortalPreferences portalPreferences) {
 		super(portalPreferences);

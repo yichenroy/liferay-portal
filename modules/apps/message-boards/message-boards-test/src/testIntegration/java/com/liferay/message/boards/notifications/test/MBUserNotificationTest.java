@@ -31,9 +31,9 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.notifications.test.util.BaseUserNotificationTestCase;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
-import com.liferay.portlet.notifications.test.BaseUserNotificationTestCase;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -61,13 +61,11 @@ public class MBUserNotificationTest extends BaseUserNotificationTestCase {
 		MBTestUtil.populateNotificationsServiceContext(
 			serviceContext, Constants.ADD);
 
-		MBMessage message = MBMessageLocalServiceUtil.addMessage(
+		return MBMessageLocalServiceUtil.addMessage(
 			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
 			group.getGroupId(), _category.getCategoryId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			serviceContext);
-
-		return message;
 	}
 
 	@Override
@@ -110,11 +108,9 @@ public class MBUserNotificationTest extends BaseUserNotificationTestCase {
 		MBTestUtil.populateNotificationsServiceContext(
 			serviceContext, Constants.UPDATE);
 
-		message = MBMessageLocalServiceUtil.updateMessage(
+		return MBMessageLocalServiceUtil.updateMessage(
 			TestPropsValues.getUserId(), message.getMessageId(),
 			RandomTestUtil.randomString(), serviceContext);
-
-		return message;
 	}
 
 	private MBCategory _category;

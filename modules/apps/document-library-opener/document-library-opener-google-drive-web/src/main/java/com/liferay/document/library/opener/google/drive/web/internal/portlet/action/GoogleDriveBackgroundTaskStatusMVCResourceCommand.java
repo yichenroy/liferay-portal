@@ -17,13 +17,14 @@ package com.liferay.document.library.opener.google.drive.web.internal.portlet.ac
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.opener.google.drive.constants.DLOpenerGoogleDriveMimeTypes;
+import com.liferay.document.library.opener.google.drive.web.internal.constants.DLOpenerGoogleDriveConstants;
 import com.liferay.document.library.opener.model.DLOpenerFileEntryReference;
 import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatus;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusRegistry;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -80,7 +81,9 @@ public class GoogleDriveBackgroundTaskStatusMVCResourceCommand
 
 		DLOpenerFileEntryReference dlOpenerFileEntryReference =
 			_dlOpenerFileEntryReferenceLocalService.
-				fetchDLOpenerFileEntryReference(fileEntry);
+				fetchDLOpenerFileEntryReference(
+					DLOpenerGoogleDriveConstants.GOOGLE_DRIVE_REFERENCE_TYPE,
+					fileEntry);
 
 		if (backgroundTaskStatus == null) {
 			if (dlOpenerFileEntryReference == null) {
@@ -99,10 +102,11 @@ public class GoogleDriveBackgroundTaskStatusMVCResourceCommand
 				backgroundTaskStatus.getAttribute("error"));
 		}
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("complete", complete);
-		jsonObject.put("error", error);
+		JSONObject jsonObject = JSONUtil.put(
+			"complete", complete
+		).put(
+			"error", error
+		);
 
 		if (complete && (dlOpenerFileEntryReference != null) &&
 			Validator.isNotNull(dlOpenerFileEntryReference.getReferenceKey())) {

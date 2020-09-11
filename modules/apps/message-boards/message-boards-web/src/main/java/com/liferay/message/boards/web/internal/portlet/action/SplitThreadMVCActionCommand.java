@@ -73,34 +73,17 @@ public class SplitThreadMVCActionCommand extends BaseMVCActionCommand {
 		try {
 			splitThread(actionRequest, actionResponse);
 		}
-		catch (PrincipalException | RequiredMessageException e) {
-			SessionErrors.add(actionRequest, e.getClass());
+		catch (PrincipalException | RequiredMessageException exception) {
+			SessionErrors.add(actionRequest, exception.getClass());
 
 			actionResponse.setRenderParameter(
 				"mvcPath", "/message_boards/error.jsp");
 		}
 		catch (MessageBodyException | MessageSubjectException |
-			   NoSuchThreadException | SplitThreadException e) {
+			   NoSuchThreadException | SplitThreadException exception) {
 
-			SessionErrors.add(actionRequest, e.getClass());
+			SessionErrors.add(actionRequest, exception.getClass());
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setMBMessageLocalService(
-		MBMessageLocalService mbMessageLocalService) {
-
-		_mbMessageLocalService = mbMessageLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setMBMessageService(MBMessageService mbMessageService) {
-		_mbMessageService = mbMessageService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setMBThreadService(MBThreadService mbThreadService) {
-		_mbThreadService = mbThreadService;
 	}
 
 	protected void splitThread(
@@ -168,8 +151,13 @@ public class SplitThreadMVCActionCommand extends BaseMVCActionCommand {
 		actionResponse.sendRedirect(portletURL.toString());
 	}
 
+	@Reference
 	private MBMessageLocalService _mbMessageLocalService;
+
+	@Reference
 	private MBMessageService _mbMessageService;
+
+	@Reference
 	private MBThreadService _mbThreadService;
 
 	@Reference

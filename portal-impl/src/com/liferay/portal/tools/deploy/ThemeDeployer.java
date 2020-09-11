@@ -14,11 +14,11 @@
 
 package com.liferay.portal.tools.deploy;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Plugin;
 import com.liferay.portal.kernel.plugin.PluginPackage;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolDependencies;
@@ -52,9 +52,9 @@ public class ThemeDeployer extends BaseDeployer {
 
 		try (ThemeDeployer themeDeployer = new ThemeDeployer(wars, jars)) {
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioe, ioe);
+				_log.warn(ioException, ioException);
 			}
 		}
 	}

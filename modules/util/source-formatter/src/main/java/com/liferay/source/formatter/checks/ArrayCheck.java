@@ -18,7 +18,9 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
+import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,8 +39,10 @@ public class ArrayCheck extends BaseFileCheck {
 			fileName, content, _addAllListUtilFromArrayPattern);
 
 		content = _formatArrayInitializer(content);
+		content = _formatCollectionsToArray(content);
+		content = _formatEmptyArray(content);
 
-		return _formatEmptyArray(content);
+		return content;
 	}
 
 	private void _checkInefficientAddAllCalls(
@@ -49,7 +53,7 @@ public class ArrayCheck extends BaseFileCheck {
 		while (matcher.find()) {
 			if (!ToolsUtil.isInsideQuotes(content, matcher.start())) {
 				addMessage(
-					fileName, "Use Collections.addAll", "collections.markdown",
+					fileName, "Use Collections.addAll",
 					getLineNumber(content, matcher.start()));
 			}
 		}
@@ -69,9 +73,9 @@ public class ArrayCheck extends BaseFileCheck {
 
 			int lineNumber = getLineNumber(content, matcher.end(3));
 
-			String line = getLine(content, lineNumber);
+			if (getLineLength(getLine(content, lineNumber)) >
+					(getMaxLineLength() - 2)) {
 
-			if (getLineLength(line) > (getMaxLineLength() - 2)) {
 				String whitespace2 = matcher.group(3);
 
 				if (whitespace2.contains(StringPool.NEW_LINE)) {
@@ -126,6 +130,59 @@ public class ArrayCheck extends BaseFileCheck {
 		return content;
 	}
 
+	private String _formatCollectionsToArray(String content) {
+		Matcher matcher1 = _collectionsToArrayPattern.matcher(content);
+
+		while (matcher1.find()) {
+			List<String> parameterList = JavaSourceUtil.getParameterList(
+				content.substring(matcher1.start()));
+
+			if (parameterList.size() != 1) {
+				continue;
+			}
+
+			String variableName = matcher1.group(1);
+
+			Pattern pattern = Pattern.compile(
+				"^(new .+)\\s*\\[" + variableName + "\\.size\\(\\)\\]$",
+				Pattern.DOTALL);
+
+			String parameter = parameterList.get(0);
+
+			Matcher matcher2 = pattern.matcher(parameter);
+
+			if (matcher2.find()) {
+				return StringUtil.replaceFirst(
+					content, parameter, matcher2.group(1) + "[0]",
+					matcher1.start());
+			}
+
+			int x = parameter.indexOf("Array.newInstance(");
+
+			if ((x == -1) || ToolsUtil.isInsideQuotes(parameter, x)) {
+				continue;
+			}
+
+			parameterList = JavaSourceUtil.getParameterList(
+				parameter.substring(x));
+
+			if (parameterList.size() != 2) {
+				continue;
+			}
+
+			String secondParameter = parameterList.get(1);
+
+			if (secondParameter.equals(variableName + ".size()")) {
+				return StringUtil.replaceFirst(
+					content, parameter,
+					StringUtil.replaceLast(parameter, secondParameter, "0"),
+					matcher1.start());
+			}
+		}
+
+		return content;
+	}
+
 	private String _formatEmptyArray(String content) {
 		Matcher matcher = _emptyArrayPattern.matcher(content);
 
@@ -150,6 +207,8 @@ public class ArrayCheck extends BaseFileCheck {
 		Pattern.compile("\\.addAll\\(\\s*ListUtil\\.fromArray\\(");
 	private static final Pattern _arrayInitializationPattern = Pattern.compile(
 		"(\\W\\w+(\\[\\])+)(\\s+)(\\w+ =)((\\s+)new \\w+(\\[\\])+)( \\{(\n)?)");
+	private static final Pattern _collectionsToArrayPattern = Pattern.compile(
+		"(\\w+)\\.toArray\\(");
 	private static final Pattern _emptyArrayPattern = Pattern.compile(
 		"((\\[\\])+) \\{\\}");
 

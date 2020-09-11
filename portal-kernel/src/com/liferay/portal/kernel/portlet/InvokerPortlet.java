@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import javax.portlet.EventPortlet;
 import javax.portlet.HeaderPortlet;
 import javax.portlet.Portlet;
@@ -23,6 +21,8 @@ import javax.portlet.PortletConfig;
 import javax.portlet.PortletContext;
 import javax.portlet.PortletException;
 import javax.portlet.ResourceServingPortlet;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael Young
@@ -52,18 +52,6 @@ public interface InvokerPortlet
 	public boolean isFacesPortlet();
 
 	public boolean isHeaderPortlet();
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public boolean isStrutsBridgePortlet();
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public boolean isStrutsPortlet();
 
 	public void setPortletFilters() throws PortletException;
 

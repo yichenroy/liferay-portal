@@ -48,8 +48,7 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 	public void onBeforeRemove(Layout layout) throws ModelListenerException {
 		try {
 			if ((layout == null) ||
-				!LayoutStagingUtil.isBranchingLayout(layout) ||
-				!layout.isHead()) {
+				!LayoutStagingUtil.isBranchingLayout(layout)) {
 
 				return;
 			}
@@ -57,26 +56,22 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 			LayoutRevisionLocalServiceUtil.deleteLayoutLayoutRevisions(
 				layout.getPlid());
 		}
-		catch (IllegalStateException ise) {
+		catch (IllegalStateException illegalStateException) {
 
 			// This is only needed because of LayoutPersistenceTest but should
 			// never happen in a deployed environment
 
 		}
-		catch (PortalException pe) {
-			throw new ModelListenerException(pe);
+		catch (PortalException portalException) {
+			throw new ModelListenerException(portalException);
 		}
-		catch (SystemException se) {
-			throw new ModelListenerException(se);
+		catch (SystemException systemException) {
+			throw new ModelListenerException(systemException);
 		}
 	}
 
 	protected void clearCache(Layout layout) {
 		if (layout == null) {
-			return;
-		}
-
-		if (!layout.isHead()) {
 			return;
 		}
 

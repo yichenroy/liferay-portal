@@ -22,13 +22,13 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.SecureRandomUtil;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.LicenseUtil;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,31 +88,39 @@ public class DefaultLicenseManagerImpl implements LicenseManager {
 
 			byte[] serverIdBytes = LicenseUtil.getServerIdBytes();
 
-			jsonObject.put(Constants.CMD, "GET_LICENSE_STATE");
-
-			jsonObject.put("hostName", getHostName());
-			jsonObject.put("ipAddresses", StringUtil.merge(getIpAddresses()));
-			jsonObject.put("macAddresses", StringUtil.merge(getMacAddresses()));
-			jsonObject.put("productId", productId);
+			jsonObject.put(
+				Constants.CMD, "GET_LICENSE_STATE"
+			).put(
+				"hostName", getHostName()
+			).put(
+				"ipAddresses", StringUtil.merge(getIpAddresses())
+			).put(
+				"macAddresses", StringUtil.merge(getMacAddresses())
+			).put(
+				"productId", productId
+			);
 
 			String productVersion = licenseProperties.get("productVersion");
 
 			jsonObject.put("productVersion", productVersion);
 
-			UUID uuid = new UUID(
-				SecureRandomUtil.nextLong(), SecureRandomUtil.nextLong());
+			String randomUuid = String.valueOf(
+				new UUID(
+					SecureRandomUtil.nextLong(), SecureRandomUtil.nextLong()));
 
-			String randomUuid = uuid.toString();
-
-			jsonObject.put("randomUuid", randomUuid);
-
-			jsonObject.put("serverId", Arrays.toString(serverIdBytes));
+			jsonObject.put(
+				"randomUuid", randomUuid
+			).put(
+				"serverId", Arrays.toString(serverIdBytes)
+			);
 
 			String userCount = licenseProperties.get("userCount");
 
-			jsonObject.put("userCount", userCount);
-
-			jsonObject.put("version", 2);
+			jsonObject.put(
+				"userCount", userCount
+			).put(
+				"version", 2
+			);
 
 			String response = LicenseUtil.sendRequest(jsonObject.toString());
 
@@ -128,13 +136,11 @@ public class DefaultLicenseManagerImpl implements LicenseManager {
 				"randomUuid");
 
 			if (responseRandomUuid.equals(randomUuid)) {
-				int licenseState = responseJSONObject.getInt("licenseState");
-
-				return licenseState;
+				return responseJSONObject.getInt("licenseState");
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return 0;
@@ -142,11 +148,10 @@ public class DefaultLicenseManagerImpl implements LicenseManager {
 
 	@Override
 	public int getLicenseState(String productId) {
-		Map<String, String> licenseProperties = new HashMap<>();
-
-		licenseProperties.put("productId", productId);
-
-		return getLicenseState(licenseProperties);
+		return getLicenseState(
+			HashMapBuilder.put(
+				"productId", productId
+			).build());
 	}
 
 	@Override

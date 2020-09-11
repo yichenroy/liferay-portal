@@ -14,8 +14,6 @@
 
 package com.liferay.friendly.url.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -25,9 +23,10 @@ import java.util.List;
  * This class is used by SOAP remote services.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class FriendlyURLEntryLocalizationSoap implements Serializable {
 
 	public static FriendlyURLEntryLocalizationSoap toSoapModel(
@@ -37,6 +36,7 @@ public class FriendlyURLEntryLocalizationSoap implements Serializable {
 			new FriendlyURLEntryLocalizationSoap();
 
 		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setFriendlyURLEntryLocalizationId(
 			model.getFriendlyURLEntryLocalizationId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -116,6 +116,14 @@ public class FriendlyURLEntryLocalizationSoap implements Serializable {
 		_mvccVersion = mvccVersion;
 	}
 
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
+	}
+
 	public long getFriendlyURLEntryLocalizationId() {
 		return _friendlyURLEntryLocalizationId;
 	}
@@ -183,6 +191,7 @@ public class FriendlyURLEntryLocalizationSoap implements Serializable {
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _friendlyURLEntryLocalizationId;
 	private long _companyId;
 	private long _friendlyURLEntryId;

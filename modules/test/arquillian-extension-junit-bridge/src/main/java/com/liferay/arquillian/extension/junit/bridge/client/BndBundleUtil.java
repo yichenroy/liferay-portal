@@ -17,37 +17,44 @@ package com.liferay.arquillian.extension.junit.bridge.client;
 import aQute.bnd.build.Project;
 import aQute.bnd.build.ProjectBuilder;
 import aQute.bnd.build.Workspace;
-import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Jar;
 
 import com.liferay.arquillian.extension.junit.bridge.constants.Headers;
 import com.liferay.arquillian.extension.junit.bridge.server.TestBundleActivator;
-import com.liferay.petra.string.StringPool;
-import com.liferay.petra.string.StringUtil;
+import com.liferay.arquillian.extension.junit.bridge.util.StringUtil;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 import java.net.URL;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
+import java.util.regex.Pattern;
+
+import org.osgi.framework.Constants;
 
 /**
  * @author Shuyang Zhou
  */
 public class BndBundleUtil {
 
-	public static Path createBundle(
-			String className, List<String> filteredMethods, String hostAddress,
-			int port, long passCode)
+	public static byte[] createBundle(
+			Map<String, List<String>> filteredMethodNamesMap,
+			String hostAddress, int port, long passCode)
 		throws Exception {
 
 		File buildDir = new File(System.getProperty("user.dir"));
@@ -55,33 +62,74 @@ public class BndBundleUtil {
 		try (Workspace workspace = new Workspace(buildDir);
 			Project project = new Project(workspace, buildDir);
 			ProjectBuilder projectBuilder = _createProjectBuilder(
-				project, className, filteredMethods, hostAddress, port,
-				passCode);
-			Jar jar = projectBuilder.build();
-			Analyzer analyzer = new Analyzer()) {
+				project, filteredMethodNamesMap, hostAddress, port, passCode);
+			Jar jar = projectBuilder.build()) {
 
-			analyzer.setProperties(project.getProperties());
-			analyzer.setJar(jar);
+			Manifest manifest = jar.getManifest();
 
-			jar.setManifest(analyzer.calcManifest());
+			Attributes attributes = manifest.getMainAttributes();
 
-			Path path = Files.createTempFile(null, ".jar");
+			attributes.putValue(
+				"Import-Package",
+				StringUtil.merge(
+					Arrays.asList(
+						_versionPattern.split(
+							attributes.getValue("Import-Package"))),
+					","));
 
-			jar.write(path.toFile());
+			if (Boolean.valueOf(
+					System.getProperty("liferay.arquillian.copy.jar"))) {
 
-			return path;
+				String symbolicName = attributes.getValue(
+					Constants.BUNDLE_SYMBOLICNAME);
+
+				Path path = Paths.get(
+					buildDir.toString(), symbolicName.concat(".jar"));
+
+				Files.deleteIfExists(path);
+
+				Files.createFile(path);
+
+				jar.write(path.toFile());
+			}
+
+			try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+				jar.write(baos);
+
+				return baos.toByteArray();
+			}
 		}
 	}
 
 	private static ProjectBuilder _createProjectBuilder(
-			Project project, String className, List<String> filteredMethods,
+			Project project, Map<String, List<String>> filteredMethodNamesMap,
 			String hostAddress, int port, long passCode)
 		throws Exception {
 
-		project.setProperty(Headers.TEST_BRIDGE_CLASS_NAME, className);
-		project.setProperty(
-			Headers.TEST_BRIDGE_FILTERED_METHOD_NAMES,
-			StringUtil.merge(filteredMethods, StringPool.COMMA));
+		if (filteredMethodNamesMap != null) {
+			StringBuilder sb = new StringBuilder();
+
+			for (Map.Entry<String, List<String>> entry :
+					filteredMethodNamesMap.entrySet()) {
+
+				sb.append(entry.getKey());
+				sb.append(":");
+
+				for (String methodName : entry.getValue()) {
+					sb.append(methodName);
+					sb.append(",");
+				}
+
+				sb.setLength(sb.length() - 1);
+				sb.append(";");
+			}
+
+			sb.setLength(sb.length() - 1);
+
+			project.setProperty(
+				Headers.TEST_BRIDGE_FILTERED_METHOD_NAMES, sb.toString());
+		}
+
 		project.setProperty(
 			Headers.TEST_BRIDGE_REPORT_SERVER_HOST_NAME, hostAddress);
 		project.setProperty(
@@ -95,7 +143,6 @@ public class BndBundleUtil {
 
 		importPackages.add("!aQute.bnd.build");
 		importPackages.add("!aQute.bnd.osgi");
-		importPackages.add("*");
 
 		String importPackageString = project.getProperty("Import-Package");
 
@@ -103,9 +150,10 @@ public class BndBundleUtil {
 			importPackages.addAll(StringUtil.split(importPackageString));
 		}
 
+		importPackages.add("*");
+
 		project.setProperty(
-			"Import-Package",
-			StringUtil.merge(importPackages, StringPool.COMMA));
+			"Import-Package", StringUtil.merge(importPackages, ","));
 
 		Set<String> includeResources = new LinkedHashSet<>();
 
@@ -129,8 +177,7 @@ public class BndBundleUtil {
 		}
 
 		project.setProperty(
-			"-includeresource",
-			StringUtil.merge(includeResources, StringPool.COMMA));
+			"-includeresource", StringUtil.merge(includeResources, ","));
 
 		ProjectBuilder projectBuilder = new ProjectBuilder(project);
 
@@ -160,5 +207,8 @@ public class BndBundleUtil {
 
 		return classPathFiles;
 	}
+
+	private static final Pattern _versionPattern = Pattern.compile(
+		";version=\"[\\[\\]\\(\\)0-9.,]*\",");
 
 }

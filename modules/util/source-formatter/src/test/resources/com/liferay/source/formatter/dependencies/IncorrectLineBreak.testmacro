@@ -1,4 +1,5 @@
 definition {
+
 	property incorrectline.portal.release.a = "true"; 	property portal.upstream = "true";
 	property incorrectline.portal.release.b = "true";property portal.upstream = "true";
 	property correctlin.testray.main.component.name = "Smoke";
@@ -11,14 +12,25 @@ definition {
 			ProductMenu.correctLine(
 				category = "Content",
 				panel = "Site Administration",
-				portlet = "Blogs"
-			);
+				portlet = "Blogs");
 		}
 
 		property testray.component.names = "Blogs";		property testray.main.component.name = "Blogs";		property testray.main.component.name = "Blogs";
-			Navigator.openURL();ProductMenu.gotoPortlet(
-				portlet = "Blogs"
-			);
-		}
+		Navigator.openURL();ProductMenu.gotoPortlet(
+			portlet = "Blogs"
+		);
 	}
+
+	test deleteSynonymSet {
+		// Not using LexiconEntry.delete(); as a workaround for LPS-98617
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Delete",
+			rowEntry = "${synonymSet}");
+
+		AssertElementNotPresent(
+			key_synonyms = "${synonymSet}",
+			locator1 = "SearchAdmin#SYNONYMS_ENTRY");
+	}
+
 }

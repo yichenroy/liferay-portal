@@ -15,9 +15,11 @@
 package com.liferay.portal.poller;
 
 import com.liferay.petra.encryptor.Encryptor;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -34,7 +36,6 @@ import com.liferay.portal.kernel.service.BrowserTrackerLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
@@ -70,7 +71,7 @@ public class PollerRequestHandlerImpl
 
 	@Override
 	public JSONObject processRequest(
-			HttpServletRequest request, String pollerRequestString)
+			HttpServletRequest httpServletRequest, String pollerRequestString)
 		throws Exception {
 
 		if (Validator.isNull(pollerRequestString)) {
@@ -93,7 +94,7 @@ public class PollerRequestHandlerImpl
 		}
 
 		boolean receiveRequest = isReceiveRequest(
-			HttpUtil.normalizePath(request.getPathInfo()));
+			HttpUtil.normalizePath(httpServletRequest.getPathInfo()));
 
 		String pollerSessionId = getPollerSessionId(pollerHeader);
 
@@ -131,9 +132,8 @@ public class PollerRequestHandlerImpl
 
 		PollerResponse pollerResponse = (PollerResponse)messagePayload;
 
-		PollerHeader pollerHeader = pollerResponse.getPollerHeader();
-
-		String pollerSessionId = getPollerSessionId(pollerHeader);
+		String pollerSessionId = getPollerSessionId(
+			pollerResponse.getPollerHeader());
 
 		synchronized (_pollerSessions) {
 			PollerSession pollerSession = _pollerSessions.get(pollerSessionId);
@@ -213,8 +213,8 @@ public class PollerRequestHandlerImpl
 					receiveRequestPortletIds.add(portletId);
 				}
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -232,8 +232,8 @@ public class PollerRequestHandlerImpl
 
 					pollerRequests.add(pollerRequest);
 				}
-				catch (Exception e) {
-					_log.error(e, e);
+				catch (Exception exception) {
+					_log.error(exception, exception);
 				}
 			}
 		}
@@ -264,13 +264,11 @@ public class PollerRequestHandlerImpl
 			}
 		}
 
-		JSONObject pollerResponseHeaderJSONObject =
-			JSONFactoryUtil.createJSONObject();
-
-		pollerResponseHeaderJSONObject.put("suspendPolling", suspendPolling);
-		pollerResponseHeaderJSONObject.put("userId", pollerHeader.getUserId());
-
-		return pollerResponseHeaderJSONObject;
+		return JSONUtil.put(
+			"suspendPolling", suspendPolling
+		).put(
+			"userId", pollerHeader.getUserId()
+		);
 	}
 
 	protected void executePollerRequests(
@@ -338,11 +336,11 @@ public class PollerRequestHandlerImpl
 			userId = GetterUtil.getLong(
 				Encryptor.decrypt(company.getKeyObj(), userIdString));
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				StringBundler.concat(
-					"Invalid credentials for company id ",
-					String.valueOf(companyId), " and user id ", userIdString));
+					"Invalid credentials for company id ", companyId,
+					" and user id ", userIdString));
 		}
 
 		return userId;

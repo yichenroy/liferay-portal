@@ -16,7 +16,7 @@ package com.liferay.journal.web.internal.portlet.action;
 
 import com.liferay.journal.configuration.JournalGroupServiceConfiguration;
 import com.liferay.journal.constants.JournalPortletKeys;
-import com.liferay.journal.web.configuration.JournalWebConfiguration;
+import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.journal.web.internal.display.context.util.JournalWebRequestHelper;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -48,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eduardo García
  */
 @Component(
-	configurationPid = "com.liferay.journal.web.configuration.JournalWebConfiguration",
+	configurationPid = "com.liferay.journal.web.internal.configuration.JournalWebConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = ConfigurationAction.class
@@ -57,20 +57,20 @@ public class JournalConfigurationAction
 	extends BaseJSPSettingsConfigurationAction {
 
 	@Override
-	public String getJspPath(HttpServletRequest request) {
+	public String getJspPath(HttpServletRequest httpServletRequest) {
 		return "/configuration.jsp";
 	}
 
 	@Override
 	public void include(
-			PortletConfig portletConfig, HttpServletRequest request,
-			HttpServletResponse response)
+			PortletConfig portletConfig, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			JournalWebConfiguration.class.getName(), _journalWebConfiguration);
 
-		super.include(portletConfig, request, response);
+		super.include(portletConfig, httpServletRequest, httpServletResponse);
 	}
 
 	@Override
@@ -81,11 +81,9 @@ public class JournalConfigurationAction
 		ModifiableSettings modifiableSettings =
 			settings.getModifiableSettings();
 
-		HttpServletRequest request = _portal.getHttpServletRequest(
-			portletRequest);
-
 		JournalWebRequestHelper journalWebRequestHelper =
-			new JournalWebRequestHelper(request);
+			new JournalWebRequestHelper(
+				_portal.getHttpServletRequest(portletRequest));
 
 		JournalGroupServiceConfiguration journalGroupServiceConfiguration =
 			journalWebRequestHelper.getJournalGroupServiceConfiguration();

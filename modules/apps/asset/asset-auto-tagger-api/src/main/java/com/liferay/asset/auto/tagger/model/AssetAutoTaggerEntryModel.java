@@ -14,12 +14,14 @@
 
 package com.liferay.asset.auto.tagger.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the AssetAutoTaggerEntry service. Represents a row in the &quot;AssetAutoTaggerEntry&quot; database table, with each column mapped to a property of this class.
@@ -34,7 +36,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface AssetAutoTaggerEntryModel
-	extends BaseModel<AssetAutoTaggerEntry>, ShardedModel {
+	extends BaseModel<AssetAutoTaggerEntry>, CTModel<AssetAutoTaggerEntry>,
+			MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -47,6 +50,7 @@ public interface AssetAutoTaggerEntryModel
 	 *
 	 * @return the primary key of this asset auto tagger entry
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -54,7 +58,40 @@ public interface AssetAutoTaggerEntryModel
 	 *
 	 * @param primaryKey the primary key of this asset auto tagger entry
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this asset auto tagger entry.
+	 *
+	 * @return the mvcc version of this asset auto tagger entry
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this asset auto tagger entry.
+	 *
+	 * @param mvccVersion the mvcc version of this asset auto tagger entry
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this asset auto tagger entry.
+	 *
+	 * @return the ct collection ID of this asset auto tagger entry
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this asset auto tagger entry.
+	 *
+	 * @param ctCollectionId the ct collection ID of this asset auto tagger entry
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the asset auto tagger entry ID of this asset auto tagger entry.

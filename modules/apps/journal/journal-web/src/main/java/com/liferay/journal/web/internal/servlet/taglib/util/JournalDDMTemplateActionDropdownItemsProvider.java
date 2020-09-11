@@ -16,7 +16,7 @@ package com.liferay.journal.web.internal.servlet.taglib.util;
 
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.journal.web.internal.security.permission.resource.DDMTemplatePermission;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
@@ -50,28 +50,24 @@ public class JournalDDMTemplateActionDropdownItemsProvider {
 		_ddmTemplate = ddmTemplate;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<DropdownItem> getActionDropdownItems() throws Exception {
-		return new DropdownItemList() {
-			{
-				if (DDMTemplatePermission.contains(
-						_themeDisplay.getPermissionChecker(), _ddmTemplate,
-						ActionKeys.UPDATE)) {
-
-					add(_getEditDDMTemplateActionUnsafeConsumer());
-				}
-
-				if (DDMTemplatePermission.contains(
-						_themeDisplay.getPermissionChecker(), _ddmTemplate,
-						ActionKeys.PERMISSIONS)) {
-
-					add(_getPermissionsDDMTemplateActionUnsafeConsumer());
-				}
-
+		return DropdownItemListBuilder.add(
+			() -> DDMTemplatePermission.contains(
+				_themeDisplay.getPermissionChecker(), _ddmTemplate,
+				ActionKeys.UPDATE),
+			_getEditDDMTemplateActionUnsafeConsumer()
+		).add(
+			() -> DDMTemplatePermission.contains(
+				_themeDisplay.getPermissionChecker(), _ddmTemplate,
+				ActionKeys.PERMISSIONS),
+			_getPermissionsDDMTemplateActionUnsafeConsumer()
+		).add(
+			() -> {
 				Group scopeGroup = _themeDisplay.getScopeGroup();
 
 				if ((!scopeGroup.hasLocalOrRemoteStagingGroup() ||
@@ -82,17 +78,18 @@ public class JournalDDMTemplateActionDropdownItemsProvider {
 						_ddmTemplate.getClassNameId(),
 						_ddmTemplate.getResourceClassNameId())) {
 
-					add(_getCopyDDMTemplateActionUnsafeConsumer());
+					return true;
 				}
 
-				if (DDMTemplatePermission.contains(
-						_themeDisplay.getPermissionChecker(), _ddmTemplate,
-						ActionKeys.DELETE)) {
-
-					add(_getDeleteDDMTemplateActionUnsafeConsumer());
-				}
-			}
-		};
+				return false;
+			},
+			_getCopyDDMTemplateActionUnsafeConsumer()
+		).add(
+			() -> DDMTemplatePermission.contains(
+				_themeDisplay.getPermissionChecker(), _ddmTemplate,
+				ActionKeys.DELETE),
+			_getDeleteDDMTemplateActionUnsafeConsumer()
+		).build();
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
@@ -104,7 +101,8 @@ public class JournalDDMTemplateActionDropdownItemsProvider {
 				"/copy_ddm_template.jsp", "redirect",
 				_themeDisplay.getURLCurrent(), "ddmTemplateId",
 				_ddmTemplate.getTemplateId());
-			dropdownItem.setLabel(LanguageUtil.get(_request, "copy"));
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "copy"));
 		};
 	}
 
@@ -125,7 +123,8 @@ public class JournalDDMTemplateActionDropdownItemsProvider {
 			dropdownItem.putData("action", "deleteDDMTemplate");
 			dropdownItem.putData(
 				"deleteDDMTemplateURL", deleteDDMTemplateURL.toString());
-			dropdownItem.setLabel(LanguageUtil.get(_request, "delete"));
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "delete"));
 		};
 	}
 
@@ -138,7 +137,8 @@ public class JournalDDMTemplateActionDropdownItemsProvider {
 				"/edit_ddm_template.jsp", "redirect",
 				_themeDisplay.getURLCurrent(), "ddmTemplateId",
 				_ddmTemplate.getTemplateId());
-			dropdownItem.setLabel(LanguageUtil.get(_request, "edit"));
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "edit"));
 		};
 	}
 
@@ -152,19 +152,20 @@ public class JournalDDMTemplateActionDropdownItemsProvider {
 				_ddmTemplate.getResourceClassNameId()),
 			_ddmTemplate.getName(_themeDisplay.getLocale()), null,
 			String.valueOf(_ddmTemplate.getTemplateId()),
-			LiferayWindowState.POP_UP.toString(), null, _request);
+			LiferayWindowState.POP_UP.toString(), null, _httpServletRequest);
 
 		return dropdownItem -> {
 			dropdownItem.putData("action", "permissionsDDMTemplate");
 			dropdownItem.putData(
 				"permissionsDDMTemplateURL", permissionsDDMTemplateURL);
-			dropdownItem.setLabel(LanguageUtil.get(_request, "permissions"));
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "permissions"));
 		};
 	}
 
 	private final DDMTemplate _ddmTemplate;
+	private final HttpServletRequest _httpServletRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final ThemeDisplay _themeDisplay;
 
 }

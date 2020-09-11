@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -35,22 +33,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class OrganizationCacheModel
 	implements CacheModel<Organization>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof OrganizationCacheModel)) {
+		if (!(object instanceof OrganizationCacheModel)) {
 			return false;
 		}
 
 		OrganizationCacheModel organizationCacheModel =
-			(OrganizationCacheModel)obj;
+			(OrganizationCacheModel)object;
 
 		if ((organizationId == organizationCacheModel.organizationId) &&
 			(mvccVersion == organizationCacheModel.mvccVersion)) {
@@ -80,10 +77,12 @@ public class OrganizationCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(39);
+		StringBundler sb = new StringBundler(41);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", externalReferenceCode=");
@@ -130,6 +129,7 @@ public class OrganizationCacheModel
 		OrganizationImpl organizationImpl = new OrganizationImpl();
 
 		organizationImpl.setMvccVersion(mvccVersion);
+		organizationImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			organizationImpl.setUuid("");
@@ -215,6 +215,8 @@ public class OrganizationCacheModel
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 		externalReferenceCode = objectInput.readUTF();
 
@@ -247,6 +249,8 @@ public class OrganizationCacheModel
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -320,6 +324,7 @@ public class OrganizationCacheModel
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public String externalReferenceCode;
 	public long organizationId;

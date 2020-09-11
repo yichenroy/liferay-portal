@@ -35,9 +35,11 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.InputStream;
 
@@ -74,6 +76,9 @@ public class UpdateOAuth2ApplicationMVCActionCommand
 	public boolean processAction(
 		ActionRequest request, ActionResponse response) {
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		long oAuth2ApplicationId = ParamUtil.getLong(
 			request, "oAuth2ApplicationId");
 
@@ -85,9 +90,9 @@ public class UpdateOAuth2ApplicationMVCActionCommand
 
 		OAuth2AdminPortletDisplayContext oAuth2AdminPortletDisplayContext =
 			new OAuth2AdminPortletDisplayContext(
-				_oAuth2ApplicationService,
-				_oAuth2ApplicationScopeAliasesLocalService,
-				_oAuth2ProviderConfiguration, request, null, _dlurlHelper);
+				_dlurlHelper, _oAuth2ApplicationScopeAliasesLocalService,
+				_oAuth2ApplicationService, _oAuth2ProviderConfiguration,
+				request, null);
 
 		String[] oAuth2Features =
 			oAuth2AdminPortletDisplayContext.getOAuth2Features(
@@ -96,7 +101,7 @@ public class UpdateOAuth2ApplicationMVCActionCommand
 		List<String> featuresList = new ArrayList<>();
 
 		for (String feature : oAuth2Features) {
-			if (ParamUtil.getBoolean(request, "feature-" + feature, false)) {
+			if (ParamUtil.getBoolean(request, "feature-" + feature)) {
 				featuresList.add(feature);
 			}
 		}
@@ -129,6 +134,8 @@ public class UpdateOAuth2ApplicationMVCActionCommand
 			StringUtil.splitLines(
 				ParamUtil.get(request, "redirectURIs", StringPool.BLANK)));
 		List<String> scopeAliasesList = Collections.emptyList();
+		long clientCredentialUserId = ParamUtil.get(
+			request, "clientCredentialUserId", themeDisplay.getUserId());
 
 		try {
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
@@ -148,10 +155,10 @@ public class UpdateOAuth2ApplicationMVCActionCommand
 
 				OAuth2Application oAuth2Application =
 					_oAuth2ApplicationService.addOAuth2Application(
-						allowedGrantTypesList, clientId, clientProfile.id(),
-						clientSecret, description, featuresList, homePageURL, 0,
-						name, privacyPolicyURL, redirectURIsList,
-						scopeAliasesList, serviceContext);
+						allowedGrantTypesList, clientCredentialUserId, clientId,
+						clientProfile.id(), clientSecret, description,
+						featuresList, homePageURL, 0, name, privacyPolicyURL,
+						redirectURIsList, scopeAliasesList, serviceContext);
 
 				response.setRenderParameter(
 					"oAuth2ApplicationId",
@@ -162,15 +169,13 @@ public class UpdateOAuth2ApplicationMVCActionCommand
 					_oAuth2ApplicationService.getOAuth2Application(
 						oAuth2ApplicationId);
 
-				long iconFileEntryId = oAuth2Application.getIconFileEntryId();
-				long oAuth2ApplicationScopeAliasesId =
-					oAuth2Application.getOAuth2ApplicationScopeAliasesId();
-
 				_oAuth2ApplicationService.updateOAuth2Application(
-					oAuth2ApplicationId, allowedGrantTypesList, clientId,
-					clientProfile.id(), clientSecret, description, featuresList,
-					homePageURL, iconFileEntryId, name, privacyPolicyURL,
-					redirectURIsList, oAuth2ApplicationScopeAliasesId,
+					oAuth2ApplicationId, allowedGrantTypesList,
+					clientCredentialUserId, clientId, clientProfile.id(),
+					clientSecret, description, featuresList, homePageURL,
+					oAuth2Application.getIconFileEntryId(), name,
+					privacyPolicyURL, redirectURIsList,
+					oAuth2Application.getOAuth2ApplicationScopeAliasesId(),
 					serviceContext);
 
 				long fileEntryId = ParamUtil.getLong(request, "fileEntryId");
@@ -192,14 +197,14 @@ public class UpdateOAuth2ApplicationMVCActionCommand
 				}
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
-			Class<?> peClass = pe.getClass();
+			Class<?> peClass = portalException.getClass();
 
-			SessionErrors.add(request, peClass.getName(), pe);
+			SessionErrors.add(request, peClass.getName(), portalException);
 		}
 
 		String backURL = ParamUtil.get(request, "backURL", StringPool.BLANK);

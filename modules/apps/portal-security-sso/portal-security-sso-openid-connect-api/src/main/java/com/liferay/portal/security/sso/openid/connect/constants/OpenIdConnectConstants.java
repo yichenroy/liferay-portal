@@ -14,12 +14,9 @@
 
 package com.liferay.portal.security.sso.openid.connect.constants;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class OpenIdConnectConstants {
 
 	public static final String REDIRECT_URL_PATTERN =

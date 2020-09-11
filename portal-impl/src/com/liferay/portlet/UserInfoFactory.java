@@ -38,21 +38,20 @@ import javax.servlet.http.HttpServletRequest;
 public class UserInfoFactory {
 
 	public static LinkedHashMap<String, String> getUserInfo(
-		HttpServletRequest request, Portlet portlet) {
+		HttpServletRequest httpServletRequest, Portlet portlet) {
 
-		if (request.getRemoteUser() == null) {
+		if (httpServletRequest.getRemoteUser() == null) {
 			return null;
 		}
 
 		LinkedHashMap<String, String> userInfo = new LinkedHashMap<>();
 
 		try {
-			User user = PortalUtil.getUser(request);
-
-			userInfo = getUserInfo(user, userInfo, portlet);
+			userInfo = getUserInfo(
+				PortalUtil.getUser(httpServletRequest), userInfo, portlet);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return userInfo;
@@ -72,8 +71,8 @@ public class UserInfoFactory {
 
 			userInfo = getUserInfo(user, userInfo, portlet);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return userInfo;
@@ -114,8 +113,8 @@ public class UserInfoFactory {
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		Map<String, String> unmodifiableUserInfo = Collections.unmodifiableMap(
@@ -186,8 +185,8 @@ public class UserInfoFactory {
 		try {
 			return (CustomUserAttributes)InstanceFactory.newInstance(className);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return null;

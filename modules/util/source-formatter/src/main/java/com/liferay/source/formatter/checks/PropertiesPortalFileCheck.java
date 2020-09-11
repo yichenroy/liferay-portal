@@ -15,6 +15,7 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
@@ -24,6 +25,8 @@ import com.liferay.source.formatter.PropertiesSourceProcessor;
 import java.io.IOException;
 
 import java.net.URL;
+
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
@@ -38,21 +41,24 @@ public class PropertiesPortalFileCheck extends BaseFileCheck {
 		throws IOException {
 
 		if (((isPortalSource() || isSubrepository()) &&
-			 fileName.matches(".*portal-legacy-.*\\.properties")) ||
+			 fileName.matches(".*/portal(-[^-/]+)*\\.properties")) ||
 			(!isPortalSource() && !isSubrepository() &&
 			 fileName.endsWith("portal.properties"))) {
 
-			_checkPortalProperties(fileName, content);
+			_checkPortalProperties(fileName, absolutePath, content);
+
+			content = _formatPortalProperties(absolutePath, content);
 		}
 
 		return content;
 	}
 
-	private void _checkPortalProperties(String fileName, String content)
+	private void _checkPortalProperties(
+			String fileName, String absolutePath, String content)
 		throws IOException {
 
 		String portalPortalPropertiesContent =
-			_getPortalPortalPropertiesContent();
+			_getPortalPortalPropertiesContent(absolutePath);
 
 		try (UnsyncBufferedReader unsyncBufferedReader =
 				new UnsyncBufferedReader(new UnsyncStringReader(content))) {
@@ -65,6 +71,10 @@ public class PropertiesPortalFileCheck extends BaseFileCheck {
 
 			while ((line = unsyncBufferedReader.readLine()) != null) {
 				lineNumber++;
+
+				if (line.matches(" *#.*")) {
+					continue;
+				}
 
 				int pos = line.indexOf(CharPool.EQUAL);
 
@@ -93,7 +103,52 @@ public class PropertiesPortalFileCheck extends BaseFileCheck {
 		}
 	}
 
-	private synchronized String _getPortalPortalPropertiesContent()
+	private String _formatPortalProperties(String absolutePath, String content)
+		throws IOException {
+
+		List<String> allowedSingleLinePropertyKeys = getAttributeValues(
+			_ALLOWED_SINGLE_LINE_PROPERTY_KEYS, absolutePath);
+
+		StringBundler sb = new StringBundler();
+
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(content))) {
+
+			String line = null;
+
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				if (line.matches(
+						StringPool.FOUR_SPACES +
+							"[^# ]+?=[^,]+(,[^ ][^,]+)+")) {
+
+					String propertyKey = StringUtil.extractFirst(
+						StringUtil.trimLeading(line), "=");
+
+					if (!propertyKey.contains("regex") &&
+						!allowedSingleLinePropertyKeys.contains(propertyKey)) {
+
+						line = line.replaceFirst("=", "=\\\\\n        ");
+
+						line = line.replaceAll(",", ",\\\\\n        ");
+					}
+				}
+
+				sb.append(line);
+				sb.append("\n");
+			}
+		}
+
+		content = sb.toString();
+
+		if (content.endsWith("\n")) {
+			content = content.substring(0, content.length() - 1);
+		}
+
+		return content;
+	}
+
+	private synchronized String _getPortalPortalPropertiesContent(
+			String absolutePath)
 		throws IOException {
 
 		if (_portalPortalPropertiesContent != null) {
@@ -102,7 +157,7 @@ public class PropertiesPortalFileCheck extends BaseFileCheck {
 
 		if (isPortalSource() || isSubrepository()) {
 			_portalPortalPropertiesContent = getPortalContent(
-				"portal-impl/src/portal.properties");
+				"portal-impl/src/portal.properties", absolutePath);
 
 			if (_portalPortalPropertiesContent == null) {
 				_portalPortalPropertiesContent = StringPool.BLANK;
@@ -125,6 +180,9 @@ public class PropertiesPortalFileCheck extends BaseFileCheck {
 
 		return _portalPortalPropertiesContent;
 	}
+
+	private static final String _ALLOWED_SINGLE_LINE_PROPERTY_KEYS =
+		"allowedSingleLinePropertyKeys";
 
 	private String _portalPortalPropertiesContent;
 

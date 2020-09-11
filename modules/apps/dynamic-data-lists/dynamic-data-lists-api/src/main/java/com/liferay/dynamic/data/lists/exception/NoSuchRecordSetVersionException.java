@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.lists.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchRecordSetVersionException extends NoSuchModelException {
 
 	public NoSuchRecordSetVersionException() {
@@ -31,12 +28,12 @@ public class NoSuchRecordSetVersionException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchRecordSetVersionException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchRecordSetVersionException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchRecordSetVersionException(Throwable cause) {
-		super(cause);
+	public NoSuchRecordSetVersionException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

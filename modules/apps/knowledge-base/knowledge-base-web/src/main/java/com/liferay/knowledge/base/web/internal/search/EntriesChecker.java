@@ -62,14 +62,14 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public String getAllRowsCheckBox(HttpServletRequest request) {
+	public String getAllRowsCheckBox(HttpServletRequest httpServletRequest) {
 		return null;
 	}
 
 	@Override
 	public String getRowCheckBox(
-		HttpServletRequest request, boolean checked, boolean disabled,
-		String primaryKey) {
+		HttpServletRequest httpServletRequest, boolean checked,
+		boolean disabled, String primaryKey) {
 
 		KBArticle kbArticle = null;
 		KBFolder kbFolder = null;
@@ -80,12 +80,12 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 			kbArticle = KBArticleServiceUtil.getLatestKBArticle(
 				entryId, WorkflowConstants.STATUS_ANY);
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchArticleException) {
+		catch (Exception exception1) {
+			if (exception1 instanceof NoSuchArticleException) {
 				try {
 					kbFolder = KBFolderServiceUtil.getKBFolder(entryId);
 				}
-				catch (Exception e1) {
+				catch (Exception exception2) {
 					return StringPool.BLANK;
 				}
 			}
@@ -108,7 +108,7 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 					showInput = true;
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 		else {
@@ -121,7 +121,7 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 					showInput = true;
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -135,7 +135,7 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 			_liferayPortletResponse.getNamespace() + "toggleActionsButton();";
 
 		return getRowCheckBox(
-			request, checked, disabled,
+			httpServletRequest, checked, disabled,
 			_liferayPortletResponse.getNamespace() + RowChecker.ROW_IDS + name,
 			primaryKey, checkBoxRowIds, checkBoxAllRowIds, checkBoxPostOnClick);
 	}

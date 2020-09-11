@@ -29,19 +29,19 @@ else {
 	backURL.setParameter("app", app);
 }
 
-ViewModuleManagementToolbarDisplayContext viewModuleManagementToolbarDisplayContext = new ViewModuleManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request);
+ViewModuleManagementToolbarDisplayContext viewModuleManagementToolbarDisplayContext = new ViewModuleManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 
 AppDisplay appDisplay = viewModuleManagementToolbarDisplayContext.getAppDisplay();
 Bundle bundle = viewModuleManagementToolbarDisplayContext.getBundle();
 String pluginType = viewModuleManagementToolbarDisplayContext.getPluginType();
-SearchContainer searchContainer = viewModuleManagementToolbarDisplayContext.getSearchContainer();
+SearchContainer<Object> searchContainer = viewModuleManagementToolbarDisplayContext.getSearchContainer();
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(backURL.toString());
 
 Dictionary<String, String> headers = bundle.getHeaders(StringPool.BLANK);
 
-String bundleName = GetterUtil.getString(headers.get(BundleConstants.BUNDLE_NAME));
+String bundleName = GetterUtil.getString(headers.get(Constants.BUNDLE_NAME));
 
 renderResponse.setTitle(bundleName);
 
@@ -60,7 +60,6 @@ else {
 %>
 
 <clay:navigation-bar
-	inverted="<%= true %>"
 	navigationItems="<%= appManagerDisplayContext.getModuleNavigationItems() %>"
 />
 
@@ -74,7 +73,7 @@ else {
 	sortingURL="<%= viewModuleManagementToolbarDisplayContext.getSortingURL() %>"
 />
 
-<div class="container-fluid container-fluid-max-xl">
+<clay:container-fluid>
 	<liferay-ui:breadcrumb
 		showCurrentGroup="<%= false %>"
 		showGuestGroup="<%= false %>"
@@ -147,4 +146,4 @@ else {
 			markupView="lexicon"
 		/>
 	</liferay-ui:search-container>
-</div>
+</clay:container-fluid>

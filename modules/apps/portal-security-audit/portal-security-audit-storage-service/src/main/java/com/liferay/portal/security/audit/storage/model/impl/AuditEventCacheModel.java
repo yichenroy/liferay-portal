@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.audit.storage.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -34,21 +32,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class AuditEventCacheModel
 	implements CacheModel<AuditEvent>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AuditEventCacheModel)) {
+		if (!(object instanceof AuditEventCacheModel)) {
 			return false;
 		}
 
-		AuditEventCacheModel auditEventCacheModel = (AuditEventCacheModel)obj;
+		AuditEventCacheModel auditEventCacheModel =
+			(AuditEventCacheModel)object;
 
 		if (auditEventId == auditEventCacheModel.auditEventId) {
 			return true;
@@ -194,7 +192,9 @@ public class AuditEventCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		auditEventId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
@@ -212,7 +212,7 @@ public class AuditEventCacheModel
 
 		serverPort = objectInput.readInt();
 		sessionID = objectInput.readUTF();
-		additionalInfo = objectInput.readUTF();
+		additionalInfo = (String)objectInput.readObject();
 	}
 
 	@Override
@@ -291,10 +291,10 @@ public class AuditEventCacheModel
 		}
 
 		if (additionalInfo == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(additionalInfo);
+			objectOutput.writeObject(additionalInfo);
 		}
 	}
 

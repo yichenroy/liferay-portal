@@ -14,14 +14,11 @@
 
 package com.liferay.digital.signature.internal.model.field;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.digital.signature.model.field.SocialSecurityNumberDSField;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class SocialSecurityNumberDSFieldImpl
 	extends UserEntryDSFieldImpl<SocialSecurityNumberDSField>
 	implements SocialSecurityNumberDSField {

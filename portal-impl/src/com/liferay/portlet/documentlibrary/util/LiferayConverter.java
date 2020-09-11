@@ -14,12 +14,12 @@
 
 package com.liferay.portlet.documentlibrary.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.image.ImageToolImpl;
 import com.liferay.portal.kernel.image.ImageTool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import com.xuggle.ferry.RefCounted;
 import com.xuggle.xuggler.Global;
@@ -110,16 +110,16 @@ public abstract class LiferayConverter {
 	}
 
 	protected int countNonKeyAfterKey(
-		IPacket inputIPacket, Boolean keyPacketFound, int nonKeyAfterKeyCount) {
+		IPacket inputIPacket, Boolean keyPacketFound, int nonkeyAfterKeyCount) {
 
 		if (inputIPacket.isKey()) {
-			nonKeyAfterKeyCount = 0;
+			nonkeyAfterKeyCount = 0;
 		}
 		else if (keyPacketFound) {
-			nonKeyAfterKeyCount++;
+			nonkeyAfterKeyCount++;
 		}
 
-		return nonKeyAfterKeyCount;
+		return nonkeyAfterKeyCount;
 	}
 
 	protected IAudioResampler createIAudioResampler(
@@ -279,8 +279,6 @@ public abstract class LiferayConverter {
 			}
 
 			if (thumbnailFile != null) {
-				BufferedImage bufferedImage = null;
-
 				if (_converterFactoryType == null) {
 					_converterFactoryType =
 						ConverterFactory.findRegisteredConverter(
@@ -299,7 +297,8 @@ public abstract class LiferayConverter {
 						inputIVideoPicture);
 				}
 
-				bufferedImage = _videoIConverter.toImage(inputIVideoPicture);
+				BufferedImage bufferedImage = _videoIConverter.toImage(
+					inputIVideoPicture);
 
 				thumbnailFile.createNewFile();
 
@@ -488,10 +487,10 @@ public abstract class LiferayConverter {
 
 		ICodec.ID iCodecID = outputICodec.getID();
 
-		if (iCodecID.equals(ICodec.ID.CODEC_ID_VORBIS)) {
-			if (originalBitRate < 64000) {
-				return 64000;
-			}
+		if (iCodecID.equals(ICodec.ID.CODEC_ID_VORBIS) &&
+			(originalBitRate < 64000)) {
+
+			return 64000;
 		}
 
 		return originalBitRate;
@@ -529,7 +528,7 @@ public abstract class LiferayConverter {
 			_log.info(
 				StringBundler.concat(
 					"Default ", prettyPropertyName, " for ", container,
-					" configured to ", String.valueOf(property)));
+					" configured to ", property));
 		}
 
 		return property;
@@ -597,7 +596,7 @@ public abstract class LiferayConverter {
 
 	protected boolean isStartDecoding(
 		IPacket inputIPacket, IStreamCoder inputIStreamCoder,
-		boolean keyPacketFound, int nonKeyAfterKeyCount,
+		boolean keyPacketFound, int nonkeyAfterKeyCount,
 		boolean onlyDecodeKeyPackets) {
 
 		if (onlyDecodeKeyPackets && !inputIPacket.isKey()) {
@@ -612,7 +611,7 @@ public abstract class LiferayConverter {
 		else if (iCodecID.equals(ICodec.ID.CODEC_ID_MPEG2VIDEO) ||
 				 iCodecID.equals(ICodec.ID.CODEC_ID_THEORA)) {
 
-			if (nonKeyAfterKeyCount != 1) {
+			if (nonkeyAfterKeyCount != 1) {
 				return true;
 			}
 
@@ -681,8 +680,8 @@ public abstract class LiferayConverter {
 		if (iCodec == null) {
 			throw new RuntimeException(
 				StringBundler.concat(
-					"Unable to determine ", String.valueOf(inputICodecType),
-					" encoder for ", outputURL));
+					"Unable to determine ", inputICodecType, " encoder for ",
+					outputURL));
 		}
 
 		IStream outputIStream = outputIContainer.addNewStream(iCodec);
@@ -770,9 +769,10 @@ public abstract class LiferayConverter {
 			return inputIVideoPicture;
 		}
 
-		if (iVideoResampler.resample(
-				resampledIVideoPicture, inputIVideoPicture) < 0) {
+		int result = iVideoResampler.resample(
+			resampledIVideoPicture, inputIVideoPicture);
 
+		if (result < 0) {
 			throw new RuntimeException("Unable to resample video");
 		}
 

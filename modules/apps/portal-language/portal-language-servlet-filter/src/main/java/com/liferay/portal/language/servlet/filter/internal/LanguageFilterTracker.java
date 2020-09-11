@@ -17,13 +17,12 @@ package com.liferay.portal.language.servlet.filter.internal;
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
-import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
@@ -100,15 +99,6 @@ public class LanguageFilterTracker {
 			return portalResourceBundleLoader.loadResourceBundle(locale);
 		}
 
-		/**
-		 * @deprecated As of Judson (7.1.x), replaced by {@link
-		 *             #loadResourceBundle(Locale)}
-		 */
-		@Deprecated
-		public ResourceBundle loadResourceBundle(String languageId) {
-			return loadResourceBundle(LocaleUtil.fromLanguageId(languageId));
-		}
-
 		private final ServiceTracker<ResourceBundleLoader, ResourceBundleLoader>
 			_serviceTracker;
 
@@ -166,16 +156,15 @@ public class LanguageFilterTracker {
 				filterSB.append(")");
 			}
 
-			Map<String, Object> properties = new HashMap<>();
-
-			properties.put("service.ranking", Integer.MIN_VALUE);
-
-			properties.put("servlet.context.name", contextName);
-
 			return ServiceTrackerFactory.open(
 				bundle.getBundleContext(), filterSB.toString(),
 				new ResourceBundleLoaderServiceTrackerCustomizer(
-					properties, filterSB.toString(), contextName));
+					HashMapBuilder.<String, Object>put(
+						"service.ranking", Integer.MIN_VALUE
+					).put(
+						"servlet.context.name", contextName
+					).build(),
+					filterSB.toString(), contextName));
 		}
 
 		@Override

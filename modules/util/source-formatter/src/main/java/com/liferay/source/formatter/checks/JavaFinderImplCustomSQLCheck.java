@@ -37,7 +37,7 @@ import org.dom4j.Element;
 public class JavaFinderImplCustomSQLCheck extends BaseJavaTermCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -56,7 +56,7 @@ public class JavaFinderImplCustomSQLCheck extends BaseJavaTermCheck {
 		}
 
 		Document customSQLDocument = getCustomSQLDocument(
-			fileName, absolutePath, getPortalCustomSQLDocument());
+			fileName, absolutePath, getPortalCustomSQLDocument(absolutePath));
 		String finderName = className.substring(0, className.length() - 4);
 
 		List<JavaTerm> childJavaTerms = javaClass.getChildJavaTerms();

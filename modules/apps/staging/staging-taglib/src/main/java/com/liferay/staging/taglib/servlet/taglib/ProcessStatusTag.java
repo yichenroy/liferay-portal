@@ -14,8 +14,6 @@
 
 package com.liferay.staging.taglib.servlet.taglib;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.staging.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.taglib.util.IncludeTag;
 
@@ -25,7 +23,6 @@ import javax.servlet.jsp.PageContext;
 /**
  * @author Péter Borkuti
  */
-@ProviderType
 public class ProcessStatusTag extends IncludeTag {
 
 	public int getBackgroundTaskStatus() {
@@ -65,11 +62,11 @@ public class ProcessStatusTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-staging:process-status:backgroundTaskStatus",
 			_backgroundTaskStatus);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-staging:process-status:backgroundTaskStatusLabel",
 			_backgroundTaskStatusLabel);
 	}

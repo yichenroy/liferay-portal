@@ -15,8 +15,8 @@
 package com.liferay.social.kernel.model;
 
 import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.Serializable;
 
@@ -67,17 +67,17 @@ public class SocialActivityDefinition implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof SocialActivityDefinition)) {
+		if (!(object instanceof SocialActivityDefinition)) {
 			return false;
 		}
 
 		SocialActivityDefinition activityDefinition =
-			(SocialActivityDefinition)obj;
+			(SocialActivityDefinition)object;
 
 		if ((activityDefinition != null) &&
 			Objects.equals(

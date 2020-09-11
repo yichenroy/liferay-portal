@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.stats;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.stats.StatsResponse;
 
 import java.io.Serializable;
@@ -23,7 +21,6 @@ import java.io.Serializable;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class StatsResponseImpl implements Serializable, StatsResponse {
 
 	public StatsResponseImpl(

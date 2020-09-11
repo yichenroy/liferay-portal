@@ -14,15 +14,19 @@
 
 package com.liferay.headless.admin.workflow.client.serdes.v1_0;
 
+import com.liferay.headless.admin.workflow.client.dto.v1_0.Role;
 import com.liferay.headless.admin.workflow.client.dto.v1_0.WorkflowTask;
 import com.liferay.headless.admin.workflow.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -59,28 +63,58 @@ public class WorkflowTaskSerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (workflowTask.getAssigneePerson() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assigneePerson\": ");
+
+			sb.append(String.valueOf(workflowTask.getAssigneePerson()));
+		}
+
+		if (workflowTask.getAssigneeRoles() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assigneeRoles\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < workflowTask.getAssigneeRoles().length; i++) {
+				sb.append(String.valueOf(workflowTask.getAssigneeRoles()[i]));
+
+				if ((i + 1) < workflowTask.getAssigneeRoles().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (workflowTask.getCompleted() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"completed\":");
+			sb.append("\"completed\": ");
 
 			sb.append(workflowTask.getCompleted());
 		}
 
-		if (workflowTask.getDateCompleted() != null) {
+		if (workflowTask.getDateCompletion() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCompleted\":");
+			sb.append("\"dateCompletion\": ");
 
 			sb.append("\"");
 
 			sb.append(
 				liferayToJSONDateFormat.format(
-					workflowTask.getDateCompleted()));
+					workflowTask.getDateCompletion()));
 
 			sb.append("\"");
 		}
@@ -90,7 +124,7 @@ public class WorkflowTaskSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -100,16 +134,17 @@ public class WorkflowTaskSerDes {
 			sb.append("\"");
 		}
 
-		if (workflowTask.getDefinitionName() != null) {
+		if (workflowTask.getDateDue() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"definitionName\":");
+			sb.append("\"dateDue\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(workflowTask.getDefinitionName()));
+			sb.append(
+				liferayToJSONDateFormat.format(workflowTask.getDateDue()));
 
 			sb.append("\"");
 		}
@@ -119,26 +154,11 @@ public class WorkflowTaskSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"description\":");
+			sb.append("\"description\": ");
 
 			sb.append("\"");
 
 			sb.append(_escape(workflowTask.getDescription()));
-
-			sb.append("\"");
-		}
-
-		if (workflowTask.getDueDate() != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"dueDate\":");
-
-			sb.append("\"");
-
-			sb.append(
-				liferayToJSONDateFormat.format(workflowTask.getDueDate()));
 
 			sb.append("\"");
 		}
@@ -148,9 +168,23 @@ public class WorkflowTaskSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(workflowTask.getId());
+		}
+
+		if (workflowTask.getLabel() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"label\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(workflowTask.getLabel()));
+
+			sb.append("\"");
 		}
 
 		if (workflowTask.getName() != null) {
@@ -158,7 +192,7 @@ public class WorkflowTaskSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"name\":");
+			sb.append("\"name\": ");
 
 			sb.append("\"");
 
@@ -172,33 +206,57 @@ public class WorkflowTaskSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"objectReviewed\":");
+			sb.append("\"objectReviewed\": ");
 
 			sb.append(String.valueOf(workflowTask.getObjectReviewed()));
 		}
 
-		if (workflowTask.getTransitions() != null) {
+		if (workflowTask.getWorkflowDefinitionId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"transitions\":");
+			sb.append("\"workflowDefinitionId\": ");
 
-			sb.append("[");
+			sb.append(workflowTask.getWorkflowDefinitionId());
+		}
 
-			for (int i = 0; i < workflowTask.getTransitions().length; i++) {
-				sb.append("\"");
-
-				sb.append(_escape(workflowTask.getTransitions()[i]));
-
-				sb.append("\"");
-
-				if ((i + 1) < workflowTask.getTransitions().length) {
-					sb.append(", ");
-				}
+		if (workflowTask.getWorkflowDefinitionName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
 			}
 
-			sb.append("]");
+			sb.append("\"workflowDefinitionName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(workflowTask.getWorkflowDefinitionName()));
+
+			sb.append("\"");
+		}
+
+		if (workflowTask.getWorkflowDefinitionVersion() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"workflowDefinitionVersion\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(workflowTask.getWorkflowDefinitionVersion()));
+
+			sb.append("\"");
+		}
+
+		if (workflowTask.getWorkflowInstanceId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"workflowInstanceId\": ");
+
+			sb.append(workflowTask.getWorkflowInstanceId());
 		}
 
 		sb.append("}");
@@ -206,15 +264,40 @@ public class WorkflowTaskSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		WorkflowTaskJSONParser workflowTaskJSONParser =
+			new WorkflowTaskJSONParser();
+
+		return workflowTaskJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(WorkflowTask workflowTask) {
 		if (workflowTask == null) {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+		if (workflowTask.getAssigneePerson() == null) {
+			map.put("assigneePerson", null);
+		}
+		else {
+			map.put(
+				"assigneePerson",
+				String.valueOf(workflowTask.getAssigneePerson()));
+		}
+
+		if (workflowTask.getAssigneeRoles() == null) {
+			map.put("assigneeRoles", null);
+		}
+		else {
+			map.put(
+				"assigneeRoles",
+				String.valueOf(workflowTask.getAssigneeRoles()));
+		}
 
 		if (workflowTask.getCompleted() == null) {
 			map.put("completed", null);
@@ -223,21 +306,32 @@ public class WorkflowTaskSerDes {
 			map.put("completed", String.valueOf(workflowTask.getCompleted()));
 		}
 
-		map.put(
-			"dateCompleted",
-			liferayToJSONDateFormat.format(workflowTask.getDateCompleted()));
-
-		map.put(
-			"dateCreated",
-			liferayToJSONDateFormat.format(workflowTask.getDateCreated()));
-
-		if (workflowTask.getDefinitionName() == null) {
-			map.put("definitionName", null);
+		if (workflowTask.getDateCompletion() == null) {
+			map.put("dateCompletion", null);
 		}
 		else {
 			map.put(
-				"definitionName",
-				String.valueOf(workflowTask.getDefinitionName()));
+				"dateCompletion",
+				liferayToJSONDateFormat.format(
+					workflowTask.getDateCompletion()));
+		}
+
+		if (workflowTask.getDateCreated() == null) {
+			map.put("dateCreated", null);
+		}
+		else {
+			map.put(
+				"dateCreated",
+				liferayToJSONDateFormat.format(workflowTask.getDateCreated()));
+		}
+
+		if (workflowTask.getDateDue() == null) {
+			map.put("dateDue", null);
+		}
+		else {
+			map.put(
+				"dateDue",
+				liferayToJSONDateFormat.format(workflowTask.getDateDue()));
 		}
 
 		if (workflowTask.getDescription() == null) {
@@ -248,15 +342,18 @@ public class WorkflowTaskSerDes {
 				"description", String.valueOf(workflowTask.getDescription()));
 		}
 
-		map.put(
-			"dueDate",
-			liferayToJSONDateFormat.format(workflowTask.getDueDate()));
-
 		if (workflowTask.getId() == null) {
 			map.put("id", null);
 		}
 		else {
 			map.put("id", String.valueOf(workflowTask.getId()));
+		}
+
+		if (workflowTask.getLabel() == null) {
+			map.put("label", null);
+		}
+		else {
+			map.put("label", String.valueOf(workflowTask.getLabel()));
 		}
 
 		if (workflowTask.getName() == null) {
@@ -275,24 +372,46 @@ public class WorkflowTaskSerDes {
 				String.valueOf(workflowTask.getObjectReviewed()));
 		}
 
-		if (workflowTask.getTransitions() == null) {
-			map.put("transitions", null);
+		if (workflowTask.getWorkflowDefinitionId() == null) {
+			map.put("workflowDefinitionId", null);
 		}
 		else {
 			map.put(
-				"transitions", String.valueOf(workflowTask.getTransitions()));
+				"workflowDefinitionId",
+				String.valueOf(workflowTask.getWorkflowDefinitionId()));
+		}
+
+		if (workflowTask.getWorkflowDefinitionName() == null) {
+			map.put("workflowDefinitionName", null);
+		}
+		else {
+			map.put(
+				"workflowDefinitionName",
+				String.valueOf(workflowTask.getWorkflowDefinitionName()));
+		}
+
+		if (workflowTask.getWorkflowDefinitionVersion() == null) {
+			map.put("workflowDefinitionVersion", null);
+		}
+		else {
+			map.put(
+				"workflowDefinitionVersion",
+				String.valueOf(workflowTask.getWorkflowDefinitionVersion()));
+		}
+
+		if (workflowTask.getWorkflowInstanceId() == null) {
+			map.put("workflowInstanceId", null);
+		}
+		else {
+			map.put(
+				"workflowInstanceId",
+				String.valueOf(workflowTask.getWorkflowInstanceId()));
 		}
 
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class WorkflowTaskJSONParser
+	public static class WorkflowTaskJSONParser
 		extends BaseJSONParser<WorkflowTask> {
 
 		@Override
@@ -310,14 +429,32 @@ public class WorkflowTaskSerDes {
 			WorkflowTask workflowTask, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "completed")) {
+			if (Objects.equals(jsonParserFieldName, "assigneePerson")) {
+				if (jsonParserFieldValue != null) {
+					workflowTask.setAssigneePerson(
+						CreatorSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "assigneeRoles")) {
+				if (jsonParserFieldValue != null) {
+					workflowTask.setAssigneeRoles(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> RoleSerDes.toDTO((String)object)
+						).toArray(
+							size -> new Role[size]
+						));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "completed")) {
 				if (jsonParserFieldValue != null) {
 					workflowTask.setCompleted((Boolean)jsonParserFieldValue);
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "dateCompleted")) {
+			else if (Objects.equals(jsonParserFieldName, "dateCompletion")) {
 				if (jsonParserFieldValue != null) {
-					workflowTask.setDateCompleted(
+					workflowTask.setDateCompletion(
 						toDate((String)jsonParserFieldValue));
 				}
 			}
@@ -327,10 +464,10 @@ public class WorkflowTaskSerDes {
 						toDate((String)jsonParserFieldValue));
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "definitionName")) {
+			else if (Objects.equals(jsonParserFieldName, "dateDue")) {
 				if (jsonParserFieldValue != null) {
-					workflowTask.setDefinitionName(
-						(String)jsonParserFieldValue);
+					workflowTask.setDateDue(
+						toDate((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "description")) {
@@ -338,16 +475,15 @@ public class WorkflowTaskSerDes {
 					workflowTask.setDescription((String)jsonParserFieldValue);
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "dueDate")) {
-				if (jsonParserFieldValue != null) {
-					workflowTask.setDueDate(
-						toDate((String)jsonParserFieldValue));
-				}
-			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					workflowTask.setId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "label")) {
+				if (jsonParserFieldValue != null) {
+					workflowTask.setLabel((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
@@ -362,18 +498,112 @@ public class WorkflowTaskSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "transitions")) {
+			else if (Objects.equals(
+						jsonParserFieldName, "workflowDefinitionId")) {
+
 				if (jsonParserFieldValue != null) {
-					workflowTask.setTransitions(
-						toStrings((Object[])jsonParserFieldValue));
+					workflowTask.setWorkflowDefinitionId(
+						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (Objects.equals(
+						jsonParserFieldName, "workflowDefinitionName")) {
+
+				if (jsonParserFieldValue != null) {
+					workflowTask.setWorkflowDefinitionName(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "workflowDefinitionVersion")) {
+
+				if (jsonParserFieldValue != null) {
+					workflowTask.setWorkflowDefinitionVersion(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "workflowInstanceId")) {
+
+				if (jsonParserFieldValue != null) {
+					workflowTask.setWorkflowInstanceId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

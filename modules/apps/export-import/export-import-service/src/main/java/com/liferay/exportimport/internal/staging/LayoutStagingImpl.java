@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.staging;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.staging.LayoutStaging;
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
@@ -47,7 +45,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Raymond Augé
  */
 @Component(immediate = true, service = LayoutStaging.class)
-@ProviderType
 public class LayoutStagingImpl implements LayoutStaging {
 
 	@Override
@@ -114,6 +111,10 @@ public class LayoutStagingImpl implements LayoutStaging {
 
 	@Override
 	public boolean isBranchingLayout(Layout layout) {
+		if ((layout == null) || layout.isSystem() || layout.isTypeContent()) {
+			return false;
+		}
+
 		return isBranchingLayoutSet(
 			layout.getGroup(), layout.isPrivateLayout());
 	}
@@ -128,10 +129,10 @@ public class LayoutStagingImpl implements LayoutStaging {
 			group = group.getLiveGroup();
 		}
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			group.getTypeSettingsProperties();
 
-		if (typeSettingsProperties.isEmpty()) {
+		if (typeSettingsUnicodeProperties.isEmpty()) {
 			return false;
 		}
 
@@ -139,11 +140,11 @@ public class LayoutStagingImpl implements LayoutStaging {
 
 		if (privateLayout) {
 			branchingEnabled = GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty("branchingPrivate"));
+				typeSettingsUnicodeProperties.getProperty("branchingPrivate"));
 		}
 		else {
 			branchingEnabled = GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty("branchingPublic"));
+				typeSettingsUnicodeProperties.getProperty("branchingPublic"));
 		}
 
 		if (!branchingEnabled || !group.isStaged() ||
@@ -164,12 +165,12 @@ public class LayoutStagingImpl implements LayoutStaging {
 
 			return true;
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return false;

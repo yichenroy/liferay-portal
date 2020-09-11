@@ -14,11 +14,11 @@
 
 package com.liferay.portal.search.query;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -33,6 +33,12 @@ public interface MoreLikeThisQuery extends Query {
 
 	public void addDocumentIdentifiers(
 		DocumentIdentifier... documentIdentifiers);
+
+	public void addField(String field);
+
+	public void addFields(Collection<String> fields);
+
+	public void addFields(String... fields);
 
 	public void addLikeText(String likeText);
 
@@ -49,6 +55,8 @@ public interface MoreLikeThisQuery extends Query {
 	public String getAnalyzer();
 
 	public Set<DocumentIdentifier> getDocumentIdentifiers();
+
+	public List<String> getFields();
 
 	public List<String> getLikeTexts();
 

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.image;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.image.ImageBag;
 import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.image.SpriteProcessor;
@@ -26,8 +27,6 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.SortedProperties;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -147,7 +146,7 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 
 		List<RenderedImage> renderedImages = new ArrayList<>();
 
-		Properties spriteProperties = new SortedProperties();
+		Properties spriteProperties = new Properties();
 
 		float x = 0;
 		float y = 0;
@@ -195,19 +194,18 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 					key = contextPath.concat(key);
 
 					String value = StringBundler.concat(
-						String.valueOf((int)y), ",", String.valueOf(height),
-						",", String.valueOf(width));
+						(int)y, ",", height, ",", width);
 
 					spriteProperties.setProperty(key, value);
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Unable to process " + imageURL, e);
+					_log.warn("Unable to process " + imageURL, exception);
 				}
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
+					_log.debug(exception, exception);
 				}
 			}
 		}
@@ -221,8 +219,7 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 			// PNG
 
 			RenderedImage renderedImage = MosaicDescriptor.create(
-				renderedImages.toArray(
-					new RenderedImage[renderedImages.size()]),
+				renderedImages.toArray(new RenderedImage[0]),
 				MosaicDescriptor.MOSAIC_TYPE_OVERLAY, null, null, null, null,
 				null);
 
@@ -235,9 +232,9 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 			try {
 				ImageIO.write(renderedImage, "png", spriteFile);
 			}
-			catch (Exception e) {
-				if (e instanceof IIOException ||
-					e instanceof NullPointerException) {
+			catch (Exception exception) {
+				if (exception instanceof IIOException ||
+					exception instanceof NullPointerException) {
 
 					if (_log.isWarnEnabled()) {
 						StringBundler sb = new StringBundler(4);
@@ -253,7 +250,7 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 					return null;
 				}
 
-				throw e;
+				throw exception;
 			}
 
 			if (lastModified > 0) {
@@ -287,9 +284,7 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 		if (colorModel instanceof IndexColorModel) {
 			IndexColorModel indexColorModel = (IndexColorModel)colorModel;
 
-			int mapSize = indexColorModel.getMapSize();
-
-			byte[][] data = new byte[4][mapSize];
+			byte[][] data = new byte[4][indexColorModel.getMapSize()];
 
 			indexColorModel.getReds(data[0]);
 			indexColorModel.getGreens(data[1]);
@@ -320,8 +315,7 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 				bytesList.add(elem);
 			}
 
-			byte[] data = ArrayUtil.toArray(
-				bytesList.toArray(new Byte[bytesList.size()]));
+			byte[] data = ArrayUtil.toArray(bytesList.toArray(new Byte[0]));
 
 			DataBuffer newDataBuffer = new DataBufferByte(data, data.length);
 
@@ -355,8 +349,7 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 				}
 			}
 
-			byte[] data = ArrayUtil.toArray(
-				bytesList.toArray(new Byte[bytesList.size()]));
+			byte[] data = ArrayUtil.toArray(bytesList.toArray(new Byte[0]));
 
 			DataBuffer newDataBuffer = new DataBufferByte(data, data.length);
 
@@ -387,8 +380,7 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 				}
 			}
 
-			byte[] data = ArrayUtil.toArray(
-				bytesList.toArray(new Byte[bytesList.size()]));
+			byte[] data = ArrayUtil.toArray(bytesList.toArray(new Byte[0]));
 
 			DataBuffer newDataBuffer = new DataBufferByte(data, data.length);
 
@@ -445,10 +437,7 @@ public class SpriteProcessorImpl implements SpriteProcessor {
 			for (int w = 0; w < width; w++) {
 				offset = (h * width * numOfBands) + (w * numOfBands);
 
-				System.out.print(
-					StringBundler.concat(
-						"[", String.valueOf(w), ", ", String.valueOf(h),
-						"] = "));
+				System.out.print(StringBundler.concat("[", w, ", ", h, "] = "));
 
 				for (int b = 0; b < numOfBands; b++) {
 					System.out.print(pixels[offset + b] + " ");

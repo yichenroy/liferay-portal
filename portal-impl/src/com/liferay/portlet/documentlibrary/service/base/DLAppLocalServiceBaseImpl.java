@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.documentlibrary.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.persistence.DLFolderFinder;
 import com.liferay.document.library.kernel.service.persistence.DLFolderPersistence;
@@ -45,7 +43,6 @@ import javax.sql.DataSource;
  * @see com.liferay.portlet.documentlibrary.service.impl.DLAppLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class DLAppLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
 	implements DLAppLocalService, IdentifiableOSGiService {
@@ -304,8 +301,8 @@ public abstract class DLAppLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 

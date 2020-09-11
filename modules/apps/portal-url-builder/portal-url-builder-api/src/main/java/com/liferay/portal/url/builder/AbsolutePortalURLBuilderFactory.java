@@ -17,21 +17,20 @@ package com.liferay.portal.url.builder;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * A service that creates new AbsolutePortalURLBuilder instances.
+ * Creates new Absolute Portal URL Builder instances.
  *
  * @author Iván Zaera Avellón
- * @review
  */
 public interface AbsolutePortalURLBuilderFactory {
 
 	/**
-	 * Get a new AbsolutePortalURLBuilder instance tied to the given request.
+	 * Returns a new Absolute Portal URL Builder instance tied to the given
+	 * request.
 	 *
-	 * @param  request the servlet request
-	 * @return an instance of AbsolutePortalURLBuilder
-	 * @review
+	 * @param  httpServletRequest the servlet request
+	 * @return an instance of Absolute Portal URL Builder
 	 */
 	public AbsolutePortalURLBuilder getAbsolutePortalURLBuilder(
-		HttpServletRequest request);
+		HttpServletRequest httpServletRequest);
 
 }

@@ -26,7 +26,11 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class FormDocument {
+public class FormDocument implements Cloneable {
+
+	public static FormDocument toDTO(String json) {
+		return FormDocumentSerDes.toDTO(json);
+	}
 
 	public String getContentUrl() {
 		return contentUrl;
@@ -48,6 +52,27 @@ public class FormDocument {
 	}
 
 	protected String contentUrl;
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public void setDescription(
+		UnsafeSupplier<String, Exception> descriptionUnsafeSupplier) {
+
+		try {
+			description = descriptionUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String description;
 
 	public String getEncodingFormat() {
 		return encodingFormat;
@@ -91,6 +116,27 @@ public class FormDocument {
 
 	protected String fileExtension;
 
+	public Long getFolderId() {
+		return folderId;
+	}
+
+	public void setFolderId(Long folderId) {
+		this.folderId = folderId;
+	}
+
+	public void setFolderId(
+		UnsafeSupplier<Long, Exception> folderIdUnsafeSupplier) {
+
+		try {
+			folderId = folderIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long folderId;
+
 	public Long getId() {
 		return id;
 	}
@@ -109,6 +155,27 @@ public class FormDocument {
 	}
 
 	protected Long id;
+
+	public Long getSiteId() {
+		return siteId;
+	}
+
+	public void setSiteId(Long siteId) {
+		this.siteId = siteId;
+	}
+
+	public void setSiteId(
+		UnsafeSupplier<Long, Exception> siteIdUnsafeSupplier) {
+
+		try {
+			siteId = siteIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long siteId;
 
 	public Long getSizeInBytes() {
 		return sizeInBytes;
@@ -151,6 +218,11 @@ public class FormDocument {
 	}
 
 	protected String title;
+
+	@Override
+	public FormDocument clone() throws CloneNotSupportedException {
+		return (FormDocument)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

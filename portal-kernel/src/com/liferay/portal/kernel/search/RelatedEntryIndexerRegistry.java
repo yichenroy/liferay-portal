@@ -14,9 +14,9 @@
 
 package com.liferay.portal.kernel.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -26,7 +26,7 @@ public interface RelatedEntryIndexerRegistry {
 
 	public List<RelatedEntryIndexer> getRelatedEntryIndexers();
 
-	public List<RelatedEntryIndexer> getRelatedEntryIndexers(Class clazz);
+	public List<RelatedEntryIndexer> getRelatedEntryIndexers(Class<?> clazz);
 
 	public List<RelatedEntryIndexer> getRelatedEntryIndexers(String className);
 

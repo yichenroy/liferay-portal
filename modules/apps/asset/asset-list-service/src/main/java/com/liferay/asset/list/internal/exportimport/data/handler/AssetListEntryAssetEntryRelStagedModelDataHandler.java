@@ -25,8 +25,12 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
+import com.liferay.segments.model.SegmentsEntry;
 
 import java.util.Map;
 
@@ -77,6 +81,11 @@ public class AssetListEntryAssetEntryRelStagedModelDataHandler
 
 		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
 			assetListEntryAssetEntryRel.getAssetEntryId());
+
+		if (Validator.isNull(assetListEntryAssetEntryRel.getAssetEntryUuid())) {
+			assetListEntryAssetEntryRel.setAssetEntryUuid(
+				assetEntry.getClassUuid());
+		}
 
 		_stagingAssetEntryHelper.addAssetReference(
 			portletDataContext, assetListEntryAssetEntryRel, entryElement,
@@ -133,6 +142,27 @@ public class AssetListEntryAssetEntryRelStagedModelDataHandler
 			portletDataContext.getScopeGroupId());
 		importedAssetListEntryAssetEntryRel.setAssetListEntryId(
 			assetListEntryId);
+		importedAssetListEntryAssetEntryRel.setAssetEntryUuid(
+			assetListEntryAssetEntryRel.getAssetEntryUuid());
+
+		Group currentGroup = _groupLocalService.fetchGroup(
+			portletDataContext.getScopeGroupId());
+
+		Map<Long, Long> segmentsEntryIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				SegmentsEntry.class);
+
+		long segmentsEntryId = assetListEntryAssetEntryRel.getSegmentsEntryId();
+
+		if (!currentGroup.isStagingGroup() && (segmentsEntryId > 0) &&
+			!segmentsEntryIds.isEmpty() &&
+			segmentsEntryIds.containsKey(segmentsEntryId)) {
+
+			long newSegmentsEntryId = segmentsEntryIds.get(segmentsEntryId);
+
+			importedAssetListEntryAssetEntryRel.setSegmentsEntryId(
+				newSegmentsEntryId);
+		}
 
 		AssetListEntryAssetEntryRel existingAssetListEntryAssetEntryRel =
 			_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
@@ -168,6 +198,9 @@ public class AssetListEntryAssetEntryRelStagedModelDataHandler
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.asset.list.model.AssetListEntryAssetEntryRel)"

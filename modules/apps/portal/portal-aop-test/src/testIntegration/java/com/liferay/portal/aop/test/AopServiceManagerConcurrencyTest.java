@@ -15,7 +15,6 @@
 package com.liferay.portal.aop.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -24,7 +23,8 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.spring.transaction.TransactionAttributeAdapter;
-import com.liferay.portal.spring.transaction.TransactionExecutor;
+import com.liferay.portal.spring.transaction.TransactionHandler;
+import com.liferay.portal.spring.transaction.TransactionStatusAdapter;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
@@ -51,8 +51,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-import org.springframework.transaction.PlatformTransactionManager;
-
 /**
  * @author Preston Crary
  */
@@ -75,6 +73,18 @@ public class AopServiceManagerConcurrencyTest {
 
 		_executorService = Executors.newFixedThreadPool(
 			runtime.availableProcessors());
+
+		for (Bundle currentBundle : _bundleContext.getBundles()) {
+			String symbolicName = currentBundle.getSymbolicName();
+
+			if (symbolicName.equals("com.liferay.portal.aop.impl")) {
+				_aopImplBundle = currentBundle;
+
+				break;
+			}
+		}
+
+		Assert.assertNotNull(_aopImplBundle);
 	}
 
 	@After
@@ -98,10 +108,10 @@ public class AopServiceManagerConcurrencyTest {
 			AopService aopService = (AopService)aopServiceClass.newInstance();
 
 			Class<?> testTransactionExecutorClass = classLoader.loadClass(
-				TestTransactionExecutor.class.getName() + nameSuffix);
+				TestTransactionHandler.class.getName() + nameSuffix);
 
-			TestTransactionExecutor testTransactionExecutor =
-				(TestTransactionExecutor)
+			TestTransactionHandler testTransactionHandler =
+				(TestTransactionHandler)
 					testTransactionExecutorClass.newInstance();
 
 			int index = i;
@@ -110,20 +120,24 @@ public class AopServiceManagerConcurrencyTest {
 				() -> {
 					int expectedMinServiceRanking = nameSuffix + 1;
 
-					ServiceRegistration<TransactionExecutor>
-						transactionExecutorServiceRegistration =
+					ServiceRegistration<TransactionHandler>
+						transactionHandlerServiceRegistration =
 							_bundleContext.registerService(
-								TransactionExecutor.class,
-								testTransactionExecutor,
+								TransactionHandler.class,
+								testTransactionHandler,
 								MapUtil.singletonDictionary(
 									Constants.SERVICE_RANKING,
 									expectedMinServiceRanking));
+
+					_assertUsingBundles(transactionHandlerServiceRegistration);
 
 					ServiceRegistration<AopService>
 						aopServiceServiceRegistration =
 							_bundleContext.registerService(
 								AopService.class, aopService,
 								MapUtil.singletonDictionary("index", index));
+
+					_assertUsingBundles(aopServiceServiceRegistration);
 
 					ServiceReference<?>[] serviceReferences = null;
 
@@ -142,20 +156,66 @@ public class AopServiceManagerConcurrencyTest {
 					while (testService == null) {
 						testService = (TestService)_bundleContext.getService(
 							serviceReferences[0]);
+
+						if (testService != null) {
+							continue;
+						}
+
+						Assert.assertSame(
+							aopService,
+							_bundleContext.getService(
+								aopServiceServiceRegistration.getReference()));
+
+						_bundleContext.ungetService(
+							aopServiceServiceRegistration.getReference());
+
+						_assertUsingBundles(aopServiceServiceRegistration);
+
+						Assert.assertSame(
+							testTransactionHandler,
+							_bundleContext.getService(
+								transactionHandlerServiceRegistration.
+									getReference()));
+
+						_bundleContext.ungetService(
+							transactionHandlerServiceRegistration.
+								getReference());
+
+						_assertUsingBundles(
+							transactionHandlerServiceRegistration);
+
+						serviceReferences = null;
+
+						while (serviceReferences == null) {
+							serviceReferences =
+								_bundleContext.getServiceReferences(
+									TestService.class.getName(),
+									"(index=" + index + ")");
+						}
 					}
 
-					TestTransactionExecutor actualTestTransactionExecutor =
+					int executorServiceRanking = 0;
+
+					try {
 						testService.getTransactionExecutor();
+
+						Assert.fail();
+					}
+					catch (RuntimeException runtimeException) {
+						String message = runtimeException.getMessage();
+
+						Assert.assertTrue(
+							message,
+							message.startsWith(
+								TestTransactionHandler.class.getName()));
+
+						executorServiceRanking = GetterUtil.getInteger(
+							message.substring(message.length() - 1));
+					}
 
 					_bundleContext.ungetService(serviceReferences[0]);
 
-					Class<?> clazz = actualTestTransactionExecutor.getClass();
-
-					String name = clazz.getName();
-
-					int executorServiceRanking =
-						GetterUtil.getInteger(
-							name.substring(name.length() - 1)) + 1;
+					executorServiceRanking++;
 
 					Assert.assertTrue(
 						StringBundler.concat(
@@ -166,7 +226,7 @@ public class AopServiceManagerConcurrencyTest {
 
 					aopServiceServiceRegistration.unregister();
 
-					transactionExecutorServiceRegistration.unregister();
+					transactionHandlerServiceRegistration.unregister();
 
 					return null;
 				});
@@ -211,46 +271,51 @@ public class AopServiceManagerConcurrencyTest {
 	public static class TestService9 extends TestServiceImpl {
 	}
 
-	public static class TestTransactionExecutor0
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler0 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor1
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler1 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor2
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler2 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor3
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler3 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor4
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler4 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor5
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler5 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor6
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler6 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor7
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler7 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor8
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler8 extends TestTransactionHandler {
 	}
 
-	public static class TestTransactionExecutor9
-		extends TestTransactionExecutor {
+	public static class TestTransactionHandler9 extends TestTransactionHandler {
 	}
 
+	private void _assertUsingBundles(
+		ServiceRegistration<?> serviceRegistration) {
+
+		ServiceReference<?> serviceReference =
+			serviceRegistration.getReference();
+
+		Bundle[] usingBundles = serviceReference.getUsingBundles();
+
+		Assert.assertNotNull(usingBundles);
+		Assert.assertEquals(
+			Arrays.toString(usingBundles), 1, usingBundles.length);
+		Assert.assertSame(_aopImplBundle, usingBundles[0]);
+	}
+
+	private Bundle _aopImplBundle;
 	private BundleContext _bundleContext;
 	private ExecutorService _executorService;
 
@@ -262,8 +327,7 @@ public class AopServiceManagerConcurrencyTest {
 		}
 
 		@Override
-		public TestTransactionExecutor getTransactionExecutor() {
-			throw new UnsupportedOperationException();
+		public void getTransactionExecutor() {
 		}
 
 		private static final Class<?>[] _AOP_INTERFACES = new Class<?>[] {
@@ -272,31 +336,47 @@ public class AopServiceManagerConcurrencyTest {
 
 	}
 
-	private static class TestTransactionExecutor
-		implements TransactionExecutor {
+	private static class TestTransactionHandler implements TransactionHandler {
 
 		@Override
-		public <T> T execute(
+		public void commit(
 			TransactionAttributeAdapter transactionAttributeAdapter,
-			UnsafeSupplier<T, Throwable> unsafeSupplier) {
+			TransactionStatusAdapter transactionStatusAdapter) {
 
 			Assert.assertSame(
-				this, transactionAttributeAdapter.getTransactionExecutor());
+				_transactionStatusAdapter, transactionStatusAdapter);
 
-			return (T)this;
+			Class<? extends TestTransactionHandler> clazz = getClass();
+
+			throw new RuntimeException(clazz.getName());
 		}
 
 		@Override
-		public PlatformTransactionManager getPlatformTransactionManager() {
-			throw new UnsupportedOperationException();
+		public void rollback(
+			Throwable throwable,
+			TransactionAttributeAdapter transactionAttributeAdapter,
+			TransactionStatusAdapter transactionStatusAdapter) {
+
+			Assert.assertSame(
+				_transactionStatusAdapter, transactionStatusAdapter);
 		}
+
+		@Override
+		public TransactionStatusAdapter start(
+			TransactionAttributeAdapter transactionAttributeAdapter) {
+
+			return _transactionStatusAdapter;
+		}
+
+		private final TransactionStatusAdapter _transactionStatusAdapter =
+			new TransactionStatusAdapter(null);
 
 	}
 
 	@Transactional(isolation = Isolation.PORTAL, rollbackFor = Exception.class)
 	private interface TestService {
 
-		public TestTransactionExecutor getTransactionExecutor();
+		public void getTransactionExecutor();
 
 	}
 

@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMForm;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
@@ -34,7 +35,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -42,14 +42,11 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.trash.kernel.util.TrashUtil;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import javax.portlet.PortletMode;
-import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -62,15 +59,6 @@ import javax.servlet.http.HttpServletRequest;
  * @author Sergio González
  */
 public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public String getAddToPagePortletId() throws Exception {
-		return StringPool.BLANK;
-	}
 
 	@Override
 	public AssetRendererFactory<T> getAssetRendererFactory() {
@@ -106,15 +94,6 @@ public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
 		return null;
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public Date getDisplayDate() {
-		return null;
-	}
-
 	@Override
 	public String getIconCssClass() throws PortalException {
 		return getAssetRendererFactory().getIconCssClass();
@@ -123,18 +102,6 @@ public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
 	@Override
 	public String getNewName(String oldName, String token) {
 		return TrashUtil.getNewName(oldName, token);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public String getPreviewPath(
-			PortletRequest portletRequest, PortletResponse portletResponse)
-		throws Exception {
-
-		return StringPool.BLANK;
 	}
 
 	@Override
@@ -171,7 +138,7 @@ public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
 
 	@Override
 	public PortletURL getURLEdit(
-			HttpServletRequest request, WindowState windowState,
+			HttpServletRequest httpServletRequest, WindowState windowState,
 			PortletURL redirectURL)
 		throws Exception {
 
@@ -181,23 +148,24 @@ public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
 			redirect = redirectURL.toString();
 		}
 
-		return getURLEdit(request, windowState, redirect);
+		return getURLEdit(httpServletRequest, windowState, redirect);
 	}
 
 	@Override
 	public PortletURL getURLEdit(
-			HttpServletRequest request, WindowState windowState,
+			HttpServletRequest httpServletRequest, WindowState windowState,
 			String redirect)
 		throws Exception {
 
 		LiferayPortletURL editPortletURL = (LiferayPortletURL)getURLEdit(
-			request);
+			httpServletRequest);
 
 		if (editPortletURL == null) {
 			return null;
 		}
 
-		return _getURLEdit(editPortletURL, request, windowState, redirect);
+		return _getURLEdit(
+			editPortletURL, httpServletRequest, windowState, redirect);
 	}
 
 	@Override
@@ -241,10 +209,10 @@ public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
 			return null;
 		}
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			liferayPortletRequest);
-
-		return _getURLEdit(editPortletURL, request, windowState, redirect);
+		return _getURLEdit(
+			editPortletURL,
+			PortalUtil.getHttpServletRequest(liferayPortletRequest),
+			windowState, redirect);
 	}
 
 	@Override
@@ -366,17 +334,6 @@ public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
 		return null;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void setAddToPagePreferences(
-			PortletPreferences portletPreferences, String portletId,
-			ThemeDisplay themeDisplay)
-		throws Exception {
-	}
-
 	public void setAssetRendererType(int assetRendererType) {
 		_assetRendererType = assetRendererType;
 	}
@@ -429,12 +386,14 @@ public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
 	}
 
 	private PortletURL _getURLEdit(
-			LiferayPortletURL editPortletURL, HttpServletRequest request,
-			WindowState windowState, String redirect)
+			LiferayPortletURL editPortletURL,
+			HttpServletRequest httpServletRequest, WindowState windowState,
+			String redirect)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Group group = themeDisplay.getScopeGroup();
 
@@ -455,7 +414,7 @@ public abstract class BaseAssetRenderer<T> implements AssetRenderer<T> {
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 		String portletResource = ParamUtil.getString(
-			request, "portletResource", portletDisplay.getId());
+			httpServletRequest, "portletResource", portletDisplay.getId());
 
 		if (Validator.isNotNull(portletResource)) {
 			editPortletURL.setParameter(

@@ -14,8 +14,6 @@
 
 package com.liferay.asset.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.model.AssetEntryUsage;
 import com.liferay.asset.service.AssetEntryUsageLocalServiceUtil;
 
@@ -29,9 +27,11 @@ import com.liferay.asset.service.AssetEntryUsageLocalServiceUtil;
  * @author Brian Wing Shun Chan
  * @see AssetEntryUsageImpl
  * @see AssetEntryUsage
+ * @deprecated As of Mueller (7.2.x), replaced by {@link
+ com.liferay.layout.model.impl.LayoutClassedModelUsageImpl}
  * @generated
  */
-@ProviderType
+@Deprecated
 public abstract class AssetEntryUsageBaseImpl
 	extends AssetEntryUsageModelImpl implements AssetEntryUsage {
 

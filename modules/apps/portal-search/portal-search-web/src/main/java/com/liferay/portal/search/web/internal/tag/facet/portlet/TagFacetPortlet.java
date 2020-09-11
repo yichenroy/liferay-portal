@@ -14,10 +14,13 @@
 
 package com.liferay.portal.search.web.internal.tag.facet.portlet;
 
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.searcher.SearchRequest;
+import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.web.internal.facet.display.builder.AssetTagsSearchFacetDisplayBuilder;
 import com.liferay.portal.search.web.internal.facet.display.context.AssetTagsSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.tag.facet.builder.AssetTagsFacetConfiguration;
@@ -46,6 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-tag-facet",
 		"com.liferay.portlet.display-category=category.search",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.icon=/icons/search.png",
 		"com.liferay.portlet.instanceable=true",
 		"com.liferay.portlet.layout-cacheable=true",
@@ -60,8 +64,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/tag/facet/view.jsp",
 		"javax.portlet.name=" + TagFacetPortletKeys.TAG_FACET,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -106,7 +109,7 @@ public class TagFacetPortlet extends MVCPortlet {
 			new AssetTagsFacetConfigurationImpl(facet.getFacetConfiguration());
 
 		AssetTagsSearchFacetDisplayBuilder assetTagsSearchFacetDisplayBuilder =
-			new AssetTagsSearchFacetDisplayBuilder();
+			createTagsSearchFacetDisplayBuilder(renderRequest);
 
 		assetTagsSearchFacetDisplayBuilder.setDisplayStyle(
 			tagFacetPortletPreferences.getDisplayStyle());
@@ -117,6 +120,8 @@ public class TagFacetPortlet extends MVCPortlet {
 			assetTagsFacetConfiguration.getFrequencyThreshold());
 		assetTagsSearchFacetDisplayBuilder.setMaxTerms(
 			assetTagsFacetConfiguration.getMaxTerms());
+		assetTagsSearchFacetDisplayBuilder.setPaginationStartParameterName(
+			getPaginationStartParameterName(portletSharedSearchResponse));
 
 		String parameterName = tagFacetPortletPreferences.getParameterName();
 
@@ -130,8 +135,30 @@ public class TagFacetPortlet extends MVCPortlet {
 		return assetTagsSearchFacetDisplayBuilder.build();
 	}
 
+	protected AssetTagsSearchFacetDisplayBuilder
+		createTagsSearchFacetDisplayBuilder(RenderRequest renderRequest) {
+
+		try {
+			return new AssetTagsSearchFacetDisplayBuilder(renderRequest);
+		}
+		catch (ConfigurationException configurationException) {
+			throw new RuntimeException(configurationException);
+		}
+	}
+
 	protected String getAggregationName(RenderRequest renderRequest) {
 		return portal.getPortletId(renderRequest);
+	}
+
+	protected String getPaginationStartParameterName(
+		PortletSharedSearchResponse portletSharedSearchResponse) {
+
+		SearchResponse searchResponse =
+			portletSharedSearchResponse.getSearchResponse();
+
+		SearchRequest request = searchResponse.getRequest();
+
+		return request.getPaginationStartParameterName();
 	}
 
 	@Reference

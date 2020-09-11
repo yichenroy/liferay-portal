@@ -14,7 +14,6 @@
 
 package com.liferay.portal.search.web.internal.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
@@ -28,7 +27,6 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 	id = "com.liferay.portal.search.web.internal.configuration.SearchWebConfiguration",
 	localization = "content/Language", name = "search-web-configuration-name"
 )
-@ProviderType
 public interface SearchWebConfiguration {
 
 	@Meta.AD(

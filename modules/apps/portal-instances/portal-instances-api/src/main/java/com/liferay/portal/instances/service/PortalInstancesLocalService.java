@@ -14,8 +14,6 @@
 
 package com.liferay.portal.instances.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -28,6 +26,8 @@ import java.sql.SQLException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the local service interface for PortalInstances. Methods of this
@@ -49,12 +49,12 @@ public interface PortalInstancesLocalService extends BaseLocalService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link PortalInstancesLocalServiceUtil} to access the portal instances local service. Add custom service methods to <code>com.liferay.portal.instances.service.impl.PortalInstancesLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.instances.service.impl.PortalInstancesLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the portal instances local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link PortalInstancesLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public void addCompanyId(long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public long getCompanyId(HttpServletRequest request);
+	public long getCompanyId(HttpServletRequest httpServletRequest);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long[] getCompanyIds();

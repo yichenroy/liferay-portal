@@ -76,6 +76,8 @@ public class UserModelDocumentContributor
 			document.addKeyword(
 				"ancestorOrganizationIds",
 				getAncestorOrganizationIds(user.getOrganizationIds()));
+			document.addDate("birthDate", user.getBirthday());
+			document.addKeyword("defaultUser", user.isDefaultUser());
 			document.addText("emailAddress", user.getEmailAddress());
 			document.addText("firstName", user.getFirstName());
 			document.addText("fullName", user.getFullName());
@@ -93,9 +95,10 @@ public class UserModelDocumentContributor
 
 			populateAddresses(document, user.getAddresses(), 0, 0);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to index user " + user.getUserId(), e);
+				_log.warn(
+					"Unable to index user " + user.getUserId(), exception);
 			}
 		}
 	}
@@ -103,7 +106,7 @@ public class UserModelDocumentContributor
 	protected long[] getActiveGroupIds(long userId) {
 		List<Long> groupIds = groupLocalService.getActiveGroupIds(userId);
 
-		return ArrayUtil.toArray(groupIds.toArray(new Long[groupIds.size()]));
+		return ArrayUtil.toArray(groupIds.toArray(new Long[0]));
 	}
 
 	protected long[] getActiveTransitiveGroupIds(long userId)
@@ -166,13 +169,13 @@ public class UserModelDocumentContributor
 
 		if (countryId > 0) {
 			try {
-				Country country = countryService.getCountry(countryId);
-
-				countries.addAll(getLocalizedCountryNames(country));
+				countries.addAll(
+					getLocalizedCountryNames(
+						countryService.getCountry(countryId)));
 			}
-			catch (NoSuchCountryException nsce) {
+			catch (NoSuchCountryException noSuchCountryException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(nsce.getMessage());
+					_log.warn(noSuchCountryException.getMessage());
 				}
 			}
 		}
@@ -185,9 +188,9 @@ public class UserModelDocumentContributor
 
 				regions.add(StringUtil.toLowerCase(region.getName()));
 			}
-			catch (NoSuchRegionException nsre) {
+			catch (NoSuchRegionException noSuchRegionException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(nsre.getMessage());
+					_log.warn(noSuchRegionException.getMessage());
 				}
 			}
 		}
@@ -210,12 +213,11 @@ public class UserModelDocumentContributor
 			zips.add(StringUtil.toLowerCase(address.getZip()));
 		}
 
-		document.addText("city", cities.toArray(new String[cities.size()]));
-		document.addText(
-			"country", countries.toArray(new String[countries.size()]));
-		document.addText("region", regions.toArray(new String[regions.size()]));
-		document.addText("street", streets.toArray(new String[streets.size()]));
-		document.addText("zip", zips.toArray(new String[zips.size()]));
+		document.addText("city", cities.toArray(new String[0]));
+		document.addText("country", countries.toArray(new String[0]));
+		document.addText("region", regions.toArray(new String[0]));
+		document.addText("street", streets.toArray(new String[0]));
+		document.addText("zip", zips.toArray(new String[0]));
 	}
 
 	@Reference

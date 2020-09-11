@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,9 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.layout.page.template.service.http.LayoutPageTemplateEntryServiceSoap}.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class LayoutPageTemplateEntrySoap implements Serializable {
 
 	public static LayoutPageTemplateEntrySoap toSoapModel(
@@ -37,6 +36,8 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		LayoutPageTemplateEntrySoap soapModel =
 			new LayoutPageTemplateEntrySoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setLayoutPageTemplateEntryId(
 			model.getLayoutPageTemplateEntryId());
@@ -48,6 +49,8 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setLayoutPageTemplateCollectionId(
 			model.getLayoutPageTemplateCollectionId());
+		soapModel.setLayoutPageTemplateEntryKey(
+			model.getLayoutPageTemplateEntryKey());
 		soapModel.setClassNameId(model.getClassNameId());
 		soapModel.setClassTypeId(model.getClassTypeId());
 		soapModel.setName(model.getName());
@@ -55,8 +58,8 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		soapModel.setPreviewFileEntryId(model.getPreviewFileEntryId());
 		soapModel.setDefaultTemplate(model.isDefaultTemplate());
 		soapModel.setLayoutPrototypeId(model.getLayoutPrototypeId());
-		soapModel.setLastPublishDate(model.getLastPublishDate());
 		soapModel.setPlid(model.getPlid());
+		soapModel.setLastPublishDate(model.getLastPublishDate());
 		soapModel.setStatus(model.getStatus());
 		soapModel.setStatusByUserId(model.getStatusByUserId());
 		soapModel.setStatusByUserName(model.getStatusByUserName());
@@ -122,6 +125,22 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setLayoutPageTemplateEntryId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public String getUuid() {
@@ -198,6 +217,16 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		_layoutPageTemplateCollectionId = layoutPageTemplateCollectionId;
 	}
 
+	public String getLayoutPageTemplateEntryKey() {
+		return _layoutPageTemplateEntryKey;
+	}
+
+	public void setLayoutPageTemplateEntryKey(
+		String layoutPageTemplateEntryKey) {
+
+		_layoutPageTemplateEntryKey = layoutPageTemplateEntryKey;
+	}
+
 	public long getClassNameId() {
 		return _classNameId;
 	}
@@ -258,20 +287,20 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		_layoutPrototypeId = layoutPrototypeId;
 	}
 
-	public Date getLastPublishDate() {
-		return _lastPublishDate;
-	}
-
-	public void setLastPublishDate(Date lastPublishDate) {
-		_lastPublishDate = lastPublishDate;
-	}
-
 	public long getPlid() {
 		return _plid;
 	}
 
 	public void setPlid(long plid) {
 		_plid = plid;
+	}
+
+	public Date getLastPublishDate() {
+		return _lastPublishDate;
+	}
+
+	public void setLastPublishDate(Date lastPublishDate) {
+		_lastPublishDate = lastPublishDate;
 	}
 
 	public int getStatus() {
@@ -306,6 +335,8 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		_statusDate = statusDate;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _layoutPageTemplateEntryId;
 	private long _groupId;
@@ -315,6 +346,7 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 	private Date _createDate;
 	private Date _modifiedDate;
 	private long _layoutPageTemplateCollectionId;
+	private String _layoutPageTemplateEntryKey;
 	private long _classNameId;
 	private long _classTypeId;
 	private String _name;
@@ -322,8 +354,8 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 	private long _previewFileEntryId;
 	private boolean _defaultTemplate;
 	private long _layoutPrototypeId;
-	private Date _lastPublishDate;
 	private long _plid;
+	private Date _lastPublishDate;
 	private int _status;
 	private long _statusByUserId;
 	private String _statusByUserName;

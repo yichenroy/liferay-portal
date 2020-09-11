@@ -14,9 +14,8 @@
 
 package com.liferay.asset.list.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.list.model.AssetListEntry;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -30,6 +29,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the remote service interface for AssetListEntry. Methods of this
  * service are expected to have security checks based on the propagated JAAS
@@ -40,6 +41,7 @@ import java.util.List;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -51,7 +53,7 @@ public interface AssetListEntryService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link AssetListEntryServiceUtil} to access the asset list entry remote service. Add custom service methods to <code>com.liferay.asset.list.service.impl.AssetListEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.asset.list.service.impl.AssetListEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the asset list entry remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AssetListEntryServiceUtil} if injection and service tracking are not available.
 	 */
 	public void addAssetEntrySelection(
 			long assetListEntryId, long assetEntryId, long segmentsEntryId,
@@ -106,10 +108,65 @@ public interface AssetListEntryService extends BaseService {
 		OrderByComparator<AssetListEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntry> getAssetListEntries(
+		long[] groupIds, int start, int end,
+		OrderByComparator<AssetListEntry> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntry> getAssetListEntries(
+		long[] groupIds, String title, int start, int end,
+		OrderByComparator<AssetListEntry> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntry> getAssetListEntries(
+		long[] groupIds, String assetEntrySubtype, String assetEntryType,
+		int start, int end,
+		OrderByComparator<AssetListEntry> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntry> getAssetListEntries(
+		long[] groupIds, String title, String assetEntrySubtype,
+		String assetEntryType, int start, int end,
+		OrderByComparator<AssetListEntry> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntry> getAssetListEntries(
+		long[] groupIds, String title, String[] assetEntryTypes, int start,
+		int end, OrderByComparator<AssetListEntry> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntry> getAssetListEntries(
+		long[] groupIds, String[] assetEntryTypes, int start, int end,
+		OrderByComparator<AssetListEntry> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAssetListEntriesCount(long groupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAssetListEntriesCount(long groupId, String title);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAssetListEntriesCount(long[] groupIds);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAssetListEntriesCount(long[] groupIds, String title);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAssetListEntriesCount(
+		long[] groupIds, String assetEntrySubtype, String assetEntryType);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAssetListEntriesCount(
+		long[] groupIds, String title, String assetEntrySubtype,
+		String assetEntryType);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAssetListEntriesCount(
+		long[] groupIds, String title, String[] assetEntryTypes);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAssetListEntriesCount(
+		long[] groupIds, String[] assetEntryTypes);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetListEntry getAssetListEntry(long assetListEntryId)

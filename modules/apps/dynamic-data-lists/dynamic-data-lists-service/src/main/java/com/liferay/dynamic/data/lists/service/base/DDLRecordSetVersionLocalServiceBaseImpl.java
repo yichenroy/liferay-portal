@@ -14,12 +14,11 @@
 
 package com.liferay.dynamic.data.lists.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.lists.model.DDLRecordSetVersion;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetVersionLocalService;
 import com.liferay.dynamic.data.lists.service.persistence.DDLRecordSetVersionPersistence;
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -37,17 +36,19 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
 import java.util.List;
 
 import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the base implementation for the ddl record set version local service.
@@ -60,10 +61,10 @@ import javax.sql.DataSource;
  * @see com.liferay.dynamic.data.lists.service.impl.DDLRecordSetVersionLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
-	implements DDLRecordSetVersionLocalService, IdentifiableOSGiService {
+	implements AopService, DDLRecordSetVersionLocalService,
+			   IdentifiableOSGiService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -73,6 +74,10 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 
 	/**
 	 * Adds the ddl record set version to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDLRecordSetVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddlRecordSetVersion the ddl record set version
 	 * @return the ddl record set version that was added
@@ -104,6 +109,10 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 	/**
 	 * Deletes the ddl record set version with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDLRecordSetVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param recordSetVersionId the primary key of the ddl record set version
 	 * @return the ddl record set version that was removed
 	 * @throws PortalException if a ddl record set version with the primary key could not be found
@@ -120,6 +129,10 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 	/**
 	 * Deletes the ddl record set version from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDLRecordSetVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddlRecordSetVersion the ddl record set version
 	 * @return the ddl record set version that was removed
 	 */
@@ -129,6 +142,11 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 		DDLRecordSetVersion ddlRecordSetVersion) {
 
 		return ddlRecordSetVersionPersistence.remove(ddlRecordSetVersion);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return ddlRecordSetVersionPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
@@ -155,7 +173,7 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordSetVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordSetVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -175,7 +193,7 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordSetVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordSetVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -291,6 +309,16 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return ddlRecordSetVersionPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
@@ -299,6 +327,13 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 			(DDLRecordSetVersion)persistedModel);
 	}
 
+	public BasePersistence<DDLRecordSetVersion> getBasePersistence() {
+		return ddlRecordSetVersionPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
@@ -310,7 +345,7 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 	 * Returns a range of all the ddl record set versions.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordSetVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordSetVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of ddl record set versions
@@ -337,6 +372,10 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 	/**
 	 * Updates the ddl record set version in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDLRecordSetVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddlRecordSetVersion the ddl record set version
 	 * @return the ddl record set version that was updated
 	 */
@@ -348,80 +387,18 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 		return ddlRecordSetVersionPersistence.update(ddlRecordSetVersion);
 	}
 
-	/**
-	 * Returns the ddl record set version local service.
-	 *
-	 * @return the ddl record set version local service
-	 */
-	public DDLRecordSetVersionLocalService
-		getDDLRecordSetVersionLocalService() {
-
-		return ddlRecordSetVersionLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			DDLRecordSetVersionLocalService.class,
+			IdentifiableOSGiService.class, PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the ddl record set version local service.
-	 *
-	 * @param ddlRecordSetVersionLocalService the ddl record set version local service
-	 */
-	public void setDDLRecordSetVersionLocalService(
-		DDLRecordSetVersionLocalService ddlRecordSetVersionLocalService) {
-
-		this.ddlRecordSetVersionLocalService = ddlRecordSetVersionLocalService;
-	}
-
-	/**
-	 * Returns the ddl record set version persistence.
-	 *
-	 * @return the ddl record set version persistence
-	 */
-	public DDLRecordSetVersionPersistence getDDLRecordSetVersionPersistence() {
-		return ddlRecordSetVersionPersistence;
-	}
-
-	/**
-	 * Sets the ddl record set version persistence.
-	 *
-	 * @param ddlRecordSetVersionPersistence the ddl record set version persistence
-	 */
-	public void setDDLRecordSetVersionPersistence(
-		DDLRecordSetVersionPersistence ddlRecordSetVersionPersistence) {
-
-		this.ddlRecordSetVersionPersistence = ddlRecordSetVersionPersistence;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService
-		getCounterLocalService() {
-
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService
-			counterLocalService) {
-
-		this.counterLocalService = counterLocalService;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register(
-			"com.liferay.dynamic.data.lists.model.DDLRecordSetVersion",
-			ddlRecordSetVersionLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.dynamic.data.lists.model.DDLRecordSetVersion");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		ddlRecordSetVersionLocalService =
+			(DDLRecordSetVersionLocalService)aopProxy;
 	}
 
 	/**
@@ -462,25 +439,18 @@ public abstract class DDLRecordSetVersionLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = DDLRecordSetVersionLocalService.class)
 	protected DDLRecordSetVersionLocalService ddlRecordSetVersionLocalService;
 
-	@BeanReference(type = DDLRecordSetVersionPersistence.class)
+	@Reference
 	protected DDLRecordSetVersionPersistence ddlRecordSetVersionPersistence;
 
-	@ServiceReference(
-		type = com.liferay.counter.kernel.service.CounterLocalService.class
-	)
+	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry
-		persistedModelLocalServiceRegistry;
 
 }

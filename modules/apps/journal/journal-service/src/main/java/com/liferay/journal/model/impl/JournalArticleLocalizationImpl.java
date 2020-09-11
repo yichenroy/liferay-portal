@@ -14,8 +14,6 @@
 
 package com.liferay.journal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * The extended model implementation for the JournalArticleLocalization service.
  * Represents a row in the &quot;JournalArticleLocalization&quot; database
@@ -30,7 +28,6 @@ import aQute.bnd.annotation.ProviderType;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class JournalArticleLocalizationImpl
 	extends JournalArticleLocalizationBaseImpl {
 

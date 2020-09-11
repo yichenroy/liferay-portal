@@ -15,9 +15,9 @@
 package com.liferay.portal.upgrade.v7_0_0;
 
 import com.liferay.counter.kernel.model.Counter;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -84,14 +84,6 @@ public class UpgradeSocial extends UpgradeProcess {
 		if (counterIncrement > 0) {
 			increment(Counter.class.getName(), (int)counterIncrement);
 		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected int getCounterIncrement() throws Exception {
-		return (int)_getCounterIncrement();
 	}
 
 	protected long getDelta(long increment) throws Exception {

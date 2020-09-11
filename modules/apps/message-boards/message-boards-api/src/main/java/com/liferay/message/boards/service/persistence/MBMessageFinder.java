@@ -14,7 +14,7 @@
 
 package com.liferay.message.boards.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -62,9 +62,6 @@ public interface MBMessageFinder {
 	public java.util.List<Long> filterFindByG_U_MD_C_A_S(
 		long groupId, long userId, java.util.Date modifiedDate,
 		long[] categoryIds, boolean anonymous, int status, int start, int end);
-
-	public java.util.List<com.liferay.message.boards.model.MBMessage>
-		findByNoAssets();
 
 	public java.util.List<com.liferay.message.boards.model.MBMessage>
 		findByThreadId(

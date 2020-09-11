@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.MissingReferences;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -27,7 +25,7 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import java.io.File;
 import java.io.InputStream;
 
-import java.util.Map;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the local service interface for ExportImport. Methods of this
@@ -49,19 +47,10 @@ public interface ExportImportLocalService extends BaseLocalService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link ExportImportLocalServiceUtil} to access the export import local service. Add custom service methods to <code>com.liferay.portlet.exportimport.service.impl.ExportImportLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.exportimport.service.impl.ExportImportLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the export import local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ExportImportLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public File exportLayoutsAsFile(
 			ExportImportConfiguration exportImportConfiguration)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public File exportLayoutsAsFile(
-			long userId, long groupId, boolean privateLayout,
-			Map<String, String[]> parameterMap)
 		throws PortalException;
 
 	public long exportLayoutsAsFileInBackground(
@@ -98,15 +87,6 @@ public interface ExportImportLocalService extends BaseLocalService {
 	public void importLayouts(
 			ExportImportConfiguration exportImportConfiguration,
 			InputStream inputStream)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public void importLayouts(
-			long userId, long groupId, boolean privateLayout,
-			Map<String, String[]> parameterMap, File file)
 		throws PortalException;
 
 	public void importLayoutsDataDeletions(

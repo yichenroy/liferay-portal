@@ -14,11 +14,12 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the User service. Represents a row in the &quot;User_&quot; database table, with each column mapped to a property of this class.
@@ -33,7 +34,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface UserModel
-	extends BaseModel<User>, MVCCModel, ShardedModel, StagedModel {
+	extends BaseModel<User>, CTModel<User>, MVCCModel, ShardedModel,
+			StagedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -46,6 +48,7 @@ public interface UserModel
 	 *
 	 * @return the primary key of this user
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -53,6 +56,7 @@ public interface UserModel
 	 *
 	 * @param primaryKey the primary key of this user
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -70,6 +74,22 @@ public interface UserModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this user.
+	 *
+	 * @return the ct collection ID of this user
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this user.
+	 *
+	 * @param ctCollectionId the ct collection ID of this user
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this user.

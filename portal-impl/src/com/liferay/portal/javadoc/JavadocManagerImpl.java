@@ -14,6 +14,7 @@
 
 package com.liferay.portal.javadoc;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.javadoc.BaseJavadoc;
 import com.liferay.portal.kernel.javadoc.EmptyJavadocMethod;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.javadoc.JavadocMethodImpl;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
@@ -107,7 +107,7 @@ public class JavadocManagerImpl implements JavadocManager {
 
 			return _javadocMethods.get(implMethod);
 		}
-		catch (NoSuchMethodException nsme) {
+		catch (NoSuchMethodException noSuchMethodException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
@@ -115,7 +115,7 @@ public class JavadocManagerImpl implements JavadocManager {
 						" from class ", implClassName));
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Unable to load implementation class " + implClassName);
@@ -153,8 +153,8 @@ public class JavadocManagerImpl implements JavadocManager {
 				return UnsecureSAXReaderUtil.read(inputStream, true);
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return null;
@@ -175,7 +175,7 @@ public class JavadocManagerImpl implements JavadocManager {
 			try {
 				clazz = JavadocUtil.loadClass(classLoader, type);
 			}
-			catch (ClassNotFoundException cnfe) {
+			catch (ClassNotFoundException classNotFoundException) {
 				if (_log.isWarnEnabled()) {
 					_log.warn("Unable to load class " + type);
 				}
@@ -208,7 +208,7 @@ public class JavadocManagerImpl implements JavadocManager {
 					_javadocMethods.put(
 						javadocMethod.getMethod(), javadocMethod);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						String methodName = methodElement.elementText("name");
 

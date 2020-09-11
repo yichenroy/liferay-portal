@@ -14,8 +14,6 @@
 
 package com.liferay.fragment.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -24,11 +22,17 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.fragment.model.FragmentEntry;
+import com.liferay.fragment.model.FragmentEntryVersion;
 import com.liferay.fragment.service.FragmentEntryLocalService;
+import com.liferay.fragment.service.persistence.FragmentCollectionPersistence;
+import com.liferay.fragment.service.persistence.FragmentEntryFinder;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkFinder;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkPersistence;
 import com.liferay.fragment.service.persistence.FragmentEntryPersistence;
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.fragment.service.persistence.FragmentEntryVersionPersistence;
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -53,19 +57,27 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.service.version.VersionService;
+import com.liferay.portal.kernel.service.version.VersionServiceListener;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the base implementation for the fragment entry local service.
@@ -78,10 +90,10 @@ import javax.sql.DataSource;
  * @see com.liferay.fragment.service.impl.FragmentEntryLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class FragmentEntryLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
-	implements FragmentEntryLocalService, IdentifiableOSGiService {
+	implements AopService, FragmentEntryLocalService, IdentifiableOSGiService,
+			   VersionService<FragmentEntry, FragmentEntryVersion> {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -91,6 +103,10 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 
 	/**
 	 * Adds the fragment entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FragmentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param fragmentEntry the fragment entry
 	 * @return the fragment entry that was added
@@ -104,19 +120,30 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	}
 
 	/**
-	 * Creates a new fragment entry with the primary key. Does not add the fragment entry to the database.
+	 * Creates a new fragment entry. Does not add the fragment entry to the database.
 	 *
-	 * @param fragmentEntryId the primary key for the new fragment entry
 	 * @return the new fragment entry
 	 */
 	@Override
 	@Transactional(enabled = false)
-	public FragmentEntry createFragmentEntry(long fragmentEntryId) {
-		return fragmentEntryPersistence.create(fragmentEntryId);
+	public FragmentEntry create() {
+		long primaryKey = counterLocalService.increment(
+			FragmentEntry.class.getName());
+
+		FragmentEntry draftFragmentEntry = fragmentEntryPersistence.create(
+			primaryKey);
+
+		draftFragmentEntry.setHeadId(primaryKey);
+
+		return draftFragmentEntry;
 	}
 
 	/**
 	 * Deletes the fragment entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FragmentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param fragmentEntryId the primary key of the fragment entry
 	 * @return the fragment entry that was removed
@@ -127,11 +154,22 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	public FragmentEntry deleteFragmentEntry(long fragmentEntryId)
 		throws PortalException {
 
-		return fragmentEntryPersistence.remove(fragmentEntryId);
+		FragmentEntry fragmentEntry =
+			fragmentEntryPersistence.fetchByPrimaryKey(fragmentEntryId);
+
+		if (fragmentEntry != null) {
+			delete(fragmentEntry);
+		}
+
+		return fragmentEntry;
 	}
 
 	/**
 	 * Deletes the fragment entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FragmentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param fragmentEntry the fragment entry
 	 * @return the fragment entry that was removed
@@ -142,7 +180,14 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	public FragmentEntry deleteFragmentEntry(FragmentEntry fragmentEntry)
 		throws PortalException {
 
-		return fragmentEntryPersistence.remove(fragmentEntry);
+		delete(fragmentEntry);
+
+		return fragmentEntry;
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return fragmentEntryPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
@@ -168,7 +213,7 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.fragment.model.impl.FragmentEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.fragment.model.impl.FragmentEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -188,7 +233,7 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.fragment.model.impl.FragmentEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.fragment.model.impl.FragmentEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -235,20 +280,6 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	@Override
 	public FragmentEntry fetchFragmentEntry(long fragmentEntryId) {
 		return fragmentEntryPersistence.fetchByPrimaryKey(fragmentEntryId);
-	}
-
-	/**
-	 * Returns the fragment entry matching the UUID and group.
-	 *
-	 * @param uuid the fragment entry's UUID
-	 * @param groupId the primary key of the group
-	 * @return the matching fragment entry, or <code>null</code> if a matching fragment entry could not be found
-	 */
-	@Override
-	public FragmentEntry fetchFragmentEntryByUuidAndGroupId(
-		String uuid, long groupId) {
-
-		return fragmentEntryPersistence.fetchByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -437,6 +468,16 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return fragmentEntryPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
@@ -445,6 +486,13 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 			(FragmentEntry)persistedModel);
 	}
 
+	public BasePersistence<FragmentEntry> getBasePersistence() {
+		return fragmentEntryPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
@@ -453,59 +501,10 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	}
 
 	/**
-	 * Returns all the fragment entries matching the UUID and company.
-	 *
-	 * @param uuid the UUID of the fragment entries
-	 * @param companyId the primary key of the company
-	 * @return the matching fragment entries, or an empty list if no matches were found
-	 */
-	@Override
-	public List<FragmentEntry> getFragmentEntriesByUuidAndCompanyId(
-		String uuid, long companyId) {
-
-		return fragmentEntryPersistence.findByUuid_C(uuid, companyId);
-	}
-
-	/**
-	 * Returns a range of fragment entries matching the UUID and company.
-	 *
-	 * @param uuid the UUID of the fragment entries
-	 * @param companyId the primary key of the company
-	 * @param start the lower bound of the range of fragment entries
-	 * @param end the upper bound of the range of fragment entries (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the range of matching fragment entries, or an empty list if no matches were found
-	 */
-	@Override
-	public List<FragmentEntry> getFragmentEntriesByUuidAndCompanyId(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<FragmentEntry> orderByComparator) {
-
-		return fragmentEntryPersistence.findByUuid_C(
-			uuid, companyId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the fragment entry matching the UUID and group.
-	 *
-	 * @param uuid the fragment entry's UUID
-	 * @param groupId the primary key of the group
-	 * @return the matching fragment entry
-	 * @throws PortalException if a matching fragment entry could not be found
-	 */
-	@Override
-	public FragmentEntry getFragmentEntryByUuidAndGroupId(
-			String uuid, long groupId)
-		throws PortalException {
-
-		return fragmentEntryPersistence.findByUUID_G(uuid, groupId);
-	}
-
-	/**
 	 * Returns a range of all the fragment entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.fragment.model.impl.FragmentEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.fragment.model.impl.FragmentEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of fragment entries
@@ -530,214 +529,457 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	/**
 	 * Updates the fragment entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FragmentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param fragmentEntry the fragment entry
 	 * @return the fragment entry that was updated
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
-	public FragmentEntry updateFragmentEntry(FragmentEntry fragmentEntry) {
-		return fragmentEntryPersistence.update(fragmentEntry);
+	public FragmentEntry updateFragmentEntry(FragmentEntry draftFragmentEntry)
+		throws PortalException {
+
+		return updateDraft(draftFragmentEntry);
 	}
 
-	/**
-	 * Returns the fragment entry local service.
-	 *
-	 * @return the fragment entry local service
-	 */
-	public FragmentEntryLocalService getFragmentEntryLocalService() {
-		return fragmentEntryLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			FragmentEntryLocalService.class, IdentifiableOSGiService.class,
+			CTService.class, PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the fragment entry local service.
-	 *
-	 * @param fragmentEntryLocalService the fragment entry local service
-	 */
-	public void setFragmentEntryLocalService(
-		FragmentEntryLocalService fragmentEntryLocalService) {
-
-		this.fragmentEntryLocalService = fragmentEntryLocalService;
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		fragmentEntryLocalService = (FragmentEntryLocalService)aopProxy;
 	}
 
-	/**
-	 * Returns the fragment entry persistence.
-	 *
-	 * @return the fragment entry persistence
-	 */
-	public FragmentEntryPersistence getFragmentEntryPersistence() {
-		return fragmentEntryPersistence;
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public FragmentEntry checkout(
+			FragmentEntry publishedFragmentEntry, int version)
+		throws PortalException {
+
+		if (!publishedFragmentEntry.isHead()) {
+			throw new IllegalArgumentException(
+				"Unable to checkout with unpublished changes " +
+					publishedFragmentEntry.getHeadId());
+		}
+
+		FragmentEntry draftFragmentEntry =
+			fragmentEntryPersistence.fetchByHeadId(
+				publishedFragmentEntry.getPrimaryKey());
+
+		if (draftFragmentEntry != null) {
+			throw new IllegalArgumentException(
+				"Unable to checkout with unpublished changes " +
+					publishedFragmentEntry.getPrimaryKey());
+		}
+
+		FragmentEntryVersion fragmentEntryVersion = getVersion(
+			publishedFragmentEntry, version);
+
+		draftFragmentEntry = _createDraft(publishedFragmentEntry);
+
+		fragmentEntryVersion.populateVersionedModel(draftFragmentEntry);
+
+		draftFragmentEntry = fragmentEntryPersistence.update(
+			draftFragmentEntry);
+
+		for (VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+				versionServiceListener : _versionServiceListeners) {
+
+			versionServiceListener.afterCheckout(draftFragmentEntry, version);
+		}
+
+		return draftFragmentEntry;
 	}
 
-	/**
-	 * Sets the fragment entry persistence.
-	 *
-	 * @param fragmentEntryPersistence the fragment entry persistence
-	 */
-	public void setFragmentEntryPersistence(
-		FragmentEntryPersistence fragmentEntryPersistence) {
+	@Indexable(type = IndexableType.DELETE)
+	@Override
+	public FragmentEntry delete(FragmentEntry publishedFragmentEntry)
+		throws PortalException {
 
-		this.fragmentEntryPersistence = fragmentEntryPersistence;
+		if (!publishedFragmentEntry.isHead()) {
+			throw new IllegalArgumentException(
+				"FragmentEntry is a draft " +
+					publishedFragmentEntry.getPrimaryKey());
+		}
+
+		FragmentEntry draftFragmentEntry =
+			fragmentEntryPersistence.fetchByHeadId(
+				publishedFragmentEntry.getPrimaryKey());
+
+		if (draftFragmentEntry != null) {
+			deleteDraft(draftFragmentEntry);
+		}
+
+		for (FragmentEntryVersion fragmentEntryVersion :
+				getVersions(publishedFragmentEntry)) {
+
+			fragmentEntryVersionPersistence.remove(fragmentEntryVersion);
+		}
+
+		fragmentEntryPersistence.remove(publishedFragmentEntry);
+
+		for (VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+				versionServiceListener : _versionServiceListeners) {
+
+			versionServiceListener.afterDelete(publishedFragmentEntry);
+		}
+
+		return publishedFragmentEntry;
 	}
 
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService
-		getCounterLocalService() {
+	@Indexable(type = IndexableType.DELETE)
+	@Override
+	public FragmentEntry deleteDraft(FragmentEntry draftFragmentEntry)
+		throws PortalException {
 
-		return counterLocalService;
+		if (draftFragmentEntry.isHead()) {
+			throw new IllegalArgumentException(
+				"FragmentEntry is not a draft " +
+					draftFragmentEntry.getPrimaryKey());
+		}
+
+		fragmentEntryPersistence.remove(draftFragmentEntry);
+
+		for (VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+				versionServiceListener : _versionServiceListeners) {
+
+			versionServiceListener.afterDeleteDraft(draftFragmentEntry);
+		}
+
+		return draftFragmentEntry;
 	}
 
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService
-			counterLocalService) {
+	@Override
+	public FragmentEntryVersion deleteVersion(
+			FragmentEntryVersion fragmentEntryVersion)
+		throws PortalException {
 
-		this.counterLocalService = counterLocalService;
+		FragmentEntryVersion latestFragmentEntryVersion =
+			fragmentEntryVersionPersistence.findByFragmentEntryId_First(
+				fragmentEntryVersion.getVersionedModelId(), null);
+
+		if (latestFragmentEntryVersion.getVersion() ==
+				fragmentEntryVersion.getVersion()) {
+
+			throw new IllegalArgumentException(
+				"Unable to delete latest version " +
+					fragmentEntryVersion.getVersion());
+		}
+
+		fragmentEntryVersion = fragmentEntryVersionPersistence.remove(
+			fragmentEntryVersion);
+
+		for (VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+				versionServiceListener : _versionServiceListeners) {
+
+			versionServiceListener.afterDeleteVersion(fragmentEntryVersion);
+		}
+
+		return fragmentEntryVersion;
 	}
 
-	/**
-	 * Returns the resource local service.
-	 *
-	 * @return the resource local service
-	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService
-		getResourceLocalService() {
+	@Override
+	public FragmentEntry fetchDraft(FragmentEntry fragmentEntry) {
+		if (fragmentEntry.isHead()) {
+			return fragmentEntryPersistence.fetchByHeadId(
+				fragmentEntry.getPrimaryKey());
+		}
 
-		return resourceLocalService;
+		return fragmentEntry;
 	}
 
-	/**
-	 * Sets the resource local service.
-	 *
-	 * @param resourceLocalService the resource local service
-	 */
-	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService
-			resourceLocalService) {
-
-		this.resourceLocalService = resourceLocalService;
+	@Override
+	public FragmentEntry fetchDraft(long primaryKey) {
+		return fragmentEntryPersistence.fetchByHeadId(primaryKey);
 	}
 
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
+	@Override
+	public FragmentEntryVersion fetchLatestVersion(
+		FragmentEntry fragmentEntry) {
 
-		return userLocalService;
+		long primaryKey = fragmentEntry.getHeadId();
+
+		if (fragmentEntry.isHead()) {
+			primaryKey = fragmentEntry.getPrimaryKey();
+		}
+
+		return fragmentEntryVersionPersistence.fetchByFragmentEntryId_First(
+			primaryKey, null);
 	}
 
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
+	@Override
+	public FragmentEntry fetchPublished(FragmentEntry fragmentEntry) {
+		if (fragmentEntry.isHead()) {
+			return fragmentEntry;
+		}
 
-		this.userLocalService = userLocalService;
+		if (fragmentEntry.getHeadId() == fragmentEntry.getPrimaryKey()) {
+			return null;
+		}
+
+		return fragmentEntryPersistence.fetchByPrimaryKey(
+			fragmentEntry.getHeadId());
 	}
 
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
+	@Override
+	public FragmentEntry fetchPublished(long primaryKey) {
+		FragmentEntry fragmentEntry =
+			fragmentEntryPersistence.fetchByPrimaryKey(primaryKey);
+
+		if ((fragmentEntry == null) ||
+			(fragmentEntry.getHeadId() == fragmentEntry.getPrimaryKey())) {
+
+			return null;
+		}
+
+		return fragmentEntry;
 	}
 
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
+	@Override
+	public FragmentEntry getDraft(FragmentEntry fragmentEntry)
+		throws PortalException {
+
+		if (!fragmentEntry.isHead()) {
+			return fragmentEntry;
+		}
+
+		FragmentEntry draftFragmentEntry =
+			fragmentEntryPersistence.fetchByHeadId(
+				fragmentEntry.getPrimaryKey());
+
+		if (draftFragmentEntry == null) {
+			draftFragmentEntry = fragmentEntryLocalService.updateDraft(
+				_createDraft(fragmentEntry));
+		}
+
+		return draftFragmentEntry;
 	}
 
-	/**
-	 * Returns the fragment entry link local service.
-	 *
-	 * @return the fragment entry link local service
-	 */
-	public com.liferay.fragment.service.FragmentEntryLinkLocalService
-		getFragmentEntryLinkLocalService() {
+	@Override
+	public FragmentEntry getDraft(long primaryKey) throws PortalException {
+		FragmentEntry draftFragmentEntry =
+			fragmentEntryPersistence.fetchByHeadId(primaryKey);
 
-		return fragmentEntryLinkLocalService;
+		if (draftFragmentEntry == null) {
+			FragmentEntry fragmentEntry =
+				fragmentEntryPersistence.findByPrimaryKey(primaryKey);
+
+			draftFragmentEntry = fragmentEntryLocalService.updateDraft(
+				_createDraft(fragmentEntry));
+		}
+
+		return draftFragmentEntry;
 	}
 
-	/**
-	 * Sets the fragment entry link local service.
-	 *
-	 * @param fragmentEntryLinkLocalService the fragment entry link local service
-	 */
-	public void setFragmentEntryLinkLocalService(
-		com.liferay.fragment.service.FragmentEntryLinkLocalService
-			fragmentEntryLinkLocalService) {
+	@Override
+	public FragmentEntryVersion getVersion(
+			FragmentEntry fragmentEntry, int version)
+		throws PortalException {
 
-		this.fragmentEntryLinkLocalService = fragmentEntryLinkLocalService;
+		long primaryKey = fragmentEntry.getHeadId();
+
+		if (fragmentEntry.isHead()) {
+			primaryKey = fragmentEntry.getPrimaryKey();
+		}
+
+		return fragmentEntryVersionPersistence.findByFragmentEntryId_Version(
+			primaryKey, version);
 	}
 
-	/**
-	 * Returns the fragment entry link persistence.
-	 *
-	 * @return the fragment entry link persistence
-	 */
-	public FragmentEntryLinkPersistence getFragmentEntryLinkPersistence() {
-		return fragmentEntryLinkPersistence;
+	@Override
+	public List<FragmentEntryVersion> getVersions(FragmentEntry fragmentEntry) {
+		long primaryKey = fragmentEntry.getPrimaryKey();
+
+		if (!fragmentEntry.isHead()) {
+			if (fragmentEntry.getHeadId() == fragmentEntry.getPrimaryKey()) {
+				return Collections.emptyList();
+			}
+
+			primaryKey = fragmentEntry.getHeadId();
+		}
+
+		return fragmentEntryVersionPersistence.findByFragmentEntryId(
+			primaryKey);
 	}
 
-	/**
-	 * Sets the fragment entry link persistence.
-	 *
-	 * @param fragmentEntryLinkPersistence the fragment entry link persistence
-	 */
-	public void setFragmentEntryLinkPersistence(
-		FragmentEntryLinkPersistence fragmentEntryLinkPersistence) {
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public FragmentEntry publishDraft(FragmentEntry draftFragmentEntry)
+		throws PortalException {
 
-		this.fragmentEntryLinkPersistence = fragmentEntryLinkPersistence;
+		if (draftFragmentEntry.isHead()) {
+			throw new IllegalArgumentException(
+				"Can only publish drafts " +
+					draftFragmentEntry.getPrimaryKey());
+		}
+
+		FragmentEntry headFragmentEntry = null;
+
+		int version = 1;
+
+		if (draftFragmentEntry.getHeadId() ==
+				draftFragmentEntry.getPrimaryKey()) {
+
+			headFragmentEntry = create();
+
+			draftFragmentEntry.setHeadId(headFragmentEntry.getPrimaryKey());
+		}
+		else {
+			headFragmentEntry = fragmentEntryPersistence.findByPrimaryKey(
+				draftFragmentEntry.getHeadId());
+
+			FragmentEntryVersion latestFragmentEntryVersion =
+				fragmentEntryVersionPersistence.findByFragmentEntryId_First(
+					draftFragmentEntry.getHeadId(), null);
+
+			version = latestFragmentEntryVersion.getVersion() + 1;
+		}
+
+		FragmentEntryVersion fragmentEntryVersion =
+			fragmentEntryVersionPersistence.create(
+				counterLocalService.increment(
+					FragmentEntryVersion.class.getName()));
+
+		fragmentEntryVersion.setVersion(version);
+		fragmentEntryVersion.setVersionedModelId(
+			headFragmentEntry.getPrimaryKey());
+
+		draftFragmentEntry.populateVersionModel(fragmentEntryVersion);
+
+		fragmentEntryVersionPersistence.update(fragmentEntryVersion);
+
+		fragmentEntryVersion.populateVersionedModel(headFragmentEntry);
+
+		headFragmentEntry.setHeadId(-headFragmentEntry.getPrimaryKey());
+
+		headFragmentEntry = fragmentEntryPersistence.update(headFragmentEntry);
+
+		for (VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+				versionServiceListener : _versionServiceListeners) {
+
+			versionServiceListener.afterPublishDraft(
+				draftFragmentEntry, version);
+		}
+
+		deleteDraft(draftFragmentEntry);
+
+		return headFragmentEntry;
 	}
 
-	/**
-	 * Returns the fragment entry link finder.
-	 *
-	 * @return the fragment entry link finder
-	 */
-	public FragmentEntryLinkFinder getFragmentEntryLinkFinder() {
-		return fragmentEntryLinkFinder;
+	@Override
+	public void registerListener(
+		VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+			versionServiceListener) {
+
+		_versionServiceListeners.add(versionServiceListener);
 	}
 
-	/**
-	 * Sets the fragment entry link finder.
-	 *
-	 * @param fragmentEntryLinkFinder the fragment entry link finder
-	 */
-	public void setFragmentEntryLinkFinder(
-		FragmentEntryLinkFinder fragmentEntryLinkFinder) {
+	@Override
+	public void unregisterListener(
+		VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+			versionServiceListener) {
 
-		this.fragmentEntryLinkFinder = fragmentEntryLinkFinder;
+		_versionServiceListeners.remove(versionServiceListener);
 	}
 
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register(
-			"com.liferay.fragment.model.FragmentEntry",
-			fragmentEntryLocalService);
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public FragmentEntry updateDraft(FragmentEntry draftFragmentEntry)
+		throws PortalException {
+
+		if (draftFragmentEntry.isHead()) {
+			throw new IllegalArgumentException(
+				"Can only update draft entries " +
+					draftFragmentEntry.getPrimaryKey());
+		}
+
+		FragmentEntry previousFragmentEntry =
+			fragmentEntryPersistence.fetchByPrimaryKey(
+				draftFragmentEntry.getPrimaryKey());
+
+		draftFragmentEntry = fragmentEntryPersistence.update(
+			draftFragmentEntry);
+
+		if (previousFragmentEntry == null) {
+			for (VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+					versionServiceListener : _versionServiceListeners) {
+
+				versionServiceListener.afterCreateDraft(draftFragmentEntry);
+			}
+		}
+		else {
+			for (VersionServiceListener<FragmentEntry, FragmentEntryVersion>
+					versionServiceListener : _versionServiceListeners) {
+
+				versionServiceListener.afterUpdateDraft(draftFragmentEntry);
+			}
+		}
+
+		return draftFragmentEntry;
 	}
 
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.fragment.model.FragmentEntry");
+	private FragmentEntry _createDraft(FragmentEntry publishedFragmentEntry)
+		throws PortalException {
+
+		FragmentEntry draftFragmentEntry = create();
+
+		draftFragmentEntry.setCtCollectionId(
+			publishedFragmentEntry.getCtCollectionId());
+		draftFragmentEntry.setUuid(publishedFragmentEntry.getUuid());
+		draftFragmentEntry.setHeadId(publishedFragmentEntry.getPrimaryKey());
+		draftFragmentEntry.setGroupId(publishedFragmentEntry.getGroupId());
+		draftFragmentEntry.setCompanyId(publishedFragmentEntry.getCompanyId());
+		draftFragmentEntry.setUserId(publishedFragmentEntry.getUserId());
+		draftFragmentEntry.setUserName(publishedFragmentEntry.getUserName());
+		draftFragmentEntry.setCreateDate(
+			publishedFragmentEntry.getCreateDate());
+		draftFragmentEntry.setModifiedDate(
+			publishedFragmentEntry.getModifiedDate());
+		draftFragmentEntry.setFragmentCollectionId(
+			publishedFragmentEntry.getFragmentCollectionId());
+		draftFragmentEntry.setFragmentEntryKey(
+			publishedFragmentEntry.getFragmentEntryKey());
+		draftFragmentEntry.setName(publishedFragmentEntry.getName());
+		draftFragmentEntry.setCss(publishedFragmentEntry.getCss());
+		draftFragmentEntry.setHtml(publishedFragmentEntry.getHtml());
+		draftFragmentEntry.setJs(publishedFragmentEntry.getJs());
+		draftFragmentEntry.setCacheable(publishedFragmentEntry.getCacheable());
+		draftFragmentEntry.setConfiguration(
+			publishedFragmentEntry.getConfiguration());
+		draftFragmentEntry.setPreviewFileEntryId(
+			publishedFragmentEntry.getPreviewFileEntryId());
+		draftFragmentEntry.setReadOnly(publishedFragmentEntry.getReadOnly());
+		draftFragmentEntry.setType(publishedFragmentEntry.getType());
+		draftFragmentEntry.setLastPublishDate(
+			publishedFragmentEntry.getLastPublishDate());
+		draftFragmentEntry.setStatus(publishedFragmentEntry.getStatus());
+		draftFragmentEntry.setStatusByUserId(
+			publishedFragmentEntry.getStatusByUserId());
+		draftFragmentEntry.setStatusByUserName(
+			publishedFragmentEntry.getStatusByUserName());
+		draftFragmentEntry.setStatusDate(
+			publishedFragmentEntry.getStatusDate());
+
+		draftFragmentEntry.resetOriginalValues();
+
+		return draftFragmentEntry;
 	}
+
+	private final Set
+		<VersionServiceListener<FragmentEntry, FragmentEntryVersion>>
+			_versionServiceListeners = Collections.newSetFromMap(
+				new ConcurrentHashMap
+					<VersionServiceListener
+						<FragmentEntry, FragmentEntryVersion>,
+					 Boolean>());
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -749,8 +991,23 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 		return FragmentEntryLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<FragmentEntry> getCTPersistence() {
+		return fragmentEntryPersistence;
+	}
+
+	@Override
+	public Class<FragmentEntry> getModelClass() {
 		return FragmentEntry.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<FragmentEntry>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(fragmentEntryPersistence);
 	}
 
 	protected String getModelClassName() {
@@ -776,52 +1033,41 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = FragmentEntryLocalService.class)
 	protected FragmentEntryLocalService fragmentEntryLocalService;
 
-	@BeanReference(type = FragmentEntryPersistence.class)
+	@Reference
 	protected FragmentEntryPersistence fragmentEntryPersistence;
 
-	@ServiceReference(
-		type = com.liferay.counter.kernel.service.CounterLocalService.class
-	)
+	@Reference
+	protected FragmentEntryFinder fragmentEntryFinder;
+
+	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@ServiceReference(
-		type = com.liferay.portal.kernel.service.ResourceLocalService.class
-	)
+	@Reference
+	protected FragmentCollectionPersistence fragmentCollectionPersistence;
+
+	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
-	@ServiceReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
+	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
 
-	@ServiceReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
+	@Reference
+	protected FragmentEntryVersionPersistence fragmentEntryVersionPersistence;
 
-	@BeanReference(
-		type = com.liferay.fragment.service.FragmentEntryLinkLocalService.class
-	)
-	protected com.liferay.fragment.service.FragmentEntryLinkLocalService
-		fragmentEntryLinkLocalService;
-
-	@BeanReference(type = FragmentEntryLinkPersistence.class)
+	@Reference
 	protected FragmentEntryLinkPersistence fragmentEntryLinkPersistence;
 
-	@BeanReference(type = FragmentEntryLinkFinder.class)
+	@Reference
 	protected FragmentEntryLinkFinder fragmentEntryLinkFinder;
-
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry
-		persistedModelLocalServiceRegistry;
 
 }

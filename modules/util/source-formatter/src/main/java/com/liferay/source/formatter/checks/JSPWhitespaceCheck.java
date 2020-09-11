@@ -36,22 +36,45 @@ public class JSPWhitespaceCheck extends WhitespaceCheck {
 			String fileName, String absolutePath, String content)
 		throws IOException {
 
-		content = _formatWhitespace(fileName, content);
+		content = _formatWhitespace(fileName, absolutePath, content);
 
 		content = _formatDirectivesWhitespace(content);
 
 		content = StringUtil.replace(
 			content,
 			new String[] {
-				"<br/>", "@page import", "@tag import", "\"%>", ")%>",
-				"function (", "javascript: ", "){\n", "\n\n\n"
+				"@page import", "@tag import", "\"%>", ")%>", "javascript: ",
+				"){\n", "\n\n\n"
 			},
 			new String[] {
-				"<br />", "@ page import", "@ tag import", "\" %>", ") %>",
-				"function(", "javascript:", ") {\n", "\n\n"
+				"@ page import", "@ tag import", "\" %>", ") %>", "javascript:",
+				") {\n", "\n\n"
 			});
 
 		return content;
+	}
+
+	@Override
+	protected String formatDoubleSpace(String line) {
+		String trimmedLine = StringUtil.trim(line);
+
+		if (trimmedLine.startsWith(StringPool.DOUBLE_SLASH) ||
+			trimmedLine.startsWith(StringPool.POUND) ||
+			trimmedLine.startsWith(StringPool.STAR)) {
+
+			return line;
+		}
+
+		Matcher matcher = _javaSourceInsideJSPLinePattern.matcher(line);
+
+		while (matcher.find()) {
+			String group = matcher.group();
+
+			line = StringUtil.replace(
+				line, group, super.formatDoubleSpace(group));
+		}
+
+		return super.formatDoubleSpace(line);
 	}
 
 	private String _formatDirectivesWhitespace(String content) {
@@ -106,7 +129,8 @@ public class JSPWhitespaceCheck extends WhitespaceCheck {
 		return line;
 	}
 
-	private String _formatWhitespace(String fileName, String content)
+	private String _formatWhitespace(
+			String fileName, String absolutePath, String content)
 		throws IOException {
 
 		StringBundler sb = new StringBundler();
@@ -117,10 +141,11 @@ public class JSPWhitespaceCheck extends WhitespaceCheck {
 			String line = null;
 
 			boolean javaSource = false;
+			boolean jsSource = false;
 
 			while ((line = unsyncBufferedReader.readLine()) != null) {
 				if (!fileName.endsWith("/jsonws/action.jsp")) {
-					line = trimLine(fileName, line);
+					line = trimLine(fileName, absolutePath, line);
 				}
 
 				String trimmedLine = StringUtil.trimLeading(line);
@@ -131,8 +156,27 @@ public class JSPWhitespaceCheck extends WhitespaceCheck {
 				else if (trimmedLine.equals("%>")) {
 					javaSource = false;
 				}
+				else if (trimmedLine.equals("<aui:script>") ||
+						 trimmedLine.startsWith("<aui:script ") ||
+						 trimmedLine.equals("<script>") ||
+						 trimmedLine.startsWith("<script ")) {
 
-				if (!trimmedLine.equals("%>") && line.contains("%>") &&
+					jsSource = true;
+				}
+				else if (trimmedLine.equals("</aui:script>") ||
+						 trimmedLine.equals("</script>")) {
+
+					jsSource = false;
+				}
+
+				if (jsSource && !javaSource) {
+					sb.append(line);
+					sb.append("\n");
+
+					continue;
+				}
+
+				if (!trimmedLine.startsWith("%>") && line.contains("%>") &&
 					!line.contains("--%>") && !line.contains(" %>")) {
 
 					line = StringUtil.replace(line, "%>", " %>");
@@ -162,7 +206,9 @@ public class JSPWhitespaceCheck extends WhitespaceCheck {
 					continue;
 				}
 
-				line = formatIncorrectSyntax(line, "\t ", "\t", false);
+				if (!javaSource) {
+					line = formatIncorrectSyntax(line, "\t ", "\t", false);
+				}
 
 				line = _formatWhitespace(line, javaSource);
 
@@ -187,19 +233,10 @@ public class JSPWhitespaceCheck extends WhitespaceCheck {
 						trimmedLine, CharPool.TAB, StringPool.SPACE);
 				}
 
-				while (trimmedLine.contains(StringPool.DOUBLE_SPACE) &&
-					   !trimmedLine.contains(
-						   StringPool.QUOTE + StringPool.DOUBLE_SPACE) &&
-					   !fileName.endsWith(".vm")) {
-
-					line = StringUtil.replaceLast(
-						line, StringPool.DOUBLE_SPACE, StringPool.SPACE);
-
-					trimmedLine = StringUtil.replaceLast(
-						trimmedLine, StringPool.DOUBLE_SPACE, StringPool.SPACE);
-				}
+				line = formatSelfClosingTags(line);
 
 				sb.append(line);
+
 				sb.append("\n");
 			}
 		}

@@ -14,11 +14,15 @@
 
 package com.liferay.user.associated.data.anonymizer;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.user.associated.data.component.UADComponent;
+
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides a way to retrieve, count, anonymize, and delete type {@code T}
@@ -82,5 +86,14 @@ public interface UADAnonymizer<T> extends UADComponent<T> {
 	 * @throws PortalException if a portal exception occurred
 	 */
 	public void deleteAll(long userId) throws PortalException;
+
+	/**
+	 * Returns a map of error messages corresponding to exceptions.
+	 *
+	 * @param locale the locale of the language
+	 */
+	public default Map<Class<?>, String> getExceptionMessageMap(Locale locale) {
+		return new HashMap<>();
+	}
 
 }

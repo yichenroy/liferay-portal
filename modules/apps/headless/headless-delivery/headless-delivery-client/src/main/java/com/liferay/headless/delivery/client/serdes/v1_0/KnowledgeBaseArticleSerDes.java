@@ -14,16 +14,20 @@
 
 package com.liferay.headless.delivery.client.serdes.v1_0;
 
+import com.liferay.headless.delivery.client.dto.v1_0.CustomField;
 import com.liferay.headless.delivery.client.dto.v1_0.KnowledgeBaseArticle;
-import com.liferay.headless.delivery.client.dto.v1_0.TaxonomyCategory;
+import com.liferay.headless.delivery.client.dto.v1_0.RelatedContent;
+import com.liferay.headless.delivery.client.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import javax.annotation.Generated;
@@ -61,12 +65,22 @@ public class KnowledgeBaseArticleSerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (knowledgeBaseArticle.getActions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(knowledgeBaseArticle.getActions()));
+		}
+
 		if (knowledgeBaseArticle.getAggregateRating() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"aggregateRating\":");
+			sb.append("\"aggregateRating\": ");
 
 			sb.append(
 				String.valueOf(knowledgeBaseArticle.getAggregateRating()));
@@ -77,7 +91,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"articleBody\":");
+			sb.append("\"articleBody\": ");
 
 			sb.append("\"");
 
@@ -91,9 +105,32 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"creator\":");
+			sb.append("\"creator\": ");
 
 			sb.append(String.valueOf(knowledgeBaseArticle.getCreator()));
+		}
+
+		if (knowledgeBaseArticle.getCustomFields() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < knowledgeBaseArticle.getCustomFields().length;
+				 i++) {
+
+				sb.append(
+					String.valueOf(knowledgeBaseArticle.getCustomFields()[i]));
+
+				if ((i + 1) < knowledgeBaseArticle.getCustomFields().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (knowledgeBaseArticle.getDateCreated() != null) {
@@ -101,7 +138,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -117,7 +154,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateModified\":");
+			sb.append("\"dateModified\": ");
 
 			sb.append("\"");
 
@@ -133,7 +170,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"description\":");
+			sb.append("\"description\": ");
 
 			sb.append("\"");
 
@@ -147,7 +184,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"encodingFormat\":");
+			sb.append("\"encodingFormat\": ");
 
 			sb.append("\"");
 
@@ -161,7 +198,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"friendlyUrlPath\":");
+			sb.append("\"friendlyUrlPath\": ");
 
 			sb.append("\"");
 
@@ -175,7 +212,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(knowledgeBaseArticle.getId());
 		}
@@ -185,7 +222,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"keywords\":");
+			sb.append("\"keywords\": ");
 
 			sb.append("[");
 
@@ -211,7 +248,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"numberOfAttachments\":");
+			sb.append("\"numberOfAttachments\": ");
 
 			sb.append(knowledgeBaseArticle.getNumberOfAttachments());
 		}
@@ -221,7 +258,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"numberOfKnowledgeBaseArticles\":");
+			sb.append("\"numberOfKnowledgeBaseArticles\": ");
 
 			sb.append(knowledgeBaseArticle.getNumberOfKnowledgeBaseArticles());
 		}
@@ -231,7 +268,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"parentKnowledgeBaseFolder\":");
+			sb.append("\"parentKnowledgeBaseFolder\": ");
 
 			sb.append(
 				String.valueOf(
@@ -243,9 +280,35 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"parentKnowledgeBaseFolderId\":");
+			sb.append("\"parentKnowledgeBaseFolderId\": ");
 
 			sb.append(knowledgeBaseArticle.getParentKnowledgeBaseFolderId());
+		}
+
+		if (knowledgeBaseArticle.getRelatedContents() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"relatedContents\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i < knowledgeBaseArticle.getRelatedContents().length; i++) {
+
+				sb.append(
+					String.valueOf(
+						knowledgeBaseArticle.getRelatedContents()[i]));
+
+				if ((i + 1) <
+						knowledgeBaseArticle.getRelatedContents().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (knowledgeBaseArticle.getSiteId() != null) {
@@ -253,29 +316,41 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"siteId\":");
+			sb.append("\"siteId\": ");
 
 			sb.append(knowledgeBaseArticle.getSiteId());
 		}
 
-		if (knowledgeBaseArticle.getTaxonomyCategories() != null) {
+		if (knowledgeBaseArticle.getSubscribed() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"taxonomyCategories\":");
+			sb.append("\"subscribed\": ");
+
+			sb.append(knowledgeBaseArticle.getSubscribed());
+		}
+
+		if (knowledgeBaseArticle.getTaxonomyCategoryBriefs() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"taxonomyCategoryBriefs\": ");
 
 			sb.append("[");
 
 			for (int i = 0;
-				 i < knowledgeBaseArticle.getTaxonomyCategories().length; i++) {
+				 i < knowledgeBaseArticle.getTaxonomyCategoryBriefs().length;
+				 i++) {
 
 				sb.append(
 					String.valueOf(
-						knowledgeBaseArticle.getTaxonomyCategories()[i]));
+						knowledgeBaseArticle.getTaxonomyCategoryBriefs()[i]));
 
 				if ((i + 1) <
-						knowledgeBaseArticle.getTaxonomyCategories().length) {
+						knowledgeBaseArticle.
+							getTaxonomyCategoryBriefs().length) {
 
 					sb.append(", ");
 				}
@@ -289,7 +364,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"taxonomyCategoryIds\":");
+			sb.append("\"taxonomyCategoryIds\": ");
 
 			sb.append("[");
 
@@ -314,7 +389,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"title\":");
+			sb.append("\"title\": ");
 
 			sb.append("\"");
 
@@ -328,7 +403,7 @@ public class KnowledgeBaseArticleSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"viewableBy\":");
+			sb.append("\"viewableBy\": ");
 
 			sb.append("\"");
 
@@ -342,6 +417,13 @@ public class KnowledgeBaseArticleSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		KnowledgeBaseArticleJSONParser knowledgeBaseArticleJSONParser =
+			new KnowledgeBaseArticleJSONParser();
+
+		return knowledgeBaseArticleJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(
 		KnowledgeBaseArticle knowledgeBaseArticle) {
 
@@ -349,10 +431,18 @@ public class KnowledgeBaseArticleSerDes {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+		if (knowledgeBaseArticle.getActions() == null) {
+			map.put("actions", null);
+		}
+		else {
+			map.put(
+				"actions", String.valueOf(knowledgeBaseArticle.getActions()));
+		}
 
 		if (knowledgeBaseArticle.getAggregateRating() == null) {
 			map.put("aggregateRating", null);
@@ -380,15 +470,34 @@ public class KnowledgeBaseArticleSerDes {
 				"creator", String.valueOf(knowledgeBaseArticle.getCreator()));
 		}
 
-		map.put(
-			"dateCreated",
-			liferayToJSONDateFormat.format(
-				knowledgeBaseArticle.getDateCreated()));
+		if (knowledgeBaseArticle.getCustomFields() == null) {
+			map.put("customFields", null);
+		}
+		else {
+			map.put(
+				"customFields",
+				String.valueOf(knowledgeBaseArticle.getCustomFields()));
+		}
 
-		map.put(
-			"dateModified",
-			liferayToJSONDateFormat.format(
-				knowledgeBaseArticle.getDateModified()));
+		if (knowledgeBaseArticle.getDateCreated() == null) {
+			map.put("dateCreated", null);
+		}
+		else {
+			map.put(
+				"dateCreated",
+				liferayToJSONDateFormat.format(
+					knowledgeBaseArticle.getDateCreated()));
+		}
+
+		if (knowledgeBaseArticle.getDateModified() == null) {
+			map.put("dateModified", null);
+		}
+		else {
+			map.put(
+				"dateModified",
+				liferayToJSONDateFormat.format(
+					knowledgeBaseArticle.getDateModified()));
+		}
 
 		if (knowledgeBaseArticle.getDescription() == null) {
 			map.put("description", null);
@@ -471,6 +580,15 @@ public class KnowledgeBaseArticleSerDes {
 					knowledgeBaseArticle.getParentKnowledgeBaseFolderId()));
 		}
 
+		if (knowledgeBaseArticle.getRelatedContents() == null) {
+			map.put("relatedContents", null);
+		}
+		else {
+			map.put(
+				"relatedContents",
+				String.valueOf(knowledgeBaseArticle.getRelatedContents()));
+		}
+
 		if (knowledgeBaseArticle.getSiteId() == null) {
 			map.put("siteId", null);
 		}
@@ -478,13 +596,23 @@ public class KnowledgeBaseArticleSerDes {
 			map.put("siteId", String.valueOf(knowledgeBaseArticle.getSiteId()));
 		}
 
-		if (knowledgeBaseArticle.getTaxonomyCategories() == null) {
-			map.put("taxonomyCategories", null);
+		if (knowledgeBaseArticle.getSubscribed() == null) {
+			map.put("subscribed", null);
 		}
 		else {
 			map.put(
-				"taxonomyCategories",
-				String.valueOf(knowledgeBaseArticle.getTaxonomyCategories()));
+				"subscribed",
+				String.valueOf(knowledgeBaseArticle.getSubscribed()));
+		}
+
+		if (knowledgeBaseArticle.getTaxonomyCategoryBriefs() == null) {
+			map.put("taxonomyCategoryBriefs", null);
+		}
+		else {
+			map.put(
+				"taxonomyCategoryBriefs",
+				String.valueOf(
+					knowledgeBaseArticle.getTaxonomyCategoryBriefs()));
 		}
 
 		if (knowledgeBaseArticle.getTaxonomyCategoryIds() == null) {
@@ -515,13 +643,7 @@ public class KnowledgeBaseArticleSerDes {
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class KnowledgeBaseArticleJSONParser
+	public static class KnowledgeBaseArticleJSONParser
 		extends BaseJSONParser<KnowledgeBaseArticle> {
 
 		@Override
@@ -539,7 +661,14 @@ public class KnowledgeBaseArticleSerDes {
 			KnowledgeBaseArticle knowledgeBaseArticle,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "aggregateRating")) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				if (jsonParserFieldValue != null) {
+					knowledgeBaseArticle.setActions(
+						(Map)KnowledgeBaseArticleSerDes.toMap(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "aggregateRating")) {
 				if (jsonParserFieldValue != null) {
 					knowledgeBaseArticle.setAggregateRating(
 						AggregateRatingSerDes.toDTO(
@@ -556,6 +685,18 @@ public class KnowledgeBaseArticleSerDes {
 				if (jsonParserFieldValue != null) {
 					knowledgeBaseArticle.setCreator(
 						CreatorSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
+				if (jsonParserFieldValue != null) {
+					knowledgeBaseArticle.setCustomFields(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> CustomFieldSerDes.toDTO((String)object)
+						).toArray(
+							size -> new CustomField[size]
+						));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
@@ -633,24 +774,42 @@ public class KnowledgeBaseArticleSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "relatedContents")) {
+				if (jsonParserFieldValue != null) {
+					knowledgeBaseArticle.setRelatedContents(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> RelatedContentSerDes.toDTO((String)object)
+						).toArray(
+							size -> new RelatedContent[size]
+						));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
 				if (jsonParserFieldValue != null) {
 					knowledgeBaseArticle.setSiteId(
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "subscribed")) {
+				if (jsonParserFieldValue != null) {
+					knowledgeBaseArticle.setSubscribed(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(
-						jsonParserFieldName, "taxonomyCategories")) {
+						jsonParserFieldName, "taxonomyCategoryBriefs")) {
 
 				if (jsonParserFieldValue != null) {
-					knowledgeBaseArticle.setTaxonomyCategories(
+					knowledgeBaseArticle.setTaxonomyCategoryBriefs(
 						Stream.of(
 							toStrings((Object[])jsonParserFieldValue)
 						).map(
-							object -> TaxonomyCategorySerDes.toDTO(
+							object -> TaxonomyCategoryBriefSerDes.toDTO(
 								(String)object)
 						).toArray(
-							size -> new TaxonomyCategory[size]
+							size -> new TaxonomyCategoryBrief[size]
 						));
 				}
 			}
@@ -674,12 +833,80 @@ public class KnowledgeBaseArticleSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

@@ -33,7 +33,6 @@ import com.liferay.poshi.runner.util.Validator;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -82,19 +81,6 @@ public class PoshiRunnerGetterUtil {
 		}
 
 		return allChildElements;
-	}
-
-	public static String getCanonicalPath(String dir) {
-		try {
-			File file = new File(dir);
-
-			return file.getCanonicalPath();
-		}
-		catch (IOException ioe) {
-			ioe.printStackTrace();
-		}
-
-		return dir;
 	}
 
 	public static String getClassCommandNameFromNamespacedClassCommandName(
@@ -379,7 +365,7 @@ public class PoshiRunnerGetterUtil {
 	}
 
 	public static String getProjectDirName() {
-		return getCanonicalPath(PropsValues.PROJECT_DIR);
+		return FileUtil.getCanonicalPath(PropsValues.PROJECT_DIR);
 	}
 
 	public static Element getRootElementFromURL(URL url) throws Exception {
@@ -506,14 +492,14 @@ public class PoshiRunnerGetterUtil {
 		try {
 			document = saxReader.read(inputStream);
 		}
-		catch (DocumentException de) {
+		catch (DocumentException documentException) {
 			throw new Exception(
-				de.getMessage() + "\nInvalid syntax in " + filePath, de);
+				documentException.getMessage() + "\nInvalid syntax in " +
+					filePath,
+				documentException);
 		}
 
-		Element rootElement = document.getRootElement();
-
-		return rootElement;
+		return document.getRootElement();
 	}
 
 	public static String getUtilityClassName(String simpleClassName) {
@@ -626,8 +612,8 @@ public class PoshiRunnerGetterUtil {
 						put(classInfo.getSimpleName(), classInfo.getName());
 					}
 				}
-				catch (IOException ioe) {
-					throw new RuntimeException(ioe);
+				catch (IOException ioException) {
+					throw new RuntimeException(ioException);
 				}
 			}
 		};

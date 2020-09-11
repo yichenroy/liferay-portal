@@ -17,7 +17,6 @@ package com.liferay.source.formatter.checks;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
@@ -41,16 +40,19 @@ import java.util.regex.Pattern;
  */
 public class GradleDependenciesCheck extends BaseFileCheck {
 
-	public void setCheckPetraDependencies(String checkPetraDependencies) {
-		_checkPetraDependencies = GetterUtil.getBoolean(checkPetraDependencies);
-	}
-
 	@Override
 	protected String doProcess(
 		String fileName, String absolutePath, String content) {
 
 		List<String> dependenciesBlocks =
 			GradleSourceUtil.getDependenciesBlocks(content);
+
+		if (dependenciesBlocks.isEmpty()) {
+			return content;
+		}
+
+		String releasePortalAPIVersion = getAttributeValue(
+			_RELEASE_PORTAL_API_VERSION_KEY, absolutePath);
 
 		for (String dependenciesBlock : dependenciesBlocks) {
 			int x = dependenciesBlock.indexOf("\n");
@@ -63,9 +65,10 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 			String dependencies = dependenciesBlock.substring(x, y + 1);
 
 			content = _formatDependencies(
-				content, SourceUtil.getIndent(dependenciesBlock), dependencies);
+				content, SourceUtil.getIndent(dependenciesBlock), dependencies,
+				releasePortalAPIVersion);
 
-			if (_checkPetraDependencies &&
+			if (isAttributeValue(_CHECK_PETRA_DEPENDENCIES_KEY, absolutePath) &&
 				absolutePath.contains("/modules/core/petra/")) {
 
 				_checkPetraDependencies(fileName, content, dependencies);
@@ -73,22 +76,6 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 		}
 
 		return content;
-	}
-
-	private static boolean _hasPatchedOSGiCore(Set<String> dependencies) {
-		if (!dependencies.contains(
-				_ORG_ECLIPSE_OSGI_3_13_0_LIFERAY_PATCHED_1)) {
-
-			return false;
-		}
-
-		if (!dependencies.contains(_OSGI_CORE_6_0_0_DEPENDENCY) &&
-			!dependencies.contains(_ORG_OSGI_CORE_6_0_0_DEPENDENCY)) {
-
-			return false;
-		}
-
-		return true;
 	}
 
 	private void _checkPetraDependencies(
@@ -105,7 +92,8 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 	}
 
 	private String _formatDependencies(
-		String content, String indent, String dependencies) {
+		String content, String indent, String dependencies,
+		String releasePortalAPIVersion) {
 
 		Matcher matcher = _incorrectWhitespacePattern.matcher(dependencies);
 
@@ -136,6 +124,18 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 				continue;
 			}
 
+			if (dependency.startsWith("compileOnly ") &&
+				Validator.isNotNull(releasePortalAPIVersion)) {
+
+				uniqueDependencies.add(
+					StringBundler.concat(
+						"compileOnly group: \"com.liferay.portal\", name: ",
+						"\"release.portal.api\", version: \"",
+						releasePortalAPIVersion, "\""));
+
+				continue;
+			}
+
 			matcher = _incorrectGroupNameVersionPattern.matcher(dependency);
 
 			if (matcher.find()) {
@@ -157,16 +157,6 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 			uniqueDependencies.add(_sortDependencyAttributes(dependency));
 		}
 
-		boolean patchedOSGiCore = _hasPatchedOSGiCore(uniqueDependencies);
-
-		if (patchedOSGiCore) {
-
-			// See https://github.com/brianchandotcom/liferay-portal/pull/62537
-
-			uniqueDependencies.remove(_ORG_OSGI_CORE_6_0_0_DEPENDENCY);
-			uniqueDependencies.remove(_OSGI_CORE_6_0_0_DEPENDENCY);
-		}
-
 		StringBundler sb = new StringBundler();
 
 		String previousConfiguration = null;
@@ -181,13 +171,6 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 				previousConfiguration = configuration;
 
 				sb.append("\n");
-
-				if (configuration.equals("compileOnly") && patchedOSGiCore) {
-					sb.append(indent);
-					sb.append("\t");
-					sb.append(_OSGI_CORE_6_0_0_DEPENDENCY);
-					sb.append("\n\n");
-				}
 			}
 
 			sb.append(indent);
@@ -232,17 +215,11 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 		return sb.toString();
 	}
 
-	private static final String _ORG_ECLIPSE_OSGI_3_13_0_LIFERAY_PATCHED_1 =
-		"compileOnly group: \"com.liferay\", name: \"org.eclipse.osgi\", " +
-			"version: \"3.13.0.LIFERAY-PATCHED-1\"";
+	private static final String _CHECK_PETRA_DEPENDENCIES_KEY =
+		"checkPetraDependencies";
 
-	private static final String _ORG_OSGI_CORE_6_0_0_DEPENDENCY =
-		"compileOnly group: \"org.osgi\", name: \"org.osgi.core\", version: " +
-			"\"6.0.0\"";
-
-	private static final String _OSGI_CORE_6_0_0_DEPENDENCY =
-		"compileOnly group: \"org.osgi\", name: \"osgi.core\", version: " +
-			"\"6.0.0\"";
+	private static final String _RELEASE_PORTAL_API_VERSION_KEY =
+		"releasePortalAPIVersion";
 
 	private static final Pattern _dependencyAttributesPattern = Pattern.compile(
 		"(\\w+): \"([\\w.-]+)\"");
@@ -253,9 +230,7 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 			"(^[^\\s]+)\\s+\"([^:]+?):([^:]+?):([^\"]+?)\"(.*?)",
 			Pattern.DOTALL);
 	private static final Pattern _incorrectWhitespacePattern = Pattern.compile(
-		":[^ \n]");
-
-	private boolean _checkPetraDependencies;
+		"(:|\",)[^ \n]");
 
 	private class GradleDependencyComparator
 		implements Comparator<String>, Serializable {

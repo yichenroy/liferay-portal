@@ -14,8 +14,6 @@
 
 package com.liferay.fragment.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
  * @see FragmentEntryLink
  * @generated
  */
-@ProviderType
 public abstract class FragmentEntryLinkBaseImpl
 	extends FragmentEntryLinkModelImpl implements FragmentEntryLink {
 

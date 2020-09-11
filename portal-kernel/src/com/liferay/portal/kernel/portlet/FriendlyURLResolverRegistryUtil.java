@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceReference;
@@ -35,22 +33,12 @@ import java.util.Set;
  * @author Eduardo García
  * @author Raymond Augé
  */
-@ProviderType
 public class FriendlyURLResolverRegistryUtil {
 
 	public static FriendlyURLResolver getFriendlyURLResolver(
 		String urlSeparator) {
 
 		return _serviceTrackerMap.getService(urlSeparator);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #getFriendlyURLResolversAsCollection()}
-	 */
-	@Deprecated
-	public static List<FriendlyURLResolver> getFriendlyURLResolvers() {
-		return new ArrayList<>(getFriendlyURLResolversAsCollection());
 	}
 
 	public static Collection<FriendlyURLResolver>
@@ -73,7 +61,7 @@ public class FriendlyURLResolverRegistryUtil {
 	public static String[] getURLSeparators() {
 		Set<String> urlSeparators = _serviceTrackerMap.keySet();
 
-		return urlSeparators.toArray(new String[urlSeparators.size()]);
+		return urlSeparators.toArray(new String[0]);
 	}
 
 	public static void register(FriendlyURLResolver friendlyURLResolver) {

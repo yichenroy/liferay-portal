@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.searcher;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Creates a search request builder for building a search request object that
@@ -31,5 +31,7 @@ public interface SearchRequestBuilderFactory {
 	 * @return the search request builder
 	 */
 	public SearchRequestBuilder builder();
+
+	public SearchRequestBuilder builder(SearchRequest searchRequest);
 
 }

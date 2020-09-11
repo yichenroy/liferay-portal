@@ -14,8 +14,6 @@
 
 package com.liferay.blogs.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * The extended model implementation for the BlogsStatsUser service. Represents
  * a row in the &quot;BlogsStatsUser&quot; database table, with each column
@@ -29,7 +27,6 @@ import aQute.bnd.annotation.ProviderType;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class BlogsStatsUserImpl extends BlogsStatsUserBaseImpl {
 
 	/**

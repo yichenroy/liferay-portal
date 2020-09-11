@@ -57,9 +57,9 @@ public <#if dependencyInjectorDS>abstract </#if>class ${entity.name}FinderBaseIm
 
 					field.set(this, dbColumnNames);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isDebugEnabled()) {
-						_log.debug(e, e);
+						_log.debug(exception, exception);
 					}
 				}
 			<#else>
@@ -72,7 +72,7 @@ public <#if dependencyInjectorDS>abstract </#if>class ${entity.name}FinderBaseIm
 		@Override
 		public Set<String> getBadColumnNames() {
 			<#if dependencyInjectorDS>
-				return ${entity.varName}Persistence.getBadColumnNames();
+				return ${entity.variableName}Persistence.getBadColumnNames();
 			<#else>
 				return get${entity.name}Persistence().getBadColumnNames();
 			</#if>
@@ -88,16 +88,16 @@ public <#if dependencyInjectorDS>abstract </#if>class ${entity.name}FinderBaseIm
 		 * @return the ${entity.humanName} persistence
 		 */
 		public ${entity.name}Persistence get${entity.name}Persistence() {
-			return ${entity.varName}Persistence;
+			return ${entity.variableName}Persistence;
 		}
 
 		/**
 		 * Sets the ${entity.humanName} persistence.
 		 *
-		 * @param ${entity.varName}Persistence the ${entity.humanName} persistence
+		 * @param ${entity.variableName}Persistence the ${entity.humanName} persistence
 		 */
-		public void set${entity.name}Persistence(${entity.name}Persistence ${entity.varName}Persistence) {
-			this.${entity.varName}Persistence = ${entity.varName}Persistence;
+		public void set${entity.name}Persistence(${entity.name}Persistence ${entity.variableName}Persistence) {
+			this.${entity.variableName}Persistence = ${entity.variableName}Persistence;
 		}
 	</#if>
 
@@ -108,11 +108,22 @@ public <#if dependencyInjectorDS>abstract </#if>class ${entity.name}FinderBaseIm
 			@BeanReference(type = ${entity.name}Persistence.class)
 		</#if>
 
-		protected ${entity.name}Persistence ${entity.varName}Persistence;
+		protected ${entity.name}Persistence ${entity.variableName}Persistence;
 	</#if>
 
 	<#if entity.badEntityColumns?size != 0>
 		private static final Log _log = LogFactoryUtil.getLog(${entity.name}FinderBaseImpl.class);
+	</#if>
+
+	<#if dependencyInjectorDS>
+		static {
+			try {
+				Class.forName(${portletShortName}PersistenceConstants.class.getName());
+			}
+			catch (ClassNotFoundException classNotFoundException) {
+				throw new ExceptionInInitializerError(classNotFoundException);
+			}
+		}
 	</#if>
 
 }

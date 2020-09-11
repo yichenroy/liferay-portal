@@ -42,24 +42,22 @@ public class DDMTemplateImpl implements DDMTemplate {
 
 	@Override
 	public Object clone() {
-		DDMTemplateImpl ddmTemplateImpl = new DDMTemplateImpl(
+		return new DDMTemplateImpl(
 			(com.liferay.dynamic.data.mapping.model.DDMTemplate)
 				_ddmTemplate.clone());
-
-		return ddmTemplateImpl;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DDMTemplate)) {
+		if (!(object instanceof DDMTemplate)) {
 			return false;
 		}
 
-		DDMTemplate ddmTemplate = (DDMTemplate)obj;
+		DDMTemplate ddmTemplate = (DDMTemplate)object;
 
 		if ((getTemplateId() == ddmTemplate.getTemplateId()) &&
 			Objects.equals(getScript(), ddmTemplate.getScript())) {

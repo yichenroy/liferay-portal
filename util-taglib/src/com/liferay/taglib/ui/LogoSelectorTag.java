@@ -138,20 +138,20 @@ public class LogoSelectorTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:aspectRatio",
 			String.valueOf(_aspectRatio));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:currentLogoURL", _currentLogoURL);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:defaultLogo",
 			String.valueOf(_defaultLogo));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:defaultLogoURL", _defaultLogoURL);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:editLogoFn", _editLogoFn);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:logoDisplaySelector",
 			_logoDisplaySelector);
 
@@ -160,29 +160,29 @@ public class LogoSelectorTag extends IncludeTag {
 				_maxFileSize =
 					UploadServletRequestConfigurationHelperUtil.getMaxSize();
 			}
-			catch (SystemException se) {
+			catch (SystemException systemException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(se, se);
+					_log.debug(systemException, systemException);
 				}
 			}
 		}
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:maxFileSize",
 			String.valueOf(_maxFileSize));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:preserveRatio",
 			String.valueOf(_preserveRatio));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:showBackground",
 			String.valueOf(_showBackground));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:showButtons",
 			String.valueOf(_showButtons));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:logo-selector:tempImageFileName", _tempImageFileName);
 	}
 

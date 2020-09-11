@@ -20,9 +20,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -30,9 +30,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
+
+import javax.validation.Valid;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -46,8 +51,42 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Rating")
 public class Rating {
 
+	public static Rating toDTO(String json) {
+		return ObjectMapperUtil.readValue(Rating.class, json);
+	}
+
+	@Schema
+	@Valid
+	public Map<String, Map<String, String>> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+	}
+
+	@JsonIgnore
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		try {
+			actions = actionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, Map<String, String>> actions;
+
 	@Schema(
-		description = "The best possible rating a content can receive, by default normalized to 1.0."
+		description = "The best possible rating an asset can receive (normalized to 1.0 by default)."
 	)
 	public Double getBestRating() {
 		return bestRating;
@@ -72,11 +111,14 @@ public class Rating {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The best possible rating an asset can receive (normalized to 1.0 by default)."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Double bestRating;
 
-	@Schema(description = "The creator of the Rating")
+	@Schema(description = "The rating's creator.")
+	@Valid
 	public Creator getCreator() {
 		return creator;
 	}
@@ -100,11 +142,11 @@ public class Rating {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The rating's creator.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema(description = "The creation date of the Rating.")
+	@Schema(description = "The rating's creation date.")
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -128,11 +170,11 @@ public class Rating {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The rating's creation date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
-	@Schema(description = "The last time a field of the Rating changed.")
+	@Schema(description = "The last time a field of the rating changed.")
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -156,11 +198,11 @@ public class Rating {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The last time a field of the rating changed.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
-	@Schema(description = "The identifier of the resource.")
+	@Schema(description = "The rating's ID.")
 	public Long getId() {
 		return id;
 	}
@@ -182,11 +224,11 @@ public class Rating {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The rating's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema(description = "The value of the Rating.")
+	@Schema(description = "The rating's value.")
 	public Double getRatingValue() {
 		return ratingValue;
 	}
@@ -210,12 +252,12 @@ public class Rating {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The rating's value.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double ratingValue;
 
 	@Schema(
-		description = "The worst possible rating a content can receive, by default normalized to 0.0."
+		description = "The worst possible rating an asset can receive (normalized to 0.0 by default)."
 	)
 	public Double getWorstRating() {
 		return worstRating;
@@ -240,7 +282,9 @@ public class Rating {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The worst possible rating an asset can receive (normalized to 0.0 by default)."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Double worstRating;
 
@@ -274,12 +318,22 @@ public class Rating {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (actions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(actions));
+		}
+
 		if (bestRating != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"bestRating\":");
+			sb.append("\"bestRating\": ");
 
 			sb.append(bestRating);
 		}
@@ -289,7 +343,7 @@ public class Rating {
 				sb.append(", ");
 			}
 
-			sb.append("\"creator\":");
+			sb.append("\"creator\": ");
 
 			sb.append(String.valueOf(creator));
 		}
@@ -299,7 +353,7 @@ public class Rating {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -313,7 +367,7 @@ public class Rating {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateModified\":");
+			sb.append("\"dateModified\": ");
 
 			sb.append("\"");
 
@@ -327,7 +381,7 @@ public class Rating {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(id);
 		}
@@ -337,7 +391,7 @@ public class Rating {
 				sb.append(", ");
 			}
 
-			sb.append("\"ratingValue\":");
+			sb.append("\"ratingValue\": ");
 
 			sb.append(ratingValue);
 		}
@@ -347,7 +401,7 @@ public class Rating {
 				sb.append(", ");
 			}
 
-			sb.append("\"worstRating\":");
+			sb.append("\"worstRating\": ");
 
 			sb.append(worstRating);
 		}
@@ -357,10 +411,88 @@ public class Rating {
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.delivery.dto.v1_0.Rating",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

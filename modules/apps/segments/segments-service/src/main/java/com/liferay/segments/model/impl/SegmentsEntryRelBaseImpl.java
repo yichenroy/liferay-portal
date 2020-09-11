@@ -14,8 +14,6 @@
 
 package com.liferay.segments.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.segments.model.SegmentsEntryRel;
 import com.liferay.segments.service.SegmentsEntryRelLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.segments.service.SegmentsEntryRelLocalServiceUtil;
  * @see SegmentsEntryRel
  * @generated
  */
-@ProviderType
 public abstract class SegmentsEntryRelBaseImpl
 	extends SegmentsEntryRelModelImpl implements SegmentsEntryRel {
 

@@ -53,6 +53,10 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		return _defaultEditLocale;
 	}
 
+	public java.util.Locale getDefaultLocale() {
+		return _defaultLocale;
+	}
+
 	public java.lang.String getDocumentLibrarySelectorURL() {
 		return _documentLibrarySelectorURL;
 	}
@@ -93,6 +97,10 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		return _showEmptyFieldLabel;
 	}
 
+	public boolean getShowLanguageSelector() {
+		return _showLanguageSelector;
+	}
+
 	public boolean getSynchronousFormSubmission() {
 		return _synchronousFormSubmission;
 	}
@@ -115,6 +123,10 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 
 	public void setDefaultEditLocale(java.util.Locale defaultEditLocale) {
 		_defaultEditLocale = defaultEditLocale;
+	}
+
+	public void setDefaultLocale(java.util.Locale defaultLocale) {
+		_defaultLocale = defaultLocale;
 	}
 
 	public void setDocumentLibrarySelectorURL(java.lang.String documentLibrarySelectorURL) {
@@ -157,6 +169,10 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		_showEmptyFieldLabel = showEmptyFieldLabel;
 	}
 
+	public void setShowLanguageSelector(boolean showLanguageSelector) {
+		_showLanguageSelector = showLanguageSelector;
+	}
+
 	public void setSynchronousFormSubmission(boolean synchronousFormSubmission) {
 		_synchronousFormSubmission = synchronousFormSubmission;
 	}
@@ -177,6 +193,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		_classPK = 0;
 		_ddmFormValues = null;
 		_defaultEditLocale = null;
+		_defaultLocale = null;
 		_documentLibrarySelectorURL = null;
 		_fieldsNamespace = null;
 		_groupId = 0;
@@ -187,6 +204,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		_repeatable = true;
 		_requestedLocale = null;
 		_showEmptyFieldLabel = true;
+		_showLanguageSelector = true;
 		_synchronousFormSubmission = true;
 	}
 
@@ -202,6 +220,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		setNamespacedAttribute(request, "classPK", _classPK);
 		setNamespacedAttribute(request, "ddmFormValues", _ddmFormValues);
 		setNamespacedAttribute(request, "defaultEditLocale", _defaultEditLocale);
+		setNamespacedAttribute(request, "defaultLocale", _defaultLocale);
 		setNamespacedAttribute(request, "documentLibrarySelectorURL", _documentLibrarySelectorURL);
 		setNamespacedAttribute(request, "fieldsNamespace", _fieldsNamespace);
 		setNamespacedAttribute(request, "groupId", _groupId);
@@ -212,6 +231,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 		setNamespacedAttribute(request, "repeatable", _repeatable);
 		setNamespacedAttribute(request, "requestedLocale", _requestedLocale);
 		setNamespacedAttribute(request, "showEmptyFieldLabel", _showEmptyFieldLabel);
+		setNamespacedAttribute(request, "showLanguageSelector", _showLanguageSelector);
 		setNamespacedAttribute(request, "synchronousFormSubmission", _synchronousFormSubmission);
 	}
 
@@ -225,6 +245,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 	private long _classPK = 0;
 	private com.liferay.dynamic.data.mapping.storage.DDMFormValues _ddmFormValues = null;
 	private java.util.Locale _defaultEditLocale = null;
+	private java.util.Locale _defaultLocale = null;
 	private java.lang.String _documentLibrarySelectorURL = null;
 	private java.lang.String _fieldsNamespace = null;
 	private long _groupId = 0;
@@ -235,6 +256,7 @@ public abstract class BaseHTMLTag extends com.liferay.taglib.util.IncludeTag {
 	private boolean _repeatable = true;
 	private java.util.Locale _requestedLocale = null;
 	private boolean _showEmptyFieldLabel = true;
+	private boolean _showLanguageSelector = true;
 	private boolean _synchronousFormSubmission = true;
 
 }

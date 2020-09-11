@@ -106,9 +106,9 @@ public class FacebookConnectImpl implements FacebookConnect {
 						" because of response:", content));
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new SystemException(
-				"Unable to retrieve Facebook access token", e);
+				"Unable to retrieve Facebook access token", exception);
 		}
 
 		return null;
@@ -168,9 +168,9 @@ public class FacebookConnectImpl implements FacebookConnect {
 
 			return JSONFactoryUtil.createJSONObject(json);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -187,12 +187,13 @@ public class FacebookConnectImpl implements FacebookConnect {
 
 	@Override
 	public String getProfileImageURL(PortletRequest portletRequest) {
-		HttpServletRequest request = _portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			portletRequest);
 
-		request = _portal.getOriginalServletRequest(request);
+		httpServletRequest = _portal.getOriginalServletRequest(
+			httpServletRequest);
 
-		HttpSession session = request.getSession();
+		HttpSession session = httpServletRequest.getSession();
 
 		String facebookId = (String)session.getAttribute(
 			FacebookConnectWebKeys.FACEBOOK_USER_ID);
@@ -201,7 +202,7 @@ public class FacebookConnectImpl implements FacebookConnect {
 			return null;
 		}
 
-		long companyId = _portal.getCompanyId(request);
+		long companyId = _portal.getCompanyId(httpServletRequest);
 
 		String token = (String)session.getAttribute(
 			FacebookConnectWebKeys.FACEBOOK_ACCESS_TOKEN);
@@ -240,16 +241,15 @@ public class FacebookConnectImpl implements FacebookConnect {
 		long companyId) {
 
 		try {
-			FacebookConnectConfiguration facebookConnectCompanyServiceSettings =
-				_configurationProvider.getConfiguration(
-					FacebookConnectConfiguration.class,
-					new CompanyServiceSettingsLocator(
-						companyId, FacebookConnectConstants.SERVICE_NAME));
-
-			return facebookConnectCompanyServiceSettings;
+			return _configurationProvider.getConfiguration(
+				FacebookConnectConfiguration.class,
+				new CompanyServiceSettingsLocator(
+					companyId, FacebookConnectConstants.SERVICE_NAME));
 		}
-		catch (ConfigurationException ce) {
-			_log.error("Unable to get Facebook Connect configuration", ce);
+		catch (ConfigurationException configurationException) {
+			_log.error(
+				"Unable to get Facebook Connect configuration",
+				configurationException);
 		}
 
 		return null;

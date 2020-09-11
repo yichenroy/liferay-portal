@@ -44,18 +44,15 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + PageCommentsPortletKeys.PAGE_COMMENTS,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=power-user,user"
 	},
 	service = Portlet.class
 )
 public class PageCommentsPortlet extends MVCPortlet {
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.comment.page.comments.web)(release.schema.version=2.0.0))",
-		unbind = "-"
+		target = "(&(release.bundle.symbolic.name=com.liferay.comment.page.comments.web)(release.schema.version=2.0.0))"
 	)
-	protected void setRelease(Release release) {
-	}
+	private Release _release;
 
 }

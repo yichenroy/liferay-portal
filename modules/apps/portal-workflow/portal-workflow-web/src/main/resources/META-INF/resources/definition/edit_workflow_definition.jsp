@@ -41,30 +41,6 @@ portletDisplay.setURLBack(portletURL.toString());
 renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request, "new-workflow") : workflowDefinition.getTitle(LanguageUtil.getLanguageId(request)));
 %>
 
-<liferay-ui:error exception="<%= WorkflowDefinitionFileException.class %>">
-
-	<%
-	WorkflowDefinitionFileException wdfe = (WorkflowDefinitionFileException)errorException;
-	%>
-
-	<liferay-ui:message key="<%= HtmlUtil.escape(wdfe.getMessage()) %>" />
-</liferay-ui:error>
-
-<liferay-ui:error exception="<%= RequiredWorkflowDefinitionException.class %>">
-
-	<%
-	RequiredWorkflowDefinitionException rwde = (RequiredWorkflowDefinitionException)errorException;
-
-	Object[] messageArguments = workflowDefinitionDisplayContext.getMessageArguments(rwde.getWorkflowDefinitionLinks());
-
-	String messageKey = workflowDefinitionDisplayContext.getMessageKey(rwde.getWorkflowDefinitionLinks());
-	%>
-
-	<liferay-ui:message arguments="<%= messageArguments %>" key="<%= messageKey %>" translateArguments="<%= false %>" />
-</liferay-ui:error>
-
-<liferay-ui:error exception="<%= WorkflowException.class %>" message="an-error-occurred-in-the-workflow-engine" />
-
 <liferay-portlet:actionURL name="deployWorkflowDefinition" var="deployWorkflowDefinitionURL">
 	<portlet:param name="mvcPath" value="/definition/edit_workflow_definition.jsp" />
 </liferay-portlet:actionURL>
@@ -80,18 +56,21 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 
 <c:if test="<%= workflowDefinition != null %>">
 	<liferay-frontend:info-bar>
-		<div class="container-fluid-1280">
+		<clay:container-fluid>
 			<div class="info-bar-item">
 				<c:choose>
 					<c:when test="<%= active %>">
-						<span class="label label-info label-lg">
-							<liferay-ui:message key="published" />
-						</span>
+						<clay:label
+							displayType="info"
+							label="published"
+							large="<%= true %>"
+						/>
 					</c:when>
 					<c:otherwise>
-						<span class="label label-lg label-secondary">
-							<liferay-ui:message key="not-published" />
-						</span>
+						<clay:label
+							label="not-published"
+							large="<%= true %>"
+						/>
 					</c:otherwise>
 				</c:choose>
 			</div>
@@ -110,7 +89,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 					</c:otherwise>
 				</c:choose>
 			</span>
-		</div>
+		</clay:container-fluid>
 
 		<liferay-frontend:info-bar-buttons>
 			<liferay-frontend:info-bar-sidenav-toggler-button
@@ -128,26 +107,30 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 			<div class="sidebar sidebar-light">
 				<div class="tbar-visible-xs">
 					<nav class="component-tbar tbar">
-						<div class="container-fluid">
+						<clay:container-fluid>
 							<ul class="tbar-nav">
 								<li class="tbar-item">
 									<aui:icon cssClass="component-action sidenav-close" image="times" markupView="lexicon" url="javascript:;" />
 								</li>
 							</ul>
-						</div>
+						</clay:container-fluid>
 					</nav>
 				</div>
 
 				<div class="sidebar-header">
-					<div class="autofit-row sidebar-section">
-						<div class="autofit-col autofit-col-expand">
+					<clay:content-row
+						cssClass="sidebar-section"
+					>
+						<clay:content-col
+							expand="<%= true %>"
+						>
 							<h4 class="component-title">
 								<span class="text-truncate-inline">
 									<span class="text-truncate"><%= HtmlUtil.escape(workflowDefinition.getTitle(LanguageUtil.getLanguageId(request))) %></span>
 								</span>
 							</h4>
-						</div>
-					</div>
+						</clay:content-col>
+					</clay:content-row>
 				</div>
 
 				<div class="sidebar-body">
@@ -157,7 +140,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 						refresh="<%= false %>"
 					>
 						<liferay-ui:section>
-							<div style="margin-top:1.5rem;">
+							<div style="margin-top: 1.5rem;">
 
 								<%
 								String creatorUserName = workflowDefinitionDisplayContext.getCreatorUserName(workflowDefinition);
@@ -174,7 +157,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 												<%= dateFormatTime.format(workflowDefinitionDisplayContext.getCreatedDate(workflowDefinition)) %>
 											</c:when>
 											<c:otherwise>
-												<liferay-ui:message arguments="<%= new String[] {dateFormatTime.format(workflowDefinitionDisplayContext.getCreatedDate(workflowDefinition)), creatorUserName} %>" key="x-by-x" translateArguments="<%= false %>" />
+												<liferay-ui:message arguments="<%= new String[] {dateFormatTime.format(workflowDefinitionDisplayContext.getCreatedDate(workflowDefinition)), HtmlUtil.escape(creatorUserName)} %>" key="x-by-x" translateArguments="<%= false %>" />
 											</c:otherwise>
 										</c:choose>
 									</dd>
@@ -187,7 +170,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 												<%= dateFormatTime.format(workflowDefinition.getModifiedDate()) %>
 											</c:when>
 											<c:otherwise>
-												<liferay-ui:message arguments="<%= new String[] {dateFormatTime.format(workflowDefinition.getModifiedDate()), userName} %>" key="x-by-x" translateArguments="<%= false %>" />
+												<liferay-ui:message arguments="<%= new String[] {dateFormatTime.format(workflowDefinition.getModifiedDate()), HtmlUtil.escape(userName)} %>" key="x-by-x" translateArguments="<%= false %>" />
 											</c:otherwise>
 										</c:choose>
 									</dd>
@@ -195,7 +178,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 										<liferay-ui:message key="total-modifications" />
 									</dt>
 									<dd class="sidebar-dd">
-										<liferay-ui:message arguments='<%= new String[] {workflowDefinitionDisplayContext.getWorkflowDefinitionCount(workflowDefinition) + ""} %>' key="x-revisions" translateArguments="<%= false %>" />
+										<liferay-ui:message arguments='<%= workflowDefinitionDisplayContext.getWorkflowDefinitionsCount(workflowDefinition) + "" %>' key="x-revisions" translateArguments="<%= false %>" />
 									</dd>
 									<dt class="sidebar-dt"></dt>
 									<dd class="sidebar-dd"></dd>
@@ -214,7 +197,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 		</div>
 	</c:if>
 
-	<div class="container-fluid-1280">
+	<clay:container-fluid>
 		<div class="sidenav-content">
 			<aui:form method="post" name="fm">
 				<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
@@ -225,10 +208,31 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 
 				<div class="card-horizontal main-content-card">
 					<div class="card-row-padded">
+						<liferay-ui:error exception="<%= IllegalArgumentException.class %>">
+
+							<%
+							IllegalArgumentException iae = (IllegalArgumentException)errorException;
+							%>
+
+							<liferay-ui:message key="<%= iae.getMessage() %>" />
+						</liferay-ui:error>
+
+						<liferay-ui:error exception="<%= NoSuchRoleException.class %>" message="the-role-could-not-be-found" />
+
+						<liferay-ui:error exception="<%= RequiredWorkflowDefinitionException.class %>">
+							<liferay-ui:message arguments="<%= workflowDefinitionDisplayContext.getMessageArguments((RequiredWorkflowDefinitionException)errorException) %>" key="<%= workflowDefinitionDisplayContext.getMessageKey((RequiredWorkflowDefinitionException)errorException) %>" translateArguments="<%= false %>" />
+						</liferay-ui:error>
+
+						<liferay-ui:error exception="<%= WorkflowDefinitionFileException.class %>" message="please-enter-valid-content" />
+
 						<liferay-ui:error exception="<%= WorkflowDefinitionTitleException.class %>" message="please-add-a-workflow-title-before-publishing" />
 
+						<liferay-ui:error exception="<%= WorkflowException.class %>" message="an-error-occurred-in-the-workflow-engine" />
+
 						<aui:fieldset cssClass="workflow-definition-content">
-							<aui:col>
+							<clay:col
+								size="12"
+							>
 								<aui:field-wrapper label="title">
 									<liferay-ui:input-localized
 										name="title"
@@ -236,9 +240,12 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 										xml='<%= BeanPropertiesUtil.getString(workflowDefinition, "title") %>'
 									/>
 								</aui:field-wrapper>
-							</aui:col>
+							</clay:col>
 
-							<aui:col cssClass="workflow-definition-upload">
+							<clay:col
+								cssClass="workflow-definition-upload"
+								size="12"
+							>
 								<liferay-util:buffer
 									var="importFileMark"
 								>
@@ -250,11 +257,15 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 								<liferay-ui:message arguments="<%= importFileMark %>" key="write-your-definition-or-x" translateArguments="<%= false %>" />
 
 								<input accept="application/xml" class="workflow-definition-upload-source" id="<portlet:namespace />upload" type="file" />
-							</aui:col>
+							</clay:col>
 
-							<aui:col cssClass="workflow-definition-content-source-wrapper" id="contentSourceWrapper">
+							<clay:col
+								cssClass="workflow-definition-content-source-wrapper"
+								id='<%= liferayPortletResponse.getNamespace() + "contentSourceWrapper" %>'
+								size="12"
+							>
 								<div class="workflow-definition-content-source" id="<portlet:namespace />contentEditor"></div>
-							</aui:col>
+							</clay:col>
 						</aui:fieldset>
 					</div>
 				</div>
@@ -280,7 +291,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 				</aui:button-row>
 			</aui:form>
 		</div>
-	</div>
+	</clay:container-fluid>
 </div>
 
 <div class="hide" id="<%= randomNamespace %>titleInputLocalized">
@@ -291,91 +302,85 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 			<aui:input name="name" type="hidden" value="<%= PortalUUIDUtil.generate() %>" />
 			<aui:input name="content" type="hidden" value="<%= workflowDefinition.getContent() %>" />
 			<aui:input name="defaultDuplicationTitle" type="hidden" value="<%= duplicateTitle %>" />
+			<aui:input name="duplicatedDefinitionName" type="hidden" value="<%= workflowDefinition.getName() %>" />
 			<aui:input name="duplicatedDefinitionTitle" type="hidden" value="<%= workflowDefinition.getTitle(LanguageUtil.getLanguageId(request)) %>" />
 
 			<aui:fieldset>
-				<aui:col>
+				<clay:col
+					size="12"
+				>
 					<aui:field-wrapper label="title">
 						<liferay-ui:input-localized
 							name='<%= randomNamespace + "title" %>'
 							xml="<%= duplicateTitle %>"
 						/>
 					</aui:field-wrapper>
-				</aui:col>
+				</clay:col>
 
-				<aui:col>
+				<clay:col
+					size="12"
+				>
 					<liferay-ui:message key="copy-does-not-include-revisions" />
-				</aui:col>
+				</clay:col>
 			</aui:fieldset>
 		</aui:form>
 	</c:if>
 </div>
 
-<aui:script use="aui-ace-editor,liferay-xml-formatter,liferay-workflow-web">
+<aui:script use="aui-ace-editor,liferay-workflow-web">
 	var STR_VALUE = 'value';
 
-	var contentEditor = new A.AceEditor(
-		{
-			boundingBox: '#<portlet:namespace />contentEditor',
-			height: 600,
-			mode: 'xml',
-			tabSize: 4,
-			width: '100%'
-		}
-	).render();
+	var contentEditor = new A.AceEditor({
+		boundingBox: '#<portlet:namespace />contentEditor',
+		height: 600,
+		mode: 'xml',
+		tabSize: 4,
+		width: '100%',
+	}).render();
 
-	var xmlFormatter = new Liferay.XMLFormatter();
-
-	var content = xmlFormatter.format('<%= HtmlUtil.escapeJS(content) %>');
-
-	if (content) {
-		content = content.trim();
-	}
-
-	contentEditor.set(STR_VALUE, content);
+	contentEditor.set(
+		STR_VALUE,
+		Liferay.Util.formatXML('<%= HtmlUtil.escapeJS(content) %>')
+	);
 
 	var uploadFile = document.getElementById('<portlet:namespace />upload');
 
 	var previousContent = '';
 
 	if (uploadFile) {
-		uploadFile.addEventListener(
-			'change',
-			function(evt) {
-				var files = evt.target.files;
+		uploadFile.addEventListener('change', function (evt) {
+			var files = evt.target.files;
 
-				if (files) {
-					var reader = new FileReader();
+			if (files) {
+				var reader = new FileReader();
 
-					reader.onloadend = function(evt) {
-						if (evt.target.readyState == FileReader.DONE) {
-							previousContent = contentEditor.get(STR_VALUE);
+				reader.onloadend = function (evt) {
+					if (evt.target.readyState == FileReader.DONE) {
+						previousContent = contentEditor.get(STR_VALUE);
 
-							contentEditor.set(STR_VALUE, evt.target.result);
+						contentEditor.set(STR_VALUE, evt.target.result);
 
-							uploadFile.value = '';
+						uploadFile.value = '';
 
-							Liferay.WorkflowWeb.showDefinitionImportSuccessMessage('<portlet:namespace />');
-						}
-					};
+						Liferay.WorkflowWeb.showDefinitionImportSuccessMessage(
+							'<portlet:namespace />'
+						);
+					}
+				};
 
-					reader.readAsText(files[0]);
-				}
+				reader.readAsText(files[0]);
 			}
-		);
+		});
 	}
 
 	var uploadLink = document.getElementById('<portlet:namespace />uploadLink');
 
 	if (uploadLink) {
-		uploadLink.addEventListener(
-			'click',
-			function(event) {
-				event.preventDefault();
+		uploadLink.addEventListener('click', function (event) {
+			event.preventDefault();
 
-				uploadFile.click();
-			}
-		);
+			uploadFile.click();
+		});
 	}
 
 	var untitledWorkflowTitle = '<liferay-ui:message key="untitled-workflow" />';
@@ -384,101 +389,77 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 
 	var form = document.<portlet:namespace />fm;
 
-	Liferay.on(
-		'<portlet:namespace />publishDefinition',
-		function(event) {
-			var titleElement = Liferay.Util.getFormElement(form, 'title_' + defaultLanguageId);
+	Liferay.on('<portlet:namespace />publishDefinition', function (event) {
+		var titleElement = Liferay.Util.getFormElement(
+			form,
+			'title_' + defaultLanguageId
+		);
 
-			if (!titleElement) {
-				Liferay.Util.setFormValues(
-					form,
-					{
-						titleElement: ''
-					}
-				);
-			}
-
-			Liferay.Util.postForm(
-				form,
-				{
-					data: {
-						content: contentEditor.get(STR_VALUE),
-						titleValue: untitledWorkflowTitle
-					},
-					url: '<%= deployWorkflowDefinitionURL %>'
-				}
-			);
+		if (!titleElement) {
+			Liferay.Util.setFormValues(form, {
+				titleElement: '',
+			});
 		}
-	);
 
-	Liferay.on(
-		'<portlet:namespace />saveDefinition',
-		function(event) {
-			var titleElement = Liferay.Util.getFormElement(form, 'title_' + defaultLanguageId);
+		Liferay.Util.postForm(form, {
+			data: {
+				content: contentEditor.get(STR_VALUE),
+				titleValue: untitledWorkflowTitle,
+			},
+			url: '<%= deployWorkflowDefinitionURL %>',
+		});
+	});
 
-			if (!titleElement) {
-				Liferay.Util.setFormValues(
-					form,
-					{
-						titleElement: ''
-					}
-				);
-			}
+	Liferay.on('<portlet:namespace />saveDefinition', function (event) {
+		var titleElement = Liferay.Util.getFormElement(
+			form,
+			'title_' + defaultLanguageId
+		);
 
-			Liferay.Util.postForm(
-				form,
-				{
-					data: {
-						content: contentEditor.get(STR_VALUE),
-						titleValue: untitledWorkflowTitle
-					},
-					url: '<%= saveWorkflowDefinitionURL %>'
-				}
-			);
+		if (!titleElement) {
+			Liferay.Util.setFormValues(form, {
+				titleElement: '',
+			});
 		}
-	);
 
-	Liferay.on(
-		'<portlet:namespace />undoDefinition',
-		function(event) {
-			if (contentEditor) {
-				contentEditor.set(STR_VALUE, previousContent);
+		Liferay.Util.postForm(form, {
+			data: {
+				content: contentEditor.get(STR_VALUE),
+				titleValue: untitledWorkflowTitle,
+			},
+			url: '<%= saveWorkflowDefinitionURL %>',
+		});
+	});
 
-				Liferay.WorkflowWeb.showActionUndoneSuccessMessage();
-			}
+	Liferay.on('<portlet:namespace />undoDefinition', function (event) {
+		if (contentEditor) {
+			contentEditor.set(STR_VALUE, previousContent);
+
+			Liferay.WorkflowWeb.showActionUndoneSuccessMessage();
 		}
-	);
+	});
 
 	var duplicateWorkflowTitle = '<liferay-ui:message key="duplicate-workflow" />';
 
-	Liferay.on(
-		'<portlet:namespace />duplicateDefinition',
-		function(event) {
-			Liferay.WorkflowWeb.confirmBeforeDuplicateDialog(this, '<%= duplicateWorkflowDefinition %>', duplicateWorkflowTitle, '<%= randomNamespace %>', '<portlet:namespace />');
-		}
-	);
+	Liferay.on('<portlet:namespace />duplicateDefinition', function (event) {
+		Liferay.WorkflowWeb.confirmBeforeDuplicateDialog(
+			this,
+			'<%= duplicateWorkflowDefinition %>',
+			duplicateWorkflowTitle,
+			'<%= randomNamespace %>',
+			'<portlet:namespace />'
+		);
+	});
 
 	var title = document.getElementById('<portlet:namespace />title');
 
 	if (title) {
-		title.addEventListener(
-			'keypress',
-			function(event) {
-				var keycode = (event.keyCode ? event.keyCode : event.which);
+		title.addEventListener('keypress', function (event) {
+			var keycode = event.keyCode ? event.keyCode : event.which;
 
-				if (keycode == '13') {
-					event.preventDefault();
-				}
+			if (keycode == '13') {
+				event.preventDefault();
 			}
-		);
+		});
 	}
-
-	var sidenavSlider = $('#<portlet:namespace />infoPanelId');
-
-	sidenavSlider.on(
-		'open.lexicon.sidenav',
-		function(event) {
-			$(document).trigger('screenChange.lexicon.sidenav');
-		}
-	);
 </aui:script>

@@ -14,6 +14,7 @@
 
 package com.liferay.message.boards.web.internal.asset.model;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
@@ -61,12 +62,13 @@ public class MBMessageAssetRendererFactory
 	public AssetRenderer<MBMessage> getAssetRenderer(long classPK, int type)
 		throws PortalException {
 
-		MBMessage message = _mbMessageLocalService.getMessage(classPK);
-
 		MBMessageAssetRenderer mbMessageAssetRenderer =
 			new MBMessageAssetRenderer(
-				message, _messageModelResourcePermission);
+				_mbMessageLocalService.getMessage(classPK),
+				_messageModelResourcePermission);
 
+		mbMessageAssetRenderer.setAssetDisplayPageFriendlyURLProvider(
+			_assetDisplayPageFriendlyURLProvider);
 		mbMessageAssetRenderer.setAssetRendererType(type);
 
 		return mbMessageAssetRenderer;
@@ -99,7 +101,7 @@ public class MBMessageAssetRendererFactory
 		try {
 			liferayPortletURL.setWindowState(windowState);
 		}
-		catch (WindowStateException wse) {
+		catch (WindowStateException windowStateException) {
 		}
 
 		return liferayPortletURL;
@@ -120,6 +122,10 @@ public class MBMessageAssetRendererFactory
 
 		_mbMessageLocalService = mbMessageLocalService;
 	}
+
+	@Reference
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
 
 	private MBMessageLocalService _mbMessageLocalService;
 

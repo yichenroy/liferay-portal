@@ -14,6 +14,7 @@
 
 package com.liferay.portal.spring.bean;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.internal.cluster.ClusterableAdvice;
 import com.liferay.portal.kernel.bean.BeanLocatorException;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -21,7 +22,6 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -121,12 +121,14 @@ public class BeanReferenceAnnotationBeanPostProcessor
 				try {
 					referencedBean = _beanFactory.getBean(referencedBeanName);
 				}
-				catch (NoSuchBeanDefinitionException nsbde) {
+				catch (NoSuchBeanDefinitionException
+							noSuchBeanDefinitionException) {
+
 					try {
 						referencedBean = PortalBeanLocatorUtil.locate(
 							referencedBeanName);
 					}
-					catch (BeanLocatorException ble) {
+					catch (BeanLocatorException beanLocatorException) {
 						StringWriter stringWriter = new StringWriter();
 
 						try (PrintWriter printWriter = new PrintWriter(
@@ -135,15 +137,17 @@ public class BeanReferenceAnnotationBeanPostProcessor
 							printWriter.print(
 								"BeanFactory could not find bean: ");
 
-							nsbde.printStackTrace(printWriter);
+							noSuchBeanDefinitionException.printStackTrace(
+								printWriter);
 
 							printWriter.print(
 								" and PortalBeanLocator failed with: ");
-							printWriter.append(ble.getMessage());
+							printWriter.append(
+								beanLocatorException.getMessage());
 						}
 
 						throw new BeanLocatorException(
-							stringWriter.toString(), ble);
+							stringWriter.toString(), beanLocatorException);
 					}
 				}
 
@@ -155,9 +159,10 @@ public class BeanReferenceAnnotationBeanPostProcessor
 			try {
 				field.set(targetBean, referencedBean);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				throw new BeanCreationException(
-					targetBeanName, "Could not inject BeanReference fields", t);
+					targetBeanName, "Could not inject BeanReference fields",
+					throwable);
 			}
 		}
 

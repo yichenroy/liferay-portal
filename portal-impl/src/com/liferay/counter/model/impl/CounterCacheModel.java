@@ -14,8 +14,6 @@
 
 package com.liferay.counter.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.counter.kernel.model.Counter;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
@@ -32,20 +30,19 @@ import java.io.ObjectOutput;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class CounterCacheModel implements CacheModel<Counter>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof CounterCacheModel)) {
+		if (!(object instanceof CounterCacheModel)) {
 			return false;
 		}
 
-		CounterCacheModel counterCacheModel = (CounterCacheModel)obj;
+		CounterCacheModel counterCacheModel = (CounterCacheModel)object;
 
 		if (name.equals(counterCacheModel.name)) {
 			return true;

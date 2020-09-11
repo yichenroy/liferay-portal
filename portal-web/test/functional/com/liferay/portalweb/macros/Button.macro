@@ -1,6 +1,9 @@
 definition {
+
 	macro click {
-		Click.mouseDownMouseUp(locator1 = "Button#ANY", key_text = "${button}");
+		Click.mouseDownMouseUp(
+			key_text = "${button}",
+			locator1 = "Button#ANY");
 	}
 
 	macro clickAdd {
@@ -15,8 +18,20 @@ definition {
 		Button.click(button = "Apply");
 	}
 
+	macro clickAssign {
+		Button.click(button = "Assign");
+	}
+
 	macro clickCancel {
 		Button.click(button = "Cancel");
+	}
+
+	macro clickComment {
+		Click(locator1 = "Button#COMMENT");
+	}
+
+	macro clickConfirm {
+		Click(locator1 = "Button#CONFIRM");
 	}
 
 	macro clickDelete {
@@ -29,6 +44,10 @@ definition {
 
 	macro clickEdit {
 		Button.click(button = "Edit");
+	}
+
+	macro clickImport {
+		Button.click(button = "Import");
 	}
 
 	macro clickInstall {
@@ -48,11 +67,15 @@ definition {
 	}
 
 	macro clickNoError {
-		ClickNoError.mouseDownMouseUp(locator1 = "Button#ANY", key_text = "${button}");
+		ClickNoError.mouseDownMouseUp(
+			key_text = "${button}",
+			locator1 = "Button#ANY");
 	}
 
 	macro clickPublish {
-		ScrollWebElementIntoView(locator1 = "Button#ANY", key_text = "Publish");
+		ScrollWebElementIntoView(
+			key_text = "Publish",
+			locator1 = "Button#ANY");
 
 		Button.click(button = "Publish");
 	}
@@ -63,6 +86,8 @@ definition {
 
 	macro clickSave {
 		Button.click(button = "Save");
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro clickSaveAsDraft {
@@ -77,19 +102,36 @@ definition {
 		Button.click(button = "Share");
 	}
 
+	macro clickSubmitButton {
+		Click(locator1 = "Button#SUBMIT");
+	}
+
 	macro clickSubmitForPublication {
 		Button.click(button = "Submit for Publication");
 	}
 
 	macro clickUpdate {
+		ScrollWebElementIntoView(
+			key_text = "Update",
+			locator1 = "Button#ANY");
+
 		Button.click(button = "Update");
 	}
 
+	macro clickVerifyButton {
+		Click(locator1 = "Button#VERIFY");
+	}
+
 	macro viewNotPresent {
-		AssertElementNotPresent(locator1 = "Button#ANY", key_text = "${button}");
+		AssertElementNotPresent(
+			key_text = "${button}",
+			locator1 = "Button#ANY");
 	}
 
 	macro viewPresent {
-		AssertElementPresent(locator1 = "Button#ANY", key_text = "${button}");
+		AssertElementPresent(
+			key_text = "${button}",
+			locator1 = "Button#ANY");
 	}
+
 }

@@ -14,7 +14,7 @@
 
 package com.liferay.asset.list.web.internal.display.context;
 
-import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.list.constants.AssetListActionKeys;
 import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
 import com.liferay.asset.list.constants.AssetListPortletKeys;
@@ -23,8 +23,11 @@ import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
 import com.liferay.asset.list.service.AssetListEntryServiceUtil;
 import com.liferay.asset.list.util.AssetListPortletUtil;
 import com.liferay.asset.list.web.internal.security.permission.resource.AssetListPermission;
+import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
@@ -33,13 +36,12 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.constants.SegmentsConstants;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 
 import java.util.List;
 
@@ -56,60 +58,31 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetListDisplayContext {
 
 	public AssetListDisplayContext(
+		AssetRendererFactoryClassProvider assetRendererFactoryClassProvider,
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
+		_assetRendererFactoryClassProvider = assetRendererFactoryClassProvider;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
 		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
-			_request);
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+			_httpServletRequest);
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<DropdownItem> getAddAssetListEntryDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					_getAddAssetListEntryDropdownItemUnsafeConsumer(
-						AssetListEntryTypeConstants.TYPE_MANUAL_LABEL,
-						"manual-selection",
-						AssetListEntryTypeConstants.TYPE_MANUAL));
-				add(
-					_getAddAssetListEntryDropdownItemUnsafeConsumer(
-						AssetListEntryTypeConstants.TYPE_DYNAMIC_LABEL,
-						"dynamic-selection",
-						AssetListEntryTypeConstants.TYPE_DYNAMIC));
-			}
-		};
-	}
-
-	public SearchContainer<AssetEntry> getAssetListContentSearchContainer() {
-		if (_assetListContentSearchContainer != null) {
-			return _assetListContentSearchContainer;
-		}
-
-		SearchContainer searchContainer = new SearchContainer(
-			_renderRequest, _renderResponse.createRenderURL(), null,
-			"there-are-no-asset-entries");
-
-		AssetListEntry assetListEntry = getAssetListEntry();
-
-		List<AssetEntry> assetEntries = assetListEntry.getAssetEntries(
-			getSegmentsEntryId());
-
-		searchContainer.setResults(assetEntries);
-
-		int totalCount = assetListEntry.getAssetEntriesCount(
-			getSegmentsEntryId());
-
-		searchContainer.setTotal(totalCount);
-
-		_assetListContentSearchContainer = searchContainer;
-
-		return _assetListContentSearchContainer;
+		return DropdownItemListBuilder.add(
+			_getAddAssetListEntryDropdownItemUnsafeConsumer(
+				AssetListEntryTypeConstants.TYPE_MANUAL_LABEL,
+				"manual-collection", AssetListEntryTypeConstants.TYPE_MANUAL)
+		).add(
+			_getAddAssetListEntryDropdownItemUnsafeConsumer(
+				AssetListEntryTypeConstants.TYPE_DYNAMIC_LABEL,
+				"dynamic-collection", AssetListEntryTypeConstants.TYPE_DYNAMIC)
+		).build();
 	}
 
 	public int getAssetListEntriesCount() {
@@ -124,14 +97,17 @@ public class AssetListDisplayContext {
 		return _assetListEntriesCount;
 	}
 
-	public SearchContainer getAssetListEntriesSearchContainer() {
+	public SearchContainer<AssetListEntry>
+		getAssetListEntriesSearchContainer() {
+
 		if (_assetListEntriesSearchContainer != null) {
 			return _assetListEntriesSearchContainer;
 		}
 
-		SearchContainer assetListEntriesSearchContainer = new SearchContainer(
-			_renderRequest, _renderResponse.createRenderURL(), null,
-			"there-are-no-content-sets");
+		SearchContainer<AssetListEntry> assetListEntriesSearchContainer =
+			new SearchContainer(
+				_renderRequest, _renderResponse.createRenderURL(), null,
+				"there-are-no-collections");
 
 		assetListEntriesSearchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
@@ -192,7 +168,8 @@ public class AssetListDisplayContext {
 			return _assetListEntryId;
 		}
 
-		_assetListEntryId = ParamUtil.getLong(_request, "assetListEntryId");
+		_assetListEntryId = ParamUtil.getLong(
+			_httpServletRequest, "assetListEntryId");
 
 		return _assetListEntryId;
 	}
@@ -201,7 +178,7 @@ public class AssetListDisplayContext {
 		AssetListEntry assetListEntry = getAssetListEntry();
 
 		if (assetListEntry != null) {
-			return HtmlUtil.escape(assetListEntry.getTitle());
+			return assetListEntry.getTitle();
 		}
 
 		String title = StringPool.BLANK;
@@ -209,15 +186,15 @@ public class AssetListDisplayContext {
 		if (getAssetListEntryType() ==
 				AssetListEntryTypeConstants.TYPE_DYNAMIC) {
 
-			title = "new-dynamic-content-set";
+			title = "new-dynamic-collection";
 		}
 		else if (getAssetListEntryType() ==
 					AssetListEntryTypeConstants.TYPE_MANUAL) {
 
-			title = "new-manual-content-set";
+			title = "new-manual-collection";
 		}
 
-		return LanguageUtil.get(_request, title);
+		return LanguageUtil.get(_httpServletRequest, title);
 	}
 
 	public int getAssetListEntryType() {
@@ -228,7 +205,7 @@ public class AssetListDisplayContext {
 		AssetListEntry assetListEntry = getAssetListEntry();
 
 		int assetListEntryType = ParamUtil.getInteger(
-			_request, "assetListEntryType");
+			_httpServletRequest, "assetListEntryType");
 
 		if (assetListEntry != null) {
 			assetListEntryType = assetListEntry.getType();
@@ -239,13 +216,47 @@ public class AssetListDisplayContext {
 		return _assetListEntryType;
 	}
 
+	public String getClassName(AssetRendererFactory<?> assetRendererFactory) {
+		Class<? extends AssetRendererFactory> clazz =
+			_assetRendererFactoryClassProvider.getClass(assetRendererFactory);
+
+		String className = clazz.getName();
+
+		int pos = className.lastIndexOf(StringPool.PERIOD);
+
+		return className.substring(pos + 1);
+	}
+
 	public String getEmptyResultMessageDescription() {
 		if (isShowAddAssetListEntryAction()) {
 			return LanguageUtil.get(
-				_request, "fortunately-it-is-very-easy-to-add-new-ones");
+				_httpServletRequest,
+				"fortunately-it-is-very-easy-to-add-new-ones");
 		}
 
 		return StringPool.BLANK;
+	}
+
+	public List<NavigationItem> getNavigationItems(String currentItem) {
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(currentItem.equals("collections"));
+				navigationItem.setHref(_renderResponse.createRenderURL());
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "collections"));
+			}
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(
+					currentItem.equals("collection-providers"));
+				navigationItem.setHref(
+					_renderResponse.createRenderURL(), "mvcPath",
+					"/view_info_list_providers.jsp");
+				navigationItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "collection-providers"));
+			}
+		).build();
 	}
 
 	public String getOrderByCol() {
@@ -253,14 +264,15 @@ public class AssetListDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol");
+		_orderByCol = ParamUtil.getString(_httpServletRequest, "orderByCol");
 
 		if (Validator.isNull(_orderByCol)) {
 			_orderByCol = _portalPreferences.getValue(
 				AssetListPortletKeys.ASSET_LIST, "order-by-col", "create-date");
 		}
 		else {
-			boolean saveOrderBy = ParamUtil.getBoolean(_request, "saveOrderBy");
+			boolean saveOrderBy = ParamUtil.getBoolean(
+				_httpServletRequest, "saveOrderBy");
 
 			if (saveOrderBy) {
 				_portalPreferences.setValue(
@@ -277,14 +289,15 @@ public class AssetListDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType");
+		_orderByType = ParamUtil.getString(_httpServletRequest, "orderByType");
 
 		if (Validator.isNull(_orderByType)) {
 			_orderByType = _portalPreferences.getValue(
 				AssetListPortletKeys.ASSET_LIST, "order-by-type", "asc");
 		}
 		else {
-			boolean saveOrderBy = ParamUtil.getBoolean(_request, "saveOrderBy");
+			boolean saveOrderBy = ParamUtil.getBoolean(
+				_httpServletRequest, "saveOrderBy");
 
 			if (saveOrderBy) {
 				_portalPreferences.setValue(
@@ -326,8 +339,8 @@ public class AssetListDisplayContext {
 		}
 
 		_segmentsEntryId = ParamUtil.getLong(
-			_request, "segmentsEntryId",
-			SegmentsConstants.SEGMENTS_ENTRY_ID_DEFAULT);
+			_httpServletRequest, "segmentsEntryId",
+			SegmentsEntryConstants.ID_DEFAULT);
 
 		return _segmentsEntryId;
 	}
@@ -348,8 +361,7 @@ public class AssetListDisplayContext {
 			dropdownItem.putData(
 				"addAssetListEntryURL", _getAddAssetListEntryURL(type));
 			dropdownItem.putData("title", _getAddAssetListTitle(title));
-			dropdownItem.setHref("#");
-			dropdownItem.setLabel(LanguageUtil.get(_request, label));
+			dropdownItem.setLabel(LanguageUtil.get(_httpServletRequest, label));
 		};
 	}
 
@@ -364,7 +376,8 @@ public class AssetListDisplayContext {
 	}
 
 	private String _getAddAssetListTitle(String title) {
-		return LanguageUtil.format(_request, "add-x-content-set", title, true);
+		return LanguageUtil.format(
+			_httpServletRequest, "add-x-collection", title, true);
 	}
 
 	private String _getKeywords() {
@@ -372,7 +385,7 @@ public class AssetListDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		return _keywords;
 	}
@@ -383,7 +396,7 @@ public class AssetListDisplayContext {
 		}
 
 		_orderByCol = ParamUtil.getString(
-			_request, "orderByCol", "create-date");
+			_httpServletRequest, "orderByCol", "create-date");
 
 		return _orderByCol;
 	}
@@ -396,19 +409,20 @@ public class AssetListDisplayContext {
 		return false;
 	}
 
-	private SearchContainer _assetListContentSearchContainer;
 	private Integer _assetListEntriesCount;
-	private SearchContainer _assetListEntriesSearchContainer;
+	private SearchContainer<AssetListEntry> _assetListEntriesSearchContainer;
 	private AssetListEntry _assetListEntry;
 	private Long _assetListEntryId;
 	private Integer _assetListEntryType;
+	private final AssetRendererFactoryClassProvider
+		_assetRendererFactoryClassProvider;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final PortalPreferences _portalPreferences;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private Long _segmentsEntryId;
 	private final ThemeDisplay _themeDisplay;
 

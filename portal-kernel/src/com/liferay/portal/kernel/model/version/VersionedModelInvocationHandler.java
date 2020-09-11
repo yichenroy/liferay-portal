@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
- * @author Preston Crary
+ * @author     Preston Crary
  * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
 @Deprecated
@@ -57,8 +57,8 @@ public class VersionedModelInvocationHandler implements InvocationHandler {
 		try {
 			return mappedMethod.invoke(_versionModel, arguments);
 		}
-		catch (InvocationTargetException ite) {
-			throw ite.getTargetException();
+		catch (InvocationTargetException invocationTargetException) {
+			throw invocationTargetException.getTargetException();
 		}
 	}
 

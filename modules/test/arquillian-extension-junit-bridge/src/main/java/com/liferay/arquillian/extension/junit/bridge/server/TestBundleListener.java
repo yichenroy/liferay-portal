@@ -14,14 +14,8 @@
 
 package com.liferay.arquillian.extension.junit.bridge.server;
 
-import java.io.IOException;
-
-import java.net.Socket;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.junit.runners.model.TestClass;
+import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -35,12 +29,12 @@ public class TestBundleListener implements BundleListener {
 
 	public TestBundleListener(
 		BundleContext systemBundleContext, Bundle testBundle,
-		TestClass testClass, String reportServerHostName, int reportServerPort,
-		long passCode) {
+		Map<String, List<String>> filteredMethodNamesMap,
+		String reportServerHostName, int reportServerPort, long passCode) {
 
 		_systemBundleContext = systemBundleContext;
 		_testBundle = testBundle;
-		_testClass = testClass;
+		_filteredMethodNamesMap = filteredMethodNamesMap;
 		_reportServerHostName = reportServerHostName;
 		_reportServerPort = reportServerPort;
 		_passCode = passCode;
@@ -59,22 +53,15 @@ public class TestBundleListener implements BundleListener {
 
 	private synchronized void _bundleChanged(Bundle bundle) {
 		if (bundle.getState() == Bundle.ACTIVE) {
-			try {
-				_socket = new Socket(_reportServerHostName, _reportServerPort);
+			_testExecutorThread = new Thread(
+				new TestExecutorRunnable(
+					_testBundle, _filteredMethodNamesMap, _reportServerHostName,
+					_reportServerPort, _passCode),
+				_testBundle.getSymbolicName() + "-executor-thread");
 
-				_testExecutorThread = new Thread(
-					new TestExecutorRunnable(
-						_testBundle, _testClass, _socket, _passCode),
-					_testClass.getName() + "-executor-thread");
+			_testExecutorThread.setDaemon(true);
 
-				_testExecutorThread.setDaemon(true);
-
-				_testExecutorThread.start();
-			}
-			catch (IOException ioe) {
-				_logger.log(
-					Level.SEVERE, "Unable to connect back to client", ioe);
-			}
+			_testExecutorThread.start();
 
 			return;
 		}
@@ -85,28 +72,15 @@ public class TestBundleListener implements BundleListener {
 			if (_testExecutorThread != null) {
 				_testExecutorThread.interrupt();
 			}
-
-			if (_socket != null) {
-				try {
-					_socket.close();
-				}
-				catch (IOException ioe) {
-					_logger.log(Level.SEVERE, "Unable to close socket", ioe);
-				}
-			}
 		}
 	}
 
-	private static final Logger _logger = Logger.getLogger(
-		TestBundleListener.class.getName());
-
+	private final Map<String, List<String>> _filteredMethodNamesMap;
 	private final long _passCode;
 	private final String _reportServerHostName;
 	private final int _reportServerPort;
-	private Socket _socket;
 	private final BundleContext _systemBundleContext;
 	private final Bundle _testBundle;
-	private final TestClass _testClass;
 	private Thread _testExecutorThread;
 
 }

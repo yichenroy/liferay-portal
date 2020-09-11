@@ -14,14 +14,11 @@
 
 package com.liferay.sharing.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DuplicateSharingEntryException extends PortalException {
 
 	public DuplicateSharingEntryException() {
@@ -31,12 +28,12 @@ public class DuplicateSharingEntryException extends PortalException {
 		super(msg);
 	}
 
-	public DuplicateSharingEntryException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DuplicateSharingEntryException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public DuplicateSharingEntryException(Throwable cause) {
-		super(cause);
+	public DuplicateSharingEntryException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

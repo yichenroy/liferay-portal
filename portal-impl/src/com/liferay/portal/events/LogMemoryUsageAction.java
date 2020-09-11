@@ -14,10 +14,10 @@
 
 package com.liferay.portal.events;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.events.Action;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.text.NumberFormat;
 
@@ -30,7 +30,10 @@ import javax.servlet.http.HttpServletResponse;
 public class LogMemoryUsageAction extends Action {
 
 	@Override
-	public void run(HttpServletRequest request, HttpServletResponse response) {
+	public void run(
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
+
 		if (!_log.isDebugEnabled()) {
 			return;
 		}

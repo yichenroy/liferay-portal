@@ -25,9 +25,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Brian Wing Shun Chan
- * @author Zsolt Berentey
- *
+ * @author     Brian Wing Shun Chan
+ * @author     Zsolt Berentey
  * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
 @Component(
@@ -44,7 +43,7 @@ public class MessageBoardsServiceVerifyProcess extends VerifyProcess {
 	}
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.message.boards.service)(&(release.schema.version>=2.0.0)(!(release.schema.version>=2.1.0))))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.message.boards.service)(&(release.schema.version>=5.0.0)(!(release.schema.version>=6.0.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

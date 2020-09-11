@@ -48,7 +48,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 	request.setAttribute("configuration.jsp-redirect", redirect);
 	%>
 
-	<liferay-ui:success key='<%= portletResource + "requestProcessed" %>' message="the-content-set-was-created-successfully" />
+	<liferay-ui:success key='<%= portletResource + "requestProcessed" %>' message="the-collection-was-created-successfully" />
 
 	<liferay-frontend:edit-form-body>
 		<liferay-frontend:form-navigator
@@ -58,7 +58,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 	</liferay-frontend:edit-form-body>
 
 	<liferay-frontend:edit-form-footer>
-		<aui:button onClick='<%= renderResponse.getNamespace() + "saveSelectBoxes();" %>' type="submit" />
+		<aui:button onClick='<%= liferayPortletResponse.getNamespace() + "saveSelectBoxes();" %>' type="submit" />
 
 		<aui:button type="cancel" />
 	</liferay-frontend:edit-form-footer>
@@ -70,69 +70,54 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 
 		<%
 		for (AssetRendererFactory<?> curRendererFactory : classTypesAssetRendererFactories) {
-			String className = assetPublisherWebUtil.getClassName(curRendererFactory);
+			String className = assetPublisherWebHelper.getClassName(curRendererFactory);
 		%>
 
-			Liferay.Util.setFormValues(
-				form,
-				{
-					classTypeIds<%= className %>: Liferay.Util.listSelect(Liferay.Util.getFormElement(form, '<%= className %>currentClassTypeIds'))
-				}
-			);
+			Liferay.Util.setFormValues(form, {
+				classTypeIds<%= className %>: Liferay.Util.listSelect(
+					Liferay.Util.getFormElement(
+						form,
+						'<%= className %>currentClassTypeIds'
+					)
+				),
+			});
 
 		<%
 		}
 		%>
 
-		var currentClassNameIdsSelect = Liferay.Util.getFormElement(form, 'currentClassNameIds');
-		var currentMetadataFieldsInput = Liferay.Util.getFormElement(form, 'currentMetadataFields');
+		var currentClassNameIdsSelect = Liferay.Util.getFormElement(
+			form,
+			'currentClassNameIds'
+		);
+		var currentMetadataFieldsInput = Liferay.Util.getFormElement(
+			form,
+			'currentMetadataFields'
+		);
 
 		if (currentClassNameIdsSelect && currentMetadataFieldsInput) {
-			Liferay.Util.postForm(
-				form,
-				{
-					data: {
-						classNameIds: Liferay.Util.listSelect(currentClassNameIdsSelect),
-						metadataFields: Liferay.Util.listSelect(currentMetadataFieldsInput)
-					}
-				}
-			);
+			Liferay.Util.postForm(form, {
+				data: {
+					classNameIds: Liferay.Util.listSelect(
+						currentClassNameIdsSelect
+					),
+					metadataFields: Liferay.Util.listSelect(
+						currentMetadataFieldsInput
+					),
+				},
+			});
+		}
+		else if (currentMetadataFieldsInput) {
+			Liferay.Util.postForm(form, {
+				data: {
+					metadataFields: Liferay.Util.listSelect(
+						currentMetadataFieldsInput
+					),
+				},
+			});
 		}
 		else {
 			submitForm(form);
 		}
 	}
 </script>
-
-<aui:script require="metal-dom/src/all/dom as dom,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as modalCommands">
-	function handleCreateAssetListLinkClick(event) {
-		event.preventDefault();
-
-		modalCommands.openSimpleInputModal(
-			{
-				dialogTitle: '<liferay-ui:message key="content-set-title" />',
-				formSubmitURL: '<liferay-portlet:actionURL name="/asset_publisher/add_asset_list" portletName="<%= portletResource %>"><portlet:param name="portletResource" value="<%= portletResource %>" /><portlet:param name="redirect" value="<%= currentURL %>" /></liferay-portlet:actionURL>',
-				mainFieldLabel: '<liferay-ui:message key="title" />',
-				mainFieldName: 'title',
-				mainFieldPlaceholder: '<liferay-ui:message key="title" />',
-				namespace: '<%= PortalUtil.getPortletNamespace(HtmlUtil.escape(portletResource)) %>',
-				spritemap: '<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg'
-			}
-		);
-	}
-
-	var createAssetListLinkClickHandler = dom.delegate(
-		document.body,
-		'click',
-		'a.create-asset-list-link',
-		handleCreateAssetListLinkClick
-	);
-
-	function handleDestroyPortlet() {
-		createAssetListLinkClickHandler.removeListener();
-
-		Liferay.detach('destroyPortlet', handleDestroyPortlet);
-	}
-
-	Liferay.on('destroyPortlet', handleDestroyPortlet);
-</aui:script>

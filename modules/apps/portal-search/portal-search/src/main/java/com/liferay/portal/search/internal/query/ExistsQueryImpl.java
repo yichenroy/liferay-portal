@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.internal.query;
 
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.search.query.ExistsQuery;
 import com.liferay.portal.search.query.QueryVisitor;
 
@@ -32,10 +32,12 @@ public class ExistsQueryImpl extends BaseQueryImpl implements ExistsQuery {
 		return queryVisitor.visit(this);
 	}
 
+	@Override
 	public String getField() {
 		return _field;
 	}
 
+	@Override
 	public int getSortOrder() {
 		return 1;
 	}

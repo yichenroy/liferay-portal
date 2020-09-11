@@ -14,8 +14,6 @@
 
 package com.liferay.external.reference.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,7 +23,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see EROrganizationLocalService
  * @generated
  */
-@ProviderType
 public class EROrganizationLocalServiceWrapper
 	implements EROrganizationLocalService,
 			   ServiceWrapper<EROrganizationLocalService> {
@@ -41,13 +38,13 @@ public class EROrganizationLocalServiceWrapper
 			String externalReferenceCode, long userId,
 			long parentOrganizationId, String name, String type, long regionId,
 			long countryId, long statusId, String comments, boolean site,
-			boolean logo, byte[] logoBytes,
+			boolean hasLogo, byte[] logoBytes,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _erOrganizationLocalService.addOrUpdateOrganization(
 			externalReferenceCode, userId, parentOrganizationId, name, type,
-			regionId, countryId, statusId, comments, site, logo, logoBytes,
+			regionId, countryId, statusId, comments, site, hasLogo, logoBytes,
 			serviceContext);
 	}
 

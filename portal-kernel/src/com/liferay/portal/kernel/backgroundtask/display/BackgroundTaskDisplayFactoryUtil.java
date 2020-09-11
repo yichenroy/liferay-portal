@@ -14,15 +14,12 @@
 
 package com.liferay.portal.kernel.backgroundtask.display;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 /**
  * @author Andrew Betts
  */
-@ProviderType
 public class BackgroundTaskDisplayFactoryUtil {
 
 	public static BackgroundTaskDisplay getBackgroundTaskDisplay(
@@ -37,17 +34,6 @@ public class BackgroundTaskDisplayFactoryUtil {
 
 		return _getBackgroundTaskDisplayFactory().getBackgroundTaskDisplay(
 			backgroundTaskId);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #_getBackgroundTaskDisplayFactory()}
-	 */
-	@Deprecated
-	public static BackgroundTaskDisplayFactory
-		getBackgroundTaskDisplayFactory() {
-
-		return _getBackgroundTaskDisplayFactory();
 	}
 
 	private static BackgroundTaskDisplayFactory

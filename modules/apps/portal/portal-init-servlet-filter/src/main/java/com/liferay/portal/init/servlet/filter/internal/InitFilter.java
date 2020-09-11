@@ -14,6 +14,7 @@
 
 package com.liferay.portal.init.servlet.filter.internal;
 
+import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 
 import java.util.concurrent.CountDownLatch;
@@ -40,16 +41,19 @@ public class InitFilter extends BasePortalFilter {
 
 	@Override
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
 		_countDownLatch.await();
 
 		synchronized (this) {
+			DependencyManagerSyncUtil.sync();
+
 			try {
 				processFilter(
-					InitFilter.class.getName(), request, response, filterChain);
+					InitFilter.class.getName(), httpServletRequest,
+					httpServletResponse, filterChain);
 			}
 			finally {
 				if (_serviceRegistration != null) {

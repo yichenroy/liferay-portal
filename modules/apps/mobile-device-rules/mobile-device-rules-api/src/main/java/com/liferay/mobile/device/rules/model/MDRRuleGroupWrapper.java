@@ -14,8 +14,6 @@
 
 package com.liferay.mobile.device.rules.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,7 +31,6 @@ import java.util.Map;
  * @see MDRRuleGroup
  * @generated
  */
-@ProviderType
 public class MDRRuleGroupWrapper
 	extends BaseModelWrapper<MDRRuleGroup>
 	implements MDRRuleGroup, ModelWrapper<MDRRuleGroup> {
@@ -46,6 +43,7 @@ public class MDRRuleGroupWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("uuid", getUuid());
 		attributes.put("ruleGroupId", getRuleGroupId());
 		attributes.put("groupId", getGroupId());
@@ -63,6 +61,12 @@ public class MDRRuleGroupWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -264,6 +268,16 @@ public class MDRRuleGroupWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this mdr rule group.
+	 *
+	 * @return the mvcc version of this mdr rule group
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -542,6 +556,16 @@ public class MDRRuleGroupWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the mvcc version of this mdr rule group.
+	 *
+	 * @param mvccVersion the mvcc version of this mdr rule group
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**

@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.changeset.taglib.servlet.taglib;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.changeset.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -28,7 +26,6 @@ import javax.servlet.jsp.PageContext;
 /**
  * @author Akos Thurzo
  */
-@ProviderType
 public class ExportImportEntityManagementBarButtonTag extends IncludeTag {
 
 	@Override
@@ -80,16 +77,16 @@ public class ExportImportEntityManagementBarButtonTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:" +
 				"export-import-entity-management-bar-button:cmd",
 			_cmd);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:" +
 				"export-import-entity-management-bar-button:searchContainerId",
 			_searchContainerId);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:" +
 				"export-import-entity-management-bar-button:" +
 					"searchContainerMappingId",

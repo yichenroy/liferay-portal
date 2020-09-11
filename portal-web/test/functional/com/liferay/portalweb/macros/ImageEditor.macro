@@ -1,10 +1,15 @@
 definition {
+
 	macro _applyChanges {
-		AssertClick(locator1 = "Button#APPLY_EFFECTS", value1 = "Apply");
+		AssertClick(
+			locator1 = "Button#APPLY_EFFECTS",
+			value1 = "Apply");
 	}
 
 	macro _saveFile {
-		AssertClick(locator1 = "Button#SAVE", value1 = "Save");
+		AssertClick(
+			locator1 = "Button#SAVE",
+			value1 = "Save");
 	}
 
 	macro applyChangesAndSaveFile {
@@ -22,11 +27,18 @@ definition {
 
 		MenuItem.click(menuItem = "Edit With Image Editor");
 
+		Pause(locator1 = "5000");
+
 		SelectFrame(locator1 = "ImageEditor#IMAGE_EDITOR_IFRAME");
 	}
 
 	macro gotoImageEditorViaItemSelector {
-		ItemSelector.gotoItemSelectorViaAlloyEditor();
+		if (isSet(ckEditor)) {
+			ItemSelector.gotoItemSelectorViaCKEditor();
+		}
+		else {
+			ItemSelector.gotoItemSelectorViaAlloyEditor();
+		}
 
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
@@ -34,14 +46,17 @@ definition {
 
 		AssertClick(
 			locator1 = "ItemSelector#NAVIGATION_SPECIFIC_TAB",
-			value1 = "${navTab}"
-		);
+			value1 = "${navTab}");
 
 		var key_imageFileName = StringUtil.replace("${imageFileName}", " ", "+");
 
 		Pause(locator1 = "1000");
 
-		Click(locator1 = "ItemSelector#SELECT_FILE_IMAGE_PREVIEW");
+		Click(locator1 = "Icon#EYE_PREVIEW");
+
+		SelectFrameTop(value1 = "relative=top");
+
+		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
 		Click(locator1 = "Icon#EDIT_PENCIL");
 
@@ -74,4 +89,5 @@ definition {
 
 		AssertVisible(locator1 = "Button#COLOR_EFFECT");
 	}
+
 }

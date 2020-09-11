@@ -15,8 +15,9 @@
 package com.liferay.password.policies.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.password.policies.admin.web.internal.search.PasswordPolicyChecker;
@@ -51,31 +52,28 @@ import javax.servlet.http.HttpServletRequest;
 public class ViewPasswordPoliciesManagementToolbarDisplayContext {
 
 	public ViewPasswordPoliciesManagementToolbarDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse, String displayStyle) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_displayStyle = displayStyle;
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							StringBundler.concat(
-								"javascript:", _renderResponse.getNamespace(),
-								"deletePasswordPolicies();"));
-						dropdownItem.setIcon("trash");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					StringBundler.concat(
+						"javascript:", _renderResponse.getNamespace(),
+						"deletePasswordPolicies();"));
+				dropdownItem.setIcon("trash");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	public String getClearResultsURL() {
@@ -87,24 +85,21 @@ public class ViewPasswordPoliciesManagementToolbarDisplayContext {
 	}
 
 	public CreationMenu getCreationMenu() throws PortalException {
-		return new CreationMenu() {
-			{
-				addDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							_renderResponse.createRenderURL(), "mvcPath",
-							"/edit_password_policy.jsp", "redirect",
-							_renderResponse.createRenderURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "add"));
-					});
+		return CreationMenuBuilder.addDropdownItem(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					_renderResponse.createRenderURL(), "mvcPath",
+					"/edit_password_policy.jsp", "redirect",
+					_renderResponse.createRenderURL());
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "add"));
 			}
-		};
+		).build();
 	}
 
 	public String getKeywords() {
 		if (Validator.isNull(_keywords)) {
-			_keywords = ParamUtil.getString(_request, "keywords");
+			_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 		}
 
 		return _keywords;
@@ -112,7 +107,8 @@ public class ViewPasswordPoliciesManagementToolbarDisplayContext {
 
 	public String getOrderByCol() {
 		if (Validator.isNull(_orderByCol)) {
-			_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+			_orderByCol = ParamUtil.getString(
+				_httpServletRequest, "orderByCol", "name");
 		}
 
 		return _orderByCol;
@@ -120,7 +116,8 @@ public class ViewPasswordPoliciesManagementToolbarDisplayContext {
 
 	public String getOrderByType() {
 		if (Validator.isNull(_orderByType)) {
-			_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+			_orderByType = ParamUtil.getString(
+				_httpServletRequest, "orderByType", "asc");
 		}
 
 		return _orderByType;
@@ -156,7 +153,9 @@ public class ViewPasswordPoliciesManagementToolbarDisplayContext {
 		return searchActionURL.toString();
 	}
 
-	public SearchContainer getSearchContainer() throws Exception {
+	public SearchContainer<PasswordPolicy> getSearchContainer()
+		throws Exception {
+
 		if (_passwordPolicySearch != null) {
 			return _passwordPolicySearch;
 		}
@@ -168,8 +167,9 @@ public class ViewPasswordPoliciesManagementToolbarDisplayContext {
 		passwordPolicySearch.setRowChecker(
 			new PasswordPolicyChecker(_renderResponse));
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PasswordPolicyDisplayTerms searchTerms =
 			(PasswordPolicyDisplayTerms)passwordPolicySearch.getSearchTerms();
@@ -210,8 +210,9 @@ public class ViewPasswordPoliciesManagementToolbarDisplayContext {
 	}
 
 	public boolean showCreationMenu() throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return PortalPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(),
@@ -219,12 +220,12 @@ public class ViewPasswordPoliciesManagementToolbarDisplayContext {
 	}
 
 	private final String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private PasswordPolicySearch _passwordPolicySearch;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

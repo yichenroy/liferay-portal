@@ -64,14 +64,14 @@ public class AudioEditorConfigContributor extends BaseEditorConfigContributor {
 
 		PortletURL itemSelectorURL = getItemSelectorPortletURL(
 			inputEditorTaglibAttributes, requestBackedPortletURLFactory,
-			itemSelectorCriteria.toArray(
-				new ItemSelectorCriterion[itemSelectorCriteria.size()]));
+			itemSelectorCriteria.toArray(new ItemSelectorCriterion[0]));
 
 		if (itemSelectorURL != null) {
 			jsonObject.put(
-				"filebrowserAudioBrowseLinkUrl", itemSelectorURL.toString());
-			jsonObject.put(
-				"filebrowserAudioBrowseUrl", itemSelectorURL.toString());
+				"filebrowserAudioBrowseLinkUrl", itemSelectorURL.toString()
+			).put(
+				"filebrowserAudioBrowseUrl", itemSelectorURL.toString()
+			);
 		}
 	}
 

@@ -51,9 +51,8 @@ public abstract class BaseFacetTestCase extends BaseIndexingTestCase {
 		throws Exception {
 
 		assertSearch(
-			indexingTestHelper -> {
-				consumer.accept(new FacetTestHelper(indexingTestHelper));
-			});
+			indexingTestHelper -> consumer.accept(
+				new FacetTestHelper(indexingTestHelper)));
 	}
 
 	protected abstract String getField();
@@ -99,10 +98,6 @@ public abstract class BaseFacetTestCase extends BaseIndexingTestCase {
 			String fieldName, List<String> expectedValues) {
 
 			_indexingTestHelper.assertValues(fieldName, expectedValues);
-		}
-
-		public String getQueryString() {
-			return _indexingTestHelper.getQueryString();
 		}
 
 		public SearchContext getSearchContext() {

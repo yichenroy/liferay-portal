@@ -14,8 +14,6 @@
 
 package com.liferay.portal.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -42,10 +40,9 @@ import javax.sql.DataSource;
  * @see com.liferay.portal.service.impl.PortalLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class PortalLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
-	implements PortalLocalService, IdentifiableOSGiService {
+	implements IdentifiableOSGiService, PortalLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -172,8 +169,8 @@ public abstract class PortalLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 

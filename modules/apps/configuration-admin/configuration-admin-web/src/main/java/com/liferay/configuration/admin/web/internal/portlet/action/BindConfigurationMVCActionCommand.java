@@ -17,6 +17,7 @@ package com.liferay.configuration.admin.web.internal.portlet.action;
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.configuration.admin.display.ConfigurationFormRenderer;
 import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContext;
+import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContextFactory;
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationFormRendererRetriever;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationModelRetriever;
@@ -34,7 +35,10 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.resource.manager.ClassLoaderResourceManager;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.LocationVariableResolver;
+import com.liferay.portal.kernel.settings.SettingsLocatorHelper;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -57,13 +61,12 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
@@ -79,6 +82,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SYSTEM_SETTINGS,
 		"mvc.command.name=bindConfiguration"
 	},
@@ -105,7 +109,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 		ConfigurationModel configurationModel = null;
 
 		ConfigurationScopeDisplayContext configurationScopeDisplayContext =
-			new ConfigurationScopeDisplayContext(actionRequest);
+			ConfigurationScopeDisplayContextFactory.create(actionRequest);
 
 		Map<String, ConfigurationModel> configurationModels =
 			_configurationModelRetriever.getConfigurationModels(
@@ -125,13 +129,16 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 				pid, configurationScopeDisplayContext.getScope(),
 				configurationScopeDisplayContext.getScopePK());
 
-		if (configuration != null) {
-			configurationModel = new ConfigurationModel(
-				configurationModel.getExtendedObjectClassDefinition(),
-				configuration, configurationModel.getBundleSymbolicName(),
-				configurationModel.getBundleLocation(),
-				configurationModel.isFactory());
+		if (configurationModel.isFactory() && pid.equals(factoryPid)) {
+			configuration = null;
 		}
+
+		configurationModel = new ConfigurationModel(
+			configurationModel.getBundleLocation(),
+			configurationModel.getBundleSymbolicName(),
+			configurationModel.getClassLoader(), configuration,
+			configurationModel.getExtendedObjectClassDefinition(),
+			configurationModel.isFactory());
 
 		Dictionary<String, Object> properties = null;
 
@@ -172,15 +179,18 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 				actionResponse.sendRedirect(redirect);
 			}
 		}
-		catch (ConfigurationModelListenerException cmle) {
+		catch (ConfigurationModelListenerException
+					configurationModelListenerException) {
+
 			SessionErrors.add(
-				actionRequest, ConfigurationModelListenerException.class, cmle);
+				actionRequest, ConfigurationModelListenerException.class,
+				configurationModelListenerException);
 
 			actionResponse.setRenderParameter(
 				"mvcRenderCommandName", "/edit_configuration");
 		}
-		catch (IOException ioe) {
-			throw new PortletException(ioe);
+		catch (IOException ioException) {
+			throw new PortletException(ioException);
 		}
 
 		return true;
@@ -210,7 +220,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 
 					String pid = configurationModel.getID();
 
-					if (scoped) {
+					if (!configurationModel.isFactory() && scoped) {
 						pid = pid + ".scoped";
 					}
 
@@ -241,20 +251,18 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 						configuration.getProperties());
 			}
 
-			Enumeration<String> keys = properties.keys();
+			Enumeration<String> enumeration = properties.keys();
 
-			while (keys.hasMoreElements()) {
-				String key = keys.nextElement();
+			while (enumeration.hasMoreElements()) {
+				String key = enumeration.nextElement();
 
 				Object value = properties.get(key);
 
-				configuredProperties.put(key, value);
-			}
+				if (Objects.equals(value, Portal.TEMP_OBFUSCATION_VALUE)) {
+					continue;
+				}
 
-			if (configurationModel.isCompanyFactory()) {
-				configuredProperties.put(
-					ConfigurationModel.PROPERTY_KEY_COMPANY_ID,
-					ConfigurationModel.PROPERTY_VALUE_COMPANY_ID_DEFAULT);
+				configuredProperties.put(key, value);
 			}
 
 			if (scoped) {
@@ -285,9 +293,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 
 				file = file.getAbsoluteFile();
 
-				URI uri = file.toURI();
-
-				String fileName = uri.toString();
+				String fileName = String.valueOf(file.toURI());
 
 				String oldFileName = (String)configuredProperties.put(
 					"felix.fileinstall.filename", fileName);
@@ -304,12 +310,12 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 									oldFileName);
 						}
 					}
-					catch (Exception e) {
+					catch (Exception exception) {
 						if (_log.isWarnEnabled()) {
 							_log.warn(
 								"Unable to delete inconsistent factory " +
 									"configuration " + oldFileName,
-								e);
+								exception);
 						}
 					}
 				}
@@ -317,11 +323,13 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 
 			configuration.update(configuredProperties);
 		}
-		catch (ConfigurationModelListenerException cmle) {
-			throw cmle;
+		catch (ConfigurationModelListenerException
+					configurationModelListenerException) {
+
+			throw configurationModelListenerException;
 		}
-		catch (IOException ioe) {
-			throw new PortletException(ioe);
+		catch (IOException ioException) {
+			throw new PortletException(ioException);
 		}
 	}
 
@@ -344,14 +352,19 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 					configurationModel, themeDisplay.getLocale(),
 					resourceBundle);
 
-		DDMForm ddmForm = configurationModelToDDMFormConverter.getDDMForm();
+		DDMFormValues ddmFormValues = getDDMFormValues(
+			actionRequest, configurationModelToDDMFormConverter.getDDMForm());
 
-		DDMFormValues ddmFormValues = getDDMFormValues(actionRequest, ddmForm);
+		LocationVariableResolver locationVariableResolver =
+			new LocationVariableResolver(
+				new ClassLoaderResourceManager(
+					configurationModel.getClassLoader()),
+				_settingsLocatorHelper);
 
 		DDMFormValuesToPropertiesConverter ddmFormValuesToPropertiesConverter =
 			new DDMFormValuesToPropertiesConverter(
 				configurationModel, ddmFormValues, _jsonFactory,
-				themeDisplay.getLocale());
+				themeDisplay.getLocale(), locationVariableResolver);
 
 		return ddmFormValuesToPropertiesConverter.getProperties();
 	}
@@ -362,10 +375,9 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 		ConfigurationFormRenderer configurationFormRenderer =
 			_configurationFormRendererRetriever.getConfigurationFormRenderer(
 				pid);
-		HttpServletRequest request = _portal.getHttpServletRequest(
-			actionRequest);
 
-		return configurationFormRenderer.getRequestParameters(request);
+		return configurationFormRenderer.getRequestParameters(
+			_portal.getHttpServletRequest(actionRequest));
 	}
 
 	protected Dictionary<String, Object> toDictionary(
@@ -390,7 +402,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 	private ConfigurationFormRendererRetriever
 		_configurationFormRendererRetriever;
 
-	@Reference
+	@Reference(target = "(!(filter.visibility=*))")
 	private ConfigurationModelRetriever _configurationModelRetriever;
 
 	@Reference
@@ -404,5 +416,8 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 
 	@Reference
 	private ResourceBundleLoaderProvider _resourceBundleLoaderProvider;
+
+	@Reference
+	private SettingsLocatorHelper _settingsLocatorHelper;
 
 }

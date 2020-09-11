@@ -4,8 +4,6 @@ package ${apiPackagePath}.model;
 	import ${apiPackagePath}.service.persistence.${entity.name}PK;
 </#if>
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -21,17 +19,17 @@ import java.util.Map;
  * This class is used by SOAP remote services<#if entity.hasRemoteService()>, specifically {@link ${packagePath}.service.http.${entity.name}ServiceSoap}</#if>.
  *
  * @author ${author}
-<#if classDeprecated>
+<#if serviceBuilder.isVersionGTE_7_3_0()>
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
+<#elseif classDeprecated>
  * @deprecated ${classDeprecatedComment}
 </#if>
  * @generated
  */
 
-<#if classDeprecated>
+<#if serviceBuilder.isVersionGTE_7_3_0() || classDeprecated>
 	@Deprecated
 </#if>
-
-@ProviderType
 public class ${entity.name}Soap implements Serializable {
 
 	public static ${entity.name}Soap toSoapModel(${entity.name} model) {

@@ -15,11 +15,10 @@
 package com.liferay.journal.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleServiceUtil;
-import com.liferay.journal.web.util.JournalPortletUtil;
-import com.liferay.petra.string.StringPool;
+import com.liferay.journal.web.internal.util.JournalPortletUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -48,25 +47,31 @@ public class JournalHistoryDisplayContext {
 		_renderResponse = renderResponse;
 		_article = article;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 	}
 
-	public SearchContainer getArticleSearchContainer() {
-		SearchContainer articleSearchContainer = new SearchContainer(
-			_renderRequest, getPortletURL(), null, null);
+	public SearchContainer<JournalArticle> getArticleSearchContainer() {
+		SearchContainer<JournalArticle> articleSearchContainer =
+			new SearchContainer(_renderRequest, getPortletURL(), null, null);
 
 		articleSearchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
+
+		articleSearchContainer.setOrderByCol(getOrderByCol());
+
+		OrderByComparator<JournalArticle> orderByComparator =
+			JournalPortletUtil.getArticleOrderByComparator(
+				getOrderByCol(), getOrderByType());
+
+		articleSearchContainer.setOrderByComparator(orderByComparator);
+
+		articleSearchContainer.setOrderByType(getOrderByType());
 
 		int articleVersionsCount =
 			JournalArticleServiceUtil.getArticlesCountByArticleId(
 				_article.getGroupId(), _article.getArticleId());
 
 		articleSearchContainer.setTotal(articleVersionsCount);
-
-		OrderByComparator<JournalArticle> orderByComparator =
-			JournalPortletUtil.getArticleOrderByComparator(
-				getOrderByCol(), getOrderByType());
 
 		List<JournalArticle> articleVersions =
 			JournalArticleServiceUtil.getArticlesByArticleId(
@@ -101,17 +106,13 @@ public class JournalHistoryDisplayContext {
 	}
 
 	public List<NavigationItem> getNavigationItems() {
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(StringPool.BLANK);
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "versions"));
-					});
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(true);
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "versions"));
 			}
-		};
+		).build();
 	}
 
 	public String getOrderByCol() {
@@ -178,12 +179,12 @@ public class JournalHistoryDisplayContext {
 	private final JournalArticle _article;
 	private String _backURL;
 	private String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _orderByCol;
 	private String _orderByType;
 	private String _redirect;
 	private String _referringPortletResource;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

@@ -22,9 +22,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -32,10 +32,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -47,44 +51,49 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Generated("")
 @GraphQLName("KnowledgeBaseFolder")
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"name"})
+@Schema(
+	requiredProperties = {"name"},
+	description = "Represents a folder for organizing Knowledge Base articles."
+)
 @XmlRootElement(name = "KnowledgeBaseFolder")
 public class KnowledgeBaseFolder {
 
-	public static enum ViewableBy {
-
-		ANYONE("Anyone"), MEMBERS("Members"), OWNER("Owner");
-
-		@JsonCreator
-		public static ViewableBy create(String value) {
-			for (ViewableBy viewableBy : values()) {
-				if (Objects.equals(viewableBy.getValue(), value)) {
-					return viewableBy;
-				}
-			}
-
-			return null;
-		}
-
-		@JsonValue
-		public String getValue() {
-			return _value;
-		}
-
-		@Override
-		public String toString() {
-			return _value;
-		}
-
-		private ViewableBy(String value) {
-			_value = value;
-		}
-
-		private final String _value;
-
+	public static KnowledgeBaseFolder toDTO(String json) {
+		return ObjectMapperUtil.readValue(KnowledgeBaseFolder.class, json);
 	}
 
-	@Schema(description = "The creator of the KnowledgeBaseFolder.")
+	@Schema
+	@Valid
+	public Map<String, Map<String, String>> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+	}
+
+	@JsonIgnore
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		try {
+			actions = actionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, Map<String, String>> actions;
+
+	@Schema(description = "The folder's creator.")
+	@Valid
 	public Creator getCreator() {
 		return creator;
 	}
@@ -108,11 +117,40 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The folder's creator.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema(description = "The creation date of the KnowledgeBaseFolder.")
+	@Schema
+	@Valid
+	public CustomField[] getCustomFields() {
+		return customFields;
+	}
+
+	public void setCustomFields(CustomField[] customFields) {
+		this.customFields = customFields;
+	}
+
+	@JsonIgnore
+	public void setCustomFields(
+		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+
+		try {
+			customFields = customFieldsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected CustomField[] customFields;
+
+	@Schema(description = "The date the folder was created.")
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -136,13 +174,11 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The date the folder was created.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
-	@Schema(
-		description = "The last time a field of the KnowledgeBaseFolder changed."
-	)
+	@Schema(description = "The last time the folder was modified.")
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -166,11 +202,11 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The last time the folder was modified.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
-	@Schema(description = "The description of the KnowledgeBaseFolder.")
+	@Schema(description = "The folder's description.")
 	public String getDescription() {
 		return description;
 	}
@@ -194,11 +230,11 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The folder's description.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String description;
 
-	@Schema(description = "The identifier of the resource.")
+	@Schema(description = "The folder's ID.")
 	public Long getId() {
 		return id;
 	}
@@ -220,11 +256,11 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The folder's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema(description = "The main title/name of this resource.")
+	@Schema(description = "The folder's main title/name.")
 	public String getName() {
 		return name;
 	}
@@ -246,13 +282,13 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The folder's main title/name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	@NotEmpty
 	protected String name;
 
 	@Schema(
-		description = "The number of child KnowledgeBaseArticles asociated with this resource."
+		description = "The number of Knowledge Base articles in this folder."
 	)
 	public Integer getNumberOfKnowledgeBaseArticles() {
 		return numberOfKnowledgeBaseArticles;
@@ -281,12 +317,14 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The number of Knowledge Base articles in this folder."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer numberOfKnowledgeBaseArticles;
 
 	@Schema(
-		description = "The number of child KnowledgeBaseFolders asociated with this resource."
+		description = "The number of Knowledge Base folders in this folder."
 	)
 	public Integer getNumberOfKnowledgeBaseFolders() {
 		return numberOfKnowledgeBaseFolders;
@@ -315,13 +353,16 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The number of Knowledge Base folders in this folder."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer numberOfKnowledgeBaseFolders;
 
 	@Schema(
-		description = "The parent KnowledgeBaseFolder of this article, if any."
+		description = "The folder's parent Knowledge Base folder, if it exists."
 	)
+	@Valid
 	public ParentKnowledgeBaseFolder getParentKnowledgeBaseFolder() {
 		return parentKnowledgeBaseFolder;
 	}
@@ -349,12 +390,14 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The folder's parent Knowledge Base folder, if it exists."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected ParentKnowledgeBaseFolder parentKnowledgeBaseFolder;
 
 	@Schema(
-		description = "The parent KnowledgeBaseFolder identifier of this article, if any."
+		description = "The ID of the folder's parent Knowledge Base folder, if such a parent folder exists."
 	)
 	public Long getParentKnowledgeBaseFolderId() {
 		return parentKnowledgeBaseFolderId;
@@ -383,13 +426,13 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The ID of the folder's parent Knowledge Base folder, if such a parent folder exists."
+	)
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	protected Long parentKnowledgeBaseFolderId;
 
-	@Schema(
-		description = "The site identificator where this KnowledgeBaseFolder is scoped."
-	)
+	@Schema(description = "The ID of the site to which this folder is scoped.")
 	public Long getSiteId() {
 		return siteId;
 	}
@@ -413,13 +456,16 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The ID of the site to which this folder is scoped."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long siteId;
 
 	@Schema(
-		description = "Write only property to specify the default permissions."
+		description = "A write-only property that specifies the folder's default permissions."
 	)
+	@Valid
 	public ViewableBy getViewableBy() {
 		return viewableBy;
 	}
@@ -452,7 +498,9 @@ public class KnowledgeBaseFolder {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A write-only property that specifies the folder's default permissions."
+	)
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	protected ViewableBy viewableBy;
 
@@ -486,14 +534,44 @@ public class KnowledgeBaseFolder {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (actions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(actions));
+		}
+
 		if (creator != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"creator\":");
+			sb.append("\"creator\": ");
 
 			sb.append(String.valueOf(creator));
+		}
+
+		if (customFields != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customFields.length; i++) {
+				sb.append(String.valueOf(customFields[i]));
+
+				if ((i + 1) < customFields.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (dateCreated != null) {
@@ -501,7 +579,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -515,7 +593,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateModified\":");
+			sb.append("\"dateModified\": ");
 
 			sb.append("\"");
 
@@ -529,7 +607,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"description\":");
+			sb.append("\"description\": ");
 
 			sb.append("\"");
 
@@ -543,7 +621,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(id);
 		}
@@ -553,7 +631,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"name\":");
+			sb.append("\"name\": ");
 
 			sb.append("\"");
 
@@ -567,7 +645,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"numberOfKnowledgeBaseArticles\":");
+			sb.append("\"numberOfKnowledgeBaseArticles\": ");
 
 			sb.append(numberOfKnowledgeBaseArticles);
 		}
@@ -577,7 +655,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"numberOfKnowledgeBaseFolders\":");
+			sb.append("\"numberOfKnowledgeBaseFolders\": ");
 
 			sb.append(numberOfKnowledgeBaseFolders);
 		}
@@ -587,7 +665,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"parentKnowledgeBaseFolder\":");
+			sb.append("\"parentKnowledgeBaseFolder\": ");
 
 			sb.append(String.valueOf(parentKnowledgeBaseFolder));
 		}
@@ -597,7 +675,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"parentKnowledgeBaseFolderId\":");
+			sb.append("\"parentKnowledgeBaseFolderId\": ");
 
 			sb.append(parentKnowledgeBaseFolderId);
 		}
@@ -607,7 +685,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"siteId\":");
+			sb.append("\"siteId\": ");
 
 			sb.append(siteId);
 		}
@@ -617,7 +695,7 @@ public class KnowledgeBaseFolder {
 				sb.append(", ");
 			}
 
-			sb.append("\"viewableBy\":");
+			sb.append("\"viewableBy\": ");
 
 			sb.append("\"");
 
@@ -631,10 +709,122 @@ public class KnowledgeBaseFolder {
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseFolder",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
+	@GraphQLName("ViewableBy")
+	public static enum ViewableBy {
+
+		ANYONE("Anyone"), MEMBERS("Members"), OWNER("Owner");
+
+		@JsonCreator
+		public static ViewableBy create(String value) {
+			for (ViewableBy viewableBy : values()) {
+				if (Objects.equals(viewableBy.getValue(), value)) {
+					return viewableBy;
+				}
+			}
+
+			return null;
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private ViewableBy(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

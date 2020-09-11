@@ -62,17 +62,17 @@ public class NamespaceServletRequest extends DynamicServletRequest {
 	};
 
 	public NamespaceServletRequest(
-		HttpServletRequest request, String attrNamespace,
+		HttpServletRequest httpServletRequest, String attrNamespace,
 		String paramNamespace) {
 
-		this(request, attrNamespace, paramNamespace, true);
+		this(httpServletRequest, attrNamespace, paramNamespace, true);
 	}
 
 	public NamespaceServletRequest(
-		HttpServletRequest request, String attrNamespace, String paramNamespace,
-		boolean inherit) {
+		HttpServletRequest httpServletRequest, String attrNamespace,
+		String paramNamespace, boolean inherit) {
 
-		super(request, inherit);
+		super(httpServletRequest, inherit);
 
 		_attrNamespace = attrNamespace;
 		_paramNamespace = paramNamespace;
@@ -93,10 +93,10 @@ public class NamespaceServletRequest extends DynamicServletRequest {
 	public Enumeration<String> getAttributeNames() {
 		List<String> names = new ArrayList<>();
 
-		Enumeration<String> enu = super.getAttributeNames();
+		Enumeration<String> enumeration = super.getAttributeNames();
 
-		while (enu.hasMoreElements()) {
-			String name = enu.nextElement();
+		while (enumeration.hasMoreElements()) {
+			String name = enumeration.nextElement();
 
 			if (name.startsWith(_attrNamespace)) {
 				names.add(name.substring(_attrNamespace.length()));

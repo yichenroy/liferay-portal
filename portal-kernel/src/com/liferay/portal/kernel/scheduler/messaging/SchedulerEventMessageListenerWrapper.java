@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.scheduler.messaging;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -32,7 +33,6 @@ import com.liferay.portal.kernel.scheduler.TriggerState;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -81,13 +81,13 @@ public class SchedulerEventMessageListenerWrapper
 					return;
 				}
 			}
-			catch (InterruptedException ie) {
+			catch (InterruptedException interruptedException) {
 				if (_log.isInfoEnabled()) {
 					_log.info(
 						"Unable to wait " +
 							_SCHEDULER_EVENT_MESSAGE_LISTENER_LOCK_TIMEOUT +
 								" milliseconds before retry",
-						ie);
+						interruptedException);
 				}
 
 				return;
@@ -126,14 +126,14 @@ public class SchedulerEventMessageListenerWrapper
 		try {
 			_messageListener.receive(message);
 		}
-		catch (Exception e) {
-			handleException(message, e);
+		catch (Exception exception) {
+			handleException(message, exception);
 
-			if (e instanceof MessageListenerException) {
-				throw (MessageListenerException)e;
+			if (exception instanceof MessageListenerException) {
+				throw (MessageListenerException)exception;
 			}
 
-			throw new MessageListenerException(e);
+			throw new MessageListenerException(exception);
 		}
 		finally {
 			TriggerState triggerState = null;
@@ -155,13 +155,13 @@ public class SchedulerEventMessageListenerWrapper
 					SchedulerEngineHelperUtil.delete(
 						jobName, groupName, storageType);
 				}
-				catch (SchedulerException se) {
+				catch (SchedulerException schedulerException) {
 					if (_log.isInfoEnabled()) {
 						_log.info(
 							StringBundler.concat(
 								"Unable to delete job ", jobName, " in group ",
 								groupName),
-							se);
+							schedulerException);
 					}
 				}
 			}
@@ -173,9 +173,9 @@ public class SchedulerEventMessageListenerWrapper
 				SchedulerEngineHelperUtil.auditSchedulerJobs(
 					message, triggerState);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isInfoEnabled()) {
-					_log.info("Unable to send audit message", e);
+					_log.info("Unable to send audit message", exception);
 				}
 			}
 		}

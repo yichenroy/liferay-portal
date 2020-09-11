@@ -14,14 +14,15 @@
 
 package com.liferay.knowledge.base.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the KBTemplate service. Represents a row in the &quot;KBTemplate&quot; database table, with each column mapped to a property of this class.
@@ -36,7 +37,7 @@ import java.util.Date;
  */
 @ProviderType
 public interface KBTemplateModel
-	extends BaseModel<KBTemplate>, ShardedModel, StagedGroupedModel {
+	extends BaseModel<KBTemplate>, MVCCModel, ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -57,6 +58,22 @@ public interface KBTemplateModel
 	 * @param primaryKey the primary key of this kb template
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this kb template.
+	 *
+	 * @return the mvcc version of this kb template
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this kb template.
+	 *
+	 * @param mvccVersion the mvcc version of this kb template
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this kb template.

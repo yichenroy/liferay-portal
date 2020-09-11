@@ -16,6 +16,7 @@ package com.liferay.portal.lpkg.deployer.internal;
 
 import com.liferay.osgi.util.bundle.BundleStartLevelUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
@@ -23,8 +24,8 @@ import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.lpkg.StaticLPKGResolver;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
@@ -33,8 +34,11 @@ import com.liferay.portal.lpkg.deployer.internal.wrapper.bundle.WARBundleWrapper
 import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,6 +52,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -92,16 +97,32 @@ public class LPKGBundleTrackerCustomizer
 		_bundleContext = bundleContext;
 		_urls = urls;
 		_overrideFileNames = overrideFileNames;
+
+		Bundle bundle = bundleContext.getBundle();
+
+		_dataFile = bundle.getDataFile(_FILE_NAME_LPKG_DATA);
+
+		_properties = new Properties();
+
+		if (_dataFile.exists()) {
+			try (InputStream inputStream = new FileInputStream(_dataFile)) {
+				_properties.load(inputStream);
+			}
+			catch (IOException ioException) {
+				_log.error("Unable to load tracked bundles", ioException);
+			}
+		}
 	}
 
 	@Override
 	public List<Bundle> addingBundle(Bundle bundle, BundleEvent bundleEvent) {
-		if (bundle.getEntry(_MARKER_FILE) != null) {
+		if (bundle.getEntry(_FILE_NAME_LFR_OUTDATED) != null) {
 			try {
 				bundle.uninstall();
 			}
-			catch (BundleException be) {
-				_log.error("Unable to uninstall LPKG " + bundle, be);
+			catch (BundleException bundleException) {
+				_log.error(
+					"Unable to uninstall LPKG " + bundle, bundleException);
 			}
 
 			return null;
@@ -145,9 +166,10 @@ public class LPKGBundleTrackerCustomizer
 				}
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
-				"Unable to determine if LPKG " + bundle + " is outdated", e);
+				"Unable to determine if LPKG " + bundle + " is outdated",
+				exception);
 		}
 
 		String symbolicName = bundle.getSymbolicName();
@@ -155,8 +177,6 @@ public class LPKGBundleTrackerCustomizer
 		if (_staticLPKGBundleSymbolicNames.contains(symbolicName)) {
 			return Collections.emptyList();
 		}
-
-		List<Bundle> bundles = new ArrayList<>();
 
 		File file = null;
 
@@ -167,18 +187,23 @@ public class LPKGBundleTrackerCustomizer
 
 			file = new File(uri.getPath());
 		}
-		catch (URISyntaxException urise) {
+		catch (URISyntaxException uriSyntaxException) {
 			throw new IllegalArgumentException(
-				"Unable to parse LPKG location " + bundle.getLocation(), urise);
+				"Unable to parse LPKG location " + bundle.getLocation(),
+				uriSyntaxException);
 		}
+
+		Set<Bundle> bundles = new HashSet<>();
 
 		try (ZipFile zipFile = new ZipFile(file)) {
 			List<Bundle> installedBundles = new ArrayList<>();
 
-			Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+			List<String> innerBundleLocations = new ArrayList<>();
 
-			while (zipEntries.hasMoreElements()) {
-				ZipEntry zipEntry = zipEntries.nextElement();
+			Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
+
+			while (enumeration.hasMoreElements()) {
+				ZipEntry zipEntry = enumeration.nextElement();
 
 				String name = zipEntry.getName();
 
@@ -188,6 +213,8 @@ public class LPKGBundleTrackerCustomizer
 
 				String location = LPKGLocationUtil.generateInnerBundleLocation(
 					bundle, name);
+
+				innerBundleLocations.add(location);
 
 				StringBundler sb = new StringBundler(4);
 
@@ -202,7 +229,7 @@ public class LPKGBundleTrackerCustomizer
 
 				URL url = new URL(sb.toString());
 
-				if (_isOverridden(symbolicName, url, location)) {
+				if (_isOverridden(symbolicName, name, location)) {
 					continue;
 				}
 
@@ -292,29 +319,86 @@ public class LPKGBundleTrackerCustomizer
 				installedBundles.add(newBundle);
 			}
 
-			for (Bundle installedBundle : installedBundles) {
-				BundleStartLevelUtil.setStartLevelAndStart(
-					installedBundle,
-					PropsValues.MODULE_FRAMEWORK_DYNAMIC_INSTALL_START_LEVEL,
-					_bundleContext);
+			if (!LPKGBatchInstallThreadLocal.isBatchInstallInProcess()) {
+				for (Bundle installedBundle : installedBundles) {
+					Dictionary<String, String> headers =
+						installedBundle.getHeaders(StringPool.BLANK);
+
+					String header = headers.get("Web-ContextPath");
+
+					if (header != null) {
+						BundleStartLevelUtil.setStartLevelAndStart(
+							installedBundle,
+							PropsValues.MODULE_FRAMEWORK_WEB_START_LEVEL,
+							_bundleContext);
+					}
+					else {
+						BundleStartLevelUtil.setStartLevelAndStart(
+							installedBundle,
+							PropsValues.
+								MODULE_FRAMEWORK_DYNAMIC_INSTALL_START_LEVEL,
+							_bundleContext);
+					}
+				}
+			}
+
+			List<String> trackedBundleLocations = _reloadTrackedBundles(
+				symbolicName, bundle, bundles);
+
+			innerBundleLocations.sort(null);
+
+			if (!trackedBundleLocations.equals(innerBundleLocations)) {
+				_recordTrackedBundles(bundle, innerBundleLocations);
 			}
 		}
-		catch (Throwable t) {
-			_log.error("Rollback bundle installation for " + bundles, t);
+		catch (Throwable throwable) {
+			_log.error(
+				"Rollback bundle installation for " + bundles, throwable);
 
 			for (Bundle newBundle : bundles) {
 				try {
 					newBundle.uninstall();
 				}
-				catch (BundleException be) {
-					_log.error("Unable to uninstall bundle " + newBundle, be);
+				catch (BundleException bundleException) {
+					_log.error(
+						"Unable to uninstall bundle " + newBundle,
+						bundleException);
 				}
 			}
 
 			return null;
 		}
 
-		return bundles;
+		return new ArrayList<>(bundles);
+	}
+
+	public void cleanTrackedBundles(Bundle[] bundles) throws IOException {
+		if (bundles == null) {
+			if (_dataFile.exists()) {
+				_dataFile.delete();
+			}
+
+			return;
+		}
+
+		Set<String> propertyNames = new HashSet<>(
+			_properties.stringPropertyNames());
+
+		for (Bundle bundle : bundles) {
+			propertyNames.remove(bundle.getSymbolicName());
+		}
+
+		if (!propertyNames.isEmpty()) {
+			return;
+		}
+
+		for (String propertyName : propertyNames) {
+			_properties.remove(propertyName);
+		}
+
+		try (OutputStream outputStream = new FileOutputStream(_dataFile)) {
+			_properties.store(outputStream, null);
+		}
 	}
 
 	@Override
@@ -341,9 +425,8 @@ public class LPKGBundleTrackerCustomizer
 					if (_log.isInfoEnabled()) {
 						_log.info(
 							StringBundler.concat(
-								"Uninstalled ", String.valueOf(installedBundle),
-								"because ", String.valueOf(bundle),
-								" was updated"));
+								"Uninstalled ", installedBundle, "because ",
+								bundle, " was updated"));
 					}
 				}
 			}
@@ -353,6 +436,8 @@ public class LPKGBundleTrackerCustomizer
 			if (newBundles != null) {
 				bundles.addAll(newBundles);
 			}
+
+			List<String> bundleLocations = new ArrayList<>();
 
 			for (Bundle installedBundle : bundles) {
 				if (installedBundle.getState() == Bundle.RESOLVED) {
@@ -365,17 +450,29 @@ public class LPKGBundleTrackerCustomizer
 						installedBundle.start();
 					}
 				}
+
+				bundleLocations.add(installedBundle.getLocation());
+			}
+
+			bundleLocations.sort(null);
+
+			if (!bundleLocations.equals(
+					_properties.getProperty(bundle.getSymbolicName()))) {
+
+				_recordTrackedBundles(bundle, bundleLocations);
 			}
 		}
-		catch (Exception e) {
-			_log.error("Rollback bundle refresh for " + bundles, e);
+		catch (Exception exception) {
+			_log.error("Rollback bundle refresh for " + bundles, exception);
 
 			for (Bundle newBundle : bundles) {
 				try {
 					newBundle.uninstall();
 				}
-				catch (BundleException be) {
-					_log.error("Unable to uninstall bundle " + newBundle, be);
+				catch (BundleException bundleException) {
+					_log.error(
+						"Unable to uninstall bundle " + newBundle,
+						bundleException);
 				}
 			}
 		}
@@ -397,15 +494,16 @@ public class LPKGBundleTrackerCustomizer
 			try {
 				_uninstallBundle(prefix, newBundle);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				_log.error(
 					StringBundler.concat(
-						"Unable to uninstall ", String.valueOf(newBundle),
-						" in response to uninstallation of ",
-						String.valueOf(bundle)),
-					t);
+						"Unable to uninstall ", newBundle,
+						" in response to uninstallation of ", bundle),
+					throwable);
 			}
 		}
+
+		_properties.remove(bundle.getSymbolicName());
 	}
 
 	private static Properties _readMarketplaceProperties(Bundle bundle)
@@ -499,16 +597,15 @@ public class LPKGBundleTrackerCustomizer
 		return false;
 	}
 
-	private boolean _isOverridden(String symbolicName, URL url, String location)
+	private boolean _isOverridden(
+			String symbolicName, String name, String location)
 		throws Throwable {
 
 		if (_overrideFileNames.isEmpty()) {
 			return false;
 		}
 
-		String path = url.getPath();
-
-		String name = _extractFileName(path);
+		name = _extractFileName(name);
 
 		name = StringUtil.toLowerCase(name);
 
@@ -517,13 +614,12 @@ public class LPKGBundleTrackerCustomizer
 
 			if (bundle != null) {
 				_uninstallBundle(symbolicName.concat(StringPool.DASH), bundle);
-			}
 
-			if (_log.isInfoEnabled()) {
-				_log.info(
-					StringBundler.concat(
-						"Disabled ", symbolicName, StringPool.COLON,
-						url.getPath()));
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						StringBundler.concat(
+							"Disabled ", symbolicName, StringPool.COLON, name));
+				}
 			}
 
 			return true;
@@ -536,7 +632,7 @@ public class LPKGBundleTrackerCustomizer
 		Path path = Paths.get(bundle.getLocation());
 
 		try (FileSystem fileSystem = FileSystems.newFileSystem(path, null)) {
-			Files.createFile(fileSystem.getPath(_MARKER_FILE));
+			Files.createFile(fileSystem.getPath(_FILE_NAME_LFR_OUTDATED));
 		}
 
 		if (_log.isInfoEnabled()) {
@@ -596,6 +692,57 @@ public class LPKGBundleTrackerCustomizer
 		}
 
 		return new String[] {servletContextName, portalProfileNames};
+	}
+
+	private void _recordTrackedBundles(
+			Bundle bundle, List<String> innerBundleLocations)
+		throws IOException {
+
+		_properties.setProperty(
+			bundle.getSymbolicName(), StringUtil.merge(innerBundleLocations));
+
+		try (OutputStream outputStream = new FileOutputStream(_dataFile)) {
+			_properties.store(outputStream, null);
+		}
+	}
+
+	private List<String> _reloadTrackedBundles(
+		String lpkgSymbolicName, Bundle bundle, Set<Bundle> trackedBundles) {
+
+		String storedBundles = _properties.getProperty(
+			bundle.getSymbolicName());
+
+		if (storedBundles == null) {
+			return Collections.emptyList();
+		}
+
+		String[] locations = StringUtil.split(storedBundles);
+
+		for (String location : locations) {
+			Bundle installedBundle = _bundleContext.getBundle(location);
+
+			if ((installedBundle == null) ||
+				(installedBundle.getState() == Bundle.UNINSTALLED)) {
+
+				continue;
+			}
+
+			String name = location.substring(
+				0, location.indexOf(StringPool.QUESTION));
+
+			try {
+				if (!_isOverridden(lpkgSymbolicName, name, location)) {
+					trackedBundles.add(installedBundle);
+				}
+			}
+			catch (Throwable throwable) {
+				_log.error("Unable to uninstall LPKG " + bundle, throwable);
+
+				return Collections.emptyList();
+			}
+		}
+
+		return Arrays.asList(locations);
 	}
 
 	private InputStream _toWARWrapperBundle(
@@ -747,7 +894,7 @@ public class LPKGBundleTrackerCustomizer
 		attributes.putValue(
 			Constants.IMPORT_PACKAGE,
 			_buildImportPackageString(
-				BundleActivator.class, BundleStartLevel.class,
+				BundleActivator.class, BundleStartLevel.class, GetterUtil.class,
 				ServiceTrackerCustomizer.class, StringBundler.class,
 				URLConstants.class));
 		attributes.putValue("Liferay-WAB-Context-Name", contextName);
@@ -766,7 +913,9 @@ public class LPKGBundleTrackerCustomizer
 		jarOutputStream.closeEntry();
 	}
 
-	private static final String _MARKER_FILE = ".lfr-outdated";
+	private static final String _FILE_NAME_LFR_OUTDATED = ".lfr-outdated";
+
+	private static final String _FILE_NAME_LPKG_DATA = "lpkg.data.file";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LPKGBundleTrackerCustomizer.class);
@@ -775,8 +924,10 @@ public class LPKGBundleTrackerCustomizer
 		StaticLPKGResolver.getStaticLPKGBundleSymbolicNames();
 
 	private final BundleContext _bundleContext;
+	private final File _dataFile;
 	private final Set<String> _outdatedRemoteAppIds = new HashSet<>();
 	private final Set<String> _overrideFileNames;
+	private final Properties _properties;
 	private final Map<String, URL> _urls;
 
 }

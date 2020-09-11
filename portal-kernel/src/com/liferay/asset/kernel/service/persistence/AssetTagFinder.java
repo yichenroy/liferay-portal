@@ -14,7 +14,7 @@
 
 package com.liferay.asset.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -30,7 +30,7 @@ public interface AssetTagFinder {
 	public java.util.List<com.liferay.asset.kernel.model.AssetTag> findByG_C_N(
 		long groupId, long classNameId, String name, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator
-			<com.liferay.asset.kernel.model.AssetTag> obc);
+			<com.liferay.asset.kernel.model.AssetTag> orderByComparator);
 
 	public java.util.List<com.liferay.asset.kernel.model.AssetTag>
 		findByG_N_S_E(

@@ -14,14 +14,11 @@
 
 package com.liferay.asset.list.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DuplicateAssetListEntryTitleException extends PortalException {
 
 	public DuplicateAssetListEntryTitleException() {
@@ -31,12 +28,14 @@ public class DuplicateAssetListEntryTitleException extends PortalException {
 		super(msg);
 	}
 
-	public DuplicateAssetListEntryTitleException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DuplicateAssetListEntryTitleException(
+		String msg, Throwable throwable) {
+
+		super(msg, throwable);
 	}
 
-	public DuplicateAssetListEntryTitleException(Throwable cause) {
-		super(cause);
+	public DuplicateAssetListEntryTitleException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

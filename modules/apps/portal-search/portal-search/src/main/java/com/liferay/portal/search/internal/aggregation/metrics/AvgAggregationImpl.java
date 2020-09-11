@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.aggregation.metrics;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.AggregationVisitor;
 import com.liferay.portal.search.aggregation.metrics.AvgAggregation;
 import com.liferay.portal.search.internal.aggregation.BaseFieldAggregation;
@@ -23,7 +21,6 @@ import com.liferay.portal.search.internal.aggregation.BaseFieldAggregation;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class AvgAggregationImpl
 	extends BaseFieldAggregation implements AvgAggregation {
 

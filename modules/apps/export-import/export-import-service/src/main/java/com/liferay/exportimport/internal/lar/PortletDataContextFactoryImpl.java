@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.ExportImportDateUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -32,6 +30,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
@@ -43,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -53,7 +51,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Máté Thurzó
  */
 @Component(immediate = true, service = PortletDataContextFactory.class)
-@ProviderType
 public class PortletDataContextFactoryImpl
 	implements PortletDataContextFactory {
 
@@ -200,9 +197,9 @@ public class PortletDataContextFactoryImpl
 		Map<String, String[]> parameterMap = Collections.emptyMap();
 
 		if (range != null) {
-			parameterMap = new HashMap<>();
-
-			parameterMap.put(ExportImportDateUtil.RANGE, new String[] {range});
+			parameterMap = HashMapBuilder.put(
+				ExportImportDateUtil.RANGE, new String[] {range}
+			).build();
 		}
 
 		portletDataContext.setParameterMap(parameterMap);
@@ -235,14 +232,15 @@ public class PortletDataContextFactoryImpl
 				portletDataContext.setCompanyGroupId(companyGroup.getGroupId());
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (CompanyThreadLocal.isDeleteInProcess()) {
-				PortletDataException pde = new PortletDataException(
-					PortletDataException.COMPANY_BEING_DELETED, e);
+				PortletDataException portletDataException =
+					new PortletDataException(
+						PortletDataException.COMPANY_BEING_DELETED, exception);
 
-				pde.setCompanyId(companyId);
+				portletDataException.setCompanyId(companyId);
 
-				throw new SystemException(pde);
+				throw new SystemException(portletDataException);
 			}
 		}
 
@@ -259,14 +257,15 @@ public class PortletDataContextFactoryImpl
 					userPersonalSiteGroup.getGroupId());
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (CompanyThreadLocal.isDeleteInProcess()) {
-				PortletDataException pde = new PortletDataException(
-					PortletDataException.COMPANY_BEING_DELETED, e);
+				PortletDataException portletDataException =
+					new PortletDataException(
+						PortletDataException.COMPANY_BEING_DELETED, exception);
 
-				pde.setCompanyId(companyId);
+				portletDataException.setCompanyId(companyId);
 
-				throw new SystemException(pde);
+				throw new SystemException(portletDataException);
 			}
 		}
 
@@ -285,11 +284,11 @@ public class PortletDataContextFactoryImpl
 
 			rootElement = document.getRootElement();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new PortletDataException(
 				"Unable to create portlet data context for the import " +
 					"process because of an invalid LAR manifest",
-				e);
+				exception);
 		}
 
 		portletDataContext.setImportDataRootElement(rootElement);

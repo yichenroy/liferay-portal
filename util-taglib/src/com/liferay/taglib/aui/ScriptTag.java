@@ -17,7 +17,6 @@ package com.liferay.taglib.aui;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.servlet.taglib.BodyContentWrapper;
 import com.liferay.portal.kernel.servlet.taglib.aui.ScriptData;
-import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.FileAvailabilityUtil;
@@ -83,30 +82,30 @@ public class ScriptTag extends BaseScriptTag {
 	public static void flushScriptData(PageContext pageContext)
 		throws Exception {
 
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		ScriptData scriptData = (ScriptData)request.getAttribute(
+		ScriptData scriptData = (ScriptData)httpServletRequest.getAttribute(
 			WebKeys.AUI_SCRIPT_DATA);
 
 		if (scriptData == null) {
 			return;
 		}
 
-		request.removeAttribute(WebKeys.AUI_SCRIPT_DATA);
+		httpServletRequest.removeAttribute(WebKeys.AUI_SCRIPT_DATA);
 
 		scriptData.writeTo(pageContext.getOut());
 	}
 
 	@Override
 	public int doEndTag() throws JspException {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
 		try {
 			String portletId = null;
 
-			Portlet portlet = (Portlet)request.getAttribute(
+			Portlet portlet = (Portlet)httpServletRequest.getAttribute(
 				WebKeys.RENDER_PORTLET);
 
 			if (portlet != null) {
@@ -166,13 +165,15 @@ public class ScriptTag extends BaseScriptTag {
 				}
 			}
 			else {
-				ScriptData scriptData = (ScriptData)request.getAttribute(
-					WebKeys.AUI_SCRIPT_DATA);
+				ScriptData scriptData =
+					(ScriptData)httpServletRequest.getAttribute(
+						WebKeys.AUI_SCRIPT_DATA);
 
 				if (scriptData == null) {
 					scriptData = new ScriptData();
 
-					request.setAttribute(WebKeys.AUI_SCRIPT_DATA, scriptData);
+					httpServletRequest.setAttribute(
+						WebKeys.AUI_SCRIPT_DATA, scriptData);
 				}
 
 				if (require != null) {
@@ -189,24 +190,23 @@ public class ScriptTag extends BaseScriptTag {
 
 			return EVAL_PAGE;
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 		finally {
-			if (!ServerDetector.isResin()) {
-				cleanUp();
-			}
+			cleanUp();
 
-			request.removeAttribute(WebKeys.JAVASCRIPT_CONTEXT);
+			httpServletRequest.removeAttribute(WebKeys.JAVASCRIPT_CONTEXT);
 		}
 	}
 
 	@Override
 	public int doStartTag() throws JspException {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		request.setAttribute(WebKeys.JAVASCRIPT_CONTEXT, Boolean.TRUE);
+		httpServletRequest.setAttribute(
+			WebKeys.JAVASCRIPT_CONTEXT, Boolean.TRUE);
 
 		return super.doStartTag();
 	}

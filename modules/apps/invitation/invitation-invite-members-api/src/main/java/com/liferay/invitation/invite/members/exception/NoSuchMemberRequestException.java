@@ -14,14 +14,11 @@
 
 package com.liferay.invitation.invite.members.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchMemberRequestException extends NoSuchModelException {
 
 	public NoSuchMemberRequestException() {
@@ -31,12 +28,12 @@ public class NoSuchMemberRequestException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchMemberRequestException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchMemberRequestException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchMemberRequestException(Throwable cause) {
-		super(cause);
+	public NoSuchMemberRequestException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

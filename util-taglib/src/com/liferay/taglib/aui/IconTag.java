@@ -16,8 +16,6 @@ package com.liferay.taglib.aui;
 
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -25,19 +23,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.aui.base.BaseIconTag;
-import com.liferay.taglib.servlet.PipingServletResponse;
 import com.liferay.taglib.ui.MessageTag;
 import com.liferay.taglib.util.InlineUtil;
-import com.liferay.taglib.util.TagResourceBundleUtil;
 
-import java.io.IOException;
+import java.util.Objects;
 
-import java.util.ResourceBundle;
-
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 
@@ -49,37 +40,6 @@ import javax.servlet.jsp.PageContext;
  */
 public class IconTag extends BaseIconTag {
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             DirectTag#doTagAsString(HttpServletRequest,
-	 *             HttpServletResponse)}
-	 */
-	@Deprecated
-	public static String doTag(
-			String cssClass, String image, String markupView,
-			HttpServletRequest request, HttpServletResponse response)
-		throws IOException, ServletException {
-
-		IconTag iconTag = new IconTag();
-
-		iconTag.setCssClass(cssClass);
-		iconTag.setImage(image);
-		iconTag.setMarkupView(markupView);
-
-		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
-
-		try {
-			iconTag.doTag(
-				request,
-				new PipingServletResponse(response, unsyncStringWriter));
-		}
-		catch (JspException je) {
-			throw new ServletException(je);
-		}
-
-		return unsyncStringWriter.toString();
-	}
-
 	@Override
 	public String getId() {
 		String id = super.getId();
@@ -88,7 +48,8 @@ public class IconTag extends BaseIconTag {
 			return id;
 		}
 
-		id = PortalUtil.generateRandomKey(request, IconTag.class.getName());
+		id = PortalUtil.generateRandomKey(
+			getRequest(), IconTag.class.getName());
 
 		id = HtmlUtil.getAUICompatibleId(id);
 
@@ -142,68 +103,45 @@ public class IconTag extends BaseIconTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		if (getSrc() == null) {
-			String src = (String)request.getAttribute("aui:icon:src:ext");
+			String src = (String)httpServletRequest.getAttribute(
+				"aui:icon:src:ext");
 
 			if (Validator.isNotNull(src)) {
 				setSrc(src);
 			}
 
-			request.removeAttribute("aui:icon:src:ext");
+			httpServletRequest.removeAttribute("aui:icon:src:ext");
 		}
 
-		super.setAttributes(request);
+		super.setAttributes(httpServletRequest);
 	}
 
 	private void _processIconContent(PageContext pageContext) {
 		JspWriter jspWriter = pageContext.getOut();
 
 		try {
-			if ("lexicon".equals(getMarkupView())) {
-				jspWriter.write("<svg class=\"lexicon-icon lexicon-icon-");
+			if (Objects.equals(getMarkupView(), "lexicon")) {
+				jspWriter.write("<svg aria-hidden=\"true\" ");
+				jspWriter.write("class=\"lexicon-icon lexicon-icon-");
 				jspWriter.write(GetterUtil.getString(getImage()));
-				jspWriter.write(
-					"\" focusable=\"false\" role=\"presentation\" title=\"");
-
-				HttpServletRequest httpServletRequest =
-					(HttpServletRequest)pageContext.getRequest();
-
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)httpServletRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
-				String title = GetterUtil.getString(getImage());
-
-				String label = getLabel();
-
-				if (label != null) {
-					ResourceBundle resourceBundle =
-						TagResourceBundleUtil.getResourceBundle(
-							request, themeDisplay.getLocale());
-
-					title = HtmlUtil.escapeAttribute(
-						LanguageUtil.get(resourceBundle, label));
-				}
-
-				if (title == null) {
-					title = "Icon";
-				}
-
-				jspWriter.write(title);
-
-				jspWriter.write("\" ");
+				jspWriter.write("\" focusable=\"false\" ");
 				jspWriter.write(
 					InlineUtil.buildDynamicAttributes(getDynamicAttributes()));
-				jspWriter.write(StringPool.GREATER_THAN);
-				jspWriter.write("<use data-href=\"");
+				jspWriter.write("><use href=\"");
 
 				String src = getSrc();
 
 				if (src == null) {
-					src =
-						themeDisplay.getPathThemeImages() +
-							"/lexicon/icons.svg";
+					HttpServletRequest httpServletRequest =
+						(HttpServletRequest)pageContext.getRequest();
+
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)httpServletRequest.getAttribute(
+							WebKeys.THEME_DISPLAY);
+
+					src = themeDisplay.getPathThemeImages() + "/clay/icons.svg";
 				}
 
 				jspWriter.write(src);
@@ -232,8 +170,8 @@ public class IconTag extends BaseIconTag {
 				jspWriter.write("</span>");
 			}
 		}
-		catch (Exception e) {
-			ReflectionUtil.throwException(e);
+		catch (Exception exception) {
+			ReflectionUtil.throwException(exception);
 		}
 	}
 

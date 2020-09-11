@@ -18,9 +18,11 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.UserGroupGroupRole;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserGroupGroupRoleLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -32,6 +34,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.RoleNameComparator;
 import com.liferay.portlet.rolesadmin.search.RoleSearch;
 import com.liferay.portlet.rolesadmin.search.RoleSearchTerms;
+import com.liferay.site.memberships.web.internal.util.DepotRolesUtil;
 import com.liferay.users.admin.kernel.util.UsersAdminUtil;
 
 import java.util.List;
@@ -51,10 +54,10 @@ import javax.servlet.http.HttpServletRequest;
 public class UserGroupRolesDisplayContext {
 
 	public UserGroupRolesDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 	}
@@ -64,7 +67,8 @@ public class UserGroupRolesDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "icon");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "icon");
 
 		return _displayStyle;
 	}
@@ -75,7 +79,7 @@ public class UserGroupRolesDisplayContext {
 		}
 
 		_eventName = ParamUtil.getString(
-			_request, "eventName",
+			_httpServletRequest, "eventName",
 			_renderResponse.getNamespace() + "selectUserGroupsRoles");
 
 		return _eventName;
@@ -86,11 +90,13 @@ public class UserGroupRolesDisplayContext {
 			return _groupId;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_groupId = ParamUtil.getLong(
-			_request, "groupId", themeDisplay.getSiteGroupIdOrLiveGroupId());
+			_httpServletRequest, "groupId",
+			themeDisplay.getSiteGroupIdOrLiveGroupId());
 
 		return _groupId;
 	}
@@ -164,15 +170,16 @@ public class UserGroupRolesDisplayContext {
 		return portletURL;
 	}
 
-	public SearchContainer getRoleSearchSearchContainer()
+	public SearchContainer<Role> getRoleSearchSearchContainer()
 		throws PortalException {
 
 		if (_roleSearch != null) {
 			return _roleSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		RoleSearch roleSearch = new RoleSearch(_renderRequest, getPortletURL());
 
@@ -195,10 +202,18 @@ public class UserGroupRolesDisplayContext {
 
 		roleSearch.setOrderByType(getOrderByType());
 
+		int roleType = RoleConstants.TYPE_SITE;
+
+		Group group = GroupLocalServiceUtil.fetchGroup(getGroupId());
+
+		if (group.isDepot()) {
+			roleType = RoleConstants.TYPE_DEPOT;
+		}
+
 		List<Role> roles = RoleLocalServiceUtil.search(
 			themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-			new Integer[] {RoleConstants.TYPE_SITE}, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, orderByComparator);
+			new Integer[] {roleType}, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			orderByComparator);
 
 		List<Role> selectedRoles = _getSelectedRoles();
 
@@ -218,8 +233,14 @@ public class UserGroupRolesDisplayContext {
 			Collectors.toList()
 		);
 
-		roles = UsersAdminUtil.filterGroupRoles(
-			themeDisplay.getPermissionChecker(), getGroupId(), roles);
+		if (group.isDepot()) {
+			roles = DepotRolesUtil.filterGroupRoles(
+				themeDisplay.getPermissionChecker(), getGroupId(), roles);
+		}
+		else {
+			roles = UsersAdminUtil.filterGroupRoles(
+				themeDisplay.getPermissionChecker(), getGroupId(), roles);
+		}
 
 		int rolesCount = roles.size();
 
@@ -240,7 +261,7 @@ public class UserGroupRolesDisplayContext {
 			return _userGroupId;
 		}
 
-		_userGroupId = ParamUtil.getLong(_request, "userGroupId");
+		_userGroupId = ParamUtil.getLong(_httpServletRequest, "userGroupId");
 
 		return _userGroupId;
 	}
@@ -250,7 +271,8 @@ public class UserGroupRolesDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "title");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "title");
 
 		return _orderByCol;
 	}
@@ -286,7 +308,8 @@ public class UserGroupRolesDisplayContext {
 			return _assignRoles;
 		}
 
-		_assignRoles = ParamUtil.getBoolean(_request, "assignRoles", true);
+		_assignRoles = ParamUtil.getBoolean(
+			_httpServletRequest, "assignRoles", true);
 
 		return _assignRoles;
 	}
@@ -295,12 +318,12 @@ public class UserGroupRolesDisplayContext {
 	private String _displayStyle;
 	private String _eventName;
 	private Long _groupId;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private RoleSearch _roleSearch;
 	private Long _userGroupId;
 

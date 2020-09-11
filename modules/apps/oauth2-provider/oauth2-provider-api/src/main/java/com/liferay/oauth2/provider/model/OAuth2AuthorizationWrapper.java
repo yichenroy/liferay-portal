@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,10 +30,9 @@ import java.util.Map;
  * @see OAuth2Authorization
  * @generated
  */
-@ProviderType
 public class OAuth2AuthorizationWrapper
 	extends BaseModelWrapper<OAuth2Authorization>
-	implements OAuth2Authorization, ModelWrapper<OAuth2Authorization> {
+	implements ModelWrapper<OAuth2Authorization>, OAuth2Authorization {
 
 	public OAuth2AuthorizationWrapper(OAuth2Authorization oAuth2Authorization) {
 		super(oAuth2Authorization);

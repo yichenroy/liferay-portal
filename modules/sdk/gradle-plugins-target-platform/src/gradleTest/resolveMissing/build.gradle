@@ -1,6 +1,9 @@
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins", version: "3.13.172"
+		classpath(group: "com.liferay", name: "com.liferay.gradle.plugins", version: "11.0.45") {
+			exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
+			exclude group: "com.liferay", module: "com.liferay.gradle.util"
+		}
 	}
 
 	repositories {
@@ -30,19 +33,19 @@ apply plugin: "com.liferay.target.platform"
 task runGradleTest
 
 dependencies {
-	compile group: "com.google.guava", name: "guava", version: "23.0"
-
+	compileOnly group: "com.google.guava", name: "guava", version: "23.0"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.util.taglib"
 	compileOnly group: "javax.portlet", name: "portlet-api"
-	compileOnly group: "javax.servlet", name: "javax.servlet-api"
 	compileOnly group: "jstl", name: "jstl"
+	compileOnly group: "org.apache.felix", name: "org.apache.felix.http.servlet-api", version: "1.1.2"
 	compileOnly group: "org.osgi", name: "osgi.cmpn"
 
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.bom", version: "7.0.4"
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.compile.only", version: "7.0.4"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom", version: "7.2.1"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom.compile.only", version: "7.2.1"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom.third.party", version: "7.2.1"
 
-	targetPlatformDistro files("../../repo/distro.jar")
+	targetPlatformDistro group: "com.liferay.portal", name: "release.portal.distro", version: "7.2.1"
 }
 
 repositories {
@@ -52,15 +55,15 @@ repositories {
 }
 
 runGradleTest {
-	dependsOn resolve
-
 	doLast {
-		File bndrunFile = new File(resolve.temporaryDir, "resolve.bndrun")
+		Task resolveTask = tasks["resolve"]
 
-		assert !bndrunFile.text.contains("com.liferay.resolve.missing;version='[1.0.0,1.0.1)")
+		try {
+			resolveTask.execute()
+		}
+		catch (Exception e) {
+		}
+
+		assert resolveTask.runBundles.isEmpty()
 	}
-}
-
-targetPlatform {
-	ignoreResolveFailures = true
 }

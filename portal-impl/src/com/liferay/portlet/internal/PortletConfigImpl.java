@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.PortletConstants;
@@ -26,7 +27,6 @@ import com.liferay.portal.kernel.portlet.WindowStateFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.StrutsResourceBundle;
 
@@ -285,7 +285,9 @@ public class PortletConfigImpl implements LiferayPortletConfig {
 			PortletBag portletBag = PortletBagPool.get(
 				_portlet.getRootPortletId());
 
-			resourceBundle = portletBag.getResourceBundle(locale);
+			if (portletBag != null) {
+				resourceBundle = portletBag.getResourceBundle(locale);
+			}
 		}
 
 		return new PortletResourceBundle(resourceBundle, _portletInfos);
@@ -337,7 +339,7 @@ public class PortletConfigImpl implements LiferayPortletConfig {
 	protected Set<QName> toJavaxQNames(
 		Set<com.liferay.portal.kernel.xml.QName> liferayQNames) {
 
-		Set<QName> javaxQNames = new HashSet<>(liferayQNames.size());
+		Set<QName> javaxQNames = new HashSet<>();
 
 		for (com.liferay.portal.kernel.xml.QName liferayQName : liferayQNames) {
 			QName javaxQName = new QName(

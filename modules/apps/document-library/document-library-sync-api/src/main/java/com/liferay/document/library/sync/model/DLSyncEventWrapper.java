@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.sync.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -31,7 +29,6 @@ import java.util.Map;
  * @see DLSyncEvent
  * @generated
  */
-@ProviderType
 public class DLSyncEventWrapper
 	extends BaseModelWrapper<DLSyncEvent>
 	implements DLSyncEvent, ModelWrapper<DLSyncEvent> {

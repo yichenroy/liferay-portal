@@ -14,8 +14,6 @@
 
 package com.liferay.sync.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,10 +31,9 @@ import java.util.Map;
  * @see SyncDevice
  * @generated
  */
-@ProviderType
 public class SyncDeviceWrapper
 	extends BaseModelWrapper<SyncDevice>
-	implements SyncDevice, ModelWrapper<SyncDevice> {
+	implements ModelWrapper<SyncDevice>, SyncDevice {
 
 	public SyncDeviceWrapper(SyncDevice syncDevice) {
 		super(syncDevice);

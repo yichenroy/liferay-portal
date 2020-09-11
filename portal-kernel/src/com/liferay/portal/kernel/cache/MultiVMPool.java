@@ -14,9 +14,9 @@
 
 package com.liferay.portal.kernel.cache;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -30,6 +30,11 @@ public interface MultiVMPool {
 	public PortalCache<? extends Serializable, ? extends Serializable>
 		getPortalCache(String portalCacheName);
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getPortalCache(String)}
+	 */
+	@Deprecated
 	public PortalCache<? extends Serializable, ? extends Serializable>
 		getPortalCache(String portalCacheName, boolean blocking);
 

@@ -22,10 +22,9 @@ import java.io.File;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import org.dm.gradle.plugins.bundle.BundleExtension;
 
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -158,30 +157,20 @@ public class GradlePluginsDefaultsUtil {
 
 		Set<String> fileNames = new HashSet<>();
 
+		if (Objects.equals(buildProfile, "dxp")) {
+			buildProfile = "portal";
+		}
+
+		fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + buildProfile);
 		fileNames.add(
 			_BUILD_PROFILE_FILE_NAME_PREFIX + buildProfile + "-" + suffix);
-		fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + buildProfile);
 
 		if (buildProfile.equals("portal-deprecated")) {
-			fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + "portal-" + suffix);
 			fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + "portal");
+			fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + "portal-" + suffix);
 		}
 
 		return fileNames;
-	}
-
-	public static String getBundleInstruction(Project project, String key) {
-		Map<String, String> bundleInstructions = getBundleInstructions(project);
-
-		return bundleInstructions.get(key);
-	}
-
-	@SuppressWarnings("unchecked")
-	public static Map<String, String> getBundleInstructions(Project project) {
-		BundleExtension bundleExtension = GradleUtil.getExtension(
-			project, BundleExtension.class);
-
-		return (Map<String, String>)bundleExtension.getInstructions();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -228,7 +217,7 @@ public class GradlePluginsDefaultsUtil {
 	public static boolean isPrivateProject(Project project) {
 		String path = project.getPath();
 
-		if (path.startsWith(":private:")) {
+		if (path.startsWith(":dxp:") || path.startsWith(":private:")) {
 			return true;
 		}
 

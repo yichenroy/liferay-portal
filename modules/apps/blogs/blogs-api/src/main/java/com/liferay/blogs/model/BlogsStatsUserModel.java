@@ -14,12 +14,13 @@
 
 package com.liferay.blogs.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the BlogsStatsUser service. Represents a row in the &quot;BlogsStatsUser&quot; database table, with each column mapped to a property of this class.
@@ -34,7 +35,7 @@ import java.util.Date;
  */
 @ProviderType
 public interface BlogsStatsUserModel
-	extends BaseModel<BlogsStatsUser>, ShardedModel {
+	extends BaseModel<BlogsStatsUser>, MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -55,6 +56,22 @@ public interface BlogsStatsUserModel
 	 * @param primaryKey the primary key of this blogs stats user
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this blogs stats user.
+	 *
+	 * @return the mvcc version of this blogs stats user
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this blogs stats user.
+	 *
+	 * @param mvccVersion the mvcc version of this blogs stats user
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the stats user ID of this blogs stats user.

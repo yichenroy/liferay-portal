@@ -14,7 +14,7 @@
 
 package com.liferay.asset.categories.admin.web.internal.exportimport.data.handler;
 
-import com.liferay.asset.categories.admin.web.internal.constants.AssetCategoriesAdminPortletKeys;
+import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
@@ -189,42 +189,6 @@ public class AssetCategoryPortletDataHandler extends BasePortletDataHandler {
 				portletDataContext);
 
 		vocabularyActionableDynamicQuery.performCount();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected ActionableDynamicQuery getCategoryActionableDynamicQuery(
-		final PortletDataContext portletDataContext) {
-
-		ActionableDynamicQuery actionableDynamicQuery =
-			_assetCategoryLocalService.getExportActionableDynamicQuery(
-				portletDataContext);
-
-		// Override date range criteria
-
-		actionableDynamicQuery.setAddCriteriaMethod(null);
-
-		return actionableDynamicQuery;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected ActionableDynamicQuery getVocabularyActionableDynamicQuery(
-		final PortletDataContext portletDataContext) {
-
-		ActionableDynamicQuery actionableDynamicQuery =
-			_assetVocabularyLocalService.getExportActionableDynamicQuery(
-				portletDataContext);
-
-		// Override date range criteria
-
-		actionableDynamicQuery.setAddCriteriaMethod(null);
-
-		return actionableDynamicQuery;
 	}
 
 	@Reference

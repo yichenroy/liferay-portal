@@ -19,13 +19,14 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
-import com.liferay.dynamic.data.mapping.test.util.background.task.DDMStructureBackgroundTask;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.search.test.util.IndexerFixture;
@@ -47,6 +48,7 @@ import org.junit.runner.RunWith;
  * @author Lucas Marques de Paula
  */
 @RunWith(Arquillian.class)
+@Sync
 public class DLFileEntryMetadataDDMStructureIndexerTest
 	extends BaseDLIndexerTestCase {
 
@@ -95,18 +97,13 @@ public class DLFileEntryMetadataDDMStructureIndexerTest
 
 		indexerFixture.deleteDocument(document);
 
-		runBackgroundTaskReindex(ddmStructure);
+		Message message = new Message();
+
+		message.put("structureId", ddmStructure.getStructureId());
+
+		_messageBus.sendMessage("liferay/ddm_structure_reindex", message);
 
 		dlSearchFixture.searchOnlyOne(searchTerm, LocaleUtil.JAPAN);
-	}
-
-	protected void runBackgroundTaskReindex(DDMStructure structure)
-		throws Exception {
-
-		DDMStructureBackgroundTask backgroundTask =
-			new DDMStructureBackgroundTask(structure.getStructureId());
-
-		backgroundTaskExecutor.execute(backgroundTask);
 	}
 
 	protected void setIndexerEnable(boolean indexerEnabled) {
@@ -125,11 +122,6 @@ public class DLFileEntryMetadataDDMStructureIndexerTest
 			dlFileEntryTypeLocalService);
 	}
 
-	@Inject(
-		filter = "background.task.executor.class.name=com.liferay.dynamic.data.mapping.background.task.DDMStructureIndexerBackgroundTaskExecutor"
-	)
-	protected BackgroundTaskExecutor backgroundTaskExecutor;
-
 	@Inject
 	protected DDMStructureLocalService ddmStructureLocalService;
 
@@ -138,5 +130,8 @@ public class DLFileEntryMetadataDDMStructureIndexerTest
 
 	protected DLFileEntryMetadataDDMStructureFixture fileEntryMetadataFixture;
 	protected IndexerFixture<DLFileEntry> indexerFixture;
+
+	@Inject
+	private static MessageBus _messageBus;
 
 }

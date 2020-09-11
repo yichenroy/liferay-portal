@@ -24,18 +24,17 @@ import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
-import javax.portlet.WindowStateException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -45,7 +44,7 @@ import javax.servlet.http.HttpServletRequest;
 public class DLBreadcrumbUtil {
 
 	public static void addPortletBreadcrumbEntries(
-			FileEntry fileEntry, HttpServletRequest request,
+			FileEntry fileEntry, HttpServletRequest httpServletRequest,
 			RenderResponse renderResponse)
 		throws Exception {
 
@@ -54,7 +53,8 @@ public class DLBreadcrumbUtil {
 		if (folder.getFolderId() !=
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 
-			addPortletBreadcrumbEntries(folder, request, renderResponse);
+			addPortletBreadcrumbEntries(
+				folder, httpServletRequest, renderResponse);
 		}
 
 		PortletURL portletURL = renderResponse.createRenderURL();
@@ -67,11 +67,12 @@ public class DLBreadcrumbUtil {
 			"fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, unescapedFileEntry.getTitle(), portletURL.toString());
+			httpServletRequest, unescapedFileEntry.getTitle(),
+			portletURL.toString());
 	}
 
 	public static void addPortletBreadcrumbEntries(
-			FileShortcut fileShortcut, HttpServletRequest request,
+			FileShortcut fileShortcut, HttpServletRequest httpServletRequest,
 			RenderResponse renderResponse)
 		throws Exception {
 
@@ -80,7 +81,8 @@ public class DLBreadcrumbUtil {
 		if (folder.getFolderId() !=
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 
-			addPortletBreadcrumbEntries(folder, request, renderResponse);
+			addPortletBreadcrumbEntries(
+				folder, httpServletRequest, renderResponse);
 		}
 
 		FileShortcut unescapedDLFileShortcut = fileShortcut.toUnescapedModel();
@@ -93,58 +95,65 @@ public class DLBreadcrumbUtil {
 			"fileEntryId", String.valueOf(fileShortcut.getToFileEntryId()));
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, unescapedDLFileShortcut.getToTitle(),
+			httpServletRequest, unescapedDLFileShortcut.getToTitle(),
 			portletURL.toString());
 	}
 
 	public static void addPortletBreadcrumbEntries(
-			Folder folder, HttpServletRequest request,
+			Folder folder, HttpServletRequest httpServletRequest,
 			LiferayPortletResponse liferayPortletResponse)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 		portletURL.setParameter(
 			"mvcRenderCommandName", "/document_library/view");
 
-		Map<String, Object> data = new HashMap<>();
+		Map<String, Object> data = HashMapBuilder.<String, Object>put(
+			"direction-right", Boolean.TRUE.toString()
+		).put(
+			"folder-id",
+			() -> {
+				PortletDisplay portletDisplay =
+					themeDisplay.getPortletDisplay();
 
-		data.put("direction-right", Boolean.TRUE.toString());
+				DLPortletInstanceSettings dlPortletInstanceSettings =
+					DLPortletInstanceSettings.getInstance(
+						themeDisplay.getLayout(), portletDisplay.getId());
 
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
-		DLPortletInstanceSettings dlPortletInstanceSettings =
-			DLPortletInstanceSettings.getInstance(
-				themeDisplay.getLayout(), portletDisplay.getId());
-
-		data.put("folder-id", dlPortletInstanceSettings.getRootFolderId());
+				return dlPortletInstanceSettings.getRootFolderId();
+			}
+		).build();
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, themeDisplay.translate("home"), portletURL.toString(),
-			data);
+			httpServletRequest, themeDisplay.translate("home"),
+			portletURL.toString(), data);
 
 		portletURL.setParameter(
 			"mvcRenderCommandName", "/document_library/view_folder");
 
-		addPortletBreadcrumbEntries(folder, request, portletURL);
+		addPortletBreadcrumbEntries(folder, httpServletRequest, portletURL);
 	}
 
 	public static void addPortletBreadcrumbEntries(
-			Folder folder, HttpServletRequest request, PortletURL portletURL)
+			Folder folder, HttpServletRequest httpServletRequest,
+			PortletURL portletURL)
 		throws Exception {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
 
 		long rootFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 
 		boolean ignoreRootFolder = ParamUtil.getBoolean(
-			request, "ignoreRootFolder");
+			httpServletRequest, "ignoreRootFolder");
 
 		if (!ignoreRootFolder) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
 			PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 			DLPortletInstanceSettings dlPortletInstanceSettings =
@@ -156,7 +165,9 @@ public class DLBreadcrumbUtil {
 
 		List<Folder> ancestorFolders = Collections.emptyList();
 
-		if ((folder != null) && (folder.getFolderId() != rootFolderId)) {
+		if ((folder != null) && (folder.getFolderId() != rootFolderId) &&
+			!folder.isRoot()) {
+
 			ancestorFolders = folder.getAncestors();
 
 			int indexOfRootFolder = -1;
@@ -180,13 +191,14 @@ public class DLBreadcrumbUtil {
 			portletURL.setParameter(
 				"folderId", String.valueOf(ancestorFolder.getFolderId()));
 
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("direction-right", Boolean.TRUE.toString());
-			data.put("folder-id", ancestorFolder.getFolderId());
-
 			PortalUtil.addPortletBreadcrumbEntry(
-				request, ancestorFolder.getName(), portletURL.toString(), data);
+				httpServletRequest, ancestorFolder.getName(),
+				portletURL.toString(),
+				HashMapBuilder.<String, Object>put(
+					"direction-right", Boolean.TRUE.toString()
+				).put(
+					"folder-id", ancestorFolder.getFolderId()
+				).build());
 		}
 
 		long folderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
@@ -202,24 +214,24 @@ public class DLBreadcrumbUtil {
 
 			Folder unescapedFolder = folder.toUnescapedModel();
 
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("direction-right", Boolean.TRUE.toString());
-			data.put("folder-id", folderId);
-
 			PortalUtil.addPortletBreadcrumbEntry(
-				request, unescapedFolder.getName(), portletURL.toString(),
-				data);
+				httpServletRequest, unescapedFolder.getName(),
+				portletURL.toString(),
+				HashMapBuilder.<String, Object>put(
+					"direction-right", Boolean.TRUE.toString()
+				).put(
+					"folder-id", folderId
+				).build());
 		}
 	}
 
 	public static void addPortletBreadcrumbEntries(
-			Folder folder, HttpServletRequest request,
+			Folder folder, HttpServletRequest httpServletRequest,
 			RenderResponse renderResponse)
 		throws Exception {
 
 		String mvcRenderCommandName = ParamUtil.getString(
-			request, "mvcRenderCommandName");
+			httpServletRequest, "mvcRenderCommandName");
 
 		PortletURL portletURL = renderResponse.createRenderURL();
 
@@ -227,13 +239,13 @@ public class DLBreadcrumbUtil {
 				"/document_library/select_file_entry") ||
 			mvcRenderCommandName.equals("/document_library/select_folder")) {
 
-			long groupId = ParamUtil.getLong(request, "groupId");
+			long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 			boolean ignoreRootFolder = ParamUtil.getBoolean(
-				request, "ignoreRootFolder");
+				httpServletRequest, "ignoreRootFolder");
 
 			_addPortletBreadcrumbEntry(
-				request, "mvcRenderCommandName", mvcRenderCommandName, groupId,
-				ignoreRootFolder, portletURL);
+				httpServletRequest, "mvcRenderCommandName",
+				mvcRenderCommandName, groupId, ignoreRootFolder, portletURL);
 		}
 		else {
 			long folderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
@@ -252,11 +264,11 @@ public class DLBreadcrumbUtil {
 			}
 		}
 
-		addPortletBreadcrumbEntries(folder, request, portletURL);
+		addPortletBreadcrumbEntries(folder, httpServletRequest, portletURL);
 	}
 
 	public static void addPortletBreadcrumbEntries(
-			long folderId, HttpServletRequest request,
+			long folderId, HttpServletRequest httpServletRequest,
 			RenderResponse renderResponse)
 		throws Exception {
 
@@ -266,19 +278,21 @@ public class DLBreadcrumbUtil {
 			if (folder.getFolderId() !=
 					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 
-				addPortletBreadcrumbEntries(folder, request, renderResponse);
+				addPortletBreadcrumbEntries(
+					folder, httpServletRequest, renderResponse);
 			}
 		}
 	}
 
 	private static void _addPortletBreadcrumbEntry(
-			HttpServletRequest request, String parameterName,
+			HttpServletRequest httpServletRequest, String parameterName,
 			String parameterValue, long groupId, boolean ignoreRootFolder,
 			PortletURL portletURL)
-		throws WindowStateException {
+		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		portletURL.setParameter(parameterName, parameterValue);
 		portletURL.setParameter("groupId", String.valueOf(groupId));
@@ -287,7 +301,8 @@ public class DLBreadcrumbUtil {
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, themeDisplay.translate("home"), portletURL.toString());
+			httpServletRequest, themeDisplay.translate("home"),
+			portletURL.toString());
 	}
 
 }

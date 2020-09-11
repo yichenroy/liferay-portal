@@ -14,7 +14,7 @@
 
 package com.liferay.trash.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 import java.io.Serializable;
 
@@ -32,7 +32,6 @@ import java.util.List;
  * @generated
  */
 @Deprecated
-@ProviderType
 public class TrashEntrySoap implements Serializable {
 	public static TrashEntrySoap toSoapModel(TrashEntry model) {
 		TrashEntrySoap soapModel = new TrashEntrySoap();

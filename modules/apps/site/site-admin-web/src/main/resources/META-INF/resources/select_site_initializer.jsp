@@ -40,9 +40,12 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-site-template"));
 			%>
 
 			<liferay-ui:search-container-column-text>
-				<clay:vertical-card
-					verticalCard="<%= new SelectSiteInitializerVerticalCard(siteInitializerItem, renderRequest, renderResponse) %>"
-				/>
+				<button class="add-site-action-button btn btn-unstyled mb-4 w-100" type="button">
+					<clay:vertical-card
+						elementClasses="add-site-action-card mb-0"
+						verticalCard="<%= new SelectSiteInitializerVerticalCard(siteInitializerItem, renderRequest, renderResponse) %>"
+					/>
+				</button>
 			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
 
@@ -57,33 +60,34 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-site-template"));
 		<portlet:param name="parentGroupId" value="<%= String.valueOf(selectSiteInitializerDisplayContext.getParentGroupId()) %>" />
 	</portlet:actionURL>
 
-	<aui:script require="metal-dom/src/all/dom as dom,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as modalCommands">
+	<aui:script require="metal-dom/src/all/dom as dom,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as openSimpleInputModal">
 		var addSiteActionOptionQueryClickHandler = dom.delegate(
 			document.body,
 			'click',
-			'.add-site-action-option',
-			function(event) {
-				var data = event.delegateTarget.dataset;
+			'.add-site-action-button',
+			function (event) {
+				var data = event.delegateTarget.querySelector('.add-site-action-card')
+					.dataset;
 
-				modalCommands.openSimpleInputModal(
-					{
-						checkboxFieldLabel: '<liferay-ui:message key="create-default-pages-as-private-available-only-to-members-if-unchecked-they-will-be-public-available-to-anyone" />',
-						checkboxFieldName: data.checkboxFieldName,
-						checkboxFieldValue: false,
-						dialogTitle: '<liferay-ui:message key="add-site" />',
-						formSubmitURL: data.addSiteUrl,
-						idFieldName: 'layoutSetPrototypeId',
-						idFieldValue: data.layoutSetPrototypeId,
-						mainFieldName: 'name',
-						mainFieldLabel: '<liferay-ui:message key="name" />',
-						namespace: '<portlet:namespace />',
-						spritemap: '<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg'
-					}
-				);
+				openSimpleInputModal.default({
+					checkboxFieldLabel:
+						'<liferay-ui:message key="create-default-pages-as-private-available-only-to-members-if-unchecked-they-will-be-public-available-to-anyone" />',
+					checkboxFieldName: data.checkboxFieldName,
+					checkboxFieldValue: false,
+					dialogTitle: '<liferay-ui:message key="add-site" />',
+					formSubmitURL: data.addSiteUrl,
+					idFieldName: 'layoutSetPrototypeId',
+					idFieldValue: data.layoutSetPrototypeId,
+					mainFieldName: 'name',
+					mainFieldLabel: '<liferay-ui:message key="name" />',
+					namespace: '<portlet:namespace />',
+					spritemap:
+						'<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg',
+				});
 			}
 		);
 
-		function handleDestroyPortlet () {
+		function handleDestroyPortlet() {
 			addSiteActionOptionQueryClickHandler.removeListener();
 
 			Liferay.detach('destroyPortlet', handleDestroyPortlet);

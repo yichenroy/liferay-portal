@@ -14,13 +14,14 @@
 
 package com.liferay.portal.osgi.web.servlet.context.helper;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.WebXMLDefinition;
 
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Raymond Augé
@@ -29,6 +30,10 @@ import javax.servlet.ServletContext;
 public interface ServletContextHelperRegistration {
 
 	public void close();
+
+	public Set<Class<?>> getAnnotatedClasses();
+
+	public Set<Class<?>> getClasses();
 
 	public ServletContext getServletContext();
 

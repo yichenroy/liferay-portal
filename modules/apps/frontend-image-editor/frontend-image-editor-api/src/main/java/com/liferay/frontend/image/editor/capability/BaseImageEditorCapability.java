@@ -57,7 +57,7 @@ public abstract class BaseImageEditorCapability
 
 	@Override
 	public void prepareContext(
-		Map<String, Object> context, HttpServletRequest request) {
+		Map<String, Object> context, HttpServletRequest httpServletRequest) {
 	}
 
 	protected Bundle getBundle() {
@@ -84,8 +84,8 @@ public abstract class BaseImageEditorCapability
 				GetterUtil.getString(jsonObject.getString("name")) + "@" +
 					GetterUtil.getString(jsonObject.getString("version"));
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
 		}
 	}
 

@@ -14,12 +14,12 @@
 
 package com.liferay.portal.servlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.registry.Filter;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -76,7 +76,8 @@ public class ServletAdapter extends HttpServlet {
 
 	@Override
 	protected void service(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		Servlet servlet = getServlet();
@@ -90,12 +91,12 @@ public class ServletAdapter extends HttpServlet {
 					"A servlet matching the filter " +
 						servletConfig.getInitParameter("filter") +
 							" is unavailable"),
-				request, response);
+				httpServletRequest, httpServletResponse);
 
 			return;
 		}
 
-		servlet.service(request, response);
+		servlet.service(httpServletRequest, httpServletResponse);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(ServletAdapter.class);
@@ -115,10 +116,7 @@ public class ServletAdapter extends HttpServlet {
 
 				@Override
 				public String getInitParameter(String name) {
-					String value = GetterUtil.getString(
-						properties.get(name), null);
-
-					return value;
+					return GetterUtil.getString(properties.get(name), null);
 				}
 
 				@Override
@@ -147,8 +145,8 @@ public class ServletAdapter extends HttpServlet {
 			try {
 				servlet.init(servletConfig);
 			}
-			catch (ServletException se) {
-				_log.error("Unable to initialize servlet", se);
+			catch (ServletException servletException) {
+				_log.error("Unable to initialize servlet", servletException);
 			}
 
 			return servlet;

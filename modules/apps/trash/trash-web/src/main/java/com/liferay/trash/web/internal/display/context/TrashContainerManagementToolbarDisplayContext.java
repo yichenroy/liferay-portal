@@ -31,13 +31,14 @@ public class TrashContainerManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public TrashContainerManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request, TrashDisplayContext trashDisplayContext)
+			TrashDisplayContext trashDisplayContext)
 		throws PortalException {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			trashDisplayContext.getTrashContainerSearchContainer());
 	}
 

@@ -14,10 +14,10 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the LayoutSetBranch service. Represents a row in the &quot;LayoutSetBranch&quot; database table, with each column mapped to a property of this class.
@@ -80,6 +80,7 @@ public interface LayoutSetBranch extends LayoutSetBranchModel, PersistedModel {
 	public boolean isLogo();
 
 	public void setSettingsProperties(
-		com.liferay.portal.kernel.util.UnicodeProperties settingsProperties);
+		com.liferay.portal.kernel.util.UnicodeProperties
+			settingsUnicodeProperties);
 
 }

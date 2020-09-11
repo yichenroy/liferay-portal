@@ -14,8 +14,6 @@
 
 package com.liferay.wiki.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,10 +31,9 @@ import java.util.Map;
  * @see WikiNode
  * @generated
  */
-@ProviderType
 public class WikiNodeWrapper
 	extends BaseModelWrapper<WikiNode>
-	implements WikiNode, ModelWrapper<WikiNode> {
+	implements ModelWrapper<WikiNode>, WikiNode {
 
 	public WikiNodeWrapper(WikiNode wikiNode) {
 		super(wikiNode);
@@ -46,6 +43,7 @@ public class WikiNodeWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("uuid", getUuid());
 		attributes.put("nodeId", getNodeId());
 		attributes.put("groupId", getGroupId());
@@ -68,6 +66,12 @@ public class WikiNodeWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -274,6 +278,16 @@ public class WikiNodeWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this wiki node.
+	 *
+	 * @return the mvcc version of this wiki node
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -633,6 +647,16 @@ public class WikiNodeWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the mvcc version of this wiki node.
+	 *
+	 * @param mvccVersion the mvcc version of this wiki node
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**

@@ -3,8 +3,6 @@ package ${apiPackagePath}.service.persistence;
 import ${serviceBuilder.getCompatJavaClassName("HashUtil")};
 import ${serviceBuilder.getCompatJavaClassName("StringBundler")};
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.DateUtil;
 
 import java.io.Serializable;
@@ -15,7 +13,6 @@ import java.util.Date;
  * @author ${author}
  * @generated
  */
-@ProviderType
 public class ${entity.PKClassName} implements Comparable<${entity.PKClassName}>, Serializable {
 
 	<#list entity.PKEntityColumns as entityColumn>
@@ -107,16 +104,16 @@ public class ${entity.PKClassName} implements Comparable<${entity.PKClassName}>,
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof ${entity.PKClassName})) {
+		if (!(object instanceof ${entity.PKClassName})) {
 			return false;
 		}
 
-		${entity.PKClassName} pk = (${entity.PKClassName})obj;
+		${entity.PKClassName} pk = (${entity.PKClassName})object;
 
 		if (
 

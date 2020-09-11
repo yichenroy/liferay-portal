@@ -17,23 +17,29 @@ package com.liferay.application.list;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.portlet.ControlPanelEntry;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletCategoryKeys;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
 import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -66,6 +72,21 @@ public abstract class BasePanelApp implements PanelApp {
 
 	@Override
 	public String getLabel(Locale locale) {
+		try {
+			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+				locale, getClass());
+
+			return LanguageUtil.get(
+				resourceBundle,
+				JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
+					getPortletId());
+		}
+		catch (MissingResourceException missingResourceException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(missingResourceException, missingResourceException);
+			}
+		}
+
 		return LanguageUtil.get(
 			locale,
 			JavaConstants.JAVAX_PORTLET_TITLE + StringPool.PERIOD +
@@ -81,7 +102,7 @@ public abstract class BasePanelApp implements PanelApp {
 		return _userNotificationEventLocalService.
 			getUserNotificationEventsCount(
 				user.getUserId(), _portlet.getPortletId(),
-				UserNotificationDeliveryConstants.TYPE_WEBSITE, false);
+				UserNotificationDeliveryConstants.TYPE_WEBSITE, true, false);
 	}
 
 	@Override
@@ -90,14 +111,14 @@ public abstract class BasePanelApp implements PanelApp {
 	}
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request)
+	public PortletURL getPortletURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
 		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			request, getGroup(request), getPortletId(), 0, 0,
-			PortletRequest.RENDER_PHASE);
+			httpServletRequest, getGroup(httpServletRequest), getPortletId(), 0,
+			0, PortletRequest.RENDER_PHASE);
 
-		Group group = groupProvider.getGroup(request);
+		Group group = groupProvider.getGroup(httpServletRequest);
 
 		if (group == null) {
 			return portletURL;
@@ -111,7 +132,8 @@ public abstract class BasePanelApp implements PanelApp {
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		return false;
@@ -120,6 +142,13 @@ public abstract class BasePanelApp implements PanelApp {
 	@Override
 	public boolean isShow(PermissionChecker permissionChecker, Group group)
 		throws PortalException {
+
+		Portlet portlet = _portletLocalService.getPortletById(
+			group.getCompanyId(), getPortletId());
+
+		if (!portlet.isActive()) {
+			return false;
+		}
 
 		try {
 			ControlPanelEntry controlPanelEntry = getControlPanelEntry();
@@ -131,11 +160,11 @@ public abstract class BasePanelApp implements PanelApp {
 			return controlPanelEntry.hasAccessPermission(
 				permissionChecker, group, getPortlet());
 		}
-		catch (PortalException | RuntimeException e) {
-			throw e;
+		catch (PortalException | RuntimeException exception) {
+			throw exception;
 		}
-		catch (Exception e) {
-			throw new PortalException(e);
+		catch (Exception exception) {
+			throw new PortalException(exception);
 		}
 	}
 
@@ -159,9 +188,10 @@ public abstract class BasePanelApp implements PanelApp {
 		return portlet.getControlPanelEntryInstance();
 	}
 
-	protected Group getGroup(HttpServletRequest request) {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	protected Group getGroup(HttpServletRequest httpServletRequest) {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Group group = themeDisplay.getScopeGroup();
 
@@ -185,7 +215,13 @@ public abstract class BasePanelApp implements PanelApp {
 			return null;
 		}
 
-		return groupProvider.getGroup(request);
+		return groupProvider.getGroup(httpServletRequest);
+	}
+
+	protected void setPortletLocalService(
+		PortletLocalService portletLocalService) {
+
+		_portletLocalService = portletLocalService;
 	}
 
 	protected void setUserNotificationEventLocalService(
@@ -196,7 +232,10 @@ public abstract class BasePanelApp implements PanelApp {
 
 	protected GroupProvider groupProvider;
 
+	private static final Log _log = LogFactoryUtil.getLog(BasePanelApp.class);
+
 	private Portlet _portlet;
+	private PortletLocalService _portletLocalService;
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;
 

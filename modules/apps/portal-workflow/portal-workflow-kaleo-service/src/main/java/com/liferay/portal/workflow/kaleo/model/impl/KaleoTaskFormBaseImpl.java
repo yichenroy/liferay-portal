@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskForm;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskFormLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.portal.workflow.kaleo.service.KaleoTaskFormLocalServiceUtil;
  * @see KaleoTaskForm
  * @generated
  */
-@ProviderType
 public abstract class KaleoTaskFormBaseImpl
 	extends KaleoTaskFormModelImpl implements KaleoTaskForm {
 

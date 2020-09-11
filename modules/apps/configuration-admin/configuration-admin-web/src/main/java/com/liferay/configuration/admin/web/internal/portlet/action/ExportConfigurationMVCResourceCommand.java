@@ -15,6 +15,8 @@
 package com.liferay.configuration.admin.web.internal.portlet.action;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContext;
+import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContextFactory;
 import com.liferay.configuration.admin.web.internal.exporter.ConfigurationExporter;
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.configuration.admin.web.internal.util.AttributeDefinitionUtil;
@@ -32,8 +34,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
+import com.liferay.portal.util.PropsValues;
 
 import java.io.FileInputStream;
+import java.io.Serializable;
 
 import java.util.List;
 import java.util.Map;
@@ -57,6 +61,8 @@ import org.osgi.service.metatype.AttributeDefinition;
 @Component(
 	immediate = true,
 	property = {
+		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SYSTEM_SETTINGS,
 		"mvc.command.name=export"
 	},
@@ -84,8 +90,8 @@ public class ExportConfigurationMVCResourceCommand
 				exportAll(resourceRequest, resourceResponse);
 			}
 		}
-		catch (Exception e) {
-			throw new PortletException(e);
+		catch (Exception exception) {
+			throw new PortletException(exception);
 		}
 
 		return false;
@@ -102,9 +108,14 @@ public class ExportConfigurationMVCResourceCommand
 
 		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
 
+		ConfigurationScopeDisplayContext configurationScopeDisplayContext =
+			ConfigurationScopeDisplayContextFactory.create(resourceRequest);
+
 		Map<String, ConfigurationModel> configurationModels =
 			_configurationModelRetriever.getConfigurationModels(
-				themeDisplay.getLanguageId(), Scope.SYSTEM, null);
+				themeDisplay.getLanguageId(),
+				configurationScopeDisplayContext.getScope(),
+				configurationScopeDisplayContext.getScopePK());
 
 		for (ConfigurationModel configurationModel :
 				configurationModels.values()) {
@@ -114,7 +125,9 @@ public class ExportConfigurationMVCResourceCommand
 
 				List<ConfigurationModel> factoryInstances =
 					_configurationModelRetriever.getFactoryInstances(
-						configurationModel, Scope.SYSTEM, null);
+						configurationModel,
+						configurationScopeDisplayContext.getScope(),
+						configurationScopeDisplayContext.getScopePK());
 
 				for (ConfigurationModel factoryInstance : factoryInstances) {
 					String curPid = factoryInstance.getID();
@@ -124,7 +137,11 @@ public class ExportConfigurationMVCResourceCommand
 					zipWriter.addEntry(
 						curFileName,
 						ConfigurationExporter.getPropertiesAsBytes(
-							getProperties(languageId, curFactoryPid, curPid)));
+							getProperties(
+								languageId, curFactoryPid, curPid,
+								configurationScopeDisplayContext.getScope(),
+								configurationScopeDisplayContext.
+									getScopePK())));
 				}
 			}
 			else if (configurationModel.hasConfiguration()) {
@@ -135,7 +152,10 @@ public class ExportConfigurationMVCResourceCommand
 				zipWriter.addEntry(
 					curFileName,
 					ConfigurationExporter.getPropertiesAsBytes(
-						getProperties(languageId, curPid, curPid)));
+						getProperties(
+							languageId, curPid, curPid,
+							configurationScopeDisplayContext.getScope(),
+							configurationScopeDisplayContext.getScopePK())));
 			}
 		}
 
@@ -160,16 +180,23 @@ public class ExportConfigurationMVCResourceCommand
 
 		String factoryPid = ParamUtil.getString(resourceRequest, "factoryPid");
 
+		ConfigurationScopeDisplayContext configurationScopeDisplayContext =
+			ConfigurationScopeDisplayContextFactory.create(resourceRequest);
+
 		Map<String, ConfigurationModel> configurationModels =
 			_configurationModelRetriever.getConfigurationModels(
-				themeDisplay.getLanguageId(), Scope.SYSTEM, null);
+				themeDisplay.getLanguageId(),
+				configurationScopeDisplayContext.getScope(),
+				configurationScopeDisplayContext.getScopePK());
 
 		ConfigurationModel factoryConfigurationModel = configurationModels.get(
 			factoryPid);
 
 		List<ConfigurationModel> factoryInstances =
 			_configurationModelRetriever.getFactoryInstances(
-				factoryConfigurationModel, Scope.SYSTEM, null);
+				factoryConfigurationModel,
+				configurationScopeDisplayContext.getScope(),
+				configurationScopeDisplayContext.getScopePK());
 
 		for (ConfigurationModel factoryInstance : factoryInstances) {
 			String curPid = factoryInstance.getID();
@@ -179,7 +206,10 @@ public class ExportConfigurationMVCResourceCommand
 			zipWriter.addEntry(
 				curFileName,
 				ConfigurationExporter.getPropertiesAsBytes(
-					getProperties(languageId, factoryPid, curPid)));
+					getProperties(
+						languageId, factoryPid, curPid,
+						configurationScopeDisplayContext.getScope(),
+						configurationScopeDisplayContext.getScopePK())));
 		}
 
 		String fileName =
@@ -206,10 +236,16 @@ public class ExportConfigurationMVCResourceCommand
 
 		String fileName = getFileName(factoryPid, pid);
 
+		ConfigurationScopeDisplayContext configurationScopeDisplayContext =
+			ConfigurationScopeDisplayContextFactory.create(resourceRequest);
+
 		PortletResponseUtil.sendFile(
 			resourceRequest, resourceResponse, fileName,
 			ConfigurationExporter.getPropertiesAsBytes(
-				getProperties(languageId, factoryPid, pid)),
+				getProperties(
+					languageId, factoryPid, pid,
+					configurationScopeDisplayContext.getScope(),
+					configurationScopeDisplayContext.getScopePK())),
 			ContentTypes.TEXT_XML_UTF8);
 	}
 
@@ -226,14 +262,15 @@ public class ExportConfigurationMVCResourceCommand
 	}
 
 	protected Properties getProperties(
-			String languageId, String factoryPid, String pid)
+			String languageId, String factoryPid, String pid, Scope scope,
+			Serializable scopePK)
 		throws Exception {
 
 		Properties properties = new Properties();
 
 		Map<String, ConfigurationModel> configurationModels =
 			_configurationModelRetriever.getConfigurationModels(
-				languageId, Scope.SYSTEM, null);
+				languageId, scope, scopePK);
 
 		ConfigurationModel configurationModel = configurationModels.get(pid);
 
@@ -246,8 +283,7 @@ public class ExportConfigurationMVCResourceCommand
 		}
 
 		Configuration configuration =
-			_configurationModelRetriever.getConfiguration(
-				pid, Scope.SYSTEM, null);
+			_configurationModelRetriever.getConfiguration(pid, scope, scopePK);
 
 		if (configuration == null) {
 			return properties;
@@ -261,21 +297,31 @@ public class ExportConfigurationMVCResourceCommand
 				ConfigurationModel.ALL);
 
 		for (AttributeDefinition attributeDefinition : attributeDefinitions) {
-			String[] values = AttributeDefinitionUtil.getProperty(
+			if (!PropsValues.MODULE_FRAMEWORK_EXPORT_PASSWORD_ATTRIBUTES &&
+				(attributeDefinition.getType() ==
+					AttributeDefinition.PASSWORD)) {
+
+				continue;
+			}
+
+			Object value = AttributeDefinitionUtil.getPropertyObject(
 				attributeDefinition, configuration);
 
-			if (values.length == 1) {
-				properties.put(attributeDefinition.getID(), values[0]);
+			if (value == null) {
+				continue;
 			}
-			else if (values.length > 1) {
-				properties.put(attributeDefinition.getID(), values);
-			}
+
+			properties.put(attributeDefinition.getID(), value);
+		}
+
+		if (!Scope.SYSTEM.equals(scope)) {
+			properties.put(scope.getPropertyKey(), scopePK);
 		}
 
 		return properties;
 	}
 
-	@Reference
+	@Reference(target = "(filter.visibility=*)")
 	private ConfigurationModelRetriever _configurationModelRetriever;
 
 }

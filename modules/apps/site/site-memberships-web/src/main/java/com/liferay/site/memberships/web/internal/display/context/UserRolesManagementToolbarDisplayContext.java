@@ -31,14 +31,14 @@ public class UserRolesManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public UserRolesManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request,
 			UserRolesDisplayContext userRolesDisplayContext)
 		throws PortalException {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			userRolesDisplayContext.getRoleSearchSearchContainer());
 	}
 
@@ -66,6 +66,11 @@ public class UserRolesManagementToolbarDisplayContext
 	@Override
 	public String getSearchContainerId() {
 		return "userGroupRoleRole";
+	}
+
+	@Override
+	protected String getDefaultDisplayStyle() {
+		return "icon";
 	}
 
 	@Override

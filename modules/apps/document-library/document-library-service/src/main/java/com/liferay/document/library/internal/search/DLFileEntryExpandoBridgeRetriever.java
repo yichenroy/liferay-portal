@@ -30,7 +30,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  */
 @Component(
-	immediate = true,
 	property = "indexer.class.name=com.liferay.document.library.kernel.model.DLFileEntry",
 	service = ExpandoBridgeRetriever.class
 )
@@ -38,20 +37,18 @@ public class DLFileEntryExpandoBridgeRetriever
 	implements ExpandoBridgeRetriever {
 
 	@Override
-	public ExpandoBridge getExpandoBridge(BaseModel baseModel) {
+	public ExpandoBridge getExpandoBridge(BaseModel<?> baseModel) {
 		try {
 			DLFileEntry dlFileEntry = (DLFileEntry)baseModel;
 
 			DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
 
-			ExpandoBridge expandoBridge = expandoBridgeFactory.getExpandoBridge(
+			return expandoBridgeFactory.getExpandoBridge(
 				dlFileEntry.getCompanyId(), DLFileEntry.class.getName(),
 				dlFileVersion.getFileVersionId());
-
-			return expandoBridge;
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 

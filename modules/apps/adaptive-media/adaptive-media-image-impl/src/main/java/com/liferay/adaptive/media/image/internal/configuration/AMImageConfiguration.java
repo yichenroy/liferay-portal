@@ -33,7 +33,7 @@ public interface AMImageConfiguration {
 	 * Sets the supported mime types that generate adaptive media images.
 	 */
 	@Meta.AD(
-		deflt = "image/bmp|image/gif|image/jpeg|image/pjpeg|image/png|image/tiff|image/x-citrix-jpeg|image/x-citrix-png|image/x-ms-bmp|image/x-png|image/x-tiff",
+		deflt = "image/bmp|image/gif|image/jpeg|image/pjpeg|image/png|image/svg+xml|image/x-citrix-jpeg|image/x-citrix-png|image/x-ms-bmp|image/x-png",
 		description = "supported-mime-types-key-description",
 		name = "supported-mime-type", required = false
 	)
@@ -55,7 +55,8 @@ public interface AMImageConfiguration {
 	 * indicates that all images will generate adaptive media images. A value of
 	 * 0 indicates that no adaptive media images will be generated.
 	 *
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link DLFileEntryConfiguration#previewableProcessorMaxSize()}
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             DLFileEntryConfiguration#previewableProcessorMaxSize()}
 	 */
 	@Deprecated
 	@Meta.AD(

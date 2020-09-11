@@ -40,7 +40,8 @@ public class FormNavigatorCategoryUtil {
 		String formNavigatorId) {
 
 		List<FormNavigatorCategory> formNavigatorCategories =
-			_instance._formNavigatorCategories.getService(formNavigatorId);
+			_formNavigatorCategoryUtil._formNavigatorCategories.getService(
+				formNavigatorId);
 
 		if (formNavigatorCategories != null) {
 			return formNavigatorCategories;
@@ -69,7 +70,7 @@ public class FormNavigatorCategoryUtil {
 			}
 		}
 
-		return keys.toArray(new String[keys.size()]);
+		return keys.toArray(new String[0]);
 	}
 
 	public static String[] getLabels(String formNavigatorId, Locale locale) {
@@ -92,7 +93,7 @@ public class FormNavigatorCategoryUtil {
 			}
 		}
 
-		return labels.toArray(new String[labels.size()]);
+		return labels.toArray(new String[0]);
 	}
 
 	private FormNavigatorCategoryUtil() {
@@ -120,7 +121,7 @@ public class FormNavigatorCategoryUtil {
 				"form.navigator.category.order"));
 	}
 
-	private static final FormNavigatorCategoryUtil _instance =
+	private static final FormNavigatorCategoryUtil _formNavigatorCategoryUtil =
 		new FormNavigatorCategoryUtil();
 
 	private final ServiceTrackerMap<String, List<FormNavigatorCategory>>

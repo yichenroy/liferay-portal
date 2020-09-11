@@ -55,8 +55,8 @@ public class LayoutRevisionAssetRenderer
 				LayoutSetBranchLocalServiceUtil.getLayoutSetBranch(
 					_layoutRevision.getLayoutSetBranchId());
 		}
-		catch (Exception e) {
-			throw new IllegalStateException(e);
+		catch (Exception exception) {
+			throw new IllegalStateException(exception);
 		}
 	}
 
@@ -81,7 +81,9 @@ public class LayoutRevisionAssetRenderer
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
 		if (template.equals(TEMPLATE_FULL_CONTENT)) {
 			return "/asset/" + template + ".jsp";
 		}
@@ -151,7 +153,7 @@ public class LayoutRevisionAssetRenderer
 
 			return layoutURL;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return StringPool.BLANK;
 		}
 	}
@@ -173,13 +175,14 @@ public class LayoutRevisionAssetRenderer
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(WebKeys.LAYOUT_REVISION, _layoutRevision);
+		httpServletRequest.setAttribute(
+			WebKeys.LAYOUT_REVISION, _layoutRevision);
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	@Override

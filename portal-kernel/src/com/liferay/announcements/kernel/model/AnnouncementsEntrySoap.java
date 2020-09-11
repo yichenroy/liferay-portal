@@ -14,8 +14,6 @@
 
 package com.liferay.announcements.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,16 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portlet.announcements.service.http.AnnouncementsEntryServiceSoap}.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class AnnouncementsEntrySoap implements Serializable {
 
 	public static AnnouncementsEntrySoap toSoapModel(AnnouncementsEntry model) {
 		AnnouncementsEntrySoap soapModel = new AnnouncementsEntrySoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setEntryId(model.getEntryId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -111,6 +111,14 @@ public class AnnouncementsEntrySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setEntryId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -253,6 +261,7 @@ public class AnnouncementsEntrySoap implements Serializable {
 		_alert = alert;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _entryId;
 	private long _companyId;

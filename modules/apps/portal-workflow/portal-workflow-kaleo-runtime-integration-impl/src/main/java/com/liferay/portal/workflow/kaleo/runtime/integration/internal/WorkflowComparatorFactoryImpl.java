@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.workflow.comparator.WorkflowLogUserIdComparator
 import com.liferay.portal.kernel.workflow.comparator.WorkflowTaskCompletionDateComparator;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowTaskCreateDateComparator;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowTaskDueDateComparator;
+import com.liferay.portal.kernel.workflow.comparator.WorkflowTaskInstanceIdComparator;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowTaskModifiedDateComparator;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowTaskNameComparator;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowTaskUserIdComparator;
@@ -69,9 +70,9 @@ public class WorkflowComparatorFactoryImpl
 		boolean ascending) {
 
 		return new WorkflowInstanceEndDateComparator(
-			ascending, "completionDate ASC, kaleoInstanceId ASC",
-			"completionDate DESC, kaleoInstanceId DESC",
-			new String[] {"completionDate", "kaleoInstanceId"});
+			ascending, "completed ASC, completionDate ASC, kaleoInstanceId ASC",
+			"completed ASC, completionDate DESC, kaleoInstanceId DESC",
+			new String[] {"completed", "completionDate", "kaleoInstanceId"});
 	}
 
 	@Override
@@ -80,7 +81,7 @@ public class WorkflowComparatorFactoryImpl
 
 		return new WorkflowInstanceStartDateComparator(
 			ascending, "completed ASC, createDate ASC, kaleoInstanceId ASC",
-			"completed DESC, createDate DESC, kaleoInstanceId DESC",
+			"completed ASC, createDate DESC, kaleoInstanceId DESC",
 			new String[] {"completed", "createDate", "kaleoInstanceId"});
 	}
 
@@ -89,9 +90,9 @@ public class WorkflowComparatorFactoryImpl
 		boolean ascending) {
 
 		return new WorkflowInstanceStateComparator(
-			ascending, "state ASC, kaleoInstanceId ASC",
-			"state DESC, kaleoInstanceId DESC",
-			new String[] {"state", "kaleoInstanceId"});
+			ascending, "completed ASC, state ASC, kaleoInstanceId ASC",
+			"completed ASC, state DESC, kaleoInstanceId DESC",
+			new String[] {"completed", "state", "kaleoInstanceId"});
 	}
 
 	@Override
@@ -119,9 +120,9 @@ public class WorkflowComparatorFactoryImpl
 		boolean ascending) {
 
 		return new WorkflowTaskCompletionDateComparator(
-			ascending, "completionDate ASC, kaleoTaskId ASC",
-			"completionDate DESC, kaleoTaskId DESC",
-			new String[] {"completionDate", "kaleoTaskId"});
+			ascending, "completed ASC, completionDate ASC, kaleoTaskId ASC",
+			"completed ASC, completionDate DESC, kaleoTaskId DESC",
+			new String[] {"completed", "completionDate", "kaleoTaskId"});
 	}
 
 	@Override
@@ -131,7 +132,7 @@ public class WorkflowComparatorFactoryImpl
 		return new WorkflowTaskCreateDateComparator(
 			ascending,
 			"completed ASC, createDate ASC, kaleoTaskInstanceTokenId ASC",
-			"completed DESC, createDate DESC, kaleoTaskInstanceTokenId DESC",
+			"completed ASC, createDate DESC, kaleoTaskInstanceTokenId DESC",
 			new String[] {
 				"completed", "createDate", "kaleoTaskInstanceTokenId"
 			});
@@ -144,10 +145,20 @@ public class WorkflowComparatorFactoryImpl
 		return new WorkflowTaskDueDateComparator(
 			ascending,
 			"completed ASC, dueDate ASC, modifiedDate ASC, kaleoTaskId ASC",
-			"completed DESC, dueDate DESC, modifiedDate DESC, kaleoTaskId DESC",
+			"completed ASC, dueDate DESC, modifiedDate DESC, kaleoTaskId DESC",
 			new String[] {
 				"completed", "dueDate", "modifiedDate", "kaleoTaskId"
 			});
+	}
+
+	@Override
+	public OrderByComparator<WorkflowTask> getTaskInstanceIdComparator(
+		boolean ascending) {
+
+		return new WorkflowTaskInstanceIdComparator(
+			ascending, "completed ASC, kaleoInstanceId ASC",
+			"completed ASC, kaleoInstanceId DESC",
+			new String[] {"completed", "kaleoInstanceId"});
 	}
 
 	@Override
@@ -157,7 +168,7 @@ public class WorkflowComparatorFactoryImpl
 		return new WorkflowTaskModifiedDateComparator(
 			ascending,
 			"completed ASC, modifiedDate ASC, kaleoTaskInstanceTokenId ASC",
-			"completed DESC, modifiedDate DESC, kaleoTaskInstanceTokenId DESC",
+			"completed ASC, modifiedDate DESC, kaleoTaskInstanceTokenId DESC",
 			new String[] {
 				"completed", "modifiedDate", "kaleoTaskInstanceTokenId"
 			});
@@ -168,9 +179,9 @@ public class WorkflowComparatorFactoryImpl
 		boolean ascending) {
 
 		return new WorkflowTaskNameComparator(
-			ascending, "name ASC, kaleoTaskId ASC",
-			"name DESC, kaleoTaskId DESC",
-			new String[] {"name", "kaleoTaskId"});
+			ascending, "completed ASC, name ASC, kaleoTaskId ASC",
+			"completed ASC, name DESC, kaleoTaskId DESC",
+			new String[] {"completed", "name", "kaleoTaskId"});
 	}
 
 	@Override
@@ -178,9 +189,9 @@ public class WorkflowComparatorFactoryImpl
 		boolean ascending) {
 
 		return new WorkflowTaskUserIdComparator(
-			ascending, "userId ASC, kaleoTaskId ASC",
-			"userId DESC, kaleoTaskId DESC",
-			new String[] {"userId", "kaleoTaskId"});
+			ascending, "completed ASC, userId ASC, kaleoTaskId ASC",
+			"completed ASC, userId DESC, kaleoTaskId DESC",
+			new String[] {"completed", "userId", "kaleoTaskId"});
 	}
 
 }

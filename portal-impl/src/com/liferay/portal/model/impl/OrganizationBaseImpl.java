@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Organization;
@@ -36,7 +34,6 @@ import java.util.List;
  * @see Organization
  * @generated
  */
-@ProviderType
 public abstract class OrganizationBaseImpl
 	extends OrganizationModelImpl implements Organization {
 

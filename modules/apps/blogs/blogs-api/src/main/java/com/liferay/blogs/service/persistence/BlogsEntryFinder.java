@@ -14,7 +14,7 @@
 
 package com.liferay.blogs.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -49,7 +49,5 @@ public interface BlogsEntryFinder {
 			java.util.List<Long> organizationIds, java.util.Date displayDate,
 			com.liferay.portal.kernel.dao.orm.QueryDefinition
 				<com.liferay.blogs.model.BlogsEntry> queryDefinition);
-
-	public java.util.List<com.liferay.blogs.model.BlogsEntry> findByNoAssets();
 
 }

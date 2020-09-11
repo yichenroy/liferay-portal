@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.servlet.taglib.ui.BaseUIItem;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
-import com.liferay.portal.kernel.servlet.taglib.ui.MenuItem;
 import com.liferay.portal.kernel.servlet.taglib.ui.ToolbarItem;
 import com.liferay.portal.kernel.settings.PortletInstanceSettingsLocator;
 import com.liferay.portal.kernel.settings.Settings;
@@ -32,14 +31,15 @@ import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.settings.TypedSettings;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.configuration.SharingConfiguration;
 import com.liferay.sharing.display.context.util.SharingMenuItemFactory;
 import com.liferay.sharing.display.context.util.SharingToolbarItemFactory;
-import com.liferay.sharing.document.library.internal.security.permission.SharingPermissionHelper;
+import com.liferay.sharing.security.permission.SharingPermission;
+import com.liferay.sharing.service.SharingEntryLocalService;
 
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,23 +53,27 @@ public class SharingDLViewFileVersionDisplayContext
 
 	public SharingDLViewFileVersionDisplayContext(
 		DLViewFileVersionDisplayContext parentDLDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileEntry fileEntry, FileVersion fileVersion,
-		ResourceBundle resourceBundle,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileEntry fileEntry,
+		FileVersion fileVersion,
+		SharingEntryLocalService sharingEntryLocalService,
 		SharingMenuItemFactory sharingMenuItemFactory,
 		SharingToolbarItemFactory sharingToolbarItemFactory,
-		SharingPermissionHelper sharingPermissionHelper,
+		SharingPermission sharingPermission,
 		SharingConfiguration sharingConfiguration) {
 
-		super(_UUID, parentDLDisplayContext, request, response, fileVersion);
+		super(
+			_UUID, parentDLDisplayContext, httpServletRequest,
+			httpServletResponse, fileVersion);
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_fileEntry = fileEntry;
-		_themeDisplay = (ThemeDisplay)request.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+		_sharingEntryLocalService = sharingEntryLocalService;
 		_sharingMenuItemFactory = sharingMenuItemFactory;
 		_sharingToolbarItemFactory = sharingToolbarItemFactory;
-		_sharingPermissionHelper = sharingPermissionHelper;
+		_sharingPermission = sharingPermission;
 		_sharingConfiguration = sharingConfiguration;
 	}
 
@@ -81,13 +85,11 @@ public class SharingDLViewFileVersionDisplayContext
 			return menu;
 		}
 
-		List<MenuItem> menuItems = menu.getMenuItems();
-
 		_addSharingUIItem(
-			menuItems,
+			menu.getMenuItems(),
 			_sharingMenuItemFactory.createShareMenuItem(
 				DLFileEntryConstants.getClassName(),
-				_fileEntry.getFileEntryId(), _request));
+				_fileEntry.getFileEntryId(), _httpServletRequest));
 
 		return menu;
 	}
@@ -104,17 +106,35 @@ public class SharingDLViewFileVersionDisplayContext
 			toolbarItems,
 			_sharingToolbarItemFactory.createShareToolbarItem(
 				DLFileEntryConstants.getClassName(),
-				_fileEntry.getFileEntryId(), _request));
+				_fileEntry.getFileEntryId(), _httpServletRequest));
 
 		return toolbarItems;
 	}
 
 	@Override
-	public boolean isSharingLinkVisible() {
+	public boolean isShared() throws PortalException {
+		if (_themeDisplay.isSignedIn() && isSharingLinkVisible()) {
+			int sharingEntriesCount =
+				_sharingEntryLocalService.getSharingEntriesCount(
+					PortalUtil.getClassNameId(
+						DLFileEntryConstants.getClassName()),
+					_fileEntry.getFileEntryId());
+
+			if (sharingEntriesCount > 0) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isSharingLinkVisible() throws PortalException {
 		if (_sharingConfiguration.isEnabled() &&
-			_sharingPermissionHelper.isShareable(
+			_sharingPermission.containsSharePermission(
 				_themeDisplay.getPermissionChecker(),
-				_fileEntry.getFileEntryId())) {
+				PortalUtil.getClassNameId(DLFileEntryConstants.getClassName()),
+				_fileEntry.getFileEntryId(), _themeDisplay.getScopeGroupId())) {
 
 			return true;
 		}
@@ -174,9 +194,10 @@ public class SharingDLViewFileVersionDisplayContext
 		_showImageEditorAction = false;
 
 		if (_themeDisplay.isSignedIn() && _isShowActions() &&
-			_sharingPermissionHelper.isShareable(
+			_sharingPermission.containsSharePermission(
 				_themeDisplay.getPermissionChecker(),
-				_fileEntry.getFileEntryId())) {
+				PortalUtil.getClassNameId(DLFileEntryConstants.getClassName()),
+				_fileEntry.getFileEntryId(), _themeDisplay.getScopeGroupId())) {
 
 			_showImageEditorAction = true;
 		}
@@ -188,10 +209,11 @@ public class SharingDLViewFileVersionDisplayContext
 		"6d7d30de-01fa-49db-a422-d78748aa03a7");
 
 	private final FileEntry _fileEntry;
-	private final HttpServletRequest _request;
+	private final HttpServletRequest _httpServletRequest;
 	private final SharingConfiguration _sharingConfiguration;
+	private final SharingEntryLocalService _sharingEntryLocalService;
 	private final SharingMenuItemFactory _sharingMenuItemFactory;
-	private final SharingPermissionHelper _sharingPermissionHelper;
+	private final SharingPermission _sharingPermission;
 	private final SharingToolbarItemFactory _sharingToolbarItemFactory;
 	private Boolean _showImageEditorAction;
 	private final ThemeDisplay _themeDisplay;

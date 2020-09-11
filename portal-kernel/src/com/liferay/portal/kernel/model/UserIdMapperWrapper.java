@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,10 +28,9 @@ import java.util.Map;
  * @see UserIdMapper
  * @generated
  */
-@ProviderType
 public class UserIdMapperWrapper
 	extends BaseModelWrapper<UserIdMapper>
-	implements UserIdMapper, ModelWrapper<UserIdMapper> {
+	implements ModelWrapper<UserIdMapper>, UserIdMapper {
 
 	public UserIdMapperWrapper(UserIdMapper userIdMapper) {
 		super(userIdMapper);

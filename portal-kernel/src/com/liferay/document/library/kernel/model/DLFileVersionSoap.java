@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,17 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portlet.documentlibrary.service.http.DLFileVersionServiceSoap}.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class DLFileVersionSoap implements Serializable {
 
 	public static DLFileVersionSoap toSoapModel(DLFileVersion model) {
 		DLFileVersionSoap soapModel = new DLFileVersionSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setFileVersionId(model.getFileVersionId());
 		soapModel.setGroupId(model.getGroupId());
@@ -113,6 +114,22 @@ public class DLFileVersionSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setFileVersionId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public String getUuid() {
@@ -339,6 +356,8 @@ public class DLFileVersionSoap implements Serializable {
 		_statusDate = statusDate;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _fileVersionId;
 	private long _groupId;

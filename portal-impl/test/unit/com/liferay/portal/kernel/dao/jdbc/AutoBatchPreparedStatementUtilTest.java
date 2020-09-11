@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Executors;
@@ -95,7 +96,8 @@ public class AutoBatchPreparedStatementUtilTest {
 	public void testCINITFailure() throws ClassNotFoundException {
 		PropsTestUtil.setProps(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE, "0");
 
-		final NoSuchMethodException nsme = new NoSuchMethodException();
+		final NoSuchMethodException noSuchMethodException =
+			new NoSuchMethodException();
 		final AtomicInteger counter = new AtomicInteger();
 
 		try (SwappableSecurityManager swappableSecurityManager =
@@ -106,7 +108,8 @@ public class AutoBatchPreparedStatementUtilTest {
 						if (pkg.equals("java.sql") &&
 							(counter.getAndIncrement() == 1)) {
 
-							ReflectionUtil.throwException(nsme);
+							ReflectionUtil.throwException(
+								noSuchMethodException);
 						}
 					}
 
@@ -117,7 +120,7 @@ public class AutoBatchPreparedStatementUtilTest {
 			Class.forName(AutoBatchPreparedStatementUtil.class.getName());
 		}
 		catch (ExceptionInInitializerError eiie) {
-			Assert.assertSame(nsme, eiie.getCause());
+			Assert.assertSame(noSuchMethodException, eiie.getCause());
 		}
 	}
 
@@ -131,7 +134,7 @@ public class AutoBatchPreparedStatementUtilTest {
 				AutoBatchPreparedStatementUtilTest.class.getClassLoader(),
 				new Class<?>[] {PortalExecutorManager.class},
 				(proxy, method, args) -> {
-					if ("getPortalExecutor".equals(method.getName())) {
+					if (Objects.equals(method.getName(), "getPortalExecutor")) {
 						return new NoticeableThreadPoolExecutor(
 							1, 1, 60, TimeUnit.SECONDS,
 							new LinkedBlockingQueue<>(1),
@@ -226,18 +229,19 @@ public class AutoBatchPreparedStatementUtilTest {
 
 			preparedStatement.executeBatch();
 		}
-		catch (Throwable t) {
-			Assert.assertSame(CancellationException.class, t.getClass());
+		catch (Throwable throwable) {
+			Assert.assertSame(
+				CancellationException.class, throwable.getClass());
 
-			Throwable[] throwables = t.getSuppressed();
+			Throwable[] throwables = throwable.getSuppressed();
 
 			Assert.assertEquals(
 				Arrays.toString(throwables), 1, throwables.length);
 
-			Throwable throwable = throwables[0];
+			Throwable firstThrowable = throwables[0];
 
 			Assert.assertSame(
-				CancellationException.class, throwable.getClass());
+				CancellationException.class, firstThrowable.getClass());
 
 			return;
 		}
@@ -285,10 +289,11 @@ public class AutoBatchPreparedStatementUtilTest {
 
 			preparedStatement.executeBatch();
 		}
-		catch (Throwable t) {
-			Assert.assertTrue(throwables.toString(), throwables.contains(t));
+		catch (Throwable throwable) {
+			Assert.assertTrue(
+				throwables.toString(), throwables.contains(throwable));
 
-			Throwable[] suppressedThrowables = t.getSuppressed();
+			Throwable[] suppressedThrowables = throwable.getSuppressed();
 
 			Assert.assertEquals(
 				Arrays.toString(suppressedThrowables), 1,
@@ -320,11 +325,8 @@ public class AutoBatchPreparedStatementUtilTest {
 								supportBatchUpdates))),
 					StringPool.BLANK)) {
 
-			InvocationHandler invocationHandler =
-				ProxyUtil.getInvocationHandler(preparedStatement);
-
 			Set<Future<Void>> futures = ReflectionTestUtil.getFieldValue(
-				invocationHandler, "_futures");
+				ProxyUtil.getInvocationHandler(preparedStatement), "_futures");
 
 			futures.add(testNoticeableFuture);
 		}

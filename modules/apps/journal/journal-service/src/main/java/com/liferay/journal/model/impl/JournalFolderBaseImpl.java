@@ -14,8 +14,6 @@
 
 package com.liferay.journal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
@@ -36,7 +34,6 @@ import java.util.List;
  * @see JournalFolder
  * @generated
  */
-@ProviderType
 public abstract class JournalFolderBaseImpl
 	extends JournalFolderModelImpl implements JournalFolder {
 

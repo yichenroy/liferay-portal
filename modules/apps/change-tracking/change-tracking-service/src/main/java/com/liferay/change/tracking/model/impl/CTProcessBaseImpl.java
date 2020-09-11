@@ -14,8 +14,6 @@
 
 package com.liferay.change.tracking.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.change.tracking.model.CTProcess;
 import com.liferay.change.tracking.service.CTProcessLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.change.tracking.service.CTProcessLocalServiceUtil;
  * @see CTProcess
  * @generated
  */
-@ProviderType
 public abstract class CTProcessBaseImpl
 	extends CTProcessModelImpl implements CTProcess {
 

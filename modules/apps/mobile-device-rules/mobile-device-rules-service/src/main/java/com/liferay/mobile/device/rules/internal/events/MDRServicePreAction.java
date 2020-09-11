@@ -50,14 +50,18 @@ import org.osgi.service.component.annotations.Reference;
 public class MDRServicePreAction extends Action {
 
 	@Override
-	public void run(HttpServletRequest request, HttpServletResponse response) {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public void run(
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Device device = null;
 
 		if (PropsValues.MOBILE_DEVICE_SESSION_CACHE_ENABLED) {
-			HttpSession session = request.getSession();
+			HttpSession session = httpServletRequest.getSession();
 
 			TransientValue<Device> transientValue =
 				(TransientValue<Device>)session.getAttribute(WebKeys.DEVICE);
@@ -67,14 +71,14 @@ public class MDRServicePreAction extends Action {
 			}
 
 			if (device == null) {
-				device = DeviceDetectionUtil.detectDevice(request);
+				device = DeviceDetectionUtil.detectDevice(httpServletRequest);
 
 				session.setAttribute(
 					WebKeys.DEVICE, new TransientValue<>(device));
 			}
 		}
 		else {
-			device = DeviceDetectionUtil.detectDevice(request);
+			device = DeviceDetectionUtil.detectDevice(httpServletRequest);
 		}
 
 		themeDisplay.setDevice(device);
@@ -105,9 +109,9 @@ public class MDRServicePreAction extends Action {
 				_log.debug(logMessage);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to retrieve rule group", e);
+				_log.warn("Unable to retrieve rule group", exception);
 			}
 
 			return;
@@ -125,11 +129,11 @@ public class MDRServicePreAction extends Action {
 				mdrRuleGroupInstance.getRuleGroupInstanceId());
 
 			ActionHandlerManagerUtil.applyActions(
-				mdrActions, request, response);
+				mdrActions, httpServletRequest, httpServletResponse);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to apply device profile", e);
+				_log.warn("Unable to apply device profile", exception);
 			}
 		}
 	}

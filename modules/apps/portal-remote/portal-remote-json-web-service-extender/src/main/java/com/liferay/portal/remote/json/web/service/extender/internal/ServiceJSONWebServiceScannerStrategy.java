@@ -50,8 +50,7 @@ public class ServiceJSONWebServiceScannerStrategy
 			methodDescriptors.add(new MethodDescriptor(method));
 		}
 
-		return methodDescriptors.toArray(
-			new MethodDescriptor[methodDescriptors.size()]);
+		return methodDescriptors.toArray(new MethodDescriptor[0]);
 	}
 
 	/**
@@ -87,7 +86,8 @@ public class ServiceJSONWebServiceScannerStrategy
 
 					service = method.invoke(invocationHandler);
 				}
-				catch (ReflectiveOperationException roe) {
+				catch (ReflectiveOperationException
+							reflectiveOperationException) {
 				}
 			}
 		}

@@ -19,19 +19,23 @@ import com.liferay.fragment.model.impl.FragmentEntryLinkImpl;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkFinder;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.Iterator;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Pavel Savinov
  */
+@Component(service = FragmentEntryLinkFinder.class)
 public class FragmentEntryLinkFinderImpl
 	extends FragmentEntryLinkFinderBaseImpl implements FragmentEntryLinkFinder {
 
@@ -41,8 +45,17 @@ public class FragmentEntryLinkFinderImpl
 	public static final String COUNT_BY_G_F_C =
 		FragmentEntryLinkFinder.class.getName() + ".countByG_F_C";
 
+	public static final String COUNT_BY_G_F_P =
+		FragmentEntryLinkFinder.class.getName() + ".countByG_F_P";
+
 	public static final String COUNT_BY_G_F_C_L =
 		FragmentEntryLinkFinder.class.getName() + ".countByG_F_C_L";
+
+	public static final String COUNT_BY_G_F_P_L =
+		FragmentEntryLinkFinder.class.getName() + ".countByG_F_P_L";
+
+	public static final String FIND_BY_TYPE =
+		FragmentEntryLinkFinder.class.getName() + ".findByType";
 
 	public static final String FIND_BY_G_F =
 		FragmentEntryLinkFinder.class.getName() + ".findByG_F";
@@ -50,8 +63,14 @@ public class FragmentEntryLinkFinderImpl
 	public static final String FIND_BY_G_F_C =
 		FragmentEntryLinkFinder.class.getName() + ".findByG_F_C";
 
+	public static final String FIND_BY_G_F_P =
+		FragmentEntryLinkFinder.class.getName() + ".findByG_F_P";
+
 	public static final String FIND_BY_G_F_C_L =
 		FragmentEntryLinkFinder.class.getName() + ".findByG_F_C_L";
+
+	public static final String FIND_BY_G_F_P_L =
+		FragmentEntryLinkFinder.class.getName() + ".findByG_F_P_L";
 
 	@Override
 	public int countByG_F(long groupId, long fragmentEntryId) {
@@ -62,19 +81,19 @@ public class FragmentEntryLinkFinderImpl
 
 			String sql = _customSQL.get(getClass(), COUNT_BY_G_F);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(fragmentEntryId);
+			queryPos.add(groupId);
+			queryPos.add(fragmentEntryId);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> iterator = sqlQuery.iterate();
 
-			if (itr.hasNext()) {
-				Long count = itr.next();
+			if (iterator.hasNext()) {
+				Long count = iterator.next();
 
 				if (count != null) {
 					return count.intValue();
@@ -83,82 +102,75 @@ public class FragmentEntryLinkFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #countByG_F_P_L(long, long, int)}
+	 */
+	@Deprecated
 	@Override
 	public int countByG_F_C(
 		long groupId, long fragmentEntryId, long classNameId) {
 
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = _customSQL.get(getClass(), COUNT_BY_G_F_C);
-
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
-
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
-
-			QueryPos qPos = QueryPos.getInstance(q);
-
-			qPos.add(groupId);
-			qPos.add(fragmentEntryId);
-			qPos.add(classNameId);
-
-			Iterator<Long> itr = q.iterate();
-
-			if (itr.hasNext()) {
-				Long count = itr.next();
-
-				if (count != null) {
-					return count.intValue();
-				}
-			}
-
-			return 0;
-		}
-		catch (Exception e) {
-			throw new SystemException(e);
-		}
-		finally {
-			closeSession(session);
-		}
+		return countByG_F_P_L(groupId, fragmentEntryId, -1);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #countByG_F_P_L(long, long, int)}
+	 */
+	@Deprecated
 	@Override
 	public int countByG_F_C_L(
 		long groupId, long fragmentEntryId, long classNameId,
 		int layoutPageTemplateEntryType) {
 
+		return countByG_F_P_L(
+			groupId, fragmentEntryId, layoutPageTemplateEntryType);
+	}
+
+	@Override
+	public int countByG_F_P_L(
+		long groupId, long fragmentEntryId, int layoutPageTemplateEntryType) {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			String sql = _customSQL.get(getClass(), COUNT_BY_G_F_C_L);
+			String sql = null;
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			if (layoutPageTemplateEntryType >= 0) {
+				sql = _customSQL.get(getClass(), COUNT_BY_G_F_P_L);
+			}
+			else {
+				sql = _customSQL.get(getClass(), COUNT_BY_G_F_P);
+			}
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			qPos.add(groupId);
-			qPos.add(fragmentEntryId);
-			qPos.add(classNameId);
-			qPos.add(layoutPageTemplateEntryType);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			Iterator<Long> itr = q.iterate();
+			if (layoutPageTemplateEntryType >= 0) {
+				queryPos.add(layoutPageTemplateEntryType);
+			}
 
-			if (itr.hasNext()) {
-				Long count = itr.next();
+			queryPos.add(groupId);
+			queryPos.add(fragmentEntryId);
+
+			Iterator<Long> iterator = sqlQuery.iterate();
+
+			if (iterator.hasNext()) {
+				Long count = iterator.next();
 
 				if (count != null) {
 					return count.intValue();
@@ -167,8 +179,42 @@ public class FragmentEntryLinkFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	@Override
+	public List<FragmentEntryLink> findByType(
+		int type, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = _customSQL.get(getClass(), FIND_BY_TYPE);
+
+			sql = _customSQL.replaceOrderBy(sql, orderByComparator);
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			sqlQuery.addEntity(
+				"FragmentEntryLink", FragmentEntryLinkImpl.class);
+
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+			queryPos.add(type);
+
+			return (List<FragmentEntryLink>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
+		}
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -189,63 +235,61 @@ public class FragmentEntryLinkFinderImpl
 
 			sql = _customSQL.replaceOrderBy(sql, orderByComparator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("FragmentEntryLink", FragmentEntryLinkImpl.class);
+			sqlQuery.addEntity(
+				"FragmentEntryLink", FragmentEntryLinkImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(fragmentEntryId);
+			queryPos.add(groupId);
+			queryPos.add(fragmentEntryId);
 
-			return q.list(true);
+			return (List<FragmentEntryLink>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #findByG_F_P_L(long, long, int, int, int, OrderByComparator)}
+	 */
+	@Deprecated
 	@Override
 	public List<FragmentEntryLink> findByG_F_C(
 		long groupId, long fragmentEntryId, long classNameId, int start,
 		int end, OrderByComparator<FragmentEntryLink> orderByComparator) {
 
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = _customSQL.get(getClass(), FIND_BY_G_F_C);
-
-			sql = _customSQL.replaceOrderBy(sql, orderByComparator);
-
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
-
-			q.addEntity("FragmentEntryLink", FragmentEntryLinkImpl.class);
-
-			QueryPos qPos = QueryPos.getInstance(q);
-
-			qPos.add(groupId);
-			qPos.add(fragmentEntryId);
-			qPos.add(classNameId);
-
-			return q.list(true);
-		}
-		catch (Exception e) {
-			throw new SystemException(e);
-		}
-		finally {
-			closeSession(session);
-		}
+		return findByG_F_P_L(
+			groupId, fragmentEntryId, -1, start, end, orderByComparator);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #findByG_F_P_L(long, long, int, int, int, OrderByComparator)}
+	 */
+	@Deprecated
 	@Override
 	public List<FragmentEntryLink> findByG_F_C_L(
 		long groupId, long fragmentEntryId, long classNameId,
 		int layoutPageTemplateEntryType, int start, int end,
+		OrderByComparator<FragmentEntryLink> orderByComparator) {
+
+		return findByG_F_P_L(
+			groupId, fragmentEntryId, layoutPageTemplateEntryType, start, end,
+			orderByComparator);
+	}
+
+	@Override
+	public List<FragmentEntryLink> findByG_F_P_L(
+		long groupId, long fragmentEntryId, int layoutPageTemplateEntryType,
+		int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator) {
 
 		Session session = null;
@@ -253,32 +297,43 @@ public class FragmentEntryLinkFinderImpl
 		try {
 			session = openSession();
 
-			String sql = _customSQL.get(getClass(), FIND_BY_G_F_C_L);
+			String sql = null;
+
+			if (layoutPageTemplateEntryType >= 0) {
+				sql = _customSQL.get(getClass(), FIND_BY_G_F_P_L);
+			}
+			else {
+				sql = _customSQL.get(getClass(), FIND_BY_G_F_P);
+			}
 
 			sql = _customSQL.replaceOrderBy(sql, orderByComparator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("FragmentEntryLink", FragmentEntryLinkImpl.class);
+			sqlQuery.addEntity(
+				"FragmentEntryLink", FragmentEntryLinkImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(fragmentEntryId);
-			qPos.add(classNameId);
-			qPos.add(layoutPageTemplateEntryType);
+			if (layoutPageTemplateEntryType >= 0) {
+				queryPos.add(layoutPageTemplateEntryType);
+			}
 
-			return q.list(true);
+			queryPos.add(groupId);
+			queryPos.add(fragmentEntryId);
+
+			return (List<FragmentEntryLink>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

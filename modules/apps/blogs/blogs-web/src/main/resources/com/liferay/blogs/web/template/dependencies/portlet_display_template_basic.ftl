@@ -15,7 +15,7 @@
 						</#if>
 
 						<h3 class="title">
-							<a class="title-link" href="${viewEntryPortletURL.toString()}">${blogsEntryUtil.getDisplayTitle(resourceBundle, curBlogEntry)}</a>
+							<a class="title-link" href="${viewEntryPortletURL.toString()}">${htmlUtil.escape(blogsEntryUtil.getDisplayTitle(resourceBundle, curBlogEntry))}</a>
 						</h3>
 					</div>
 
@@ -25,7 +25,7 @@
 								direction="left-side"
 								icon=""
 								markupView="lexicon"
-								message=""
+								message="actions"
 								showWhenSingleIcon=true
 							>
 								<#if blogsEntryPermission.contains(permissionChecker, curBlogEntry, "UPDATE")>
@@ -140,7 +140,7 @@
 									${viewCommentsPortletURL.setParameter("entryId", curBlogEntry.getEntryId()?string)}
 								</#if>
 
-								<a class="btn btn-outline-borderless btn-outline-secondary btn-sm" href="${viewCommentsPortletURL.toString()}">
+								<a class="btn btn-outline-borderless btn-outline-secondary btn-sm" href="${viewCommentsPortletURL.toString()}" title="${language.get(locale, "comments")}">
 									<span class="inline-item inline-item-before">
 										<@clay["icon"] symbol="comments" />
 									</span> ${commentManager.getCommentsCount("com.liferay.blogs.model.BlogsEntry", curBlogEntry.getEntryId())}

@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.exception.ExportImportRuntimeException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -31,16 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author Daniel Kocsis
  */
-@ProviderType
 public class ExportImportProcessCallbackUtil {
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public static List<Callable<?>> popCallbackList() {
-		return Collections.<Callable<?>>emptyList();
-	}
 
 	public static List<Callable<?>> popCallbackList(String processId) {
 		List<List<Callable<?>>> callbackListList = _callbackListListMap.get(
@@ -51,13 +40,6 @@ public class ExportImportProcessCallbackUtil {
 		}
 
 		return callbackListList.remove(callbackListList.size() - 1);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public static void pushCallbackList() {
 	}
 
 	public static void pushCallbackList(String processId) {
@@ -71,13 +53,6 @@ public class ExportImportProcessCallbackUtil {
 		}
 
 		callbackListList.add(Collections.<Callable<?>>emptyList());
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public static void registerCallback(Callable<?> callable) {
 	}
 
 	public static void registerCallback(
@@ -100,16 +75,16 @@ public class ExportImportProcessCallbackUtil {
 			try {
 				callable.call();
 			}
-			catch (Exception e) {
-				ExportImportRuntimeException eire =
+			catch (Exception exception) {
+				ExportImportRuntimeException exportImportRuntimeException =
 					new ExportImportRuntimeException(
-						e.getLocalizedMessage(), e);
+						exception.getLocalizedMessage(), exception);
 
 				Class<?> clazz = callable.getClass();
 
-				eire.setClassName(clazz.getName());
+				exportImportRuntimeException.setClassName(clazz.getName());
 
-				throw eire;
+				throw exportImportRuntimeException;
 			}
 
 			return;
@@ -132,6 +107,6 @@ public class ExportImportProcessCallbackUtil {
 		ExportImportProcessCallbackUtil.class);
 
 	private static final Map<String, List<List<Callable<?>>>>
-		_callbackListListMap = new ConcurrentHashMap();
+		_callbackListListMap = new ConcurrentHashMap<>();
 
 }

@@ -19,10 +19,8 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetLink;
 import com.liferay.asset.kernel.model.AssetLinkConstants;
 import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
-import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -73,20 +71,20 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 		User user = userLocalService.getUser(userId);
 		Date now = new Date();
 
-		long linkId = counterLocalService.increment();
+		long linkId1 = counterLocalService.increment();
 
-		AssetLink link = assetLinkPersistence.create(linkId);
+		AssetLink link1 = assetLinkPersistence.create(linkId1);
 
-		link.setCompanyId(user.getCompanyId());
-		link.setUserId(user.getUserId());
-		link.setUserName(user.getFullName());
-		link.setCreateDate(now);
-		link.setEntryId1(entryId1);
-		link.setEntryId2(entryId2);
-		link.setType(type);
-		link.setWeight(weight);
+		link1.setCompanyId(user.getCompanyId());
+		link1.setUserId(user.getUserId());
+		link1.setUserName(user.getFullName());
+		link1.setCreateDate(now);
+		link1.setEntryId1(entryId1);
+		link1.setEntryId2(entryId2);
+		link1.setType(type);
+		link1.setWeight(weight);
 
-		assetLinkPersistence.update(link);
+		link1 = assetLinkPersistence.update(link1);
 
 		if (AssetLinkConstants.isTypeBi(type)) {
 			long linkId2 = counterLocalService.increment();
@@ -105,7 +103,7 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 			assetLinkPersistence.update(link2);
 		}
 
-		return link;
+		return link1;
 	}
 
 	@Override
@@ -150,9 +148,10 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 
 				deleteAssetLink(assetLink);
 			}
-			catch (NoSuchLinkException nsle) {
+			catch (NoSuchLinkException noSuchLinkException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Unable to delete asset link", nsle);
+					_log.warn(
+						"Unable to delete asset link", noSuchLinkException);
 				}
 			}
 		}
@@ -252,17 +251,6 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 			entryId, typeId);
 
 		return filterAssetLinks(assetLinks, excludeInvisibleLinks);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public ExportActionableDynamicQuery getExportActionbleDynamicQuery(
-		final PortletDataContext portletDataContext) {
-
-		return new ExportActionableDynamicQuery();
 	}
 
 	/**
@@ -368,9 +356,7 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 
 		assetLink.setWeight(weight);
 
-		assetLinkPersistence.update(assetLink);
-
-		return assetLink;
+		return assetLinkPersistence.update(assetLink);
 	}
 
 	/**
@@ -447,8 +433,8 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 				stagedAssetLink.getPrimaryKey(), stagedAssetLink.getUuid(),
 				null, SystemEventConstants.TYPE_DELETE, StringPool.BLANK);
 		}
-		catch (PortalException pe) {
-			throw new RuntimeException(pe);
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
 		}
 	}
 
@@ -470,9 +456,7 @@ public class AssetLinkLocalServiceImpl extends AssetLinkLocalServiceBaseImpl {
 			}
 		}
 
-		assetLinks = Collections.unmodifiableList(filteredAssetLinks);
-
-		return assetLinks;
+		return Collections.unmodifiableList(filteredAssetLinks);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

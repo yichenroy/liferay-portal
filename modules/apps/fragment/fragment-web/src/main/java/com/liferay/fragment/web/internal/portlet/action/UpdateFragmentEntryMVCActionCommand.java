@@ -19,8 +19,8 @@ import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryService;
 import com.liferay.fragment.web.internal.handler.FragmentEntryExceptionRequestHandler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -64,9 +64,7 @@ public class UpdateFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 				_fragmentEntryService.updateFragmentEntry(
 					fragmentEntryId, name);
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-			jsonObject.put(
+			JSONObject jsonObject = JSONUtil.put(
 				"redirectURL", getRedirectURL(actionResponse, fragmentEntry));
 
 			if (SessionErrors.contains(actionRequest, "fragmentNameInvalid")) {
@@ -76,13 +74,13 @@ public class UpdateFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			SessionErrors.add(actionRequest, "fragmentNameInvalid");
 
 			hideDefaultErrorMessage(actionRequest);
 
 			_fragmentEntryExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, pe);
+				actionRequest, actionResponse, portalException);
 		}
 	}
 

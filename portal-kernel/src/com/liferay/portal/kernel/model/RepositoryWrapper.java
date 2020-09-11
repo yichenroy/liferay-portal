@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,10 +30,9 @@ import java.util.Map;
  * @see Repository
  * @generated
  */
-@ProviderType
 public class RepositoryWrapper
 	extends BaseModelWrapper<Repository>
-	implements Repository, ModelWrapper<Repository> {
+	implements ModelWrapper<Repository>, Repository {
 
 	public RepositoryWrapper(Repository repository) {
 		super(repository);
@@ -514,9 +511,9 @@ public class RepositoryWrapper
 	@Override
 	public void setTypeSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties
-			typeSettingsProperties) {
+			typeSettingsUnicodeProperties) {
 
-		model.setTypeSettingsProperties(typeSettingsProperties);
+		model.setTypeSettingsProperties(typeSettingsUnicodeProperties);
 	}
 
 	/**

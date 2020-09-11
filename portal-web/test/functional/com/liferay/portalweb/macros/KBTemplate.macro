@@ -1,13 +1,15 @@
 definition {
+
 	macro addCP {
 		Navigator.gotoNavItem(navItem = "Templates");
 
 		LexiconEntry.gotoAdd();
 
-		AlloyEditor.addTitleAndContent(
-			content = "${kbTemplateContent}",
-			title = "${kbTemplateTitle}"
-		);
+		Type(
+			locator1 = "KnowledgeBaseTemplate#TEMPLATE_TITLE_INPUT",
+			value1 = "${kbTemplateTitle}");
+
+		CKEditor.addContent(content = "${kbTemplateContent}");
 
 		PortletEntry.publish();
 	}
@@ -17,8 +19,7 @@ definition {
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "View",
-			rowEntry = "${kbTemplateTitle}"
-		);
+			rowEntry = "${kbTemplateTitle}");
 	}
 
 	macro tearDownCP {
@@ -26,20 +27,18 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Knowledge Base"
-		);
+			portlet = "Knowledge Base");
 
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Templates");
 
 		if (IsElementPresent(locator1 = "ContentRow#ENTRY_CONTENT_ROW_1")) {
 			PortletEntry.selectAll();
 
-			AssertClickNoError(locator1 = "Button#DELETE", value1 = "Delete");
+			AssertClickNoError(
+				locator1 = "Button#DELETE",
+				value1 = "Delete");
 
-			AssertConfirm(
-				value1 = "Are you sure you want to delete the selected templates?"
-			);
+			AssertConfirm(value1 = "Are you sure you want to delete the selected templates?");
 
 			Alert.viewSuccessMessage();
 		}
@@ -50,28 +49,27 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseTemplate#TEMPLATE_TITLE",
-			value1 = "${kbTemplateTitle}"
-		);
+			value1 = "${kbTemplateTitle}");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "KnowledgeBaseTemplate#TEMPLATE_CONTENT",
-			value1 = "${kbTemplateContent}"
-		);
+			value1 = "${kbTemplateContent}");
 	}
 
 	macro viewCPViaAddTemplate {
 		LexiconEntry.gotoAddMenuItem(menuItem = "${kbTemplateTitle}");
 
 		AssertTextEquals(
-			locator1 = "AlloyEditor#EDITOR",
-			value1 = "${kbTemplateTitle}",
-			key_editor = "title"
-		);
+			key_editor = "title",
+			locator1 = "TextInput#TITLE",
+			value1 = "${kbTemplateTitle}");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
 		AssertTextEquals(
-			locator1 = "AlloyEditor#EDITOR",
-			value1 = "${kbTemplateContent}",
-			key_editor = "content"
-		);
+			key_editor = "content",
+			locator1 = "CKEditor#BODY",
+			value1 = "${kbTemplateContent}");
 	}
+
 }

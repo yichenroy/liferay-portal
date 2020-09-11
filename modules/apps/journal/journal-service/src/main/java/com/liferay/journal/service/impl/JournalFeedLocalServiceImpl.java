@@ -21,6 +21,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureLink;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.journal.constants.JournalFeedConstants;
 import com.liferay.journal.exception.DuplicateFeedIdException;
 import com.liferay.journal.exception.FeedContentFieldException;
 import com.liferay.journal.exception.FeedIdException;
@@ -28,11 +29,11 @@ import com.liferay.journal.exception.FeedNameException;
 import com.liferay.journal.exception.FeedTargetLayoutFriendlyUrlException;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFeed;
-import com.liferay.journal.model.JournalFeedConstants;
 import com.liferay.journal.service.base.JournalFeedLocalServiceBaseImpl;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -41,18 +42,24 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.rss.util.RSSUtil;
 
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Raymond Augé
  */
+@Component(
+	property = "model.class.name=com.liferay.journal.model.JournalFeed",
+	service = AopService.class
+)
 public class JournalFeedLocalServiceImpl
 	extends JournalFeedLocalServiceBaseImpl {
 
@@ -113,15 +120,15 @@ public class JournalFeedLocalServiceImpl
 
 		feed.setExpandoBridgeAttributes(serviceContext);
 
-		journalFeedPersistence.update(feed);
+		feed = journalFeedPersistence.update(feed);
 
 		// DDM Structure Link
 
-		DDMStructure ddmStructure = ddmStructureLocalService.getStructure(
+		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
 			groupId, classNameLocalService.getClassNameId(JournalArticle.class),
 			ddmStructureKey, true);
 
-		ddmStructureLinkLocalService.addStructureLink(
+		_ddmStructureLinkLocalService.addStructureLink(
 			classNameLocalService.getClassNameId(JournalFeed.class),
 			feed.getPrimaryKey(), ddmStructure.getStructureId());
 
@@ -163,23 +170,6 @@ public class JournalFeedLocalServiceImpl
 			JournalFeed.class.getName(), feed.getId(), modelPermissions);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #addFeedResources(JournalFeed, ModelPermissions)}
-	 */
-	@Deprecated
-	@Override
-	public void addFeedResources(
-			JournalFeed feed, String[] groupPermissions,
-			String[] guestPermissions)
-		throws PortalException {
-
-		resourceLocalService.addModelResources(
-			feed.getCompanyId(), feed.getGroupId(), feed.getUserId(),
-			JournalFeed.class.getName(), feed.getId(), groupPermissions,
-			guestPermissions);
-	}
-
 	@Override
 	public void addFeedResources(
 			long feedId, boolean addGroupPermissions,
@@ -189,21 +179,6 @@ public class JournalFeedLocalServiceImpl
 		JournalFeed feed = journalFeedPersistence.findByPrimaryKey(feedId);
 
 		addFeedResources(feed, addGroupPermissions, addGuestPermissions);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #addFeedResources(JournalFeed, ModelPermissions)}
-	 */
-	@Deprecated
-	@Override
-	public void addFeedResources(
-			long feedId, String[] groupPermissions, String[] guestPermissions)
-		throws PortalException {
-
-		JournalFeed feed = journalFeedPersistence.findByPrimaryKey(feedId);
-
-		addFeedResources(feed, groupPermissions, guestPermissions);
 	}
 
 	@Override
@@ -216,12 +191,12 @@ public class JournalFeedLocalServiceImpl
 
 		// DDM Structure Link
 
-		DDMStructure ddmStructure = ddmStructureLocalService.getStructure(
+		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
 			feed.getGroupId(),
 			classNameLocalService.getClassNameId(JournalArticle.class),
 			feed.getDDMStructureKey(), true);
 
-		ddmStructureLinkLocalService.deleteStructureLink(
+		_ddmStructureLinkLocalService.deleteStructureLink(
 			classNameLocalService.getClassNameId(JournalFeed.class),
 			feed.getPrimaryKey(), ddmStructure.getStructureId());
 
@@ -291,21 +266,21 @@ public class JournalFeedLocalServiceImpl
 	@Override
 	public List<JournalFeed> search(
 		long companyId, long groupId, String keywords, int start, int end,
-		OrderByComparator<JournalFeed> obc) {
+		OrderByComparator<JournalFeed> orderByComparator) {
 
 		return journalFeedFinder.findByKeywords(
-			companyId, groupId, keywords, start, end, obc);
+			companyId, groupId, keywords, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<JournalFeed> search(
 		long companyId, long groupId, String feedId, String name,
 		String description, boolean andOperator, int start, int end,
-		OrderByComparator<JournalFeed> obc) {
+		OrderByComparator<JournalFeed> orderByComparator) {
 
 		return journalFeedFinder.findByC_G_F_N_D(
 			companyId, groupId, feedId, name, description, andOperator, start,
-			end, obc);
+			end, orderByComparator);
 	}
 
 	@Override
@@ -363,7 +338,7 @@ public class JournalFeedLocalServiceImpl
 
 		feed.setExpandoBridgeAttributes(serviceContext);
 
-		journalFeedPersistence.update(feed);
+		feed = journalFeedPersistence.update(feed);
 
 		//DDM Structure Link
 
@@ -371,14 +346,14 @@ public class JournalFeedLocalServiceImpl
 			JournalFeed.class);
 
 		DDMStructureLink ddmStructureLink =
-			ddmStructureLinkLocalService.getUniqueStructureLink(
+			_ddmStructureLinkLocalService.getUniqueStructureLink(
 				classNameId, feed.getPrimaryKey());
 
-		DDMStructure ddmStructure = ddmStructureLocalService.getStructure(
+		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
 			groupId, classNameLocalService.getClassNameId(JournalArticle.class),
 			ddmStructureKey, true);
 
-		ddmStructureLinkLocalService.updateStructureLink(
+		_ddmStructureLinkLocalService.updateStructureLink(
 			ddmStructureLink.getStructureLinkId(), classNameId,
 			feed.getPrimaryKey(), ddmStructure.getStructureId());
 
@@ -457,7 +432,7 @@ public class JournalFeedLocalServiceImpl
 			throw new FeedNameException("Name is null");
 		}
 
-		long plid = PortalUtil.getPlidFromFriendlyURL(
+		long plid = _portal.getPlidFromFriendlyURL(
 			companyId, targetLayoutFriendlyUrl);
 
 		if (plid <= 0) {
@@ -477,7 +452,7 @@ public class JournalFeedLocalServiceImpl
 			return;
 		}
 
-		DDMStructure ddmStructure = ddmStructureLocalService.getStructure(
+		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
 			groupId, classNameLocalService.getClassNameId(JournalArticle.class),
 			ddmStructureKey, true);
 
@@ -496,10 +471,13 @@ public class JournalFeedLocalServiceImpl
 		}
 	}
 
-	@ServiceReference(type = DDMStructureLinkLocalService.class)
-	protected DDMStructureLinkLocalService ddmStructureLinkLocalService;
+	@Reference
+	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
 
-	@ServiceReference(type = DDMStructureLocalService.class)
-	protected DDMStructureLocalService ddmStructureLocalService;
+	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

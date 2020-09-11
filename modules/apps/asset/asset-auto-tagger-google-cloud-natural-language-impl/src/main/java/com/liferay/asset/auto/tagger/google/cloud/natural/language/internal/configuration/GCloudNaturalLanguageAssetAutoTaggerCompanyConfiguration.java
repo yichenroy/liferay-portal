@@ -16,7 +16,7 @@ package com.liferay.asset.auto.tagger.google.cloud.natural.language.internal.con
 
 import aQute.bnd.annotation.metatype.Meta;
 
-import com.liferay.asset.auto.tagger.google.cloud.natural.language.internal.contants.GCloudNaturalLanguageDocumentAssetAutoTaggerConstants;
+import com.liferay.asset.auto.tagger.google.cloud.natural.language.internal.constants.GCloudNaturalLanguageDocumentAssetAutoTaggerConstants;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedAttributeDefinition;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
@@ -32,10 +32,10 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 	category = "assets", scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
 @Meta.OCD(
-	description = "google-cloud-natural-language-asset-auto-tag-provider-description",
+	description = "google-cloud-natural-language-asset-auto-tag-configuration-description",
 	id = "com.liferay.asset.auto.tagger.google.cloud.natural.language.internal.configuration.GCloudNaturalLanguageAssetAutoTaggerCompanyConfiguration",
 	localization = "content/Language",
-	name = "google-cloud-natural-language-asset-auto-tag-provider-configuration-name"
+	name = "google-cloud-natural-language-asset-auto-tag-configuration-name"
 )
 public interface GCloudNaturalLanguageAssetAutoTaggerCompanyConfiguration {
 
@@ -93,5 +93,14 @@ public interface GCloudNaturalLanguageAssetAutoTaggerCompanyConfiguration {
 		required = false
 	)
 	public float salience();
+
+	/**
+	 * Sets the class names to enable auto tagging of documents using the Google
+	 * Cloud Natural Language API.
+	 *
+	 * @review
+	 */
+	@Meta.AD(deflt = "", name = "enabled-class-names", required = false)
+	public String[] enabledClassNames();
 
 }

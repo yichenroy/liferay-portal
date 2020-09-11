@@ -14,8 +14,7 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -27,6 +26,10 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import java.io.File;
 import java.io.InputStream;
 
+import java.util.TreeMap;
+
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the remote service interface for LayoutSet. Methods of this
  * service are expected to have security checks based on the propagated JAAS
@@ -37,6 +40,7 @@ import java.io.InputStream;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -48,7 +52,7 @@ public interface LayoutSetService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link LayoutSetServiceUtil} to access the layout set remote service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutSetServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutSetServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the layout set remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link LayoutSetServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -83,20 +87,20 @@ public interface LayoutSetService extends BaseService {
 		throws PortalException;
 
 	public void updateLogo(
-			long groupId, boolean privateLayout, boolean logo, byte[] bytes)
+			long groupId, boolean privateLayout, boolean hasLogo, byte[] bytes)
 		throws PortalException;
 
 	public void updateLogo(
-			long groupId, boolean privateLayout, boolean logo, File file)
+			long groupId, boolean privateLayout, boolean hasLogo, File file)
 		throws PortalException;
 
 	public void updateLogo(
-			long groupId, boolean privateLayout, boolean logo,
+			long groupId, boolean privateLayout, boolean hasLogo,
 			InputStream inputStream)
 		throws PortalException;
 
 	public void updateLogo(
-			long groupId, boolean privateLayout, boolean logo,
+			long groupId, boolean privateLayout, boolean hasLogo,
 			InputStream inputStream, boolean cleanUpStream)
 		throws PortalException;
 
@@ -109,8 +113,18 @@ public interface LayoutSetService extends BaseService {
 			long groupId, boolean privateLayout, String settings)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 #updateVirtualHosts(long, boolean, TreeMap)}
+	 */
+	@Deprecated
 	public LayoutSet updateVirtualHost(
-			long groupId, boolean privateLayout, String virtualHost)
+			long groupId, boolean privateLayout, String virtualHostname)
+		throws PortalException;
+
+	public LayoutSet updateVirtualHosts(
+			long groupId, boolean privateLayout,
+			TreeMap<String, String> virtualHostnames)
 		throws PortalException;
 
 }

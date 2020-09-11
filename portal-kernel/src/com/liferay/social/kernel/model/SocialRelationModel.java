@@ -14,11 +14,13 @@
 
 package com.liferay.social.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the SocialRelation service. Represents a row in the &quot;SocialRelation&quot; database table, with each column mapped to a property of this class.
@@ -33,7 +35,8 @@ import com.liferay.portal.kernel.model.ShardedModel;
  */
 @ProviderType
 public interface SocialRelationModel
-	extends BaseModel<SocialRelation>, ShardedModel {
+	extends BaseModel<SocialRelation>, CTModel<SocialRelation>, MVCCModel,
+			ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -46,6 +49,7 @@ public interface SocialRelationModel
 	 *
 	 * @return the primary key of this social relation
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -53,7 +57,40 @@ public interface SocialRelationModel
 	 *
 	 * @param primaryKey the primary key of this social relation
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this social relation.
+	 *
+	 * @return the mvcc version of this social relation
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this social relation.
+	 *
+	 * @param mvccVersion the mvcc version of this social relation
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this social relation.
+	 *
+	 * @return the ct collection ID of this social relation
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this social relation.
+	 *
+	 * @param ctCollectionId the ct collection ID of this social relation
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this social relation.

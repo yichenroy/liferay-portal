@@ -29,8 +29,8 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class DLRequestHelper extends BaseRequestHelper {
 
-	public DLRequestHelper(HttpServletRequest request) {
-		super(request);
+	public DLRequestHelper(HttpServletRequest httpServletRequest) {
+		super(httpServletRequest);
 	}
 
 	public DLGroupServiceSettings getDLGroupServiceSettings() {
@@ -38,10 +38,11 @@ public class DLRequestHelper extends BaseRequestHelper {
 			return _dlGroupServiceSettings;
 		}
 
-		HttpServletRequest request = getRequest();
+		HttpServletRequest httpServletRequest = getRequest();
 
-		_dlGroupServiceSettings = (DLGroupServiceSettings)request.getAttribute(
-			DLWebKeys.DOCUMENT_LIBRARY_GROUP_SERVICE_SETTINGS);
+		_dlGroupServiceSettings =
+			(DLGroupServiceSettings)httpServletRequest.getAttribute(
+				DLWebKeys.DOCUMENT_LIBRARY_GROUP_SERVICE_SETTINGS);
 
 		if (_dlGroupServiceSettings != null) {
 			return _dlGroupServiceSettings;
@@ -52,18 +53,18 @@ public class DLRequestHelper extends BaseRequestHelper {
 		try {
 			if (Validator.isNotNull(portletResource)) {
 				_dlGroupServiceSettings = DLGroupServiceSettings.getInstance(
-					getScopeGroupId(), request.getParameterMap());
+					getScopeGroupId(), httpServletRequest.getParameterMap());
 			}
 			else {
 				_dlGroupServiceSettings = DLGroupServiceSettings.getInstance(
 					getScopeGroupId());
 			}
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			DLWebKeys.DOCUMENT_LIBRARY_GROUP_SERVICE_SETTINGS,
 			_dlGroupServiceSettings);
 
@@ -75,10 +76,10 @@ public class DLRequestHelper extends BaseRequestHelper {
 			return _dlPortletInstanceSettings;
 		}
 
-		HttpServletRequest request = getRequest();
+		HttpServletRequest httpServletRequest = getRequest();
 
 		_dlPortletInstanceSettings =
-			(DLPortletInstanceSettings)request.getAttribute(
+			(DLPortletInstanceSettings)httpServletRequest.getAttribute(
 				DLWebKeys.DOCUMENT_LIBRARY_PORTLET_INSTANCE_SETTINGS);
 
 		if (_dlPortletInstanceSettings != null) {
@@ -92,7 +93,7 @@ public class DLRequestHelper extends BaseRequestHelper {
 				_dlPortletInstanceSettings =
 					DLPortletInstanceSettings.getInstance(
 						getLayout(), getResourcePortletId(),
-						request.getParameterMap());
+						httpServletRequest.getParameterMap());
 			}
 			else {
 				_dlPortletInstanceSettings =
@@ -100,11 +101,11 @@ public class DLRequestHelper extends BaseRequestHelper {
 						getLayout(), getPortletId());
 			}
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			DLWebKeys.DOCUMENT_LIBRARY_PORTLET_INSTANCE_SETTINGS,
 			_dlPortletInstanceSettings);
 

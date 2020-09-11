@@ -15,10 +15,10 @@
 package com.liferay.portal.json.jabsorb.serializer;
 
 import com.liferay.petra.lang.ClassLoaderPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.util.HashMap;
 
@@ -99,9 +99,9 @@ public class LiferayJSONSerializer extends JSONSerializer {
 					}
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				throw new UnmarshallException(
-					"Unable to get class " + className, e);
+					"Unable to get class " + className, exception);
 			}
 		}
 

@@ -14,10 +14,11 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -45,6 +48,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the local service interface for Role. Methods of this
  * service will not have security checks based on the propagated JAAS
@@ -55,18 +60,19 @@ import java.util.Map;
  * @see RoleLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface RoleLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<Role>, PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link RoleLocalServiceUtil} to access the role local service. Add custom service methods to <code>com.liferay.portal.service.impl.RoleLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.RoleLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the role local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link RoleLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public void addGroupRole(long groupId, long roleId);
 
@@ -105,6 +111,10 @@ public interface RoleLocalService
 
 	/**
 	 * Adds the role to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param role the role
 	 * @return the role that was added
@@ -157,6 +167,12 @@ public interface RoleLocalService
 	public void clearUserRoles(long userId) throws PortalException;
 
 	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
+	/**
 	 * Creates a new role with the primary key. Does not add the role to the database.
 	 *
 	 * @param roleId the primary key for the new role
@@ -183,6 +199,10 @@ public interface RoleLocalService
 	/**
 	 * Deletes the role with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param roleId the primary key of the role
 	 * @return the role that was removed
 	 * @throws PortalException if a role with the primary key could not be found
@@ -192,6 +212,10 @@ public interface RoleLocalService
 
 	/**
 	 * Deletes the role from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param role the role
 	 * @return the role that was removed
@@ -227,6 +251,9 @@ public interface RoleLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -242,7 +269,7 @@ public interface RoleLocalService
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -258,7 +285,7 @@ public interface RoleLocalService
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -308,7 +335,7 @@ public interface RoleLocalService
 	 * @return Returns the role with the name or <code>null</code> if a role
 	 with the name could not be found in the company
 	 */
-	@Transactional(enabled = false)
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Role fetchRole(long companyId, String name);
 
 	/**
@@ -396,18 +423,13 @@ public interface RoleLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<Role> getResourceBlockRoles(
-		long resourceBlockId, String className, String actionId);
 
 	/**
 	 * Returns a map of role names to associated action IDs for the named
@@ -465,7 +487,7 @@ public interface RoleLocalService
 	 * @param name the role's name
 	 * @return the role with the name
 	 */
-	@Transactional(enabled = false)
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Role getRole(long companyId, String name) throws PortalException;
 
 	/**
@@ -484,7 +506,7 @@ public interface RoleLocalService
 	 * Returns a range of all the roles.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of roles
@@ -522,6 +544,10 @@ public interface RoleLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Role> getRoles(long companyId, int[] types);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Role> getRoles(
+		long companyId, long classNameId, long[] classPKs, int type);
 
 	/**
 	 * Returns all the roles with the primary keys.
@@ -786,7 +812,10 @@ public interface RoleLocalService
 	 * @param name the role's name (optionally <code>null</code>)
 	 * @return the role with the name, or <code>null</code> if a role with the
 	 name could not be found in the company
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #fetchRole(long, String)}
 	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Role loadFetchRole(long companyId, String name);
 
@@ -796,7 +825,10 @@ public interface RoleLocalService
 	 * @param companyId the primary key of the company
 	 * @param name the role's name
 	 * @return the role with the name in the company
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getRole(long, String)}
 	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Role loadGetRole(long companyId, String name) throws PortalException;
 
@@ -821,16 +853,16 @@ public interface RoleLocalService
 	 * @param start the lower bound of the range of roles to return
 	 * @param end the upper bound of the range of roles to return (not
 	 inclusive)
-	 * @param obc the comparator to order the roles (optionally
+	 * @param orderByComparator the comparator to order the roles (optionally
 	 <code>null</code>)
 	 * @return the ordered range of the matching roles, ordered by
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Role> search(
 		long companyId, String keywords, Integer[] types, int start, int end,
-		OrderByComparator<Role> obc);
+		OrderByComparator<Role> orderByComparator);
 
 	/**
 	 * Returns an ordered range of all the roles that match the keywords, types,
@@ -856,17 +888,17 @@ public interface RoleLocalService
 	 * @param start the lower bound of the range of roles to return
 	 * @param end the upper bound of the range of roles to return (not
 	 inclusive)
-	 * @param obc the comparator to order the roles (optionally
+	 * @param orderByComparator the comparator to order the roles (optionally
 	 <code>null</code>)
 	 * @return the ordered range of the matching roles, ordered by
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Role> search(
 		long companyId, String keywords, Integer[] types,
 		LinkedHashMap<String, Object> params, int start, int end,
-		OrderByComparator<Role> obc);
+		OrderByComparator<Role> orderByComparator);
 
 	/**
 	 * Returns an ordered range of all the roles that match the name,
@@ -889,16 +921,16 @@ public interface RoleLocalService
 	 * @param start the lower bound of the range of the roles to return
 	 * @param end the upper bound of the range of the roles to return (not
 	 inclusive)
-	 * @param obc the comparator to order the roles (optionally
+	 * @param orderByComparator the comparator to order the roles (optionally
 	 <code>null</code>)
 	 * @return the ordered range of the matching roles, ordered by
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Role> search(
 		long companyId, String name, String description, Integer[] types,
-		int start, int end, OrderByComparator<Role> obc);
+		int start, int end, OrderByComparator<Role> orderByComparator);
 
 	/**
 	 * Returns an ordered range of all the roles that match the name,
@@ -924,17 +956,17 @@ public interface RoleLocalService
 	 * @param start the lower bound of the range of the roles to return
 	 * @param end the upper bound of the range of the roles to return (not
 	 inclusive)
-	 * @param obc the comparator to order the roles (optionally
+	 * @param orderByComparator the comparator to order the roles (optionally
 	 <code>null</code>)
 	 * @return the ordered range of the matching roles, ordered by
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Role> search(
 		long companyId, String name, String description, Integer[] types,
 		LinkedHashMap<String, Object> params, int start, int end,
-		OrderByComparator<Role> obc);
+		OrderByComparator<Role> orderByComparator);
 
 	/**
 	 * Returns the number of roles that match the keywords and types.
@@ -1037,10 +1069,30 @@ public interface RoleLocalService
 	/**
 	 * Updates the role in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param role the role
 	 * @return the role that was updated
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public Role updateRole(Role role);
+
+	public void validateName(String name) throws PortalException;
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<Role> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<Role> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<Role>, R, E> updateUnsafeFunction)
+		throws E;
 
 }

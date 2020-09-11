@@ -14,14 +14,11 @@
 
 package com.liferay.message.boards.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchMailingListException extends NoSuchModelException {
 
 	public NoSuchMailingListException() {
@@ -31,12 +28,12 @@ public class NoSuchMailingListException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchMailingListException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchMailingListException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchMailingListException(Throwable cause) {
-		super(cause);
+	public NoSuchMailingListException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

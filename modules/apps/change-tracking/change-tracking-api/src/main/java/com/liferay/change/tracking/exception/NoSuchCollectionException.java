@@ -14,14 +14,11 @@
 
 package com.liferay.change.tracking.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchCollectionException extends NoSuchModelException {
 
 	public NoSuchCollectionException() {
@@ -31,12 +28,12 @@ public class NoSuchCollectionException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchCollectionException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchCollectionException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchCollectionException(Throwable cause) {
-		super(cause);
+	public NoSuchCollectionException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

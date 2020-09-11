@@ -14,6 +14,8 @@
 
 package com.liferay.portal.osgi.web.wab.extender.internal.adapter;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.osgi.web.servlet.JSPServletFactory;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.FilterDefinition;
@@ -46,8 +48,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 
-import org.apache.felix.utils.log.Logger;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
@@ -59,15 +59,26 @@ public class ModifiableServletContextAdapter
 
 	public static ServletContext createInstance(
 		BundleContext bundleContext, ServletContext servletContext,
+		JSPServletFactory jspServletFactory,
+		WebXMLDefinition webXMLDefinition) {
+
+		return (ServletContext)Proxy.newProxyInstance(
+			ModifiableServletContextAdapter.class.getClassLoader(), _INTERFACES,
+			new ModifiableServletContextAdapter(
+				servletContext, bundleContext, jspServletFactory,
+				webXMLDefinition));
+	}
+
+	public static ServletContext createInstance(
+		BundleContext bundleContext, ServletContext servletContext,
 		JSPServletFactory jspServletFactory, WebXMLDefinition webXMLDefinition,
 		List<ListenerDefinition> listenerDefinitions,
 		Map<String, FilterRegistrationImpl> filterRegistrationImpls,
 		Map<String, ServletRegistrationImpl> servletRegistrationImpls,
-		Map<String, Object> attributes, Logger logger) {
+		Map<String, Object> attributes) {
 
 		ServletContext newServletContext = createInstance(
-			bundleContext, servletContext, jspServletFactory, webXMLDefinition,
-			logger);
+			bundleContext, servletContext, jspServletFactory, webXMLDefinition);
 
 		Set<String> attributeNames = attributes.keySet();
 
@@ -115,28 +126,15 @@ public class ModifiableServletContextAdapter
 		return newServletContext;
 	}
 
-	public static ServletContext createInstance(
-		BundleContext bundleContext, ServletContext servletContext,
-		JSPServletFactory jspServletFactory, WebXMLDefinition webXMLDefinition,
-		Logger logger) {
-
-		return (ServletContext)Proxy.newProxyInstance(
-			ModifiableServletContextAdapter.class.getClassLoader(), _INTERFACES,
-			new ModifiableServletContextAdapter(
-				servletContext, bundleContext, jspServletFactory,
-				webXMLDefinition, logger));
-	}
-
 	public ModifiableServletContextAdapter(
 		ServletContext servletContext, BundleContext bundleContext,
-		JSPServletFactory jspServletFactory, WebXMLDefinition webXMLDefinition,
-		Logger logger) {
+		JSPServletFactory jspServletFactory,
+		WebXMLDefinition webXMLDefinition) {
 
 		_servletContext = servletContext;
 		_bundleContext = bundleContext;
 		_jspServletFactory = jspServletFactory;
 		_webXMLDefinition = webXMLDefinition;
-		_logger = logger;
 
 		_bundle = _bundleContext.getBundle();
 	}
@@ -204,12 +202,11 @@ public class ModifiableServletContextAdapter
 
 			_eventListeners.put(eventListenerClass, null);
 		}
-		catch (Exception e) {
-			_logger.log(
-				Logger.LOG_ERROR,
+		catch (Exception exception) {
+			_log.error(
 				"Bundle " + _bundle + " is unable to load filter " + className);
 
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException(exception);
 		}
 	}
 
@@ -269,12 +266,11 @@ public class ModifiableServletContextAdapter
 		try {
 			return clazz.newInstance();
 		}
-		catch (Throwable t) {
-			_logger.log(
-				Logger.LOG_ERROR,
+		catch (Throwable throwable) {
+			_log.error(
 				"Bundle " + _bundle + " is unable to load filter " + clazz);
 
-			throw new ServletException(t);
+			throw new ServletException(throwable);
 		}
 	}
 
@@ -284,12 +280,11 @@ public class ModifiableServletContextAdapter
 		try {
 			return clazz.newInstance();
 		}
-		catch (Throwable t) {
-			_logger.log(
-				Logger.LOG_ERROR,
+		catch (Throwable throwable) {
+			_log.error(
 				"Bundle " + _bundle + " is unable to load listener " + clazz);
 
-			throw new ServletException(t);
+			throw new ServletException(throwable);
 		}
 	}
 
@@ -299,26 +294,25 @@ public class ModifiableServletContextAdapter
 		try {
 			return clazz.newInstance();
 		}
-		catch (Throwable t) {
-			_logger.log(
-				Logger.LOG_ERROR,
+		catch (Throwable throwable) {
+			_log.error(
 				"Bundle " + _bundle + " is unable to load servlet " + clazz);
 
-			throw new ServletException(t);
+			throw new ServletException(throwable);
 		}
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof ServletContext)) {
+	public boolean equals(Object object) {
+		if (!(object instanceof ServletContext)) {
 			return true;
 		}
 
-		ServletContext servletContext = (ServletContext)obj;
+		ServletContext servletContext = (ServletContext)object;
 
-		if (obj instanceof ModifiableServletContext) {
+		if (object instanceof ModifiableServletContext) {
 			ModifiableServletContext modifiableServletContext =
-				(ModifiableServletContext)obj;
+				(ModifiableServletContext)object;
 
 			servletContext =
 				modifiableServletContext.getWrappedServletContext();
@@ -391,9 +385,8 @@ public class ModifiableServletContextAdapter
 
 				listenerDefinitions.add(listenerDefinition);
 			}
-			catch (Exception e) {
-				_logger.log(
-					Logger.LOG_ERROR,
+			catch (Exception exception) {
+				_log.error(
 					"Bundle " + _bundle + " is unable to load listener " +
 						eventListenerClass);
 			}
@@ -509,9 +502,8 @@ public class ModifiableServletContextAdapter
 				filterDefinitions.put(
 					filterRegistrationImpl.getName(), filterDefinition);
 			}
-			catch (Exception e) {
-				_logger.log(
-					Logger.LOG_ERROR,
+			catch (Exception exception) {
+				_log.error(
 					"Bundle " + _bundle + " is unable to load filter " +
 						filterClassName);
 			}
@@ -574,9 +566,8 @@ public class ModifiableServletContextAdapter
 				servletDefinitions.put(
 					servletRegistrationImpl.getName(), servletDefinition);
 			}
-			catch (Exception e) {
-				_logger.log(
-					Logger.LOG_ERROR,
+			catch (Exception exception) {
+				_log.error(
 					"Bundle " + _bundle + " is unable to load servlet " +
 						servletClassName);
 			}
@@ -625,14 +616,14 @@ public class ModifiableServletContextAdapter
 
 				methods.put(method, adapterMethod);
 			}
-			catch (NoSuchMethodException nsme1) {
+			catch (NoSuchMethodException noSuchMethodException1) {
 				try {
 					Method method = ModifiableServletContext.class.getMethod(
 						name, parameterTypes);
 
 					methods.put(method, adapterMethod);
 				}
-				catch (NoSuchMethodException nsme2) {
+				catch (NoSuchMethodException noSuchMethodException2) {
 				}
 			}
 		}
@@ -656,7 +647,7 @@ public class ModifiableServletContextAdapter
 
 			methods.put(hashCodeMethod, hashCodeHandlerMethod);
 		}
-		catch (NoSuchMethodException nsme) {
+		catch (NoSuchMethodException noSuchMethodException) {
 		}
 
 		return Collections.unmodifiableMap(methods);
@@ -665,6 +656,9 @@ public class ModifiableServletContextAdapter
 	private static final Class<?>[] _INTERFACES = new Class<?>[] {
 		ModifiableServletContext.class, ServletContext.class
 	};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ModifiableServletContextAdapter.class);
 
 	private static final Map<Method, Method> _contextAdapterMethods;
 
@@ -680,7 +674,6 @@ public class ModifiableServletContextAdapter
 		new LinkedHashMap<>();
 	private final Map<String, String> _initParameters = new HashMap<>();
 	private final JSPServletFactory _jspServletFactory;
-	private final Logger _logger;
 	private final ServletContext _servletContext;
 	private final Map<String, ServletRegistrationImpl>
 		_servletRegistrationImpls = new LinkedHashMap<>();

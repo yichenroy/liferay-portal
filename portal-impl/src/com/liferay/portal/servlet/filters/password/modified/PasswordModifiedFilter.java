@@ -39,39 +39,43 @@ public class PasswordModifiedFilter extends BasePortalFilter {
 
 	@Override
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		if (_isPasswordModified(request)) {
-			AuthenticatedSessionManagerUtil.logout(request, response);
+		if (_isPasswordModified(httpServletRequest)) {
+			AuthenticatedSessionManagerUtil.logout(
+				httpServletRequest, httpServletResponse);
 
-			String redirect = PortalUtil.getCurrentCompleteURL(request);
+			if (StringUtil.equals(
+					httpServletRequest.getMethod(), HttpMethods.GET)) {
 
-			if (!StringUtil.equals(request.getMethod(), HttpMethods.GET)) {
-				redirect = PortalUtil.getPortalURL(request);
+				httpServletResponse.sendRedirect(
+					PortalUtil.getCurrentCompleteURL(httpServletRequest));
 			}
-
-			response.sendRedirect(redirect);
+			else {
+				httpServletResponse.sendRedirect(
+					PortalUtil.getPortalURL(httpServletRequest));
+			}
 		}
 		else {
-			filterChain.doFilter(request, response);
+			filterChain.doFilter(httpServletRequest, httpServletResponse);
 		}
 	}
 
-	private boolean _isPasswordModified(HttpServletRequest request) {
-		HttpSession session = request.getSession(false);
+	private boolean _isPasswordModified(HttpServletRequest httpServletRequest) {
+		HttpSession session = httpServletRequest.getSession(false);
 
 		if (session == null) {
 			return false;
 		}
 
-		if (!request.isRequestedSessionIdValid()) {
+		if (!httpServletRequest.isRequestedSessionIdValid()) {
 			return false;
 		}
 
 		try {
-			User user = PortalUtil.getUser(request);
+			User user = PortalUtil.getUser(httpServletRequest);
 
 			if ((user == null) || user.isDefaultUser()) {
 				return false;
@@ -87,7 +91,7 @@ public class PasswordModifiedFilter extends BasePortalFilter {
 				return false;
 			}
 
-			if (!request.isRequestedSessionIdValid() || (session == null) ||
+			if (!httpServletRequest.isRequestedSessionIdValid() ||
 				(session.getCreationTime() < passwordModifiedDate.getTime())) {
 
 				return true;
@@ -95,8 +99,8 @@ public class PasswordModifiedFilter extends BasePortalFilter {
 
 			return false;
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return false;
 		}

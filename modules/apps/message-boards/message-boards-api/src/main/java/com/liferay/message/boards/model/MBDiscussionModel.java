@@ -14,15 +14,17 @@
 
 package com.liferay.message.boards.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the MBDiscussion service. Represents a row in the &quot;MBDiscussion&quot; database table, with each column mapped to a property of this class.
@@ -37,8 +39,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface MBDiscussionModel
-	extends AttachedModel, BaseModel<MBDiscussion>, ShardedModel,
-			StagedGroupedModel {
+	extends AttachedModel, BaseModel<MBDiscussion>, CTModel<MBDiscussion>,
+			MVCCModel, ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -51,6 +53,7 @@ public interface MBDiscussionModel
 	 *
 	 * @return the primary key of this message boards discussion
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -58,7 +61,40 @@ public interface MBDiscussionModel
 	 *
 	 * @param primaryKey the primary key of this message boards discussion
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this message boards discussion.
+	 *
+	 * @return the mvcc version of this message boards discussion
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this message boards discussion.
+	 *
+	 * @param mvccVersion the mvcc version of this message boards discussion
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this message boards discussion.
+	 *
+	 * @return the ct collection ID of this message boards discussion
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this message boards discussion.
+	 *
+	 * @param ctCollectionId the ct collection ID of this message boards discussion
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this message boards discussion.

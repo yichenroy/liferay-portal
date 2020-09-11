@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.query.geolocation;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum GeoExecType {
 
 	INDEXED, MEMORY

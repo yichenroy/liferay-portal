@@ -15,8 +15,8 @@
 package com.liferay.portal.kernel.servlet;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -46,14 +46,14 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 
 	@SuppressWarnings("deprecation")
 	public static void finishResponse(
-			MetaData metaInfoDataBag, HttpServletResponse response)
+			MetaData metaInfoDataBag, HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		if (response.isCommitted()) {
+		if (httpServletResponse.isCommitted()) {
 			return;
 		}
 
-		resetThrough(response);
+		resetThrough(httpServletResponse);
 
 		for (Map.Entry<String, Set<Header>> entry :
 				metaInfoDataBag._headers.entrySet()) {
@@ -64,49 +64,54 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 
 			for (Header header : entry.getValue()) {
 				if (first) {
-					header.setToResponse(key, response);
+					header.setToResponse(key, httpServletResponse);
 
 					first = false;
 				}
 				else {
-					header.addToResponse(key, response);
+					header.addToResponse(key, httpServletResponse);
 				}
 			}
 		}
 
 		if (metaInfoDataBag._location != null) {
-			response.sendRedirect(metaInfoDataBag._location);
+			httpServletResponse.sendRedirect(metaInfoDataBag._location);
 		}
 		else if (metaInfoDataBag._error) {
-			response.sendError(
+			httpServletResponse.sendError(
 				metaInfoDataBag._status, metaInfoDataBag._errorMessage);
 		}
 		else {
 			if (metaInfoDataBag._charsetName != null) {
-				response.setCharacterEncoding(metaInfoDataBag._charsetName);
+				httpServletResponse.setCharacterEncoding(
+					metaInfoDataBag._charsetName);
 			}
 
 			if (metaInfoDataBag._contentLength != -1) {
-				response.setContentLengthLong(metaInfoDataBag._contentLength);
+				httpServletResponse.setContentLengthLong(
+					metaInfoDataBag._contentLength);
 			}
 
 			if (metaInfoDataBag._contentType != null) {
-				response.setContentType(metaInfoDataBag._contentType);
+				httpServletResponse.setContentType(
+					metaInfoDataBag._contentType);
 			}
 
 			if (metaInfoDataBag._locale != null) {
-				response.setLocale(metaInfoDataBag._locale);
+				httpServletResponse.setLocale(metaInfoDataBag._locale);
 			}
 
 			if (metaInfoDataBag._status != SC_OK) {
-				response.setStatus(
+				httpServletResponse.setStatus(
 					metaInfoDataBag._status, metaInfoDataBag._statusMessage);
 			}
 		}
 	}
 
-	public MetaInfoCacheServletResponse(HttpServletResponse response) {
-		super(response);
+	public MetaInfoCacheServletResponse(
+		HttpServletResponse httpServletResponse) {
+
+		super(httpServletResponse);
 	}
 
 	@Override
@@ -229,11 +234,8 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 		String contentType = _metaData._contentType;
 
 		if ((contentType != null) && (_metaData._charsetName != null)) {
-			contentType = contentType.concat(
-				"; charset="
-			).concat(
-				_metaData._charsetName
-			);
+			contentType = StringBundler.concat(
+				contentType, "; charset=", _metaData._charsetName);
 		}
 
 		return contentType;
@@ -623,17 +625,19 @@ public class MetaInfoCacheServletResponse extends HttpServletResponseWrapper {
 
 	}
 
-	protected static void resetThrough(HttpServletResponse response) {
-		if (response instanceof MetaInfoCacheServletResponse) {
+	protected static void resetThrough(
+		HttpServletResponse httpServletResponse) {
+
+		if (httpServletResponse instanceof MetaInfoCacheServletResponse) {
 			MetaInfoCacheServletResponse metaInfoCacheServletResponse =
-				(MetaInfoCacheServletResponse)response;
+				(MetaInfoCacheServletResponse)httpServletResponse;
 
 			resetThrough(
 				(HttpServletResponse)
 					metaInfoCacheServletResponse.getResponse());
 		}
 		else {
-			response.reset();
+			httpServletResponse.reset();
 		}
 	}
 

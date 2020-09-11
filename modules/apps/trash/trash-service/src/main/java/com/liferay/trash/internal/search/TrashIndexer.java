@@ -100,16 +100,13 @@ public class TrashIndexer extends BaseIndexer<TrashEntry> {
 			fullQueryBooleanFilter.addRequiredTerm(
 				Field.STATUS, WorkflowConstants.STATUS_IN_TRASH);
 
-			BooleanQuery fullQuery = createFullQuery(
-				fullQueryBooleanFilter, searchContext);
-
-			return fullQuery;
+			return createFullQuery(fullQueryBooleanFilter, searchContext);
 		}
-		catch (SearchException se) {
-			throw se;
+		catch (SearchException searchException) {
+			throw searchException;
 		}
-		catch (Exception e) {
-			throw new SearchException(e);
+		catch (Exception exception) {
+			throw new SearchException(exception);
 		}
 	}
 

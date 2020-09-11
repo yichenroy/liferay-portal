@@ -58,8 +58,8 @@ public class MoveCategoryMVCActionCommand extends BaseMVCActionCommand {
 				actionResponse.sendRedirect(redirect);
 			}
 		}
-		catch (PrincipalException pe) {
-			SessionErrors.add(actionRequest, pe.getClass());
+		catch (PrincipalException principalException) {
+			SessionErrors.add(actionRequest, principalException.getClass());
 		}
 	}
 
@@ -79,11 +79,7 @@ public class MoveCategoryMVCActionCommand extends BaseMVCActionCommand {
 			categoryId, parentCategoryId, mergeWithParentCategory);
 	}
 
-	@Reference(unbind = "-")
-	protected void setMBCategoryService(MBCategoryService mbCategoryService) {
-		_mbCategoryService = mbCategoryService;
-	}
-
+	@Reference
 	private MBCategoryService _mbCategoryService;
 
 	@Reference

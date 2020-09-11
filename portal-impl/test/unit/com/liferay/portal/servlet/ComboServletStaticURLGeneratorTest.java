@@ -14,6 +14,7 @@
 
 package com.liferay.portal.servlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.servlet.ServletContextUtil;
@@ -22,7 +23,6 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.model.impl.PortletAppImpl;
 import com.liferay.portal.model.impl.PortletImpl;
 import com.liferay.portal.util.HtmlImpl;
@@ -366,33 +366,33 @@ public class ComboServletStaticURLGeneratorTest {
 	protected Portlet buildPortlet(
 		String contextName, String... portletResources) {
 
-		PortletImpl portlet = new PortletImpl();
+		PortletImpl portletImpl = new PortletImpl();
 
 		List<String> portletResourcesList = Arrays.asList(portletResources);
 
-		portlet.setFooterPortalCss(portletResourcesList);
-		portlet.setFooterPortalJavaScript(portletResourcesList);
-		portlet.setFooterPortletCss(portletResourcesList);
-		portlet.setFooterPortletJavaScript(portletResourcesList);
-		portlet.setHeaderPortalCss(portletResourcesList);
-		portlet.setHeaderPortalJavaScript(portletResourcesList);
-		portlet.setHeaderPortletCss(portletResourcesList);
-		portlet.setHeaderPortletJavaScript(portletResourcesList);
+		portletImpl.setFooterPortalCss(portletResourcesList);
+		portletImpl.setFooterPortalJavaScript(portletResourcesList);
+		portletImpl.setFooterPortletCss(portletResourcesList);
+		portletImpl.setFooterPortletJavaScript(portletResourcesList);
+		portletImpl.setHeaderPortalCss(portletResourcesList);
+		portletImpl.setHeaderPortalJavaScript(portletResourcesList);
+		portletImpl.setHeaderPortletCss(portletResourcesList);
+		portletImpl.setHeaderPortletJavaScript(portletResourcesList);
 
-		portlet.setPortletId(PortletKeys.PORTAL);
-		portlet.setPortletName(contextName);
+		portletImpl.setPortletId(PortletKeys.PORTAL);
+		portletImpl.setPortletName(contextName);
 
-		PortletAppImpl portletApp = new PortletAppImpl(contextName);
+		PortletAppImpl portletAppImpl = new PortletAppImpl(contextName);
 
 		ServletContext servletContext = new MockServletContext();
 
 		ServletContextPool.put(contextName, servletContext);
 
-		portletApp.setServletContext(servletContext);
+		portletAppImpl.setServletContext(servletContext);
 
-		portlet.setPortletApp(portletApp);
+		portletImpl.setPortletApp(portletAppImpl);
 
-		return portlet;
+		return portletImpl;
 	}
 
 	protected void setPortletTimestamp(

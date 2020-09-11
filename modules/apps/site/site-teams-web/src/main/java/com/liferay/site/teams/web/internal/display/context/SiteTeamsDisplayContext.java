@@ -16,6 +16,7 @@ package com.liferay.site.teams.web.internal.display.context;
 
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.service.TeamServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -39,12 +40,12 @@ import javax.servlet.http.HttpServletRequest;
 public class SiteTeamsDisplayContext {
 
 	public SiteTeamsDisplayContext(
-		RenderRequest renderRequest, RenderResponse renderResponse,
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse) {
 
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-		_request = request;
 	}
 
 	public String getDisplayStyle() {
@@ -52,7 +53,8 @@ public class SiteTeamsDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
@@ -62,7 +64,8 @@ public class SiteTeamsDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
@@ -72,7 +75,8 @@ public class SiteTeamsDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -85,11 +89,12 @@ public class SiteTeamsDisplayContext {
 		return portletURL;
 	}
 
-	public SearchContainer getSearchContainer() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public SearchContainer<Team> getSearchContainer() {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		SearchContainer searchContainer = new TeamSearch(
+		SearchContainer<Team> searchContainer = new TeamSearch(
 			_renderRequest, getPortletURL());
 
 		searchContainer.setEmptyResultsMessage("there-are-no-teams");
@@ -106,7 +111,7 @@ public class SiteTeamsDisplayContext {
 
 		searchContainer.setTotal(total);
 
-		List results = TeamServiceUtil.search(
+		List<Team> results = TeamServiceUtil.search(
 			themeDisplay.getScopeGroupId(), getKeywords(), getKeywords(),
 			new LinkedHashMap<>(), searchContainer.getStart(),
 			searchContainer.getEnd(), searchContainer.getOrderByComparator());
@@ -137,17 +142,17 @@ public class SiteTeamsDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_renderRequest, "keywords");
 
 		return _keywords;
 	}
 
 	private String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

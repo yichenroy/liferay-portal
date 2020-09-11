@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.security.auto.login.AutoLogin;
 import com.liferay.portal.kernel.security.auto.login.BaseAutoLogin;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.security.exportimport.UserImporter;
@@ -50,10 +51,11 @@ public class NtlmAutoLogin extends BaseAutoLogin {
 
 	@Override
 	protected String[] doLogin(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		long companyId = _portal.getCompanyId(request);
+		long companyId = _portal.getCompanyId(httpServletRequest);
 
 		NtlmConfiguration ntlmConfiguration =
 			_configurationProvider.getConfiguration(
@@ -65,22 +67,22 @@ public class NtlmAutoLogin extends BaseAutoLogin {
 			return null;
 		}
 
-		String screenName = (String)request.getAttribute(
+		String screenName = (String)httpServletRequest.getAttribute(
 			NtlmWebKeys.NTLM_REMOTE_USER);
 
 		if (screenName == null) {
 			return null;
 		}
 
-		request.removeAttribute(NtlmWebKeys.NTLM_REMOTE_USER);
+		httpServletRequest.removeAttribute(NtlmWebKeys.NTLM_REMOTE_USER);
 
 		User user = _userImporter.importUserByScreenName(companyId, screenName);
 
 		if (user == null) {
-			return null;
+			user = _userLocalService.getUserByScreenName(companyId, screenName);
 		}
 
-		addRedirect(request);
+		addRedirect(httpServletRequest);
 
 		String[] credentials = new String[3];
 
@@ -103,11 +105,17 @@ public class NtlmAutoLogin extends BaseAutoLogin {
 		_userImporter = userImporter;
 	}
 
+	@Reference(unbind = "-")
+	protected void setUserLocalService(UserLocalService userLocalService) {
+		_userLocalService = userLocalService;
+	}
+
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private Portal _portal;
 
 	private UserImporter _userImporter;
+	private UserLocalService _userLocalService;
 
 }

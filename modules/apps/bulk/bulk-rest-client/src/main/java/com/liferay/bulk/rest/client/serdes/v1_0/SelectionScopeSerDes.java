@@ -17,9 +17,11 @@ package com.liferay.bulk.rest.client.serdes.v1_0;
 import com.liferay.bulk.rest.client.dto.v1_0.SelectionScope;
 import com.liferay.bulk.rest.client.json.BaseJSONParser;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.annotation.Generated;
 
@@ -58,7 +60,7 @@ public class SelectionScopeSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"folderId\":");
+			sb.append("\"folderId\": ");
 
 			sb.append(selectionScope.getFolderId());
 		}
@@ -68,7 +70,7 @@ public class SelectionScopeSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"repositoryId\":");
+			sb.append("\"repositoryId\": ");
 
 			sb.append(selectionScope.getRepositoryId());
 		}
@@ -78,7 +80,7 @@ public class SelectionScopeSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"selectAll\":");
+			sb.append("\"selectAll\": ");
 
 			sb.append(selectionScope.getSelectAll());
 		}
@@ -88,12 +90,19 @@ public class SelectionScopeSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		SelectionScopeJSONParser selectionScopeJSONParser =
+			new SelectionScopeJSONParser();
+
+		return selectionScopeJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(SelectionScope selectionScope) {
 		if (selectionScope == null) {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		if (selectionScope.getFolderId() == null) {
 			map.put("folderId", null);
@@ -121,13 +130,7 @@ public class SelectionScopeSerDes {
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class SelectionScopeJSONParser
+	public static class SelectionScopeJSONParser
 		extends BaseJSONParser<SelectionScope> {
 
 		@Override
@@ -162,12 +165,80 @@ public class SelectionScopeSerDes {
 					selectionScope.setSelectAll((Boolean)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

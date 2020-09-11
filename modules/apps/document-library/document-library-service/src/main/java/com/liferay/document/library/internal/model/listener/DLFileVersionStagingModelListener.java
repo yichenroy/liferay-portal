@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Akos Thurzo
  */
-@Component(immediate = true, service = ModelListener.class)
+@Component(service = ModelListener.class)
 public class DLFileVersionStagingModelListener
 	extends BaseModelListener<DLFileVersion> {
 
@@ -57,8 +57,8 @@ public class DLFileVersionStagingModelListener
 		try {
 			dlFileEntry = dlFileVersion.getFileEntry();
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return;
 		}
@@ -77,7 +77,9 @@ public class DLFileVersionStagingModelListener
 	public void onAfterUpdate(DLFileVersion dlFileVersion)
 		throws ModelListenerException {
 
-		if (dlFileVersion.getStatus() != WorkflowConstants.STATUS_APPROVED) {
+		if ((dlFileVersion.getStatus() != WorkflowConstants.STATUS_APPROVED) &&
+			(dlFileVersion.getStatus() != WorkflowConstants.STATUS_IN_TRASH)) {
+
 			return;
 		}
 
@@ -86,8 +88,8 @@ public class DLFileVersionStagingModelListener
 		try {
 			dlFileEntry = dlFileVersion.getFileEntry();
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return;
 		}

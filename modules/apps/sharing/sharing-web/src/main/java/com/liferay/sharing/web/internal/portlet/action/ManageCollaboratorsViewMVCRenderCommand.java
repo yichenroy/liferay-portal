@@ -19,16 +19,15 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.template.Template;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.model.SharingEntry;
@@ -37,7 +36,7 @@ import com.liferay.sharing.web.internal.constants.SharingPortletKeys;
 import com.liferay.sharing.web.internal.constants.SharingWebKeys;
 import com.liferay.sharing.web.internal.display.SharingEntryPermissionDisplay;
 import com.liferay.sharing.web.internal.display.SharingEntryPermissionDisplayAction;
-import com.liferay.sharing.web.internal.util.SharingUtil;
+import com.liferay.sharing.web.internal.helper.SharingHelper;
 
 import java.text.DateFormat;
 import java.text.Format;
@@ -73,29 +72,36 @@ public class ManageCollaboratorsViewMVCRenderCommand
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		Template template = _getTemplate(renderRequest);
+		renderRequest.setAttribute(
+			SharingWebKeys.SHARING_REACT_DATA,
+			HashMapBuilder.<String, Object>put(
+				"actionUrl", _getManageCollaboratorsActionURL(renderResponse)
+			).put(
+				"classNameId", ParamUtil.getLong(renderRequest, "classNameId")
+			).put(
+				"classPK", ParamUtil.getLong(renderRequest, "classPK")
+			).put(
+				"collaborators",
+				_getCollaboratorsJSONArray(
+					ParamUtil.getLong(renderRequest, "classNameId"),
+					ParamUtil.getLong(renderRequest, "classPK"), renderRequest)
+			).put(
+				"dialogId",
+				ParamUtil.getString(
+					renderRequest,
+					SharingWebKeys.MANAGE_COLLABORATORS_DIALOG_ID)
+			).put(
+				"portletNamespace", renderResponse.getNamespace()
+			).build());
 
-		template.put(
-			"actionUrl", _getManageCollaboratorsActionURL(renderResponse));
-		template.put(
-			"collaborators", _getCollaboratorsJSONArray(renderRequest));
-		template.put(
-			"dialogId",
-			ParamUtil.getString(
-				renderRequest, SharingWebKeys.MANAGE_COLLABORATORS_DIALOG_ID));
-		template.put("portletNamespace", renderResponse.getNamespace());
-		template.put("spritemap", _getSpritemap(renderRequest));
-
-		return "ManageCollaborators";
+		return "/manage_collaborators/view.jsp";
 	}
 
-	private JSONArray _getCollaboratorsJSONArray(RenderRequest renderRequest)
+	private JSONArray _getCollaboratorsJSONArray(
+			long classNameId, long classPK, RenderRequest renderRequest)
 		throws PortletException {
 
 		try {
-			long classNameId = ParamUtil.getLong(renderRequest, "classNameId");
-			long classPK = ParamUtil.getLong(renderRequest, "classPK");
-
 			int sharingEntriesCount =
 				_sharingEntryLocalService.getSharingEntriesCount(
 					classNameId, classPK);
@@ -118,9 +124,6 @@ public class ManageCollaboratorsViewMVCRenderCommand
 				User sharingEntryToUser = _userLocalService.fetchUser(
 					sharingEntry.getToUserId());
 
-				JSONObject collaboratorJSONObject =
-					JSONFactoryUtil.createJSONObject();
-
 				String portraitURL = StringPool.BLANK;
 
 				if (sharingEntryToUser.getPortraitId() > 0) {
@@ -128,12 +131,13 @@ public class ManageCollaboratorsViewMVCRenderCommand
 						themeDisplay);
 				}
 
-				collaboratorJSONObject.put("portraitURL", portraitURL);
-
-				collaboratorJSONObject.put(
-					"fullName", sharingEntryToUser.getFullName());
-				collaboratorJSONObject.put(
-					"sharingEntryId", sharingEntry.getSharingEntryId());
+				JSONObject collaboratorJSONObject = JSONUtil.put(
+					"fullName", sharingEntryToUser.getFullName()
+				).put(
+					"portraitURL", portraitURL
+				).put(
+					"sharingEntryId", sharingEntry.getSharingEntryId()
+				);
 
 				String expirationDateAsText = null;
 				String expirationDateTooltip = null;
@@ -159,26 +163,37 @@ public class ManageCollaboratorsViewMVCRenderCommand
 				}
 
 				collaboratorJSONObject.put(
-					"sharingEntryExpirationDate", expirationDateAsText);
-				collaboratorJSONObject.put(
-					"sharingEntryExpirationDateTooltip", expirationDateTooltip);
+					"sharingEntryExpirationDate", expirationDateAsText
+				).put(
+					"sharingEntryExpirationDateTooltip", expirationDateTooltip
+				);
+
+				SharingEntryPermissionDisplayAction
+					userSharingEntryPermissionDisplayActionKey =
+						_sharingHelper.
+							getSharingEntryPermissionDisplayActionKey(
+								sharingEntry);
 
 				collaboratorJSONObject.put(
+					"sharingEntryPermissionActionId",
+					userSharingEntryPermissionDisplayActionKey.getActionId()
+				).put(
 					"sharingEntryPermissionDisplaySelectOptions",
 					_getSharingEntryPermissionDisplaySelectOptions(
-						sharingEntry, renderRequest));
-				collaboratorJSONObject.put(
-					"sharingEntryShareable", sharingEntry.isShareable());
-				collaboratorJSONObject.put(
-					"userId", Long.valueOf(sharingEntryToUser.getUserId()));
+						renderRequest)
+				).put(
+					"sharingEntryShareable", sharingEntry.isShareable()
+				).put(
+					"userId", Long.valueOf(sharingEntryToUser.getUserId())
+				);
 
 				collaboratorsJSONArray.put(collaboratorJSONObject);
 			}
 
 			return collaboratorsJSONArray;
 		}
-		catch (PortalException pe) {
-			throw new PortletException(pe);
+		catch (PortalException portalException) {
+			throw new PortletException(portalException);
 		}
 	}
 
@@ -194,7 +209,7 @@ public class ManageCollaboratorsViewMVCRenderCommand
 	}
 
 	private JSONArray _getSharingEntryPermissionDisplaySelectOptions(
-		SharingEntry sharingEntry, RenderRequest renderRequest) {
+		RenderRequest renderRequest) {
 
 		long classNameId = ParamUtil.getLong(renderRequest, "classNameId");
 		long classPK = ParamUtil.getLong(renderRequest, "classPK");
@@ -203,7 +218,7 @@ public class ManageCollaboratorsViewMVCRenderCommand
 			WebKeys.THEME_DISPLAY);
 
 		List<SharingEntryPermissionDisplay> sharingEntryPermissionDisplays =
-			_sharingUtil.getSharingEntryPermissionDisplays(
+			_sharingHelper.getSharingEntryPermissionDisplays(
 				themeDisplay.getPermissionChecker(), classNameId, classPK,
 				themeDisplay.getScopeGroupId(), themeDisplay.getLocale());
 
@@ -213,60 +228,24 @@ public class ManageCollaboratorsViewMVCRenderCommand
 		for (SharingEntryPermissionDisplay sharingEntryPermissionDisplay :
 				sharingEntryPermissionDisplays) {
 
-			JSONObject sharingEntryPermissionDisplaySelectOptionJSONObject =
-				JSONFactoryUtil.createJSONObject();
-
-			sharingEntryPermissionDisplaySelectOptionJSONObject.put(
-				"label", sharingEntryPermissionDisplay.getPhrase());
-
-			String currentSharingEntryPermissionDisplayActionKeyActionId =
-				sharingEntryPermissionDisplay.
-					getSharingEntryPermissionDisplayActionId();
-
-			SharingEntryPermissionDisplayAction
-				userSharingEntryPermissionDisplayActionKey =
-					_sharingUtil.getSharingEntryPermissionDisplayActionKey(
-						sharingEntry);
-
-			sharingEntryPermissionDisplaySelectOptionJSONObject.put(
-				"selected",
-				currentSharingEntryPermissionDisplayActionKeyActionId.equals(
-					userSharingEntryPermissionDisplayActionKey.getActionId()));
-
-			sharingEntryPermissionDisplaySelectOptionJSONObject.put(
-				"value",
-				sharingEntryPermissionDisplay.
-					getSharingEntryPermissionDisplayActionId());
-
 			sharingEntryPermissionDisplaySelectOptionsJSONArray.put(
-				sharingEntryPermissionDisplaySelectOptionJSONObject);
+				JSONUtil.put(
+					"label", sharingEntryPermissionDisplay.getPhrase()
+				).put(
+					"value",
+					sharingEntryPermissionDisplay.
+						getSharingEntryPermissionDisplayActionId()
+				));
 		}
 
 		return sharingEntryPermissionDisplaySelectOptionsJSONArray;
 	}
 
-	private String _getSpritemap(RenderRequest renderRequest) {
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		return themeDisplay.getPathThemeImages() + "/lexicon/icons.svg";
-	}
-
-	private Template _getTemplate(RenderRequest renderRequest) {
-		return (Template)renderRequest.getAttribute(WebKeys.TEMPLATE);
-	}
-
-	@Reference
-	private ClassNameLocalService _classNameLocalService;
-
-	@Reference
-	private Portal _portal;
-
 	@Reference
 	private SharingEntryLocalService _sharingEntryLocalService;
 
 	@Reference
-	private SharingUtil _sharingUtil;
+	private SharingHelper _sharingHelper;
 
 	@Reference
 	private UserLocalService _userLocalService;

@@ -65,7 +65,7 @@ public class OpenSSOImpl implements OpenSSO {
 
 	@Override
 	public Map<String, String> getAttributes(
-		HttpServletRequest request, String serviceURL) {
+		HttpServletRequest httpServletRequest, String serviceURL) {
 
 		Map<String, String> nameValues = new HashMap<>();
 
@@ -82,9 +82,9 @@ public class OpenSSOImpl implements OpenSSO {
 			httpURLConnection.setRequestProperty(
 				"Content-type", "application/x-www-form-urlencoded");
 
-			String[] cookieNames = getCookieNames(serviceURL);
-
-			setCookieProperty(request, httpURLConnection, cookieNames);
+			setCookieProperty(
+				httpServletRequest, httpURLConnection,
+				getCookieNames(serviceURL));
 
 			OutputStreamWriter osw = new OutputStreamWriter(
 				httpURLConnection.getOutputStream());
@@ -125,18 +125,18 @@ public class OpenSSOImpl implements OpenSSO {
 				_log.debug("Attributes response code " + responseCode);
 			}
 		}
-		catch (MalformedURLException murle) {
-			_log.error(murle.getMessage());
+		catch (MalformedURLException malformedURLException) {
+			_log.error(malformedURLException.getMessage());
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(murle, murle);
+				_log.debug(malformedURLException, malformedURLException);
 			}
 		}
-		catch (IOException ioe) {
-			_log.error(ioe.getMessage());
+		catch (IOException ioException) {
+			_log.error(ioException.getMessage());
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(ioe, ioe);
+				_log.debug(ioException, ioException);
 			}
 		}
 
@@ -222,14 +222,13 @@ public class OpenSSOImpl implements OpenSSO {
 				}
 			}
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioe, ioe);
+				_log.warn(ioException, ioException);
 			}
 		}
 
-		cookieNames = cookieNamesList.toArray(
-			new String[cookieNamesList.size()]);
+		cookieNames = cookieNamesList.toArray(new String[0]);
 
 		if (cookieNames.length > 0) {
 			_cookieNamesMap.put(serviceURL, cookieNames);
@@ -239,20 +238,22 @@ public class OpenSSOImpl implements OpenSSO {
 	}
 
 	@Override
-	public String getSubjectId(HttpServletRequest request, String serviceURL) {
+	public String getSubjectId(
+		HttpServletRequest httpServletRequest, String serviceURL) {
+
 		String cookieName = getCookieNames(serviceURL)[0];
 
-		return CookieKeys.getCookie(request, cookieName);
+		return CookieKeys.getCookie(httpServletRequest, cookieName);
 	}
 
 	@Override
 	public boolean isAuthenticated(
-			HttpServletRequest request, String serviceURL)
+			HttpServletRequest httpServletRequest, String serviceURL)
 		throws IOException {
 
 		String[] cookieNames = getCookieNames(serviceURL);
 
-		if (!_hasCookieNames(request, cookieNames)) {
+		if (!_hasCookieNames(httpServletRequest, cookieNames)) {
 			return false;
 		}
 
@@ -263,19 +264,19 @@ public class OpenSSOImpl implements OpenSSO {
 				_configurationProvider.getConfiguration(
 					OpenSSOConfiguration.class,
 					new CompanyServiceSettingsLocator(
-						_portal.getCompanyId(request),
+						_portal.getCompanyId(httpServletRequest),
 						OpenSSOConstants.SERVICE_NAME));
 
 			version = openSSOConfiguration.version();
 		}
-		catch (ConfigurationException ce) {
+		catch (ConfigurationException configurationException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ce, ce);
+				_log.warn(configurationException, configurationException);
 			}
 		}
 
 		if (version.equals(OpenSSOConfigurationKeys.VERSION_OPENAM_13)) {
-			String subjectId = getSubjectId(request, serviceURL);
+			String subjectId = getSubjectId(httpServletRequest, serviceURL);
 
 			if (subjectId != null) {
 				String url = serviceURL.concat(
@@ -300,8 +301,8 @@ public class OpenSSOImpl implements OpenSSO {
 						_log.debug("Invalid authentication: " + json);
 					}
 				}
-				catch (JSONException jsone) {
-					throw new IOException(jsone);
+				catch (JSONException jsonException) {
+					throw new IOException(jsonException);
 				}
 			}
 		}
@@ -318,7 +319,8 @@ public class OpenSSOImpl implements OpenSSO {
 			httpURLConnection.setRequestProperty(
 				"Content-type", "application/x-www-form-urlencoded");
 
-			setCookieProperty(request, httpURLConnection, cookieNames);
+			setCookieProperty(
+				httpServletRequest, httpURLConnection, cookieNames);
 
 			OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
 				httpURLConnection.getOutputStream());
@@ -395,9 +397,9 @@ public class OpenSSOImpl implements OpenSSO {
 						responseCode));
 			}
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioe, ioe);
+				_log.warn(ioException, ioException);
 			}
 
 			return false;
@@ -418,7 +420,7 @@ public class OpenSSOImpl implements OpenSSO {
 	}
 
 	public void setCookieProperty(
-		HttpServletRequest request, HttpURLConnection urlc,
+		HttpServletRequest httpServletRequest, HttpURLConnection urlc,
 		String[] cookieNames) {
 
 		if (cookieNames.length == 0) {
@@ -428,7 +430,8 @@ public class OpenSSOImpl implements OpenSSO {
 		StringBundler sb = new StringBundler(cookieNames.length * 6);
 
 		for (String cookieName : cookieNames) {
-			String cookieValue = CookieKeys.getCookie(request, cookieName);
+			String cookieValue = CookieKeys.getCookie(
+				httpServletRequest, cookieName);
 
 			sb.append(cookieName);
 			sb.append(StringPool.EQUAL);
@@ -442,10 +445,10 @@ public class OpenSSOImpl implements OpenSSO {
 	}
 
 	private boolean _hasCookieNames(
-		HttpServletRequest request, String[] cookieNames) {
+		HttpServletRequest httpServletRequest, String[] cookieNames) {
 
 		for (String cookieName : cookieNames) {
-			if (CookieKeys.getCookie(request, cookieName) != null) {
+			if (CookieKeys.getCookie(httpServletRequest, cookieName) != null) {
 				return true;
 			}
 		}

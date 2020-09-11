@@ -14,21 +14,21 @@
 
 package com.liferay.portal.kernel.servlet.filters.invoker;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.ProxyFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -225,20 +225,6 @@ public class FilterMappingTest {
 				expectedFilterName, expectedFilter,
 				new TestFilterConfig(expectedUrlRegexIgnore, expectedUrlRegex),
 				Arrays.asList(expectedUrlPattern), dispatchers));
-
-		List<String> dispatcherList = new ArrayList<>();
-
-		for (Dispatcher dispatcher : dispatchers) {
-			dispatcherList.add(String.valueOf(dispatcher));
-		}
-
-		_assertFilterMapping(
-			expectedFilterName, expectedFilter, expectedUrlRegexIgnore,
-			expectedUrlRegex, expectedUrlPattern, expectedDispatchers,
-			new FilterMapping(
-				expectedFilterName, expectedFilter,
-				new TestFilterConfig(expectedUrlRegexIgnore, expectedUrlRegex),
-				Arrays.asList(expectedUrlPattern), dispatcherList));
 	}
 
 	private void _assertFilterMapping(
@@ -385,11 +371,11 @@ public class FilterMappingTest {
 
 		@Override
 		public String getInitParameter(String parameterName) {
-			if ("url-regex-pattern".equals(parameterName)) {
+			if (Objects.equals(parameterName, "url-regex-pattern")) {
 				return _urlRegexPattern;
 			}
 
-			if ("url-regex-ignore-pattern".equals(parameterName)) {
+			if (Objects.equals(parameterName, "url-regex-ignore-pattern")) {
 				return _urlRegexIgnorePattern;
 			}
 

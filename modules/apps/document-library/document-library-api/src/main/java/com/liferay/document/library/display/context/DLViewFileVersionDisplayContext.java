@@ -72,6 +72,10 @@ public interface DLViewFileVersionDisplayContext extends DLDisplayContext {
 
 	public boolean isDownloadLinkVisible() throws PortalException;
 
+	public default boolean isShared() throws PortalException {
+		return false;
+	}
+
 	public default boolean isSharingLinkVisible() throws PortalException {
 		return false;
 	}
@@ -79,12 +83,14 @@ public interface DLViewFileVersionDisplayContext extends DLDisplayContext {
 	public boolean isVersionInfoVisible() throws PortalException;
 
 	public default void renderCustomThumbnail(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 	}
 
 	public void renderPreview(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException;
 
 }

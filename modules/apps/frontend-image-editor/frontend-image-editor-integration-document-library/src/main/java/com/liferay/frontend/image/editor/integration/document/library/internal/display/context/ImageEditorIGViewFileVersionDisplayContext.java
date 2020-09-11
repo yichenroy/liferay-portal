@@ -40,11 +40,13 @@ public class ImageEditorIGViewFileVersionDisplayContext
 
 	public ImageEditorIGViewFileVersionDisplayContext(
 		IGViewFileVersionDisplayContext parentIGDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileVersion fileVersion, ResourceBundle resourceBundle,
-		DLURLHelper dlURLHelper) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileVersion fileVersion,
+		ResourceBundle resourceBundle, DLURLHelper dlURLHelper) {
 
-		super(_UUID, parentIGDisplayContext, request, response, fileVersion);
+		super(
+			_UUID, parentIGDisplayContext, httpServletRequest,
+			httpServletResponse, fileVersion);
 
 		_resourceBundle = resourceBundle;
 		_dlURLHelper = dlURLHelper;
@@ -60,13 +62,13 @@ public class ImageEditorIGViewFileVersionDisplayContext
 
 			_imageEditorDLDisplayContextHelper =
 				new ImageEditorDLDisplayContextHelper(
-					fileVersion, request, dlURLHelper);
+					fileVersion, httpServletRequest, dlURLHelper);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new SystemException(
 				"Unable to create image editor image gallery view file " +
 					"version display context for file version " + fileVersion,
-				pe);
+				portalException);
 		}
 	}
 

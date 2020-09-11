@@ -14,7 +14,7 @@
 
 package com.liferay.wiki.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -97,10 +97,6 @@ public interface WikiPageFinder {
 	public java.util.List<com.liferay.wiki.model.WikiPage> findByCreateDate(
 		long groupId, long nodeId, java.sql.Timestamp createDate,
 		boolean before, int start, int end);
-
-	public java.util.List<com.liferay.wiki.model.WikiPage> findByModifiedDate(
-		long groupId, long nodeId, java.util.Date modifiedDate, boolean before,
-		int start, int end);
 
 	public java.util.List<com.liferay.wiki.model.WikiPage> findByModifiedDate(
 		long groupId, long nodeId, java.sql.Timestamp modifiedDate,

@@ -43,15 +43,15 @@ import javax.servlet.http.HttpServletRequest;
 public class SelectSiteInitializerDisplayContext {
 
 	public SelectSiteInitializerDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
 		_siteInitializerRegistry =
-			(SiteInitializerRegistry)request.getAttribute(
+			(SiteInitializerRegistry)httpServletRequest.getAttribute(
 				SiteWebKeys.SITE_INITIALIZER_REGISTRY);
 	}
 
@@ -60,9 +60,10 @@ public class SelectSiteInitializerDisplayContext {
 			return _backURL;
 		}
 
-		String redirect = ParamUtil.getString(_request, "redirect");
+		String redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
-		_backURL = ParamUtil.getString(_request, "backURL", redirect);
+		_backURL = ParamUtil.getString(
+			_httpServletRequest, "backURL", redirect);
 
 		return _backURL;
 	}
@@ -72,12 +73,15 @@ public class SelectSiteInitializerDisplayContext {
 			return _parentGroupId;
 		}
 
-		_parentGroupId = ParamUtil.getLong(_request, "parentGroupId");
+		_parentGroupId = ParamUtil.getLong(
+			_httpServletRequest, "parentGroupId");
 
 		return _parentGroupId;
 	}
 
-	public SearchContainer getSearchContainer() throws PortalException {
+	public SearchContainer<SiteInitializerItem> getSearchContainer()
+		throws PortalException {
+
 		SearchContainer<SiteInitializerItem>
 			siteInitializerItemSearchContainer = new SearchContainer<>(
 				_renderRequest, _getPortletURL(), null,
@@ -101,7 +105,8 @@ public class SelectSiteInitializerDisplayContext {
 	private PortletURL _getPortletURL() {
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
-		portletURL.setParameter("mvcPath", "/select_site_initializer.jsp");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/site/select_site_initializer");
 		portletURL.setParameter("redirect", getBackURL());
 
 		return portletURL;
@@ -112,8 +117,9 @@ public class SelectSiteInitializerDisplayContext {
 
 		List<SiteInitializerItem> siteInitializerItems = new ArrayList<>();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		List<LayoutSetPrototype> layoutSetPrototypes =
 			LayoutSetPrototypeServiceUtil.search(
@@ -136,17 +142,15 @@ public class SelectSiteInitializerDisplayContext {
 			siteInitializerItems.add(siteInitializerItem);
 		}
 
-		siteInitializerItems = ListUtil.sort(
+		return ListUtil.sort(
 			siteInitializerItems, new SiteInitializerNameComparator(true));
-
-		return siteInitializerItems;
 	}
 
 	private String _backURL;
+	private final HttpServletRequest _httpServletRequest;
 	private Long _parentGroupId;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private final SiteInitializerRegistry _siteInitializerRegistry;
 
 }

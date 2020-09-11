@@ -14,13 +14,14 @@
 
 package com.liferay.friendly.url.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the FriendlyURLEntryLocalization service. Represents a row in the &quot;FriendlyURLEntryLocalization&quot; database table, with each column mapped to a property of this class.
@@ -35,8 +36,8 @@ import com.liferay.portal.kernel.model.ShardedModel;
  */
 @ProviderType
 public interface FriendlyURLEntryLocalizationModel
-	extends AttachedModel, BaseModel<FriendlyURLEntryLocalization>, MVCCModel,
-			ShardedModel {
+	extends AttachedModel, BaseModel<FriendlyURLEntryLocalization>,
+			CTModel<FriendlyURLEntryLocalization>, MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -49,6 +50,7 @@ public interface FriendlyURLEntryLocalizationModel
 	 *
 	 * @return the primary key of this friendly url entry localization
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -56,6 +58,7 @@ public interface FriendlyURLEntryLocalizationModel
 	 *
 	 * @param primaryKey the primary key of this friendly url entry localization
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -73,6 +76,22 @@ public interface FriendlyURLEntryLocalizationModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this friendly url entry localization.
+	 *
+	 * @return the ct collection ID of this friendly url entry localization
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this friendly url entry localization.
+	 *
+	 * @param ctCollectionId the ct collection ID of this friendly url entry localization
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the friendly url entry localization ID of this friendly url entry localization.

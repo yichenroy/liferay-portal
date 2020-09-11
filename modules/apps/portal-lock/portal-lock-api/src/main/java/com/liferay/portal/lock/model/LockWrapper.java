@@ -14,8 +14,6 @@
 
 package com.liferay.portal.lock.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see Lock
  * @generated
  */
-@ProviderType
 public class LockWrapper
 	extends BaseModelWrapper<Lock> implements Lock, ModelWrapper<Lock> {
 

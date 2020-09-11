@@ -17,10 +17,10 @@ package com.liferay.asset.display.page.item.selector.web.internal.servlet.taglib
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.portlet.RenderRequest;
@@ -38,21 +38,20 @@ public class LayoutPageTemplateEntryVerticalCard implements VerticalCard {
 
 		_layoutPageTemplateEntry = layoutPageTemplateEntry;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 	}
 
 	@Override
 	public Map<String, String> getData() {
-		Map<String, String> data = new HashMap<>();
-
-		data.put(
+		return HashMapBuilder.put(
 			"id",
 			String.valueOf(
-				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
-		data.put("name", _layoutPageTemplateEntry.getName());
-		data.put("type", "asset-display-page");
-
-		return data;
+				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId())
+		).put(
+			"name", _layoutPageTemplateEntry.getName()
+		).put(
+			"type", "asset-display-page"
+		).build();
 	}
 
 	@Override
@@ -71,9 +70,11 @@ public class LayoutPageTemplateEntryVerticalCard implements VerticalCard {
 		Date createDate = _layoutPageTemplateEntry.getCreateDate();
 
 		String createDateDescription = LanguageUtil.getTimeDescription(
-			_request, System.currentTimeMillis() - createDate.getTime(), true);
+			_httpServletRequest,
+			System.currentTimeMillis() - createDate.getTime(), true);
 
-		return LanguageUtil.format(_request, "x-ago", createDateDescription);
+		return LanguageUtil.format(
+			_httpServletRequest, "x-ago", createDateDescription);
 	}
 
 	@Override
@@ -86,7 +87,7 @@ public class LayoutPageTemplateEntryVerticalCard implements VerticalCard {
 		return false;
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private final LayoutPageTemplateEntry _layoutPageTemplateEntry;
-	private final HttpServletRequest _request;
 
 }

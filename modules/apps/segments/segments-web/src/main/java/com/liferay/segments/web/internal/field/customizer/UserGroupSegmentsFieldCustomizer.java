@@ -16,6 +16,7 @@ package com.liferay.segments.web.internal.field.customizer;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -54,20 +55,23 @@ public class UserGroupSegmentsFieldCustomizer
 	public static final String KEY = "userGroup";
 
 	@Override
+	public ClassedModel getClassedModel(String fieldValue) {
+		return _getUserGroup(fieldValue);
+	}
+
+	@Override
+	public String getClassName() {
+		return UserGroup.class.getName();
+	}
+
+	@Override
 	public List<String> getFieldNames() {
 		return _fieldNames;
 	}
 
 	@Override
 	public String getFieldValueName(String fieldValue, Locale locale) {
-		long userGroupId = GetterUtil.getLong(fieldValue);
-
-		if (userGroupId == 0) {
-			return fieldValue;
-		}
-
-		UserGroup userGroup = _userGroupLocalService.fetchUserGroup(
-			userGroupId);
+		UserGroup userGroup = _getUserGroup(fieldValue);
 
 		if (userGroup == null) {
 			return fieldValue;
@@ -102,20 +106,30 @@ public class UserGroupSegmentsFieldCustomizer
 					UserGroup.class.getName()),
 				portletURL.toString(), false);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to get select entity", e);
+				_log.warn("Unable to get select entity", exception);
 			}
 
 			return null;
 		}
 	}
 
+	private UserGroup _getUserGroup(String fieldValue) {
+		long userGroupId = GetterUtil.getLong(fieldValue);
+
+		if (userGroupId == 0) {
+			return null;
+		}
+
+		return _userGroupLocalService.fetchUserGroup(userGroupId);
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserGroupSegmentsFieldCustomizer.class);
 
 	private static final List<String> _fieldNames = ListUtil.fromArray(
-		new String[] {"userGroupIds"});
+		"userGroupIds");
 
 	@Reference
 	private Portal _portal;

@@ -1,15 +1,15 @@
 {
 	"dependencies": {
-		"metal": "^2.4.7",
-		"metal-dom": "^2.4.7",
-		"metal-uri": "^2.0.2",
-		"senna": "2.7.5"
+		"frontend-js-web": "*",
+		"metal": "2.16.8",
+		"metal-dom": "2.16.8",
+		"senna": "2.7.9"
 	},
 	"name": "frontend-js-spa-web",
 	"scripts": {
 		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts lint",
-		"format": "liferay-npm-scripts format"
+		"checkFormat": "liferay-npm-scripts check",
+		"format": "liferay-npm-scripts fix"
 	},
-	"version": "3.0.0"
+	"version": "4.0.16"
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.web.internal.trash;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.web.internal.constants.ExportImportWebKeys;
 import com.liferay.portal.kernel.trash.BaseJSPTrashRenderer;
@@ -32,7 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * @author Levente Hudák
  */
-@ProviderType
 public class ExportImportConfigurationTrashRenderer
 	extends BaseJSPTrashRenderer {
 
@@ -55,7 +52,9 @@ public class ExportImportConfigurationTrashRenderer
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
 		return "/view_configuration.jsp";
 	}
 
@@ -83,15 +82,15 @@ public class ExportImportConfigurationTrashRenderer
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			ExportImportWebKeys.EXPORT_IMPORT_CONFIGURATION_ID,
 			_exportImportConfiguration.getExportImportConfigurationId());
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	private final ExportImportConfiguration _exportImportConfiguration;

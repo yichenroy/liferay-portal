@@ -14,12 +14,9 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class CamelCasePropertyAccessor extends LiferayPropertyAccessor {
 
 	@Override

@@ -1,6 +1,8 @@
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins", version: "3.13.172"
+		classpath(group: "com.liferay", name: "com.liferay.gradle.plugins", version: "11.0.45") {
+			exclude group: "com.liferay", module: "com.liferay.gradle.util"
+		}
 	}
 
 	repositories {
@@ -32,7 +34,7 @@ task runGradleTest
 dependencies {
 	originalModule group: "com.liferay", name: "com.liferay.login.web"
 
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.bom", version: "7.0.4"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom", version: "7.2.1"
 }
 
 repositories {
@@ -43,10 +45,6 @@ repositories {
 
 runGradleTest {
 	doLast {
-		ResolvedArtifact resolvedArtifact = configurations.originalModule.resolvedConfiguration.resolvedArtifacts.find {
-			it.name == "com.liferay.login.web"
-		}
-
-		assert resolvedArtifact.file.name.contains("2.0.4")
+		assert configurations.originalModule.singleFile.name.equals("com.liferay.login.web-4.0.20.jar")
 	}
 }

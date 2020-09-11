@@ -14,8 +14,6 @@
 
 package com.liferay.petra.salesforce.client;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.sforce.ws.ConnectorConfig;
 
 /**
@@ -23,7 +21,6 @@ import com.sforce.ws.ConnectorConfig;
  * @author Peter Shin
  * @author Rachael Koestartyo
  */
-@ProviderType
 public interface SalesforceClient {
 
 	public String getAuthEndpoint();

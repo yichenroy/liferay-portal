@@ -14,12 +14,12 @@
 
 package com.liferay.exportimport.kernel.configuration;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.List;
 import java.util.Map;
 
 import javax.portlet.PortletRequest;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Akos Thurzo
@@ -33,6 +33,19 @@ public interface ExportImportConfigurationParameterMapFactory {
 
 	public Map<String, String[]> buildParameterMap(
 		PortletRequest portletRequest);
+
+	public Map<String, String[]> buildParameterMap(
+		String dataStrategy, Boolean deleteLayouts,
+		Boolean deleteMissingLayouts, Boolean deletePortletData,
+		Boolean deletions, Boolean ignoreLastPublishDate,
+		Boolean layoutSetPrototypeLinkEnabled, Boolean layoutSetSettings,
+		Boolean logo, Boolean permissions, Boolean portletConfiguration,
+		Boolean portletConfigurationAll,
+		List<String> portletConfigurationPortletIds, Boolean portletData,
+		Boolean portletDataAll, List<String> portletDataPortletIds,
+		Boolean portletSetupAll, List<String> portletSetupPortletIds,
+		String range, Boolean themeReference, Boolean updateLastPublishDate,
+		String userIdStrategy);
 
 	public Map<String, String[]> buildParameterMap(
 		String dataStrategy, Boolean deleteMissingLayouts,

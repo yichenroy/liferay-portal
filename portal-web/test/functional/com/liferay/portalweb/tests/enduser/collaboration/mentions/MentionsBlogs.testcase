@@ -1,9 +1,10 @@
 @component-name = "portal-collaboration"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column";
-	property testray.component.names = "Blogs,Comment,Mentions";
+	property custom.properties = "default.layout.template.id=1_column${line.separator}jsonws.web.service.paths.excludes=";
+	property testray.component.names = "Mentions";
 	property testray.main.component.name = "Mentions";
 
 	setUp {
@@ -15,20 +16,22 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		User.editPasswordCP(
-			password = "password",
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn"
-		);
+		User.logoutPG();
+
+		User.loginPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
+
+		User.logoutPG();
+
+		User.loginPG();
 	}
 
 	tearDown {
@@ -40,7 +43,7 @@ definition {
 		else {
 			BlogsEntry.tearDownCP();
 
-			User.tearDownCP();
+			JSONUser.tearDownNonAdminUsers();
 
 			Page.tearDownCP();
 		}
@@ -50,18 +53,11 @@ definition {
 	test ViewMentionViaBlogsEntry {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Blogs Page", sitePageType = "Widget Page");
-
-		SitePages.configurePage(
-			columnName = "1 Column",
+		SitePages.addPublicPage(
 			pageName = "Blogs Page",
-			privacy = "Public Pages",
-			sitePageType = "Widget Page"
-		);
+			sitePageType = "Widget Page");
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
@@ -72,8 +68,7 @@ definition {
 		Mentions.addMentionViaBlogsEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
@@ -81,26 +76,18 @@ definition {
 
 		Mentions.viewMentionTagLink(
 			mentionsUserFullName = "userfn userln",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
 	}
 
 	@priority = "5"
 	test ViewMentionViaBlogsEntryComment {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Blogs Page", sitePageType = "Widget Page");
-
-		SitePages.configurePage(
-			columnName = "1 Column",
+		SitePages.addPublicPage(
 			pageName = "Blogs Page",
-			privacy = "Public Pages",
-			sitePageType = "Widget Page"
-		);
+			sitePageType = "Widget Page");
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
@@ -110,27 +97,24 @@ definition {
 
 		Blogs.addEntry(
 			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title"
-		);
+			entryTitle = "Blogs Entry Title");
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		BlogsNavigator.gotoEntryPG(
 			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title"
-		);
+			entryTitle = "Blogs Entry Title");
 
 		Pause(locator1 = "3000");
 
 		Mentions.addMentionViaComments(
 			entryComment = "Comment mentioning",
 			mentionsUserFullName = "userfn userln",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
 
 		Mentions.viewCommentMentionTagLink(
 			mentionsUserFullName = "userfn userln",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
 	}
+
 }

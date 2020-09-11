@@ -14,28 +14,30 @@
 
 package com.liferay.login.web.internal.portlet.util;
 
-import com.liferay.login.web.internal.constants.LoginPortletKeys;
+import com.liferay.login.web.constants.LoginPortletKeys;
+import com.liferay.petra.content.ContentUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
-import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
@@ -48,29 +50,12 @@ import javax.portlet.WindowState;
 import javax.portlet.WindowStateException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Scott Lee
  */
 public class LoginUtil {
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             AuthenticatedSessionManagerUtil#getAuthenticatedUserId(
-	 *             HttpServletRequest, String, String, String)}
-	 */
-	@Deprecated
-	public static long getAuthenticatedUserId(
-			HttpServletRequest request, String login, String password,
-			String authType)
-		throws PortalException {
-
-		return AuthenticatedSessionManagerUtil.getAuthenticatedUserId(
-			request, login, password, authType);
-	}
 
 	public static Map<String, String> getEmailDefinitionTerms(
 		PortletRequest portletRequest, String emailFromAddress,
@@ -79,11 +64,11 @@ public class LoginUtil {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Map<String, String> definitionTerms = new LinkedHashMap<>();
-
-		definitionTerms.put(
-			"[$FROM_ADDRESS$]", HtmlUtil.escape(emailFromAddress));
-		definitionTerms.put("[$FROM_NAME$]", HtmlUtil.escape(emailFromName));
+		Map<String, String> definitionTerms = LinkedHashMapBuilder.put(
+			"[$FROM_ADDRESS$]", HtmlUtil.escape(emailFromAddress)
+		).put(
+			"[$FROM_NAME$]", HtmlUtil.escape(emailFromName)
+		).build();
 
 		if (showPasswordTerms) {
 			definitionTerms.put(
@@ -117,13 +102,6 @@ public class LoginUtil {
 			"[$USER_ID$]",
 			LanguageUtil.get(themeDisplay.getLocale(), "the-user-id"));
 
-		if (showPasswordTerms) {
-			definitionTerms.put(
-				"[$USER_PASSWORD$]",
-				LanguageUtil.get(
-					themeDisplay.getLocale(), "the-user-password"));
-		}
-
 		definitionTerms.put(
 			"[$USER_SCREENNAME$]",
 			LanguageUtil.get(themeDisplay.getLocale(), "the-user-screen-name"));
@@ -145,13 +123,41 @@ public class LoginUtil {
 			preferences, companyId, PropsValues.LOGIN_EMAIL_FROM_NAME);
 	}
 
-	public static String getLogin(
-		HttpServletRequest request, String paramName, Company company) {
+	public static String getEmailTemplateXML(
+		PortletPreferences portletPreferences, PortletRequest portletRequest,
+		long companyId, String portletPreferencesTemplateKey,
+		String companyPortletPreferencesTemplateKey,
+		String portalPropertiesTemplateKey) {
 
-		String login = request.getParameter(paramName);
+		String xml = LocalizationUtil.getLocalizationXmlFromPreferences(
+			portletPreferences, portletRequest, portletPreferencesTemplateKey,
+			"preferences", null);
+
+		if (xml == null) {
+			PortletPreferences companyPortletPreferences =
+				PrefsPropsUtil.getPreferences(companyId, true);
+			String defaultContent = ContentUtil.get(
+				PortalClassLoaderUtil.getClassLoader(),
+				PropsUtil.get(portalPropertiesTemplateKey));
+
+			xml = LocalizationUtil.getLocalizationXmlFromPreferences(
+				companyPortletPreferences, portletRequest,
+				companyPortletPreferencesTemplateKey, "settings",
+				defaultContent);
+		}
+
+		return xml;
+	}
+
+	public static String getLogin(
+		HttpServletRequest httpServletRequest, String paramName,
+		Company company) {
+
+		String login = httpServletRequest.getParameter(paramName);
 
 		if ((login == null) || login.equals(StringPool.NULL)) {
-			login = CookieKeys.getCookie(request, CookieKeys.LOGIN, false);
+			login = CookieKeys.getCookie(
+				httpServletRequest, CookieKeys.LOGIN, false);
 
 			String authType = company.getAuthType();
 
@@ -166,11 +172,13 @@ public class LoginUtil {
 		return login;
 	}
 
-	public static PortletURL getLoginURL(HttpServletRequest request, long plid)
+	public static PortletURL getLoginURL(
+			HttpServletRequest httpServletRequest, long plid)
 		throws PortletModeException, WindowStateException {
 
 		PortletURL portletURL = PortletURLFactoryUtil.create(
-			request, LoginPortletKeys.LOGIN, plid, PortletRequest.RENDER_PHASE);
+			httpServletRequest, LoginPortletKeys.LOGIN, plid,
+			PortletRequest.RENDER_PHASE);
 
 		portletURL.setParameter("saveLastPath", Boolean.FALSE.toString());
 		portletURL.setParameter("mvcRenderCommandName", "/login/login");
@@ -180,56 +188,21 @@ public class LoginUtil {
 		return portletURL;
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             AuthenticatedSessionManagerUtil#login(HttpServletRequest,
-	 *             HttpServletResponse, String, String, boolean, String)}
-	 */
-	@Deprecated
-	public static void login(
-			HttpServletRequest request, HttpServletResponse response,
-			String login, String password, boolean rememberMe, String authType)
-		throws Exception {
-
-		AuthenticatedSessionManagerUtil.login(
-			request, response, login, password, rememberMe, authType);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             AuthenticatedSessionManagerUtil#renewSession(
-	 *             HttpServletRequest, HttpSession)}
-	 */
-	@Deprecated
-	public static HttpSession renewSession(
-			HttpServletRequest request, HttpSession session)
-		throws Exception {
-
-		return AuthenticatedSessionManagerUtil.renewSession(request, session);
-	}
-
-	public static void sendPassword(ActionRequest actionRequest)
-		throws Exception {
-
-		String toAddress = ParamUtil.getString(actionRequest, "emailAddress");
-
-		sendPassword(actionRequest, null, null, toAddress, null, null);
-	}
-
 	public static void sendPassword(
 			ActionRequest actionRequest, String fromName, String fromAddress,
 			String toAddress, String subject, String body)
 		throws Exception {
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			actionRequest);
+		HttpServletRequest httpServletRequest =
+			PortalUtil.getHttpServletRequest(actionRequest);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Company company = themeDisplay.getCompany();
 
-		if (!company.isSendPassword() && !company.isSendPasswordResetLink()) {
+		if (!company.isSendPasswordResetLink()) {
 			return;
 		}
 
@@ -239,16 +212,6 @@ public class LoginUtil {
 		UserLocalServiceUtil.sendPassword(
 			company.getCompanyId(), toAddress, fromName, fromAddress, subject,
 			body, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             AuthenticatedSessionManagerUtil#signOutSimultaneousLogins(
-	 *             long)}
-	 */
-	@Deprecated
-	public static void signOutSimultaneousLogins(long userId) throws Exception {
-		AuthenticatedSessionManagerUtil.signOutSimultaneousLogins(userId);
 	}
 
 }

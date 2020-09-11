@@ -14,12 +14,11 @@
 
 package com.liferay.portal.search.searcher;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.search.aggregation.AggregationResult;
 import com.liferay.portal.search.document.Document;
+import com.liferay.portal.search.groupby.GroupByResponse;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.stats.StatsResponse;
 
@@ -28,6 +27,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Contains the full response of an executed search, as returned from the search
@@ -43,6 +44,8 @@ public interface SearchResponse {
 
 	public Map<String, AggregationResult> getAggregationResultsMap();
 
+	public long getCount();
+
 	public List<com.liferay.portal.kernel.search.Document> getDocuments71();
 
 	public Stream<Document> getDocumentsStream();
@@ -52,6 +55,14 @@ public interface SearchResponse {
 	public SearchResponse getFederatedSearchResponse(String key);
 
 	public Stream<SearchResponse> getFederatedSearchResponsesStream();
+
+	/**
+	 * Returns the map containing the top hits aggregations for each field.
+	 *
+	 * @return the map containing the top hits aggregations
+	 * @review
+	 */
+	public List<GroupByResponse> getGroupByResponses();
 
 	public SearchRequest getRequest();
 

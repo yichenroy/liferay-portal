@@ -41,7 +41,6 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -83,7 +82,6 @@ public class DDMFormInstanceStagingTest {
 				_stagingGroup.getGroupId()));
 	}
 
-	@Ignore
 	@Test
 	public void testPublishFormToRemoteStagingSite() throws Exception {
 		_remoteLiveGroup = GroupTestUtil.addGroup();
@@ -130,7 +128,7 @@ public class DDMFormInstanceStagingTest {
 
 		DDMFormStagingTestUtil.enableLocalStaging(_liveGroup, true);
 
-		DDMFormInstanceServiceUtil.addFormInstance(
+		_formInstance = DDMFormInstanceServiceUtil.addFormInstance(
 			_liveGroup.getGroupId(), null, null, null, null, null, null);
 	}
 
@@ -141,10 +139,7 @@ public class DDMFormInstanceStagingTest {
 		DDMFormInstanceTestHelper ddmFormInstanceTestHelper =
 			new DDMFormInstanceTestHelper(group);
 
-		DDMFormInstance ddmFormInstance =
-			ddmFormInstanceTestHelper.addDDMFormInstance(_ddmStructure);
-
-		return ddmFormInstance;
+		return ddmFormInstanceTestHelper.addDDMFormInstance(_ddmStructure);
 	}
 
 	protected void setUpPermissionThreadLocal() throws Exception {

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.portletfilerepository;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -31,6 +29,8 @@ import java.io.File;
 import java.io.InputStream;
 
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Eudaldo Alonso
@@ -116,16 +116,17 @@ public interface PortletFileRepository {
 
 	public List<FileEntry> getPortletFileEntries(
 			long groupId, long folderId, int status, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	public List<FileEntry> getPortletFileEntries(
-			long groupId, long folderId, OrderByComparator<FileEntry> obc)
+			long groupId, long folderId,
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	public List<FileEntry> getPortletFileEntries(
 			long groupId, long folderId, String[] mimeTypes, int status,
-			int start, int end, OrderByComparator<FileEntry> obc)
+			int start, int end, OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	public int getPortletFileEntriesCount(long groupId, long folderId)

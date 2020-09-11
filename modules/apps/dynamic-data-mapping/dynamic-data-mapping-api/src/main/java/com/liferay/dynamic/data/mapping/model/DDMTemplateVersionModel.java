@@ -14,19 +14,21 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.WorkflowedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the DDMTemplateVersion service. Represents a row in the &quot;DDMTemplateVersion&quot; database table, with each column mapped to a property of this class.
@@ -41,7 +43,8 @@ import java.util.Map;
  */
 @ProviderType
 public interface DDMTemplateVersionModel
-	extends AttachedModel, BaseModel<DDMTemplateVersion>, LocalizedModel,
+	extends AttachedModel, BaseModel<DDMTemplateVersion>,
+			CTModel<DDMTemplateVersion>, LocalizedModel, MVCCModel,
 			ShardedModel, WorkflowedModel {
 
 	/*
@@ -55,6 +58,7 @@ public interface DDMTemplateVersionModel
 	 *
 	 * @return the primary key of this ddm template version
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -62,7 +66,40 @@ public interface DDMTemplateVersionModel
 	 *
 	 * @param primaryKey the primary key of this ddm template version
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this ddm template version.
+	 *
+	 * @return the mvcc version of this ddm template version
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this ddm template version.
+	 *
+	 * @param mvccVersion the mvcc version of this ddm template version
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this ddm template version.
+	 *
+	 * @return the ct collection ID of this ddm template version
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this ddm template version.
+	 *
+	 * @param ctCollectionId the ct collection ID of this ddm template version
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the template version ID of this ddm template version.

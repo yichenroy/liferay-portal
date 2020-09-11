@@ -14,14 +14,11 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.CentralizedThreadLocal;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class ExportImportThreadLocal {
 
 	public static boolean isDataDeletionImportInProcess() {

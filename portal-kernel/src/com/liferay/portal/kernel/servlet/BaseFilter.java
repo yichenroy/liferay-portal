@@ -14,9 +14,9 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.IOException;
 
@@ -50,16 +50,16 @@ public abstract class BaseFilter implements LiferayFilter {
 				(HttpServletRequest)servletRequest,
 				(HttpServletResponse)servletResponse, filterChain);
 		}
-		catch (IOException ioe) {
-			throw ioe;
+		catch (IOException ioException) {
+			throw ioException;
 		}
-		catch (ServletException se) {
-			throw se;
+		catch (ServletException servletException) {
+			throw servletException;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			Log log = getLog();
 
-			log.error(e, e);
+			log.error(exception, exception);
 		}
 	}
 
@@ -81,7 +81,8 @@ public abstract class BaseFilter implements LiferayFilter {
 
 	@Override
 	public boolean isFilterEnabled(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
 		return _filterEnabled;
 	}
@@ -94,18 +95,20 @@ public abstract class BaseFilter implements LiferayFilter {
 	protected abstract Log getLog();
 
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
 		Class<?> clazz = getClass();
 
-		processFilter(clazz.getName(), request, response, filterChain);
+		processFilter(
+			clazz.getName(), httpServletRequest, httpServletResponse,
+			filterChain);
 	}
 
 	protected void processFilter(
-			String logName, HttpServletRequest request,
-			HttpServletResponse response, FilterChain filterChain)
+			String logName, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
 		long startTime = 0;
@@ -123,7 +126,7 @@ public abstract class BaseFilter implements LiferayFilter {
 
 			threadName = currentThread.getName();
 
-			depther = (String)request.getAttribute(_DEPTHER);
+			depther = (String)httpServletRequest.getAttribute(_DEPTHER);
 
 			if (depther == null) {
 				depther = StringPool.BLANK;
@@ -132,16 +135,16 @@ public abstract class BaseFilter implements LiferayFilter {
 				depther += StringPool.EQUAL;
 			}
 
-			request.setAttribute(_DEPTHER, depther);
+			httpServletRequest.setAttribute(_DEPTHER, depther);
 
-			path = request.getRequestURI();
+			path = httpServletRequest.getRequestURI();
 
 			log.debug(
 				StringBundler.concat(
 					"[", threadName, "]", depther, "> ", logName, " ", path));
 		}
 
-		filterChain.doFilter(request, response);
+		filterChain.doFilter(httpServletRequest, httpServletResponse);
 
 		if (!log.isDebugEnabled()) {
 			return;
@@ -149,7 +152,7 @@ public abstract class BaseFilter implements LiferayFilter {
 
 		long endTime = System.currentTimeMillis();
 
-		depther = (String)request.getAttribute(_DEPTHER);
+		depther = (String)httpServletRequest.getAttribute(_DEPTHER);
 
 		if (depther == null) {
 			return;
@@ -158,13 +161,13 @@ public abstract class BaseFilter implements LiferayFilter {
 		log.debug(
 			StringBundler.concat(
 				"[", threadName, "]", depther, "< ", logName, " ", path, " ",
-				String.valueOf(endTime - startTime), " ms"));
+				endTime - startTime, " ms"));
 
 		if (depther.length() > 0) {
 			depther = depther.substring(1);
 		}
 
-		request.setAttribute(_DEPTHER, depther);
+		httpServletRequest.setAttribute(_DEPTHER, depther);
 	}
 
 	private static final String _DEPTHER = "DEPTHER";

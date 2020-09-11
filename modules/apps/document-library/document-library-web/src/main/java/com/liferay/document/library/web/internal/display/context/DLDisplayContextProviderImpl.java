@@ -25,7 +25,7 @@ import com.liferay.document.library.kernel.util.DLValidator;
 import com.liferay.document.library.kernel.versioning.VersioningStrategy;
 import com.liferay.document.library.preview.DLPreviewRendererProvider;
 import com.liferay.document.library.util.DLURLHelper;
-import com.liferay.document.library.web.internal.util.DLTrashUtil;
+import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.dynamic.data.mapping.storage.StorageEngine;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
@@ -40,7 +40,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletRequest;
@@ -58,26 +57,27 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 /**
  * @author Iván Zaera
  */
-@Component(immediate = true, service = DLDisplayContextProvider.class)
+@Component(service = DLDisplayContextProvider.class)
 public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 
 	@Override
 	public DLEditFileEntryDisplayContext getDLEditFileEntryDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse,
 		DLFileEntryType dlFileEntryType) {
 
 		DLEditFileEntryDisplayContext dlEditFileEntryDisplayContext =
 			new DefaultDLEditFileEntryDisplayContext(
-				request, response, dlFileEntryType, _dlValidator,
-				_storageEngine);
+				httpServletRequest, httpServletResponse, dlFileEntryType,
+				_dlValidator, _storageEngine);
 
 		for (DLDisplayContextFactory dlDisplayContextFactory :
 				_dlDisplayContextFactories) {
 
 			dlEditFileEntryDisplayContext =
 				dlDisplayContextFactory.getDLEditFileEntryDisplayContext(
-					dlEditFileEntryDisplayContext, request, response,
-					dlFileEntryType);
+					dlEditFileEntryDisplayContext, httpServletRequest,
+					httpServletResponse, dlFileEntryType);
 		}
 
 		return dlEditFileEntryDisplayContext;
@@ -85,20 +85,21 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 
 	@Override
 	public DLEditFileEntryDisplayContext getDLEditFileEntryDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
-		FileEntry fileEntry) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileEntry fileEntry) {
 
 		DLEditFileEntryDisplayContext dlEditFileEntryDisplayContext =
 			new DefaultDLEditFileEntryDisplayContext(
-				request, response, _dlValidator, fileEntry, _storageEngine);
+				httpServletRequest, httpServletResponse, _dlValidator,
+				fileEntry, _storageEngine);
 
 		for (DLDisplayContextFactory dlDisplayContextFactory :
 				_dlDisplayContextFactories) {
 
 			dlEditFileEntryDisplayContext =
 				dlDisplayContextFactory.getDLEditFileEntryDisplayContext(
-					dlEditFileEntryDisplayContext, request, response,
-					fileEntry);
+					dlEditFileEntryDisplayContext, httpServletRequest,
+					httpServletResponse, fileEntry);
 		}
 
 		return dlEditFileEntryDisplayContext;
@@ -107,11 +108,12 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 	@Override
 	public DLViewFileEntryHistoryDisplayContext
 		getDLViewFileEntryHistoryDisplayContext(
-			HttpServletRequest request, HttpServletResponse response,
-			FileVersion fileVersion) {
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FileVersion fileVersion) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		ResourceBundle resourceBundle =
 			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
@@ -119,8 +121,8 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 		DLViewFileEntryHistoryDisplayContext
 			dlViewFileEntryHistoryDisplayContext =
 				new DefaultDLViewFileEntryHistoryDisplayContext(
-					request, fileVersion, resourceBundle, _dlTrashUtil,
-					_versioningStrategy, _dlURLHelper);
+					httpServletRequest, fileVersion, resourceBundle,
+					_dlTrashHelper, _versioningStrategy, _dlURLHelper);
 
 		if (fileVersion == null) {
 			return dlViewFileEntryHistoryDisplayContext;
@@ -131,8 +133,8 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 
 			dlViewFileEntryHistoryDisplayContext =
 				dlDisplayContextFactory.getDLViewFileEntryHistoryDisplayContext(
-					dlViewFileEntryHistoryDisplayContext, request, response,
-					fileVersion);
+					dlViewFileEntryHistoryDisplayContext, httpServletRequest,
+					httpServletResponse, fileVersion);
 		}
 
 		return dlViewFileEntryHistoryDisplayContext;
@@ -140,12 +142,13 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 
 	@Override
 	public DLViewFileVersionDisplayContext getDLViewFileVersionDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
-		FileShortcut fileShortcut) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileShortcut fileShortcut) {
 
 		try {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			ResourceBundle resourceBundle =
 				_resourceBundleLoader.loadResourceBundle(
@@ -159,38 +162,35 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 
 			DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext =
 				new DefaultDLViewFileVersionDisplayContext(
-					request, response, fileShortcut, _dlMimeTypeDisplayContext,
-					resourceBundle, _storageEngine, _dlTrashUtil,
-					dlPreviewRendererProvider, _versioningStrategy,
-					_dlURLHelper);
-
-			if (fileShortcut == null) {
-				return dlViewFileVersionDisplayContext;
-			}
+					httpServletRequest, httpServletResponse, fileShortcut,
+					_dlMimeTypeDisplayContext, resourceBundle, _storageEngine,
+					_dlTrashHelper, dlPreviewRendererProvider,
+					_versioningStrategy, _dlURLHelper);
 
 			for (DLDisplayContextFactory dlDisplayContextFactory :
 					_dlDisplayContextFactories) {
 
 				dlViewFileVersionDisplayContext =
 					dlDisplayContextFactory.getDLViewFileVersionDisplayContext(
-						dlViewFileVersionDisplayContext, request, response,
-						fileShortcut);
+						dlViewFileVersionDisplayContext, httpServletRequest,
+						httpServletResponse, fileShortcut);
 			}
 
 			return dlViewFileVersionDisplayContext;
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
 	@Override
 	public DLViewFileVersionDisplayContext getDLViewFileVersionDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
-		FileVersion fileVersion) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileVersion fileVersion) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		ResourceBundle resourceBundle =
 			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
@@ -200,41 +200,43 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 
 		DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext =
 			new DefaultDLViewFileVersionDisplayContext(
-				request, response, fileVersion, _dlMimeTypeDisplayContext,
-				resourceBundle, _storageEngine, _dlTrashUtil,
-				dlPreviewRendererProvider, _versioningStrategy, _dlURLHelper);
-
-		if (fileVersion == null) {
-			return dlViewFileVersionDisplayContext;
-		}
+				httpServletRequest, httpServletResponse, fileVersion,
+				_dlMimeTypeDisplayContext, resourceBundle, _storageEngine,
+				_dlTrashHelper, dlPreviewRendererProvider, _versioningStrategy,
+				_dlURLHelper);
 
 		for (DLDisplayContextFactory dlDisplayContextFactory :
 				_dlDisplayContextFactories) {
 
 			dlViewFileVersionDisplayContext =
 				dlDisplayContextFactory.getDLViewFileVersionDisplayContext(
-					dlViewFileVersionDisplayContext, request, response,
-					fileVersion);
+					dlViewFileVersionDisplayContext, httpServletRequest,
+					httpServletResponse, fileVersion);
 		}
 
 		return dlViewFileVersionDisplayContext;
 	}
 
-	@Reference(unbind = "-")
-	public void setStorageEngine(StorageEngine storageEngine) {
-		_storageEngine = storageEngine;
-	}
-
 	@Activate
-	protected void activate(
-		BundleContext bundleContext, Map<String, Object> properties) {
-
+	protected void activate(BundleContext bundleContext) {
 		_dlDisplayContextFactories = ServiceTrackerListFactory.open(
 			bundleContext, DLDisplayContextFactory.class);
 
 		_dlPreviewRendererProviders =
 			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, DLPreviewRendererProvider.class, "content.type");
+				bundleContext, DLPreviewRendererProvider.class, null,
+				(serviceReference, emitter) -> {
+					DLPreviewRendererProvider dlPreviewRendererProvider =
+						bundleContext.getService(serviceReference);
+
+					for (String mimeType :
+							dlPreviewRendererProvider.getMimeTypes()) {
+
+						emitter.emit(mimeType);
+					}
+
+					bundleContext.ungetService(serviceReference);
+				});
 	}
 
 	@Deactivate
@@ -257,7 +259,7 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 		_dlPreviewRendererProviders;
 
 	@Reference
-	private DLTrashUtil _dlTrashUtil;
+	private DLTrashHelper _dlTrashHelper;
 
 	@Reference
 	private DLURLHelper _dlURLHelper;
@@ -272,6 +274,7 @@ public class DLDisplayContextProviderImpl implements DLDisplayContextProvider {
 	)
 	private volatile ResourceBundleLoader _resourceBundleLoader;
 
+	@Reference
 	private StorageEngine _storageEngine;
 
 	@Reference(

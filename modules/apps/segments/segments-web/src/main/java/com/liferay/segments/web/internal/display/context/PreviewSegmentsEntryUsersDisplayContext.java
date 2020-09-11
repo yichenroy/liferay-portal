@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.odata.retriever.ODataRetriever;
-import com.liferay.segments.provider.SegmentsEntryProvider;
+import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.web.internal.constants.SegmentsWebKeys;
 
@@ -49,31 +49,31 @@ import javax.servlet.http.HttpServletRequest;
 public class PreviewSegmentsEntryUsersDisplayContext {
 
 	public PreviewSegmentsEntryUsersDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse,
-		SegmentsEntryProvider segmentsEntryProvider,
+		SegmentsEntryProviderRegistry segmentsEntryProviderRegistry,
 		SegmentsEntryService segmentsEntryService,
 		ODataRetriever<User> userODataRetriever,
 		UserLocalService userLocalService) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-		_segmentsEntryProvider = segmentsEntryProvider;
+		_segmentsEntryProviderRegistry = segmentsEntryProviderRegistry;
 		_segmentsEntryService = segmentsEntryService;
 		_userODataRetriever = userODataRetriever;
 		_userLocalService = userLocalService;
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public SearchContainer getSearchContainer() {
+	public SearchContainer<User> getSearchContainer() {
 		if (_userSearchContainer != null) {
 			return _userSearchContainer;
 		}
 
-		SearchContainer userSearchContainer = new SearchContainer(
+		SearchContainer<User> userSearchContainer = new SearchContainer(
 			_renderRequest, getPortletURL(), null,
 			"no-users-have-been-assigned-to-this-segment");
 
@@ -107,19 +107,21 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 					userSearchContainer.getEnd());
 			}
 			else if (segmentsEntry != null) {
-				total = _segmentsEntryProvider.getSegmentsEntryClassPKsCount(
-					segmentsEntry.getSegmentsEntryId());
+				total =
+					_segmentsEntryProviderRegistry.
+						getSegmentsEntryClassPKsCount(
+							segmentsEntry.getSegmentsEntryId());
 
 				long[] segmentsEntryClassPKs =
-					_segmentsEntryProvider.getSegmentsEntryClassPKs(
+					_segmentsEntryProviderRegistry.getSegmentsEntryClassPKs(
 						segmentsEntry.getSegmentsEntryId(),
 						userSearchContainer.getStart(),
 						userSearchContainer.getEnd());
 
-				LongStream segmentsEntryClassPKsStream = Arrays.stream(
+				LongStream segmentsEntryClassPKsLongStream = Arrays.stream(
 					segmentsEntryClassPKs);
 
-				users = segmentsEntryClassPKsStream.boxed(
+				users = segmentsEntryClassPKsLongStream.boxed(
 				).map(
 					userId -> _userLocalService.fetchUser(userId)
 				).collect(
@@ -127,10 +129,11 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 				);
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"Unable to obtain a preview of the segment users", pe);
+					"Unable to obtain a preview of the segment users",
+					portalException);
 			}
 		}
 
@@ -145,8 +148,13 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 	protected Criteria getCriteriaFromSession() {
 		PortletSession portletSession = _renderRequest.getPortletSession();
 
-		return (Criteria)portletSession.getAttribute(
+		Criteria criteria = (Criteria)portletSession.getAttribute(
 			SegmentsWebKeys.PREVIEW_SEGMENTS_ENTRY_CRITERIA);
+
+		portletSession.removeAttribute(
+			SegmentsWebKeys.PREVIEW_SEGMENTS_ENTRY_CRITERIA);
+
+		return criteria;
 	}
 
 	protected PortletURL getPortletURL() {
@@ -171,16 +179,18 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 			return _segmentsEntry;
 		}
 
-		long segmentsEntryId = ParamUtil.getLong(_request, "segmentsEntryId");
+		long segmentsEntryId = ParamUtil.getLong(
+			_httpServletRequest, "segmentsEntryId");
 
 		if (segmentsEntryId > 0) {
 			try {
 				_segmentsEntry = _segmentsEntryService.getSegmentsEntry(
 					segmentsEntryId);
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				_log.error(
-					"Unable to get segment entry " + segmentsEntryId, pe);
+					"Unable to get segment entry " + segmentsEntryId,
+					portalException);
 
 				return null;
 			}
@@ -192,15 +202,15 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		PreviewSegmentsEntryUsersDisplayContext.class);
 
+	private final HttpServletRequest _httpServletRequest;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private SegmentsEntry _segmentsEntry;
-	private final SegmentsEntryProvider _segmentsEntryProvider;
+	private final SegmentsEntryProviderRegistry _segmentsEntryProviderRegistry;
 	private final SegmentsEntryService _segmentsEntryService;
 	private final ThemeDisplay _themeDisplay;
 	private final UserLocalService _userLocalService;
 	private final ODataRetriever<User> _userODataRetriever;
-	private SearchContainer _userSearchContainer;
+	private SearchContainer<User> _userSearchContainer;
 
 }

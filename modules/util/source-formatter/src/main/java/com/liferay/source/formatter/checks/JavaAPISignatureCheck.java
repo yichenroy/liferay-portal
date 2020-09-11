@@ -29,8 +29,6 @@ import com.liferay.source.formatter.util.SourceFormatterUtil;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,7 +37,7 @@ import java.util.List;
 public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -48,33 +46,13 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 		_allFileNames = allFileNames;
 	}
 
-	public void setIllegalAPIParameterTypes(String illegalAPIParameterTypes) {
-		Collections.addAll(
-			_illegalAPIParameterTypes,
-			StringUtil.split(illegalAPIParameterTypes));
-	}
-
-	public void setIllegalAPIServiceParameterTypes(
-		String illegalAPIServiceParameterTypes) {
-
-		Collections.addAll(
-			_illegalAPIServiceParameterTypes,
-			StringUtil.split(illegalAPIServiceParameterTypes));
-	}
-
 	@Override
 	protected String doProcess(
 			String fileName, String absolutePath, JavaTerm javaTerm,
 			String fileContent)
 		throws IOException {
 
-		if (javaTerm.hasAnnotation("Override")) {
-			return javaTerm.getContent();
-		}
-
-		String accessModifier = javaTerm.getAccessModifier();
-
-		if (!accessModifier.equals(JavaTerm.ACCESS_MODIFIER_PUBLIC)) {
+		if (!javaTerm.isPublic() || javaTerm.hasAnnotation("Override")) {
 			return javaTerm.getContent();
 		}
 
@@ -88,6 +66,11 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 			return javaTerm.getContent();
 		}
 
+		List<String> illegalAPIParameterTypes = getAttributeValues(
+			_ILLEGAL_API_PARAMETER_TYPES_KEY, absolutePath);
+		List<String> illegalAPIServiceParameterTypes = getAttributeValues(
+			_ILLEGAL_API_SERVICE_PARAMETER_TYPES_KEY, absolutePath);
+
 		String methodName = javaTerm.getName();
 
 		List<JavaParameter> parameters = signature.getParameters();
@@ -99,18 +82,17 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 				continue;
 			}
 
-			if (_illegalAPIServiceParameterTypes.contains(parameterType) &&
+			if (illegalAPIServiceParameterTypes.contains(parameterType) &&
 				!absolutePath.contains("-service/") &&
 				!_matches(_SERVICE_PACKAGE_NAME_WHITELIST, packageName)) {
 
 				addMessage(
 					fileName,
 					"Do not use type '" + parameterType +
-						"' in API method signature",
-					"api_method_signatures.markdown");
+						"' in API method signature");
 			}
 
-			if (_illegalAPIParameterTypes.contains(parameterType) &&
+			if (illegalAPIParameterTypes.contains(parameterType) &&
 				!_matches(_CLASS_NAME_WHITELIST, className) &&
 				!_matches(_METHOD_NAME_WHITELIST, javaTerm.getName()) &&
 				!_matches(_PACKAGE_NAME_WHITELIST, packageName)) {
@@ -118,8 +100,7 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 				addMessage(
 					fileName,
 					"Do not use type '" + parameterType +
-						"' in API method signature",
-					"api_method_signatures.markdown");
+						"' in API method signature");
 			}
 		}
 
@@ -212,6 +193,12 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 		".*URL([A-Z].*)?"
 	};
 
+	private static final String _ILLEGAL_API_PARAMETER_TYPES_KEY =
+		"illegalAPIParameterTypes";
+
+	private static final String _ILLEGAL_API_SERVICE_PARAMETER_TYPES_KEY =
+		"illegalAPIServiceParameterTypes";
+
 	private static final String[] _METHOD_NAME_WHITELIST = {
 		".*JSP([A-Z].*)?", ".*PortletURL([A-Z].*)?", "include([A-Z].*)?",
 		"render([A-Z].*)?"
@@ -220,7 +207,8 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 	private static final String[] _PACKAGE_NAME_WHITELIST = {
 		".*\\.alloy\\.mvc(\\..*)?", ".*\\.auth(\\..*)?", ".*\\.axis(\\..*)?",
 		".*\\.display\\.context(\\..*)?", ".*\\.http(\\..*)?",
-		".*\\.jsp(\\..*)?", ".*\\.layoutconfiguration\\.util(\\..*)?",
+		".*\\.jaxrs(\\..*)?", ".*\\.jsp(\\..*)?",
+		".*\\.layoutconfiguration\\.util(\\..*)?",
 		".*\\.portal\\.action(\\..*)?", ".*\\.portal\\.events(\\..*)?",
 		".*\\.portlet(\\..*)?", ".*\\.server\\.manager(\\..*)?",
 		".*\\.servlet(\\..*)?", ".*\\.spi\\.agent(\\..*)?", ".*\\.sso(\\..*)?",
@@ -239,8 +227,5 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 
 	private List<String> _allFileNames;
 	private String[] _apiSignatureExceptions;
-	private final List<String> _illegalAPIParameterTypes = new ArrayList<>();
-	private final List<String> _illegalAPIServiceParameterTypes =
-		new ArrayList<>();
 
 }

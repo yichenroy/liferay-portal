@@ -15,6 +15,7 @@
 package com.liferay.asset.taglib.servlet.taglib;
 
 import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.taglib.util.IncludeTag;
 
@@ -56,6 +57,10 @@ public class AssetCategoriesSummaryTag<R> extends IncludeTag {
 		return _portletURL;
 	}
 
+	public int[] getVisibleTypes() {
+		return _visibleTypes;
+	}
+
 	public void setClassName(String className) {
 		_className = className;
 	}
@@ -87,6 +92,10 @@ public class AssetCategoriesSummaryTag<R> extends IncludeTag {
 		_portletURL = portletURL;
 	}
 
+	public void setVisibleTypes(int[] visibleTypes) {
+		_visibleTypes = visibleTypes;
+	}
+
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
@@ -97,6 +106,7 @@ public class AssetCategoriesSummaryTag<R> extends IncludeTag {
 		_message = null;
 		_paramName = null;
 		_portletURL = null;
+		_visibleTypes = null;
 	}
 
 	@Override
@@ -105,7 +115,7 @@ public class AssetCategoriesSummaryTag<R> extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		List<AssetCategory> assetCategories = new ArrayList<>();
 
 		AssetCategoriesAvailableTag<R> assetCategoriesAvailableTag =
@@ -116,24 +126,34 @@ public class AssetCategoriesSummaryTag<R> extends IncludeTag {
 			assetCategories = assetCategoriesAvailableTag.getAssetCategories();
 		}
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:assetCategories",
 			assetCategories);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:className", _className);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:classPK",
 			String.valueOf(_classPK));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:displayStyle",
 			_displayStyle);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:message", _message);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:paramName", _paramName);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:portletURL", _portletURL);
+
+		if (_visibleTypes == null) {
+			_visibleTypes = new int[] {
+				AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC
+			};
+		}
+
+		httpServletRequest.setAttribute(
+			"liferay-asset:asset-categories-summary:visibleTypes",
+			_visibleTypes);
 	}
 
 	private static final String _PAGE = "/asset_categories_summary/page.jsp";
@@ -144,5 +164,6 @@ public class AssetCategoriesSummaryTag<R> extends IncludeTag {
 	private String _message;
 	private String _paramName;
 	private PortletURL _portletURL;
+	private int[] _visibleTypes;
 
 }

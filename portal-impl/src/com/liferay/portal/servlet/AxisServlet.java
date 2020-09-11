@@ -59,7 +59,8 @@ public class AxisServlet extends com.liferay.util.axis.AxisServlet {
 
 	@Override
 	public void service(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		boolean remoteAccess = AccessControlThreadLocal.isRemoteAccess();
@@ -68,7 +69,7 @@ public class AxisServlet extends com.liferay.util.axis.AxisServlet {
 			AccessControlThreadLocal.setRemoteAccess(true);
 
 			if (_pluginClassLoader == null) {
-				super.service(request, response);
+				super.service(httpServletRequest, httpServletResponse);
 			}
 			else {
 				Thread currentThread = Thread.currentThread();
@@ -79,21 +80,21 @@ public class AxisServlet extends com.liferay.util.axis.AxisServlet {
 				try {
 					currentThread.setContextClassLoader(_pluginClassLoader);
 
-					super.service(request, response);
+					super.service(httpServletRequest, httpServletResponse);
 				}
 				finally {
 					currentThread.setContextClassLoader(contextClassLoader);
 				}
 			}
 		}
-		catch (IOException ioe) {
-			throw ioe;
+		catch (IOException ioException) {
+			throw ioException;
 		}
-		catch (ServletException se) {
-			throw se;
+		catch (ServletException servletException) {
+			throw servletException;
 		}
-		catch (Exception e) {
-			throw new ServletException(e);
+		catch (Exception exception) {
+			throw new ServletException(exception);
 		}
 		finally {
 			AccessControlThreadLocal.setRemoteAccess(remoteAccess);

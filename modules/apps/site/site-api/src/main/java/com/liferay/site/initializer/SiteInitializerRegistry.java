@@ -14,9 +14,9 @@
 
 package com.liferay.site.initializer;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Marco Leo
@@ -29,6 +29,6 @@ public interface SiteInitializerRegistry {
 	public List<SiteInitializer> getSiteInitializers(long companyId);
 
 	public List<SiteInitializer> getSiteInitializers(
-		long companyId, boolean active);
+		long companyId, boolean activeOnly);
 
 }

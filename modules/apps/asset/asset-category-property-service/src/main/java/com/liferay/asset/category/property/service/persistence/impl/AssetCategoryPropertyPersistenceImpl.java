@@ -14,16 +14,17 @@
 
 package com.liferay.asset.category.property.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.category.property.exception.NoSuchCategoryPropertyException;
 import com.liferay.asset.category.property.model.AssetCategoryProperty;
+import com.liferay.asset.category.property.model.AssetCategoryPropertyTable;
 import com.liferay.asset.category.property.model.impl.AssetCategoryPropertyImpl;
 import com.liferay.asset.category.property.model.impl.AssetCategoryPropertyModelImpl;
 import com.liferay.asset.category.property.service.persistence.AssetCategoryPropertyPersistence;
 import com.liferay.asset.category.property.service.persistence.impl.constants.AssetPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -34,12 +35,13 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
+import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -48,16 +50,23 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -74,7 +83,6 @@ import org.osgi.service.component.annotations.Reference;
  * @generated
  */
 @Component(service = AssetCategoryPropertyPersistence.class)
-@ProviderType
 public class AssetCategoryPropertyPersistenceImpl
 	extends BasePersistenceImpl<AssetCategoryProperty>
 	implements AssetCategoryPropertyPersistence {
@@ -116,7 +124,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns a range of all the asset category properties where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -135,7 +143,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns an ordered range of all the asset category properties where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -156,34 +164,37 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns an ordered range of all the asset category properties where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
 	 * @param start the lower bound of the range of asset category properties
 	 * @param end the upper bound of the range of asset category properties (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset category properties
 	 */
 	@Override
 	public List<AssetCategoryProperty> findByCompanyId(
 		long companyId, int start, int end,
 		OrderByComparator<AssetCategoryProperty> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByCompanyId;
-			finderArgs = new Object[] {companyId};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByCompanyId;
+				finderArgs = new Object[] {companyId};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByCompanyId;
 			finderArgs = new Object[] {
 				companyId, start, end, orderByComparator
@@ -192,13 +203,13 @@ public class AssetCategoryPropertyPersistenceImpl
 
 		List<AssetCategoryProperty> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetCategoryProperty>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AssetCategoryProperty assetCategoryProperty : list) {
-					if ((companyId != assetCategoryProperty.getCompanyId())) {
+					if (companyId != assetCategoryProperty.getCompanyId()) {
 						list = null;
 
 						break;
@@ -208,62 +219,52 @@ public class AssetCategoryPropertyPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
+			sb.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
 
-			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<AssetCategoryProperty>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetCategoryProperty>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetCategoryProperty>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -294,16 +295,16 @@ public class AssetCategoryPropertyPersistenceImpl
 			return assetCategoryProperty;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchCategoryPropertyException(msg.toString());
+		throw new NoSuchCategoryPropertyException(sb.toString());
 	}
 
 	/**
@@ -349,16 +350,16 @@ public class AssetCategoryPropertyPersistenceImpl
 			return assetCategoryProperty;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchCategoryPropertyException(msg.toString());
+		throw new NoSuchCategoryPropertyException(sb.toString());
 	}
 
 	/**
@@ -426,8 +427,8 @@ public class AssetCategoryPropertyPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -440,102 +441,102 @@ public class AssetCategoryPropertyPersistenceImpl
 		OrderByComparator<AssetCategoryProperty> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
+		sb.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
 
-		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
+			sb.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						assetCategoryProperty)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<AssetCategoryProperty> list = q.list();
+		List<AssetCategoryProperty> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -568,40 +569,50 @@ public class AssetCategoryPropertyPersistenceImpl
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = _finderPathCountByCompanyId;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
 
-		Object[] finderArgs = new Object[] {companyId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByCompanyId;
+
+			finderArgs = new Object[] {companyId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_ASSETCATEGORYPROPERTY_WHERE);
+			sb.append(_SQL_COUNT_ASSETCATEGORYPROPERTY_WHERE);
 
-			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -634,7 +645,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns a range of all the asset category properties where categoryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param categoryId the category ID
@@ -653,7 +664,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns an ordered range of all the asset category properties where categoryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param categoryId the category ID
@@ -675,34 +686,37 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns an ordered range of all the asset category properties where categoryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param categoryId the category ID
 	 * @param start the lower bound of the range of asset category properties
 	 * @param end the upper bound of the range of asset category properties (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset category properties
 	 */
 	@Override
 	public List<AssetCategoryProperty> findByCategoryId(
 		long categoryId, int start, int end,
 		OrderByComparator<AssetCategoryProperty> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByCategoryId;
-			finderArgs = new Object[] {categoryId};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByCategoryId;
+				finderArgs = new Object[] {categoryId};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByCategoryId;
 			finderArgs = new Object[] {
 				categoryId, start, end, orderByComparator
@@ -711,13 +725,13 @@ public class AssetCategoryPropertyPersistenceImpl
 
 		List<AssetCategoryProperty> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetCategoryProperty>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AssetCategoryProperty assetCategoryProperty : list) {
-					if ((categoryId != assetCategoryProperty.getCategoryId())) {
+					if (categoryId != assetCategoryProperty.getCategoryId()) {
 						list = null;
 
 						break;
@@ -727,62 +741,52 @@ public class AssetCategoryPropertyPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
+			sb.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
 
-			query.append(_FINDER_COLUMN_CATEGORYID_CATEGORYID_2);
+			sb.append(_FINDER_COLUMN_CATEGORYID_CATEGORYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(categoryId);
+				queryPos.add(categoryId);
 
-				if (!pagination) {
-					list = (List<AssetCategoryProperty>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetCategoryProperty>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetCategoryProperty>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -813,16 +817,16 @@ public class AssetCategoryPropertyPersistenceImpl
 			return assetCategoryProperty;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("categoryId=");
-		msg.append(categoryId);
+		sb.append("categoryId=");
+		sb.append(categoryId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchCategoryPropertyException(msg.toString());
+		throw new NoSuchCategoryPropertyException(sb.toString());
 	}
 
 	/**
@@ -868,16 +872,16 @@ public class AssetCategoryPropertyPersistenceImpl
 			return assetCategoryProperty;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("categoryId=");
-		msg.append(categoryId);
+		sb.append("categoryId=");
+		sb.append(categoryId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchCategoryPropertyException(msg.toString());
+		throw new NoSuchCategoryPropertyException(sb.toString());
 	}
 
 	/**
@@ -945,8 +949,8 @@ public class AssetCategoryPropertyPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -959,102 +963,102 @@ public class AssetCategoryPropertyPersistenceImpl
 		OrderByComparator<AssetCategoryProperty> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
+		sb.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
 
-		query.append(_FINDER_COLUMN_CATEGORYID_CATEGORYID_2);
+		sb.append(_FINDER_COLUMN_CATEGORYID_CATEGORYID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
+			sb.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(categoryId);
+		queryPos.add(categoryId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						assetCategoryProperty)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<AssetCategoryProperty> list = q.list();
+		List<AssetCategoryProperty> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1087,40 +1091,50 @@ public class AssetCategoryPropertyPersistenceImpl
 	 */
 	@Override
 	public int countByCategoryId(long categoryId) {
-		FinderPath finderPath = _finderPathCountByCategoryId;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
 
-		Object[] finderArgs = new Object[] {categoryId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByCategoryId;
+
+			finderArgs = new Object[] {categoryId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_ASSETCATEGORYPROPERTY_WHERE);
+			sb.append(_SQL_COUNT_ASSETCATEGORYPROPERTY_WHERE);
 
-			query.append(_FINDER_COLUMN_CATEGORYID_CATEGORYID_2);
+			sb.append(_FINDER_COLUMN_CATEGORYID_CATEGORYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(categoryId);
+				queryPos.add(categoryId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1154,7 +1168,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns a range of all the asset category properties where companyId = &#63; and key = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1174,7 +1188,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns an ordered range of all the asset category properties where companyId = &#63; and key = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1196,7 +1210,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns an ordered range of all the asset category properties where companyId = &#63; and key = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1204,29 +1218,32 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * @param start the lower bound of the range of asset category properties
 	 * @param end the upper bound of the range of asset category properties (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching asset category properties
 	 */
 	@Override
 	public List<AssetCategoryProperty> findByC_K(
 		long companyId, String key, int start, int end,
 		OrderByComparator<AssetCategoryProperty> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		key = Objects.toString(key, "");
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByC_K;
-			finderArgs = new Object[] {companyId, key};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByC_K;
+				finderArgs = new Object[] {companyId, key};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByC_K;
 			finderArgs = new Object[] {
 				companyId, key, start, end, orderByComparator
@@ -1235,7 +1252,7 @@ public class AssetCategoryPropertyPersistenceImpl
 
 		List<AssetCategoryProperty> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetCategoryProperty>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -1253,77 +1270,67 @@ public class AssetCategoryPropertyPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
+			sb.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
 
-			query.append(_FINDER_COLUMN_C_K_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_K_COMPANYID_2);
 
 			boolean bindKey = false;
 
 			if (key.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_K_KEY_3);
+				sb.append(_FINDER_COLUMN_C_K_KEY_3);
 			}
 			else {
 				bindKey = true;
 
-				query.append(_FINDER_COLUMN_C_K_KEY_2);
+				sb.append(_FINDER_COLUMN_C_K_KEY_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindKey) {
-					qPos.add(key);
+					queryPos.add(key);
 				}
 
-				if (!pagination) {
-					list = (List<AssetCategoryProperty>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetCategoryProperty>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetCategoryProperty>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1355,19 +1362,19 @@ public class AssetCategoryPropertyPersistenceImpl
 			return assetCategoryProperty;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", key=");
-		msg.append(key);
+		sb.append(", key=");
+		sb.append(key);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchCategoryPropertyException(msg.toString());
+		throw new NoSuchCategoryPropertyException(sb.toString());
 	}
 
 	/**
@@ -1415,19 +1422,19 @@ public class AssetCategoryPropertyPersistenceImpl
 			return assetCategoryProperty;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", key=");
-		msg.append(key);
+		sb.append(", key=");
+		sb.append(key);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchCategoryPropertyException(msg.toString());
+		throw new NoSuchCategoryPropertyException(sb.toString());
 	}
 
 	/**
@@ -1499,8 +1506,8 @@ public class AssetCategoryPropertyPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1513,30 +1520,30 @@ public class AssetCategoryPropertyPersistenceImpl
 		OrderByComparator<AssetCategoryProperty> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
+		sb.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
 
-		query.append(_FINDER_COLUMN_C_K_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_K_COMPANYID_2);
 
 		boolean bindKey = false;
 
 		if (key.isEmpty()) {
-			query.append(_FINDER_COLUMN_C_K_KEY_3);
+			sb.append(_FINDER_COLUMN_C_K_KEY_3);
 		}
 		else {
 			bindKey = true;
 
-			query.append(_FINDER_COLUMN_C_K_KEY_2);
+			sb.append(_FINDER_COLUMN_C_K_KEY_2);
 		}
 
 		if (orderByComparator != null) {
@@ -1544,74 +1551,74 @@ public class AssetCategoryPropertyPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
+			sb.append(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (bindKey) {
-			qPos.add(key);
+			queryPos.add(key);
 		}
 
 		if (orderByComparator != null) {
@@ -1619,11 +1626,11 @@ public class AssetCategoryPropertyPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						assetCategoryProperty)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<AssetCategoryProperty> list = q.list();
+		List<AssetCategoryProperty> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1661,55 +1668,65 @@ public class AssetCategoryPropertyPersistenceImpl
 	public int countByC_K(long companyId, String key) {
 		key = Objects.toString(key, "");
 
-		FinderPath finderPath = _finderPathCountByC_K;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
 
-		Object[] finderArgs = new Object[] {companyId, key};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_K;
+
+			finderArgs = new Object[] {companyId, key};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ASSETCATEGORYPROPERTY_WHERE);
+			sb.append(_SQL_COUNT_ASSETCATEGORYPROPERTY_WHERE);
 
-			query.append(_FINDER_COLUMN_C_K_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_K_COMPANYID_2);
 
 			boolean bindKey = false;
 
 			if (key.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_K_KEY_3);
+				sb.append(_FINDER_COLUMN_C_K_KEY_3);
 			}
 			else {
 				bindKey = true;
 
-				query.append(_FINDER_COLUMN_C_K_KEY_2);
+				sb.append(_FINDER_COLUMN_C_K_KEY_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindKey) {
-					qPos.add(key);
+					queryPos.add(key);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1747,23 +1764,23 @@ public class AssetCategoryPropertyPersistenceImpl
 			categoryId, key);
 
 		if (assetCategoryProperty == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("categoryId=");
-			msg.append(categoryId);
+			sb.append("categoryId=");
+			sb.append(categoryId);
 
-			msg.append(", key=");
-			msg.append(key);
+			sb.append(", key=");
+			sb.append(key);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchCategoryPropertyException(msg.toString());
+			throw new NoSuchCategoryPropertyException(sb.toString());
 		}
 
 		return assetCategoryProperty;
@@ -1786,20 +1803,27 @@ public class AssetCategoryPropertyPersistenceImpl
 	 *
 	 * @param categoryId the category ID
 	 * @param key the key
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching asset category property, or <code>null</code> if a matching asset category property could not be found
 	 */
 	@Override
 	public AssetCategoryProperty fetchByCA_K(
-		long categoryId, String key, boolean retrieveFromCache) {
+		long categoryId, String key, boolean useFinderCache) {
 
 		key = Objects.toString(key, "");
 
-		Object[] finderArgs = new Object[] {categoryId, key};
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {categoryId, key};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
 				_finderPathFetchByCA_K, finderArgs, this);
 		}
@@ -1816,45 +1840,47 @@ public class AssetCategoryPropertyPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
+			sb.append(_SQL_SELECT_ASSETCATEGORYPROPERTY_WHERE);
 
-			query.append(_FINDER_COLUMN_CA_K_CATEGORYID_2);
+			sb.append(_FINDER_COLUMN_CA_K_CATEGORYID_2);
 
 			boolean bindKey = false;
 
 			if (key.isEmpty()) {
-				query.append(_FINDER_COLUMN_CA_K_KEY_3);
+				sb.append(_FINDER_COLUMN_CA_K_KEY_3);
 			}
 			else {
 				bindKey = true;
 
-				query.append(_FINDER_COLUMN_CA_K_KEY_2);
+				sb.append(_FINDER_COLUMN_CA_K_KEY_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(categoryId);
+				queryPos.add(categoryId);
 
 				if (bindKey) {
-					qPos.add(key);
+					queryPos.add(key);
 				}
 
-				List<AssetCategoryProperty> list = q.list();
+				List<AssetCategoryProperty> list = query.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(
-						_finderPathFetchByCA_K, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						finderCache.putResult(
+							_finderPathFetchByCA_K, finderArgs, list);
+					}
 				}
 				else {
 					AssetCategoryProperty assetCategoryProperty = list.get(0);
@@ -1864,10 +1890,8 @@ public class AssetCategoryPropertyPersistenceImpl
 					cacheResult(assetCategoryProperty);
 				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(_finderPathFetchByCA_K, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1910,55 +1934,65 @@ public class AssetCategoryPropertyPersistenceImpl
 	public int countByCA_K(long categoryId, String key) {
 		key = Objects.toString(key, "");
 
-		FinderPath finderPath = _finderPathCountByCA_K;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
 
-		Object[] finderArgs = new Object[] {categoryId, key};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByCA_K;
+
+			finderArgs = new Object[] {categoryId, key};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ASSETCATEGORYPROPERTY_WHERE);
+			sb.append(_SQL_COUNT_ASSETCATEGORYPROPERTY_WHERE);
 
-			query.append(_FINDER_COLUMN_CA_K_CATEGORYID_2);
+			sb.append(_FINDER_COLUMN_CA_K_CATEGORYID_2);
 
 			boolean bindKey = false;
 
 			if (key.isEmpty()) {
-				query.append(_FINDER_COLUMN_CA_K_KEY_3);
+				sb.append(_FINDER_COLUMN_CA_K_KEY_3);
 			}
 			else {
 				bindKey = true;
 
-				query.append(_FINDER_COLUMN_CA_K_KEY_2);
+				sb.append(_FINDER_COLUMN_CA_K_KEY_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(categoryId);
+				queryPos.add(categoryId);
 
 				if (bindKey) {
-					qPos.add(key);
+					queryPos.add(key);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1978,16 +2012,18 @@ public class AssetCategoryPropertyPersistenceImpl
 		"(assetCategoryProperty.key IS NULL OR assetCategoryProperty.key = '')";
 
 	public AssetCategoryPropertyPersistenceImpl() {
-		setModelClass(AssetCategoryProperty.class);
-
-		setModelImplClass(AssetCategoryPropertyImpl.class);
-		setModelPKClass(long.class);
-
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
 		dbColumnNames.put("key", "key_");
 
 		setDBColumnNames(dbColumnNames);
+
+		setModelClass(AssetCategoryProperty.class);
+
+		setModelImplClass(AssetCategoryPropertyImpl.class);
+		setModelPKClass(long.class);
+
+		setTable(AssetCategoryPropertyTable.INSTANCE);
 	}
 
 	/**
@@ -1997,8 +2033,12 @@ public class AssetCategoryPropertyPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(AssetCategoryProperty assetCategoryProperty) {
+		if (assetCategoryProperty.getCtCollectionId() != 0) {
+			return;
+		}
+
 		entityCache.putResult(
-			entityCacheEnabled, AssetCategoryPropertyImpl.class,
+			AssetCategoryPropertyImpl.class,
 			assetCategoryProperty.getPrimaryKey(), assetCategoryProperty);
 
 		finderCache.putResult(
@@ -2008,8 +2048,6 @@ public class AssetCategoryPropertyPersistenceImpl
 				assetCategoryProperty.getKey()
 			},
 			assetCategoryProperty);
-
-		assetCategoryProperty.resetOriginalValues();
 	}
 
 	/**
@@ -2024,14 +2062,15 @@ public class AssetCategoryPropertyPersistenceImpl
 		for (AssetCategoryProperty assetCategoryProperty :
 				assetCategoryProperties) {
 
+			if (assetCategoryProperty.getCtCollectionId() != 0) {
+				continue;
+			}
+
 			if (entityCache.getResult(
-					entityCacheEnabled, AssetCategoryPropertyImpl.class,
+					AssetCategoryPropertyImpl.class,
 					assetCategoryProperty.getPrimaryKey()) == null) {
 
 				cacheResult(assetCategoryProperty);
-			}
-			else {
-				assetCategoryProperty.resetOriginalValues();
 			}
 		}
 	}
@@ -2062,32 +2101,30 @@ public class AssetCategoryPropertyPersistenceImpl
 	@Override
 	public void clearCache(AssetCategoryProperty assetCategoryProperty) {
 		entityCache.removeResult(
-			entityCacheEnabled, AssetCategoryPropertyImpl.class,
-			assetCategoryProperty.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache(
-			(AssetCategoryPropertyModelImpl)assetCategoryProperty, true);
+			AssetCategoryPropertyImpl.class, assetCategoryProperty);
 	}
 
 	@Override
 	public void clearCache(
 		List<AssetCategoryProperty> assetCategoryProperties) {
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (AssetCategoryProperty assetCategoryProperty :
 				assetCategoryProperties) {
 
 			entityCache.removeResult(
-				entityCacheEnabled, AssetCategoryPropertyImpl.class,
-				assetCategoryProperty.getPrimaryKey());
+				AssetCategoryPropertyImpl.class, assetCategoryProperty);
+		}
+	}
 
-			clearUniqueFindersCache(
-				(AssetCategoryPropertyModelImpl)assetCategoryProperty, true);
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
+		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		for (Serializable primaryKey : primaryKeys) {
+			entityCache.removeResult(
+				AssetCategoryPropertyImpl.class, primaryKey);
 		}
 	}
 
@@ -2106,33 +2143,6 @@ public class AssetCategoryPropertyPersistenceImpl
 			false);
 	}
 
-	protected void clearUniqueFindersCache(
-		AssetCategoryPropertyModelImpl assetCategoryPropertyModelImpl,
-		boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				assetCategoryPropertyModelImpl.getCategoryId(),
-				assetCategoryPropertyModelImpl.getKey()
-			};
-
-			finderCache.removeResult(_finderPathCountByCA_K, args);
-			finderCache.removeResult(_finderPathFetchByCA_K, args);
-		}
-
-		if ((assetCategoryPropertyModelImpl.getColumnBitmask() &
-			 _finderPathFetchByCA_K.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				assetCategoryPropertyModelImpl.getOriginalCategoryId(),
-				assetCategoryPropertyModelImpl.getOriginalKey()
-			};
-
-			finderCache.removeResult(_finderPathCountByCA_K, args);
-			finderCache.removeResult(_finderPathFetchByCA_K, args);
-		}
-	}
-
 	/**
 	 * Creates a new asset category property with the primary key. Does not add the asset category property to the database.
 	 *
@@ -2147,7 +2157,7 @@ public class AssetCategoryPropertyPersistenceImpl
 		assetCategoryProperty.setNew(true);
 		assetCategoryProperty.setPrimaryKey(categoryPropertyId);
 
-		assetCategoryProperty.setCompanyId(companyProvider.getCompanyId());
+		assetCategoryProperty.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return assetCategoryProperty;
 	}
@@ -2197,11 +2207,11 @@ public class AssetCategoryPropertyPersistenceImpl
 
 			return remove(assetCategoryProperty);
 		}
-		catch (NoSuchCategoryPropertyException nsee) {
-			throw nsee;
+		catch (NoSuchCategoryPropertyException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2223,12 +2233,14 @@ public class AssetCategoryPropertyPersistenceImpl
 					assetCategoryProperty.getPrimaryKeyObj());
 			}
 
-			if (assetCategoryProperty != null) {
+			if ((assetCategoryProperty != null) &&
+				ctPersistenceHelper.isRemove(assetCategoryProperty)) {
+
 				session.delete(assetCategoryProperty);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2299,132 +2311,46 @@ public class AssetCategoryPropertyPersistenceImpl
 		try {
 			session = openSession();
 
-			if (assetCategoryProperty.isNew()) {
-				session.save(assetCategoryProperty);
+			if (ctPersistenceHelper.isInsert(assetCategoryProperty)) {
+				if (!isNew) {
+					session.evict(
+						AssetCategoryPropertyImpl.class,
+						assetCategoryProperty.getPrimaryKeyObj());
+				}
 
-				assetCategoryProperty.setNew(false);
+				session.save(assetCategoryProperty);
 			}
 			else {
 				assetCategoryProperty = (AssetCategoryProperty)session.merge(
 					assetCategoryProperty);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!_columnBitmaskEnabled) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {
-				assetCategoryPropertyModelImpl.getCompanyId()
-			};
-
-			finderCache.removeResult(_finderPathCountByCompanyId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByCompanyId, args);
-
-			args = new Object[] {
-				assetCategoryPropertyModelImpl.getCategoryId()
-			};
-
-			finderCache.removeResult(_finderPathCountByCategoryId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByCategoryId, args);
-
-			args = new Object[] {
-				assetCategoryPropertyModelImpl.getCompanyId(),
-				assetCategoryPropertyModelImpl.getKey()
-			};
-
-			finderCache.removeResult(_finderPathCountByC_K, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByC_K, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((assetCategoryPropertyModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCompanyId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					assetCategoryPropertyModelImpl.getOriginalCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByCompanyId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-
-				args = new Object[] {
-					assetCategoryPropertyModelImpl.getCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByCompanyId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
+		if (assetCategoryProperty.getCtCollectionId() != 0) {
+			if (isNew) {
+				assetCategoryProperty.setNew(false);
 			}
 
-			if ((assetCategoryPropertyModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCategoryId.
-					 getColumnBitmask()) != 0) {
+			assetCategoryProperty.resetOriginalValues();
 
-				Object[] args = new Object[] {
-					assetCategoryPropertyModelImpl.getOriginalCategoryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByCategoryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCategoryId, args);
-
-				args = new Object[] {
-					assetCategoryPropertyModelImpl.getCategoryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByCategoryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCategoryId, args);
-			}
-
-			if ((assetCategoryPropertyModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_K.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					assetCategoryPropertyModelImpl.getOriginalCompanyId(),
-					assetCategoryPropertyModelImpl.getOriginalKey()
-				};
-
-				finderCache.removeResult(_finderPathCountByC_K, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByC_K, args);
-
-				args = new Object[] {
-					assetCategoryPropertyModelImpl.getCompanyId(),
-					assetCategoryPropertyModelImpl.getKey()
-				};
-
-				finderCache.removeResult(_finderPathCountByC_K, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByC_K, args);
-			}
+			return assetCategoryProperty;
 		}
 
 		entityCache.putResult(
-			entityCacheEnabled, AssetCategoryPropertyImpl.class,
-			assetCategoryProperty.getPrimaryKey(), assetCategoryProperty,
-			false);
+			AssetCategoryPropertyImpl.class, assetCategoryPropertyModelImpl,
+			false, true);
 
-		clearUniqueFindersCache(assetCategoryPropertyModelImpl, false);
 		cacheUniqueFindersCache(assetCategoryPropertyModelImpl);
+
+		if (isNew) {
+			assetCategoryProperty.setNew(false);
+		}
 
 		assetCategoryProperty.resetOriginalValues();
 
@@ -2474,12 +2400,124 @@ public class AssetCategoryPropertyPersistenceImpl
 	/**
 	 * Returns the asset category property with the primary key or returns <code>null</code> if it could not be found.
 	 *
+	 * @param primaryKey the primary key of the asset category property
+	 * @return the asset category property, or <code>null</code> if a asset category property with the primary key could not be found
+	 */
+	@Override
+	public AssetCategoryProperty fetchByPrimaryKey(Serializable primaryKey) {
+		if (ctPersistenceHelper.isProductionMode(AssetCategoryProperty.class)) {
+			return super.fetchByPrimaryKey(primaryKey);
+		}
+
+		AssetCategoryProperty assetCategoryProperty = null;
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			assetCategoryProperty = (AssetCategoryProperty)session.get(
+				AssetCategoryPropertyImpl.class, primaryKey);
+
+			if (assetCategoryProperty != null) {
+				cacheResult(assetCategoryProperty);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return assetCategoryProperty;
+	}
+
+	/**
+	 * Returns the asset category property with the primary key or returns <code>null</code> if it could not be found.
+	 *
 	 * @param categoryPropertyId the primary key of the asset category property
 	 * @return the asset category property, or <code>null</code> if a asset category property with the primary key could not be found
 	 */
 	@Override
 	public AssetCategoryProperty fetchByPrimaryKey(long categoryPropertyId) {
 		return fetchByPrimaryKey((Serializable)categoryPropertyId);
+	}
+
+	@Override
+	public Map<Serializable, AssetCategoryProperty> fetchByPrimaryKeys(
+		Set<Serializable> primaryKeys) {
+
+		if (ctPersistenceHelper.isProductionMode(AssetCategoryProperty.class)) {
+			return super.fetchByPrimaryKeys(primaryKeys);
+		}
+
+		if (primaryKeys.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		Map<Serializable, AssetCategoryProperty> map =
+			new HashMap<Serializable, AssetCategoryProperty>();
+
+		if (primaryKeys.size() == 1) {
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			Serializable primaryKey = iterator.next();
+
+			AssetCategoryProperty assetCategoryProperty = fetchByPrimaryKey(
+				primaryKey);
+
+			if (assetCategoryProperty != null) {
+				map.put(primaryKey, assetCategoryProperty);
+			}
+
+			return map;
+		}
+
+		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
+
+		sb.append(getSelectSQL());
+		sb.append(" WHERE ");
+		sb.append(getPKDBName());
+		sb.append(" IN (");
+
+		for (Serializable primaryKey : primaryKeys) {
+			sb.append((long)primaryKey);
+
+			sb.append(",");
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		sb.append(")");
+
+		String sql = sb.toString();
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Query query = session.createQuery(sql);
+
+			for (AssetCategoryProperty assetCategoryProperty :
+					(List<AssetCategoryProperty>)query.list()) {
+
+				map.put(
+					assetCategoryProperty.getPrimaryKeyObj(),
+					assetCategoryProperty);
+
+				cacheResult(assetCategoryProperty);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return map;
 	}
 
 	/**
@@ -2496,7 +2534,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns a range of all the asset category properties.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of asset category properties
@@ -2512,7 +2550,7 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns an ordered range of all the asset category properties.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of asset category properties
@@ -2532,66 +2570,66 @@ public class AssetCategoryPropertyPersistenceImpl
 	 * Returns an ordered range of all the asset category properties.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetCategoryPropertyModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of asset category properties
 	 * @param end the upper bound of the range of asset category properties (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of asset category properties
 	 */
 	@Override
 	public List<AssetCategoryProperty> findAll(
 		int start, int end,
 		OrderByComparator<AssetCategoryProperty> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindAll;
-			finderArgs = FINDER_ARGS_EMPTY;
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<AssetCategoryProperty> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<AssetCategoryProperty>)finderCache.getResult(
 				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_ASSETCATEGORYPROPERTY);
+				sb.append(_SQL_SELECT_ASSETCATEGORYPROPERTY);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_ASSETCATEGORYPROPERTY;
 
-				if (pagination) {
-					sql = sql.concat(
-						AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(AssetCategoryPropertyModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -2599,29 +2637,19 @@ public class AssetCategoryPropertyPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<AssetCategoryProperty>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<AssetCategoryProperty>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<AssetCategoryProperty>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2649,8 +2677,15 @@ public class AssetCategoryPropertyPersistenceImpl
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetCategoryProperty.class);
+
+		Long count = null;
+
+		if (productionMode) {
+			count = (Long)finderCache.getResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		}
 
 		if (count == null) {
 			Session session = null;
@@ -2658,18 +2693,18 @@ public class AssetCategoryPropertyPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_ASSETCATEGORYPROPERTY);
+				Query query = session.createQuery(
+					_SQL_COUNT_ASSETCATEGORYPROPERTY);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				if (productionMode) {
+					finderCache.putResult(
+						_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2700,137 +2735,181 @@ public class AssetCategoryPropertyPersistenceImpl
 	}
 
 	@Override
-	protected Map<String, Integer> getTableColumnsMap() {
+	public Set<String> getCTColumnNames(
+		CTColumnResolutionType ctColumnResolutionType) {
+
+		return _ctColumnNamesMap.get(ctColumnResolutionType);
+	}
+
+	@Override
+	public List<String> getMappingTableNames() {
+		return _mappingTableNames;
+	}
+
+	@Override
+	public Map<String, Integer> getTableColumnsMap() {
 		return AssetCategoryPropertyModelImpl.TABLE_COLUMNS_MAP;
+	}
+
+	@Override
+	public String getTableName() {
+		return "AssetCategoryProperty";
+	}
+
+	@Override
+	public List<String[]> getUniqueIndexColumnNames() {
+		return _uniqueIndexColumnNames;
+	}
+
+	private static final Map<CTColumnResolutionType, Set<String>>
+		_ctColumnNamesMap = new EnumMap<CTColumnResolutionType, Set<String>>(
+			CTColumnResolutionType.class);
+	private static final List<String> _mappingTableNames =
+		new ArrayList<String>();
+	private static final List<String[]> _uniqueIndexColumnNames =
+		new ArrayList<String[]>();
+
+	static {
+		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
+		Set<String> ctStrictColumnNames = new HashSet<String>();
+
+		ctControlColumnNames.add("mvccVersion");
+		ctControlColumnNames.add("ctCollectionId");
+		ctStrictColumnNames.add("companyId");
+		ctStrictColumnNames.add("userId");
+		ctStrictColumnNames.add("userName");
+		ctStrictColumnNames.add("createDate");
+		ctIgnoreColumnNames.add("modifiedDate");
+		ctStrictColumnNames.add("categoryId");
+		ctStrictColumnNames.add("key_");
+		ctStrictColumnNames.add("value");
+
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.PK,
+			Collections.singleton("categoryPropertyId"));
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.STRICT, ctStrictColumnNames);
+
+		_uniqueIndexColumnNames.add(new String[] {"categoryId", "key_"});
 	}
 
 	/**
 	 * Initializes the asset category property persistence.
 	 */
 	@Activate
-	public void activate() {
-		AssetCategoryPropertyModelImpl.setEntityCacheEnabled(
-			entityCacheEnabled);
-		AssetCategoryPropertyModelImpl.setFinderCacheEnabled(
-			finderCacheEnabled);
+	public void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
 
-		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+		_argumentsResolverServiceRegistration = _bundleContext.registerService(
+			ArgumentsResolver.class,
+			new AssetCategoryPropertyModelArgumentsResolver(),
+			MapUtil.singletonDictionary(
+				"model.class.name", AssetCategoryProperty.class.getName()));
 
-		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+		_finderPathWithPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
-		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
+		_finderPathWithoutPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathCountAll = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class,
+		_finderPathWithPaginationFindByCompanyId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId"}, true);
 
-		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class,
+		_finderPathWithoutPaginationFindByCompanyId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] {Long.class.getName()},
-			AssetCategoryPropertyModelImpl.COMPANYID_COLUMN_BITMASK |
-			AssetCategoryPropertyModelImpl.KEY_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
 
-		_finderPathCountByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
+		_finderPathCountByCompanyId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
 
-		_finderPathWithPaginationFindByCategoryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class,
+		_finderPathWithPaginationFindByCategoryId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCategoryId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"categoryId"}, true);
 
-		_finderPathWithoutPaginationFindByCategoryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class,
+		_finderPathWithoutPaginationFindByCategoryId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCategoryId",
-			new String[] {Long.class.getName()},
-			AssetCategoryPropertyModelImpl.CATEGORYID_COLUMN_BITMASK |
-			AssetCategoryPropertyModelImpl.KEY_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"categoryId"},
+			true);
 
-		_finderPathCountByCategoryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
+		_finderPathCountByCategoryId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCategoryId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"categoryId"},
+			false);
 
-		_finderPathWithPaginationFindByC_K = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class,
+		_finderPathWithPaginationFindByC_K = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_K",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "key_"}, true);
 
-		_finderPathWithoutPaginationFindByC_K = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class,
+		_finderPathWithoutPaginationFindByC_K = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_K",
 			new String[] {Long.class.getName(), String.class.getName()},
-			AssetCategoryPropertyModelImpl.COMPANYID_COLUMN_BITMASK |
-			AssetCategoryPropertyModelImpl.KEY_COLUMN_BITMASK);
+			new String[] {"companyId", "key_"}, true);
 
-		_finderPathCountByC_K = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
+		_finderPathCountByC_K = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_K",
-			new String[] {Long.class.getName(), String.class.getName()});
-
-		_finderPathFetchByCA_K = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetCategoryPropertyImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByCA_K",
 			new String[] {Long.class.getName(), String.class.getName()},
-			AssetCategoryPropertyModelImpl.CATEGORYID_COLUMN_BITMASK |
-			AssetCategoryPropertyModelImpl.KEY_COLUMN_BITMASK);
+			new String[] {"companyId", "key_"}, false);
 
-		_finderPathCountByCA_K = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
+		_finderPathFetchByCA_K = _createFinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByCA_K",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"categoryId", "key_"}, true);
+
+		_finderPathCountByCA_K = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCA_K",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"categoryId", "key_"}, false);
 	}
 
 	@Deactivate
 	public void deactivate() {
 		entityCache.removeCache(AssetCategoryPropertyImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		_argumentsResolverServiceRegistration.unregister();
+
+		for (ServiceRegistration<FinderPath> serviceRegistration :
+				_serviceRegistrations) {
+
+			serviceRegistration.unregister();
+		}
 	}
 
 	@Override
 	@Reference(
-		target = AssetPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		target = AssetPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.asset.category.property.model.AssetCategoryProperty"),
-			true);
 	}
 
 	@Override
@@ -2851,10 +2930,10 @@ public class AssetCategoryPropertyPersistenceImpl
 		super.setSessionFactory(sessionFactory);
 	}
 
-	private boolean _columnBitmaskEnabled;
+	private BundleContext _bundleContext;
 
-	@Reference(service = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
+	@Reference
+	protected CTPersistenceHelper ctPersistenceHelper;
 
 	@Reference
 	protected EntityCache entityCache;
@@ -2888,5 +2967,118 @@ public class AssetCategoryPropertyPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"key"});
+
+	static {
+		try {
+			Class.forName(AssetPersistenceConstants.class.getName());
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
+		}
+	}
+
+	private FinderPath _createFinderPath(
+		String cacheName, String methodName, String[] params,
+		String[] columnNames, boolean baseModelResult) {
+
+		FinderPath finderPath = new FinderPath(
+			cacheName, methodName, params, columnNames, baseModelResult);
+
+		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+			_serviceRegistrations.add(
+				_bundleContext.registerService(
+					FinderPath.class, finderPath,
+					MapUtil.singletonDictionary("cache.name", cacheName)));
+		}
+
+		return finderPath;
+	}
+
+	private ServiceRegistration<ArgumentsResolver>
+		_argumentsResolverServiceRegistration;
+	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
+		new HashSet<>();
+
+	private static class AssetCategoryPropertyModelArgumentsResolver
+		implements ArgumentsResolver {
+
+		@Override
+		public Object[] getArguments(
+			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
+			boolean original) {
+
+			String[] columnNames = finderPath.getColumnNames();
+
+			if ((columnNames == null) || (columnNames.length == 0)) {
+				if (baseModel.isNew()) {
+					return FINDER_ARGS_EMPTY;
+				}
+
+				return null;
+			}
+
+			AssetCategoryPropertyModelImpl assetCategoryPropertyModelImpl =
+				(AssetCategoryPropertyModelImpl)baseModel;
+
+			long columnBitmask =
+				assetCategoryPropertyModelImpl.getColumnBitmask();
+
+			if (!checkColumn || (columnBitmask == 0)) {
+				return _getValue(
+					assetCategoryPropertyModelImpl, columnNames, original);
+			}
+
+			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
+				finderPath);
+
+			if (finderPathColumnBitmask == null) {
+				finderPathColumnBitmask = 0L;
+
+				for (String columnName : columnNames) {
+					finderPathColumnBitmask |=
+						assetCategoryPropertyModelImpl.getColumnBitmask(
+							columnName);
+				}
+
+				_finderPathColumnBitmasksCache.put(
+					finderPath, finderPathColumnBitmask);
+			}
+
+			if ((columnBitmask & finderPathColumnBitmask) != 0) {
+				return _getValue(
+					assetCategoryPropertyModelImpl, columnNames, original);
+			}
+
+			return null;
+		}
+
+		private Object[] _getValue(
+			AssetCategoryPropertyModelImpl assetCategoryPropertyModelImpl,
+			String[] columnNames, boolean original) {
+
+			Object[] arguments = new Object[columnNames.length];
+
+			for (int i = 0; i < arguments.length; i++) {
+				String columnName = columnNames[i];
+
+				if (original) {
+					arguments[i] =
+						assetCategoryPropertyModelImpl.getColumnOriginalValue(
+							columnName);
+				}
+				else {
+					arguments[i] =
+						assetCategoryPropertyModelImpl.getColumnValue(
+							columnName);
+				}
+			}
+
+			return arguments;
+		}
+
+		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
+			new ConcurrentHashMap<>();
+
+	}
 
 }

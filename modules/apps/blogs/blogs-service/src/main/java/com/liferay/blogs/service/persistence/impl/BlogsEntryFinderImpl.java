@@ -28,13 +28,13 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.CalendarUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.sql.Timestamp;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -66,12 +66,8 @@ public class BlogsEntryFinderImpl
 		long organizationId, Date displayDate,
 		QueryDefinition<BlogsEntry> queryDefinition) {
 
-		List<Long> organizationIds = new ArrayList<>();
-
-		organizationIds.add(organizationId);
-
 		return countByOrganizationIds(
-			organizationIds, displayDate, queryDefinition);
+			ListUtil.fromArray(organizationId), displayDate, queryDefinition);
 	}
 
 	@Override
@@ -103,26 +99,26 @@ public class BlogsEntryFinderImpl
 				sql, "[$ORGANIZATION_ID$]",
 				getOrganizationIds(organizationIds));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (Long organizationId : organizationIds) {
-				qPos.add(organizationId);
+				queryPos.add(organizationId);
 			}
 
-			qPos.add(displayDate_TS);
+			queryPos.add(displayDate_TS);
 
 			if (queryDefinition.getStatus() != WorkflowConstants.STATUS_ANY) {
-				qPos.add(queryDefinition.getStatus());
+				queryPos.add(queryDefinition.getStatus());
 			}
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> iterator = sqlQuery.iterate();
 
-			if (itr.hasNext()) {
-				Long count = itr.next();
+			if (iterator.hasNext()) {
+				Long count = iterator.next();
 
 				if (count != null) {
 					return count.intValue();
@@ -131,8 +127,8 @@ public class BlogsEntryFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -162,28 +158,28 @@ public class BlogsEntryFinderImpl
 				}
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("BlogsEntry", BlogsEntryImpl.class);
+			sqlQuery.addEntity("BlogsEntry", BlogsEntryImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(groupId);
-			qPos.add(groupId);
-			qPos.add(groupId);
-			qPos.add(displayDate);
+			queryPos.add(companyId);
+			queryPos.add(groupId);
+			queryPos.add(groupId);
+			queryPos.add(groupId);
+			queryPos.add(displayDate);
 
 			if (queryDefinition.getStatus() != WorkflowConstants.STATUS_ANY) {
-				qPos.add(queryDefinition.getStatus());
+				queryPos.add(queryDefinition.getStatus());
 			}
 
 			return (List<BlogsEntry>)QueryUtil.list(
-				q, getDialect(), queryDefinition.getStart(),
+				sqlQuery, getDialect(), queryDefinition.getStart(),
 				queryDefinition.getEnd());
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -195,12 +191,8 @@ public class BlogsEntryFinderImpl
 		long organizationId, Date displayDate,
 		QueryDefinition<BlogsEntry> queryDefinition) {
 
-		List<Long> organizationIds = new ArrayList<>();
-
-		organizationIds.add(organizationId);
-
 		return findByOrganizationIds(
-			organizationIds, displayDate, queryDefinition);
+			ListUtil.fromArray(organizationId), displayDate, queryDefinition);
 	}
 
 	@Override
@@ -234,59 +226,28 @@ public class BlogsEntryFinderImpl
 			sql = _customSQL.replaceOrderBy(
 				sql, queryDefinition.getOrderByComparator());
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("BlogsEntry", BlogsEntryImpl.class);
+			sqlQuery.addEntity("BlogsEntry", BlogsEntryImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (Long organizationId : organizationIds) {
-				qPos.add(organizationId);
+				queryPos.add(organizationId);
 			}
 
-			qPos.add(displayDate_TS);
+			queryPos.add(displayDate_TS);
 
 			if (queryDefinition.getStatus() != WorkflowConstants.STATUS_ANY) {
-				qPos.add(queryDefinition.getStatus());
+				queryPos.add(queryDefinition.getStatus());
 			}
 
 			return (List<BlogsEntry>)QueryUtil.list(
-				q, getDialect(), queryDefinition.getStart(),
+				sqlQuery, getDialect(), queryDefinition.getStart(),
 				queryDefinition.getEnd());
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public List<BlogsEntry> findByNoAssets() {
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = _customSQL.get(getClass(), FIND_BY_NO_ASSETS);
-
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
-
-			q.addEntity("BlogsEntry", BlogsEntryImpl.class);
-
-			QueryPos qPos = QueryPos.getInstance(q);
-
-			qPos.add(_portal.getClassNameId(BlogsEntry.class));
-
-			return q.list(true);
-		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -298,7 +259,7 @@ public class BlogsEntryFinderImpl
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(organizationIds.size() * 2 - 1);
+		StringBundler sb = new StringBundler((organizationIds.size() * 2) - 1);
 
 		for (int i = 0; i < organizationIds.size(); i++) {
 			sb.append("Users_Orgs.organizationId = ? ");

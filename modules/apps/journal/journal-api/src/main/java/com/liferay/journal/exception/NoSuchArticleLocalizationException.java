@@ -14,14 +14,11 @@
 
 package com.liferay.journal.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchArticleLocalizationException extends NoSuchModelException {
 
 	public NoSuchArticleLocalizationException() {
@@ -31,12 +28,12 @@ public class NoSuchArticleLocalizationException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchArticleLocalizationException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchArticleLocalizationException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchArticleLocalizationException(Throwable cause) {
-		super(cause);
+	public NoSuchArticleLocalizationException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

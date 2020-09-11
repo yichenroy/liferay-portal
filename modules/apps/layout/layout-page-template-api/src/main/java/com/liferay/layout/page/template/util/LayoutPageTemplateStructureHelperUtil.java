@@ -14,13 +14,10 @@
 
 package com.liferay.layout.page.template.util;
 
-import com.liferay.fragment.constants.FragmentConstants;
-import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
-import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.util.structure.LayoutStructure;
+import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.portal.kernel.json.JSONObject;
 
 import java.util.List;
@@ -33,68 +30,54 @@ public class LayoutPageTemplateStructureHelperUtil {
 	public static JSONObject generateContentLayoutStructure(
 		List<FragmentEntryLink> fragmentEntryLinks) {
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+		return generateContentLayoutStructure(
+			fragmentEntryLinks,
+			LayoutPageTemplateEntryTypeConstants.TYPE_BASIC);
+	}
 
-		JSONArray structureJSONArray = JSONFactoryUtil.createJSONArray();
+	public static JSONObject generateContentLayoutStructure(
+		List<FragmentEntryLink> fragmentEntryLinks, int type) {
+
+		if (fragmentEntryLinks.isEmpty() &&
+			(type == LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT)) {
+
+			LayoutStructure layoutStructure = new LayoutStructure();
+
+			LayoutStructureItem rootLayoutStructureItem =
+				layoutStructure.addRootLayoutStructureItem();
+
+			layoutStructure.addDropZoneLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+			return layoutStructure.toJSONObject();
+		}
+
+		if (fragmentEntryLinks.isEmpty()) {
+			LayoutStructure layoutStructure = new LayoutStructure();
+
+			layoutStructure.addRootLayoutStructureItem();
+
+			return layoutStructure.toJSONObject();
+		}
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerLayoutStructureItem =
+			layoutStructure.addContainerLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
 
 		for (int i = 0; i < fragmentEntryLinks.size(); i++) {
 			FragmentEntryLink fragmentEntryLink = fragmentEntryLinks.get(i);
 
-			JSONObject structureJSONObject = JSONFactoryUtil.createJSONObject();
-
-			JSONArray columnJSONArray = JSONFactoryUtil.createJSONArray();
-
-			JSONObject columnJSONObject = JSONFactoryUtil.createJSONObject();
-
-			columnJSONObject.put("columnId", String.valueOf(i));
-
-			JSONArray fragmentEntryLinksJSONArray =
-				JSONFactoryUtil.createJSONArray();
-
-			fragmentEntryLinksJSONArray.put(
-				fragmentEntryLink.getFragmentEntryLinkId());
-
-			columnJSONObject.put(
-				"fragmentEntryLinkIds", fragmentEntryLinksJSONArray);
-
-			columnJSONObject.put("size", StringPool.BLANK);
-
-			columnJSONArray.put(columnJSONObject);
-
-			structureJSONObject.put("columns", columnJSONArray);
-
-			structureJSONObject.put("rowId", String.valueOf(i));
-			structureJSONObject.put("type", _getRowType(fragmentEntryLink));
-
-			structureJSONArray.put(structureJSONObject);
+			layoutStructure.addFragmentLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				containerLayoutStructureItem.getItemId(), i);
 		}
 
-		jsonObject.put("config", JSONFactoryUtil.createJSONObject());
-		jsonObject.put("nextColumnId", fragmentEntryLinks.size());
-		jsonObject.put("nextRowId", fragmentEntryLinks.size());
-
-		if (!fragmentEntryLinks.isEmpty()) {
-			jsonObject.put(
-				"nextRowId", String.valueOf(fragmentEntryLinks.size() - 1));
-		}
-
-		jsonObject.put("structure", structureJSONArray);
-
-		return jsonObject;
-	}
-
-	private static String _getRowType(FragmentEntryLink fragmentEntryLink) {
-		FragmentEntry fragmentEntry =
-			FragmentEntryLocalServiceUtil.fetchFragmentEntry(
-				fragmentEntryLink.getFragmentEntryId());
-
-		if ((fragmentEntry != null) &&
-			(fragmentEntry.getType() == FragmentConstants.TYPE_COMPONENT)) {
-
-			return "fragments-editor-component-row";
-		}
-
-		return "fragments-editor-section-row";
+		return layoutStructure.toJSONObject();
 	}
 
 }

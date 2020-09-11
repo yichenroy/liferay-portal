@@ -63,14 +63,12 @@ public class AggregateTestRule implements TestRule {
 		CodeCoverageAssertor.class.getName(), NewEnvTestRule.class.getName(),
 		AssumeTestRule.class.getName(),
 		"com.liferay.portal.test.rule.LiferayIntegrationTestRule",
-		"com.liferay.portal.test.rule.HypersonicServerClassTestRule",
 		"com.liferay.portal.test.rule.PersistenceTestRule",
 		"com.liferay.portal.test.rule.TransactionalTestRule",
 		SynchronousDestinationTestRule.class.getName(),
 		"com.liferay.portal.test.rule.SynchronousMailTestRule",
 		"com.liferay.document.library.webdav.test." +
 			"WebDAVEnvironmentConfigClassTestRule",
-		"com.liferay.portal.test.rule.SyntheticBundleClassTestRule",
 		"com.liferay.portal.test.rule.PermissionCheckerMethodTestRule"
 	};
 

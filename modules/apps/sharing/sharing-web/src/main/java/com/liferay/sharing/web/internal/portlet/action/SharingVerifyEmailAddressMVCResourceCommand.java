@@ -14,8 +14,8 @@
 
 package com.liferay.sharing.web.internal.portlet.action;
 
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
@@ -57,31 +57,30 @@ public class SharingVerifyEmailAddressMVCResourceCommand
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		HttpServletRequest request = _portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			resourceRequest);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (!themeDisplay.isSignedIn()) {
 			throw new PrincipalException.MustBeAuthenticated(
 				themeDisplay.getUserId());
 		}
 
-		String emailAddress = ParamUtil.getString(request, "emailAddress");
+		String emailAddress = ParamUtil.getString(
+			httpServletRequest, "emailAddress");
 
 		User user = _userLocalService.fetchUserByEmailAddress(
 			themeDisplay.getCompanyId(), emailAddress);
 
-		HttpServletResponse response = _portal.getHttpServletResponse(
-			resourceResponse);
+		HttpServletResponse httpServletResponse =
+			_portal.getHttpServletResponse(resourceResponse);
 
-		response.setContentType(ContentTypes.APPLICATION_JSON);
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("userEmailAddress", emailAddress);
-		jsonObject.put("userExists", user != null);
+		JSONObject jsonObject = JSONUtil.put("userExists", user != null);
 
 		JSONPortletResponseUtil.writeJSON(
 			resourceRequest, resourceResponse, jsonObject);

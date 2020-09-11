@@ -39,25 +39,27 @@ import javax.servlet.http.HttpSession;
 public class DefaultLandingPageAction extends Action {
 
 	@Override
-	public void run(HttpServletRequest request, HttpServletResponse response)
+	public void run(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws ActionException {
 
 		try {
-			doRun(request, response);
+			doRun(httpServletRequest, httpServletResponse);
 		}
-		catch (Exception e) {
-			throw new ActionException(e);
+		catch (Exception exception) {
+			throw new ActionException(exception);
 		}
 	}
 
 	protected void doRun(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		long companyId = PortalUtil.getCompanyId(request);
-
 		String path = PrefsPropsUtil.getString(
-			companyId, PropsKeys.DEFAULT_LANDING_PAGE_PATH);
+			PortalUtil.getCompanyId(httpServletRequest),
+			PropsKeys.DEFAULT_LANDING_PAGE_PATH);
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -68,7 +70,7 @@ public class DefaultLandingPageAction extends Action {
 			return;
 		}
 
-		HttpSession session = request.getSession();
+		HttpSession session = httpServletRequest.getSession();
 
 		if (path.contains("${liferay:screenName}") ||
 			path.contains("${liferay:userId}")) {

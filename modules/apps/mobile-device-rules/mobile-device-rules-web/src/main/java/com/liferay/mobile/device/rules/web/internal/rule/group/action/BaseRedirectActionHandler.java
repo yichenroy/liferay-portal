@@ -34,11 +34,11 @@ public abstract class BaseRedirectActionHandler implements ActionHandler {
 
 	@Override
 	public void applyAction(
-			MDRAction mdrAction, HttpServletRequest request,
-			HttpServletResponse response)
+			MDRAction mdrAction, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws PortalException {
 
-		String url = getURL(mdrAction, request, response);
+		String url = getURL(mdrAction, httpServletRequest, httpServletResponse);
 
 		if (Validator.isNull(url)) {
 			if (_log.isInfoEnabled()) {
@@ -48,7 +48,7 @@ public abstract class BaseRedirectActionHandler implements ActionHandler {
 			return;
 		}
 
-		String requestURL = String.valueOf(request.getRequestURL());
+		String requestURL = String.valueOf(httpServletRequest.getRequestURL());
 
 		if (StringUtil.contains(requestURL, url)) {
 			if (_log.isInfoEnabled()) {
@@ -60,16 +60,17 @@ public abstract class BaseRedirectActionHandler implements ActionHandler {
 		}
 
 		try {
-			response.sendRedirect(url);
+			httpServletResponse.sendRedirect(url);
 		}
-		catch (IOException ioe) {
-			throw new PortalException("Unable to redirect to " + url, ioe);
+		catch (IOException ioException) {
+			throw new PortalException(
+				"Unable to redirect to " + url, ioException);
 		}
 	}
 
 	protected abstract String getURL(
-			MDRAction mdrAction, HttpServletRequest request,
-			HttpServletResponse response)
+			MDRAction mdrAction, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws PortalException;
 
 	private static final Log _log = LogFactoryUtil.getLog(

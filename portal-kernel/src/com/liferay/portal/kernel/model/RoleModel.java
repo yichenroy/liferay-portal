@@ -14,14 +14,15 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the Role service. Represents a row in the &quot;Role_&quot; database table, with each column mapped to a property of this class.
@@ -36,8 +37,8 @@ import java.util.Map;
  */
 @ProviderType
 public interface RoleModel
-	extends AttachedModel, BaseModel<Role>, LocalizedModel, MVCCModel,
-			ShardedModel, StagedAuditedModel {
+	extends AttachedModel, BaseModel<Role>, CTModel<Role>, LocalizedModel,
+			MVCCModel, ShardedModel, StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -50,6 +51,7 @@ public interface RoleModel
 	 *
 	 * @return the primary key of this role
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -57,6 +59,7 @@ public interface RoleModel
 	 *
 	 * @param primaryKey the primary key of this role
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -74,6 +77,22 @@ public interface RoleModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this role.
+	 *
+	 * @return the ct collection ID of this role
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this role.
+	 *
+	 * @param ctCollectionId the ct collection ID of this role
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this role.

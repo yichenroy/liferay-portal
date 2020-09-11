@@ -14,6 +14,8 @@
 
 package com.liferay.frontend.js.loader.modules.extender.internal.resolution;
 
+import com.liferay.portal.kernel.json.JSONObject;
+
 import java.util.Collection;
 import java.util.Map;
 
@@ -59,12 +61,14 @@ public interface BrowserModule {
 	 * The dependencies map will be something similar to:
 	 *
 	 * {
-	 *     "is-object": "is-object@1.1.0"
+	 * "is-object": "is-object@1.1.0"
 	 * }
 	 *
-	 * @return a map or null
+	 * @return a map or <code>null</code>
 	 */
 	public Map<String, String> getDependenciesMap();
+
+	public JSONObject getFlagsJSONObject();
 
 	public String getName();
 

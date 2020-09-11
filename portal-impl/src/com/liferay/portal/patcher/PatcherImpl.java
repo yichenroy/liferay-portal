@@ -14,6 +14,7 @@
 
 package com.liferay.portal.patcher;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -22,7 +23,6 @@ import com.liferay.portal.kernel.patcher.Patcher;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -77,7 +77,7 @@ public class PatcherImpl implements Patcher {
 
 			return true;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				StringBundler.concat(
 					"Unable to copy ", patchFile.getAbsolutePath(), " to ",
@@ -200,35 +200,36 @@ public class PatcherImpl implements Patcher {
 
 		Arrays.sort(portalImplJARPatches);
 
-		if (!Arrays.equals(portalImplJARPatches, kernelJARPatches)) {
-			_log.error("Inconsistent patch level detected");
+		if (Arrays.equals(portalImplJARPatches, kernelJARPatches)) {
+			return;
+		}
 
-			if (_log.isWarnEnabled()) {
-				if (ArrayUtil.isEmpty(portalImplJARPatches)) {
-					_log.warn(
-						"There are no patches installed on portal-impl.jar");
-				}
-				else {
-					_log.warn(
-						"Patch level on portal-impl.jar: " +
-							Arrays.toString(portalImplJARPatches));
-				}
+		_log.error("Inconsistent patch level detected");
 
-				if (ArrayUtil.isEmpty(kernelJARPatches)) {
-					_log.warn(
-						"There are no patches installed on portal-kernel.jar");
-				}
-				else {
-					_log.warn(
-						"Patch level on portal-kernel.jar: " +
-							Arrays.toString(kernelJARPatches));
-				}
+		if (_log.isWarnEnabled()) {
+			if (ArrayUtil.isEmpty(portalImplJARPatches)) {
+				_log.warn("There are no patches installed on portal-impl.jar");
+			}
+			else {
+				_log.warn(
+					"Patch level on portal-impl.jar: " +
+						Arrays.toString(portalImplJARPatches));
 			}
 
-			_inconsistentPatchLevels = true;
-
-			throw new PatchInconsistencyException();
+			if (ArrayUtil.isEmpty(kernelJARPatches)) {
+				_log.warn(
+					"There are no patches installed on portal-kernel.jar");
+			}
+			else {
+				_log.warn(
+					"Patch level on portal-kernel.jar: " +
+						Arrays.toString(kernelJARPatches));
+			}
 		}
+
+		_inconsistentPatchLevels = true;
+
+		throw new PatchInconsistencyException();
 	}
 
 	private String[] _getInstalledPatches(Properties properties) {
@@ -236,10 +237,8 @@ public class PatcherImpl implements Patcher {
 			properties = getProperties();
 		}
 
-		String[] installedPatchNames = StringUtil.split(
+		return StringUtil.split(
 			properties.getProperty(PROPERTY_INSTALLED_PATCHES));
-
-		return installedPatchNames;
 	}
 
 	private Properties _getProperties(String fileName) {
@@ -269,9 +268,9 @@ public class PatcherImpl implements Patcher {
 				properties.load(inputStream);
 			}
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioe, ioe);
+				_log.warn(ioException, ioException);
 			}
 		}
 

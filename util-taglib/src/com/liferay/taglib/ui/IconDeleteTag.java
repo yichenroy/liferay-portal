@@ -14,13 +14,13 @@
 
 package com.liferay.taglib.ui;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.FileAvailabilityUtil;
 import com.liferay.taglib.util.TagResourceBundleUtil;
@@ -69,7 +69,7 @@ public class IconDeleteTag extends IconTag {
 
 	@Override
 	protected String getPage() {
-		if (FileAvailabilityUtil.isAvailable(servletContext, _PAGE)) {
+		if (FileAvailabilityUtil.isAvailable(getServletContext(), _PAGE)) {
 			return _PAGE;
 		}
 
@@ -120,11 +120,8 @@ public class IconDeleteTag extends IconTag {
 		if (url.startsWith(Http.HTTP_WITH_SLASH) ||
 			url.startsWith(Http.HTTPS_WITH_SLASH)) {
 
-			url = "submitForm(document.hrefFm, '".concat(
-				HtmlUtil.escapeJS(url)
-			).concat(
-				"');"
-			);
+			url = StringBundler.concat(
+				"submitForm(document.hrefFm, '", HtmlUtil.escapeJS(url), "');");
 		}
 
 		if (!_trash) {

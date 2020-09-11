@@ -32,23 +32,33 @@ public class BNDMultipleAppBNDsCheck extends BaseFileCheck {
 			return content;
 		}
 
-		int x = absolutePath.indexOf("/modules/private/apps/");
+		_checkMuldipleAppBND(fileName, absolutePath, "dxp");
+		_checkMuldipleAppBND(fileName, absolutePath, "private");
+
+		return content;
+	}
+
+	private void _checkMuldipleAppBND(
+			String fileName, String absolutePath, String dirName)
+		throws IOException {
+
+		int x = absolutePath.indexOf("/modules/" + dirName + "/apps/");
 
 		if (x == -1) {
-			return content;
+			return;
 		}
 
 		String portalAppBNDFileName = StringUtil.replaceFirst(
-			absolutePath.substring(x + 1), "/private/", "/");
+			absolutePath.substring(x + 1), "/" + dirName + "/", "/");
 
-		if (getPortalContent(portalAppBNDFileName, true) != null) {
+		if (getPortalContent(portalAppBNDFileName, absolutePath, true) !=
+				null) {
+
 			addMessage(
 				fileName,
 				"Redundant app.bnd. There is one already: '" +
 					portalAppBNDFileName + "'.");
 		}
-
-		return content;
 	}
 
 }

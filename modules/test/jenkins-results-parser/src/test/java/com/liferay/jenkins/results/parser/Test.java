@@ -192,10 +192,10 @@ public class Test {
 
 			testSamples.put(sampleKey, testSample);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			deleteFile(sampleDir);
 
-			throw ioe;
+			throw ioException;
 		}
 	}
 
@@ -250,13 +250,14 @@ public class Test {
 		try {
 			document = saxReader.read(new StringReader(xml));
 		}
-		catch (DocumentException de) {
-			DocumentException newDE = new DocumentException(
-				de.getMessage() + "\n" + xml);
+		catch (DocumentException documentException1) {
+			DocumentException documentException2 = new DocumentException(
+				documentException1.getMessage() + "\n" + xml);
 
-			newDE.setStackTrace(de.getStackTrace());
+			documentException2.setStackTrace(
+				documentException1.getStackTrace());
 
-			throw newDE;
+			throw documentException2;
 		}
 
 		String formattedXML = Dom4JUtil.format(document.getRootElement());
@@ -340,9 +341,7 @@ public class Test {
 	protected String toURLString(File file) throws Exception {
 		URI uri = file.toURI();
 
-		URL url = uri.toURL();
-
-		String urlString = url.toString();
+		String urlString = String.valueOf(uri.toURL());
 
 		File dependenciesDir = dependenciesDirs.get(0);
 

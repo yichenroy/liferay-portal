@@ -14,10 +14,10 @@
 
 package com.liferay.portal.diff;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.diff.DiffResult;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.Reader;
 
@@ -95,7 +95,7 @@ public class DiffImpl implements com.liferay.portal.kernel.diff.Diff {
 
 		// Make a a Diff of these lines and iterate over their Differences.
 
-		Diff diff = new Diff(sourceStringList, targetStringList);
+		Diff<String> diff = new Diff(sourceStringList, targetStringList);
 
 		List<Difference> differences = diff.diff();
 

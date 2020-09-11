@@ -28,13 +28,16 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Zoltan Csaszi
  */
+@Component(service = BackgroundTaskFinder.class)
 public class BackgroundTaskFinderImpl
 	extends BackgroundTaskFinderBaseImpl implements BackgroundTaskFinder {
 
@@ -59,29 +62,29 @@ public class BackgroundTaskFinderImpl
 			sql = StringUtil.replace(
 				sql, "[$ORDER_BY_TYPE$]", orderByType ? "ASC" : "DESC");
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("BackgroundTask", BackgroundTaskImpl.class);
+			sqlQuery.addEntity("BackgroundTask", BackgroundTaskImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (long groupId : groupIds) {
-				qPos.add(groupId);
+				queryPos.add(groupId);
 			}
 
 			for (String taskExecutorClassName : taskExecutorClassNames) {
-				qPos.add(taskExecutorClassName);
+				queryPos.add(taskExecutorClassName);
 			}
 
 			if (completed != null) {
-				qPos.add(completed.booleanValue());
+				queryPos.add(completed.booleanValue());
 			}
 
 			return (List<BackgroundTask>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -164,14 +167,13 @@ public class BackgroundTaskFinderImpl
 				sql, "[$WHERE_CONDITIONS$]", "WHERE " + sb.toString());
 		}
 		else {
-			sql = StringUtil.replace(
-				sql, "[$WHERE_CONDITIONS$]", StringPool.BLANK);
+			sql = StringUtil.removeSubstring(sql, "[$WHERE_CONDITIONS$]");
 		}
 
 		return sql;
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

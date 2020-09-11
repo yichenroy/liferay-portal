@@ -27,34 +27,65 @@ CATALINA_OPTS=&quot;${CATALINA_OPTS} -Djavax.net.ssl.trustStore=${solr.dir}/serv
 		</sequential>
 	</macrodef>
 
+	<macrodef name="configure-blacklist-osgi-config">
+		<sequential>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.bundle.blacklist.internal.BundleBlacklistConfiguration.config">blacklistBundleSymbolicNames="com.liferay.portal.mobile.device.detection.fiftyonedegrees.api,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise.test.data,com.liferay.portal.mobile.device.detection.fiftyonedegrees,com.liferay.portal.search.elasticsearch7.api,com.liferay.portal.search.elasticsearch7.impl,com.liferay.portal.search.elasticsearch7.spi,com.liferay.portal.search.elasticsearch.monitoring.web</echo>
+
+			<pathconvert pathsep="," property="commerce.modules">
+				<path>
+					<fileset
+						dir="${liferay.home}/osgi/modules"
+					>
+						<include name="com.liferay.commerce.*" />
+						<include name="com.liferay.headless.commerce.*" />
+					</fileset>
+				</path>
+				<chainedmapper>
+					<mapper
+						from="^(.*)/(.*\.jar)"
+						to="\2"
+						type="regexp"
+					/>
+					<mapper
+						from="*.jar"
+						to="*"
+						type="glob"
+					/>
+				</chainedmapper>
+			</pathconvert>
+
+			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.bundle.blacklist.internal.BundleBlacklistConfiguration.config">,${commerce.modules}"</echo>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="configure-liferay-solr-adapter-osgi-configs">
 		<sequential>
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.cfg">readURL=http://localhost:8983/solr/liferay
-writeURL=http://localhost:8983/solr/liferay</echo>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.config">readURL="http://localhost:8983/solr/liferay"
+writeURL="http://localhost:8983/solr/liferay"</echo>
 		</sequential>
 	</macrodef>
 
 	<macrodef name="configure-liferay-solr-solrcloud-osgi-configs">
 		<sequential>
-			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.cfg">
-clientType=CLOUD</echo>
+			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.config">
+clientType="CLOUD"</echo>
 		</sequential>
 	</macrodef>
 
 	<macrodef name="configure-liferay-solr-ssl-adapter-properties">
 		<sequential>
 			<replace
-				file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.cfg"
+				file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.config"
 			>
 				<replacetoken><![CDATA[http://]]></replacetoken>
 				<replacevalue><![CDATA[https://]]></replacevalue>
 			</replace>
 
-			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.cfg">
-authenticationMode=CERT</echo>
+			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.config">
+authenticationMode="CERT"</echo>
 
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrSSLSocketFactoryConfiguration.cfg">keyStorePath=${solr.dir}/server/etc/solr-ssl.keystore.jks
-trustStorePath=${solr.dir}/server/etc/solr-ssl.keystore.jks</echo>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrSSLSocketFactoryConfiguration.config">keyStorePath="${solr.dir}/server/etc/solr-ssl.keystore.jks"
+trustStorePath="${solr.dir}/server/etc/solr-ssl.keystore.jks"</echo>
 		</sequential>
 	</macrodef>
 
@@ -267,31 +298,63 @@ schema=schema.xml</echo>
 		<gradle-execute dir="modules/apps/portal-search-solr7" task="deploy">
 			<arg value="clean" />
 		</gradle-execute>
-
-		<echo file="${liferay.home}/osgi/configs/com.liferay.portal.bundle.blacklist.internal.BundleBlacklistConfiguration.config">blacklistBundleSymbolicNames=&quot;com.liferay.portal.mobile.device.detection.fiftyonedegrees.api,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise.test.data,com.liferay.portal.mobile.device.detection.fiftyonedegrees,com.liferay.portal.search.elasticsearch6.api,com.liferay.portal.search.elasticsearch6.impl,com.liferay.portal.search.elasticsearch6.xpack.security.impl,com.liferay.portal.search.elasticsearch6.xpack.monitoring.web&quot;</echo>
 	</target>
 
-	<target name="prepare-solr-suite">
+	<target name="print-solr-indices">
+		<property name="solr.print.query">
+			<![CDATA[
+				'{
+					"query": {
+						"bool": {
+							"must": [
+								{
+									"match": {
+										"userName": "test test"
+									}
+								}
+							],
+							"must_not": [
+								{
+									"match": {
+										"hidden": "true"
+									}
+								}
+							]
+						}
+					}
+				}'
+			]]>
+		</property>
+
+		<exec executable="curl" outputproperty="curl.output.solr.indices">
+			<arg line="http://localhost:8983/solr/liferay/select?q=*:*&amp;wt=json" />
+			<arg value="-d" />
+			<arg value="${solr.print.query}" />
+		</exec>
+
+		<echo></echo>
+		<echo>##</echo>
+		<echo>## Solr Indices</echo>
+		<echo>##</echo>
+		<echo></echo>
+		<echo>${curl.output.solr.indices}</echo>
+		<echo></echo>
+	</target>
+
+	<target name="set-up-solr">
 		<antcall target="deploy-solr" />
 
-		<condition else="${env.TEST_BATCH_NAME}" property="test.batch.name" value="${test.batch.name}">
-			<isset property="test.batch.name" />
-		</condition>
-
-		<if>
-			<not>
-				<contains string="${test.batch.name}" substring="functional" />
-			</not>
-			<then>
-				<antcall target="start-solr" />
-			</then>
-		</if>
+		<antcall target="start-solr" />
 	</target>
 
 	<target name="start-solr">
+		<lstopwatch action="start" name="start.solr" />
+
 		<unzip-solr />
 
 		<prepare-solr-configurations />
+
+		<configure-blacklist-osgi-config />
 
 		<configure-liferay-solr-adapter-osgi-configs />
 
@@ -323,9 +386,13 @@ schema=schema.xml</echo>
 				<create-solr-core />
 			</else>
 		</if>
+
+		<lstopwatch action="total" name="start.solr" />
 	</target>
 
 	<target name="start-solr-core">
+		<lstopwatch action="start" name="start.solr.core" />
+
 		<if>
 			<os family="unix" />
 			<then>
@@ -356,10 +423,14 @@ schema=schema.xml</echo>
 			<socket port="8983" server="localhost" />
 		</waitfor>
 
+		<lstopwatch action="total" name="start.solr.core" />
+
 		<fail if="solr.server.not.started" message="Solr server failed to initialize." />
 	</target>
 
 	<target name="start-solr-solrcloud">
+		<lstopwatch action="start" name="start.solr.solrcloud" />
+
 		<prepare-solr-solrcloud-configurations />
 
 		<prepare-solr-solrcloud-example />
@@ -367,11 +438,11 @@ schema=schema.xml</echo>
 		<configure-liferay-solr-solrcloud-osgi-configs />
 
 		<start-solr-solrcloud-example />
+
+		<lstopwatch action="total" name="start.solr.solrcloud" />
 	</target>
 
 	<target name="stop-solr-core">
-		<print-file file.name="${solr.dir}/server/logs/solr.log" />
-
 		<if>
 			<os family="unix" />
 			<then>

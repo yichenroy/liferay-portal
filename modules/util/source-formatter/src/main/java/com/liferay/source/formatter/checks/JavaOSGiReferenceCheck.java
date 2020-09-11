@@ -47,16 +47,8 @@ import java.util.regex.Pattern;
 public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isModulesCheck() {
+	public boolean isModuleSourceCheck() {
 		return true;
-	}
-
-	public void setServiceReferenceUtilClassNames(
-		String serviceReferenceUtilClassNames) {
-
-		Collections.addAll(
-			_serviceReferenceUtilClassNames,
-			StringUtil.split(serviceReferenceUtilClassNames));
 	}
 
 	@Override
@@ -76,10 +68,8 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 		_checkMissingReference(fileName, content);
 
-		String className = JavaSourceUtil.getClassName(fileName);
-
 		String moduleSuperClassContent = _getModuleSuperClassContent(
-			content, className, packageName);
+			content, JavaSourceUtil.getClassName(fileName), packageName);
 
 		content = _formatDuplicateReferenceMethods(
 			fileName, content, moduleSuperClassContent);
@@ -94,8 +84,11 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 			}
 		}
 
+		List<String> serviceReferenceUtilClassNames = getAttributeValues(
+			_SERVICE_REFERENCE_UTIL_CLASS_NAMES_KEY, absolutePath);
+
 		for (String serviceReferenceUtilClassName :
-				_serviceReferenceUtilClassNames) {
+				serviceReferenceUtilClassNames) {
 
 			_checkUtilUsage(
 				fileName, content, serviceReferenceUtilClassName,
@@ -112,6 +105,10 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 		while (matcher.find()) {
 			String serviceUtilClassName = matcher.group(2);
+
+			if (serviceUtilClassName.equals("IdentifiableOSGiServiceUtil")) {
+				continue;
+			}
 
 			if (moduleServicePackageName == null) {
 				moduleServicePackageName = _getModuleServicePackageName(
@@ -131,8 +128,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 			addMessage(
 				fileName,
 				"Use @Reference instead of calling " + serviceUtilClassName +
-					" directly",
-				"osgi_components.markdown");
+					" directly");
 		}
 	}
 
@@ -169,8 +165,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 					addMessage(
 						fileName,
 						"Use portal service reference instead of '" +
-							serviceReferenceUtilClassName + "' in modules",
-						"osgi_components.markdown");
+							serviceReferenceUtilClassName + "' in modules");
 
 					return;
 				}
@@ -220,8 +215,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 				String entireMethod = content.substring(x + 1, y);
 
-				content = StringUtil.replace(
-					content, entireMethod, StringPool.BLANK);
+				content = StringUtil.removeSubstring(content, entireMethod);
 
 				bndInheritRequired = true;
 			}
@@ -252,8 +246,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 					String entireMethod = content.substring(x + 1, y);
 
-					content = StringUtil.replace(
-						content, entireMethod, StringPool.BLANK);
+					content = StringUtil.removeSubstring(content, entireMethod);
 
 					bndInheritRequired = true;
 				}
@@ -272,8 +265,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 				addMessage(
 					fileName,
 					"Add '-dsannotations-options: inherit' to '" +
-						bndSettings.getFileName(),
-					"osgi_components_inheritance.markdown");
+						bndSettings.getFileName());
 			}
 		}
 
@@ -488,6 +480,9 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 		return _serviceProxyFactoryUtilClassNames;
 	}
 
+	private static final String _SERVICE_REFERENCE_UTIL_CLASS_NAMES_KEY =
+		"serviceReferenceUtilClassNames";
+
 	private static final Pattern _referenceMethodContentPattern =
 		Pattern.compile("^(\\w+) =\\s+\\w+;$");
 	private static final Pattern _referenceMethodPattern = Pattern.compile(
@@ -501,7 +496,5 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 		new ConcurrentHashMap<>();
 	private Map<String, String> _moduleFileNamesMap;
 	private List<String> _serviceProxyFactoryUtilClassNames;
-	private final List<String> _serviceReferenceUtilClassNames =
-		new ArrayList<>();
 
 }

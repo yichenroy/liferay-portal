@@ -23,6 +23,8 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.include.PageInclude;
 import com.liferay.taglib.ui.IconTag;
 
+import java.util.Objects;
+
 import javax.portlet.PortletConfig;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,18 +48,19 @@ public class CreateAccountNavigationPostPageInclude implements PageInclude {
 
 	@Override
 	public void include(PageContext pageContext) throws JspException {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		String mvcRenderCommandName = request.getParameter(
+		String mvcRenderCommandName = httpServletRequest.getParameter(
 			"mvcRenderCommandName");
 
-		if ("/login/create_account".equals(mvcRenderCommandName)) {
+		if (Objects.equals(mvcRenderCommandName, "/login/create_account")) {
 			return;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Company company = themeDisplay.getCompany();
 
@@ -65,8 +68,9 @@ public class CreateAccountNavigationPostPageInclude implements PageInclude {
 			return;
 		}
 
-		PortletConfig portletConfig = (PortletConfig)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+		PortletConfig portletConfig =
+			(PortletConfig)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_CONFIG);
 
 		String portletName = portletConfig.getPortletName();
 
@@ -76,14 +80,14 @@ public class CreateAccountNavigationPostPageInclude implements PageInclude {
 
 		IconTag iconTag = new IconTag();
 
-		iconTag.setIconCssClass("icon-plus");
 		iconTag.setMessage("create-account");
 
 		try {
-			iconTag.setUrl(_portal.getCreateAccountURL(request, themeDisplay));
+			iconTag.setUrl(
+				_portal.getCreateAccountURL(httpServletRequest, themeDisplay));
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 
 		iconTag.doTag(pageContext);

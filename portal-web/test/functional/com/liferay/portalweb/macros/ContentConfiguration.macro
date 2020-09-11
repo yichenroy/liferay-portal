@@ -1,11 +1,10 @@
 definition {
+
 	macro checkContentNameList {
 		for (var contentName : list "${checkContentNameList}") {
 			var key_contentName = "${contentName}";
 
-			Check.checkToggleSwitch(
-				locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL"
-			);
+			Check.checkToggleSwitch(locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL");
 		}
 	}
 
@@ -60,38 +59,47 @@ definition {
 	}
 
 	macro contentDateRange {
+		if (IsElementPresent(locator1 = "Button#PUBLISH")) {
+			ScrollWebElementIntoView(locator1 = "Button#PUBLISH");
+		}
+
+		var browserType = PropsUtil.get("browser.type");
+
 		if ("${contentDateRange}" == "All") {
 			Click(locator1 = "StagingPublishToLive#CONTENT_ALL");
-
-			Click(locator1 = "Link#REFRESH_COUNTS");
 		}
 
 		if ("${contentDateRange}" == "Date Range") {
-			Click(locator1 = "StagingPublishToLive#CONTENT_DATE_RANGE");
+			Click(locator1 = "Radio#CHOOSE_CONTENT_DATE_RANGE_CHANGE");
 
 			var key_contentDateRange = "${contentDateRange}";
 
 			Type(
 				locator1 = "Select#DATE_RANGE_START_DATE",
-				value1 = "${dateRangeStartDate}"
-			);
+				value1 = "${dateRangeStartDate}");
 
-			Type(locator1 = "Select#DATE_RANGE_END_DATE", value1 = "${dateRangeEndDate}");
-
-			Click(locator1 = "Link#REFRESH_COUNTS");
+			Type(
+				locator1 = "Select#DATE_RANGE_END_DATE",
+				value1 = "${dateRangeEndDate}");
 		}
 
-		if ("${contentDateRange}" == "Last") {
-			Click(locator1 = "StagingPublishToLive#CONTENT_LAST");
+		if (("${contentDateRange}" == "Last") && ("${browserType}" == "safari")) {
+			Click.javaScriptClick(locator1 = "StagingPublishToLive#CONTENT_LAST");
+		}
+		else if ("${contentDateRange}" == "Last") {
+			Click.clickNoMouseOverNoWaitForVisible(locator1 = "StagingPublishToLive#CONTENT_LAST");
+		}
 
+		if ("${browserType}" == "safari") {
+			Click.javaScriptClick(locator1 = "Link#REFRESH_COUNTS");
+		}
+		else {
 			Click(locator1 = "Link#REFRESH_COUNTS");
 		}
 	}
 
 	macro contentDeletion {
-		Click(
-			locator1 = "StagingPublishToLive#CONTENT_CHOOSE_CONTENT_DELETION_CHECKBOX"
-		);
+		Click(locator1 = "StagingPublishToLive#CONTENT_CHOOSE_CONTENT_DELETION_CHECKBOX");
 	}
 
 	macro deleteMissingPages {
@@ -104,19 +112,25 @@ definition {
 		Click(locator1 = "Checkbox#PERMISSIONS");
 	}
 
+	macro pageDeletion {
+		Click(locator1 = "StagingPublishToLive#CONTENT_CHOOSE_CONTENT_DELETION_CHECKBOX");
+
+		AssertElementPresent(locator1 = "StagingPublishToLive#PAGES_CHOOSE_PAGE_DELETION_CHECKBOX");
+
+		Click(locator1 = "StagingPublishToLive#PAGES_CHOOSE_PAGE_DELETION_CHECKBOX");
+	}
+
 	macro setTitle {
 		Type(
 			locator1 = "StagingPublishToLive#PUBLICATION_TITLE",
-			value1 = "${publicationTitle}"
-		);
+			value1 = "${publicationTitle}");
 	}
 
 	macro uncheckContentNameList {
 		for (var contentName : list "${uncheckContentNameList}") {
 			Uncheck.uncheckToggleSwitch(
-				locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL",
-				key_contentName = "${contentName}"
-			);
+				key_contentName = "${contentName}",
+				locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL");
 		}
 	}
 
@@ -147,24 +161,28 @@ definition {
 
 		Click(locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_SUBCONTENT_CHECKBOX");
 
-		AssertClick(locator1 = "Button#OK", value1 = "OK");
+		AssertClick(
+			locator1 = "Button#OK",
+			value1 = "OK");
 	}
 
 	macro uncheckSubSubContent {
 		var key_contentName = "${contentName}";
 
-		Click(locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CONTENT_CHECKBOX");
+		Check(locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CONTENT_CHECKBOX");
 
 		AssertClick(
 			locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_CONTENT_CHANGE_LINK",
-			value1 = "Change"
-		);
+			value1 = "Change");
 
 		var key_subContent = "${subContent}";
 		var key_subSubContent = "${uncheckSubSubContent}";
 
 		Click(locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_SUB_SUBCONTENT_CHECKBOX");
 
-		AssertClick(locator1 = "Button#OK", value1 = "OK");
+		AssertClick(
+			locator1 = "Button#OK",
+			value1 = "OK");
 	}
+
 }

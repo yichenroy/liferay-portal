@@ -14,8 +14,6 @@
 
 package com.liferay.external.reference.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,7 +23,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see ERUserGroupLocalService
  * @generated
  */
-@ProviderType
 public class ERUserGroupLocalServiceWrapper
 	implements ERUserGroupLocalService,
 			   ServiceWrapper<ERUserGroupLocalService> {

@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.engine.adapter.cluster;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Dylan Rebelak
@@ -33,5 +33,8 @@ public interface ClusterRequestExecutor {
 
 	public StatsClusterResponse executeClusterRequest(
 		StatsClusterRequest statsClusterRequest);
+
+	public UpdateSettingsClusterResponse executeClusterRequest(
+		UpdateSettingsClusterRequest updateSettingsClusterRequest);
 
 }

@@ -29,8 +29,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mika Koivisto
- *
+ * @author     Mika Koivisto
  * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
 @Component(
@@ -69,11 +68,11 @@ public class SAPServiceVerifyProcess extends VerifyProcess {
 					_sapEntryLocalService.checkSystemSAPEntries(
 						company.getCompanyId());
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					_log.error(
 						"Unable to add default service access policy for " +
 							"company " + company.getCompanyId(),
-						pe);
+						portalException);
 				}
 			}
 		}

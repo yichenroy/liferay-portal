@@ -18,10 +18,12 @@ import com.liferay.knowledge.base.constants.AdminActivityKeys;
 import com.liferay.knowledge.base.exception.KBTemplateContentException;
 import com.liferay.knowledge.base.exception.KBTemplateTitleException;
 import com.liferay.knowledge.base.exception.NoSuchTemplateException;
+import com.liferay.knowledge.base.internal.util.KBCommentUtil;
 import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.knowledge.base.service.base.KBTemplateLocalServiceBaseImpl;
 import com.liferay.knowledge.base.util.KnowledgeBaseUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.Disjunction;
@@ -32,8 +34,8 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -48,10 +50,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+
 /**
  * @author Peter Shin
  * @author Brian Wing Shun Chan
  */
+@Component(
+	property = "model.class.name=com.liferay.knowledge.base.model.KBTemplate",
+	service = AopService.class
+)
 public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 
 	@Override
@@ -82,7 +90,7 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 		kbTemplate.setTitle(title);
 		kbTemplate.setContent(content);
 
-		kbTemplatePersistence.update(kbTemplate);
+		kbTemplate = kbTemplatePersistence.update(kbTemplate);
 
 		// Resources
 
@@ -90,9 +98,8 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 
 		// Social
 
-		JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-		extraDataJSONObject.put("title", kbTemplate.getTitle());
+		JSONObject extraDataJSONObject = JSONUtil.put(
+			"title", kbTemplate.getTitle());
 
 		socialActivityLocalService.addActivity(
 			userId, groupId, KBTemplate.class.getName(), kbTemplateId,
@@ -132,8 +139,9 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 
 		// KB Comments
 
-		kbCommentLocalService.deleteKBComments(
-			KBTemplate.class.getName(), kbTemplate.getKbTemplateId());
+		KBCommentUtil.deleteKBComments(
+			KBTemplate.class.getName(), classNameLocalService,
+			kbTemplate.getKbTemplateId(), kbCommentPersistence);
 
 		// Social
 
@@ -162,7 +170,7 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 				kbTemplate = kbTemplatePersistence.findByPrimaryKey(
 					kbTemplateId);
 			}
-			catch (NoSuchTemplateException nste) {
+			catch (NoSuchTemplateException noSuchTemplateException) {
 				continue;
 			}
 
@@ -213,13 +221,12 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 		kbTemplate.setTitle(title);
 		kbTemplate.setContent(content);
 
-		kbTemplatePersistence.update(kbTemplate);
+		kbTemplate = kbTemplatePersistence.update(kbTemplate);
 
 		// Social
 
-		JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-		extraDataJSONObject.put("title", kbTemplate.getTitle());
+		JSONObject extraDataJSONObject = JSONUtil.put(
+			"title", kbTemplate.getTitle());
 
 		socialActivityLocalService.addActivity(
 			kbTemplate.getUserId(), kbTemplate.getGroupId(),

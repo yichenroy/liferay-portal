@@ -92,10 +92,7 @@ public class BackgroundTaskStatusRegistryImpl
 		lock.lock();
 
 		try {
-			BackgroundTaskStatus backgroundTaskStatus =
-				_backgroundTaskStatuses.remove(backgroundTaskId);
-
-			return backgroundTaskStatus;
+			return _backgroundTaskStatuses.remove(backgroundTaskId);
 		}
 		finally {
 			lock.unlock();
@@ -116,8 +113,8 @@ public class BackgroundTaskStatusRegistryImpl
 
 			return future.get();
 		}
-		catch (Exception e) {
-			_log.error("Unable to retrieve status from master node", e);
+		catch (Exception exception) {
+			_log.error("Unable to retrieve status from master node", exception);
 		}
 
 		return null;

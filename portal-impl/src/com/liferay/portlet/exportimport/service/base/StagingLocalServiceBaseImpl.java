@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.exportimport.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.exportimport.kernel.service.persistence.ExportImportConfigurationFinder;
 import com.liferay.exportimport.kernel.service.persistence.ExportImportConfigurationPersistence;
@@ -54,10 +52,9 @@ import javax.sql.DataSource;
  * @see com.liferay.portlet.exportimport.service.impl.StagingLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class StagingLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
-	implements StagingLocalService, IdentifiableOSGiService {
+	implements IdentifiableOSGiService, StagingLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -628,8 +625,8 @@ public abstract class StagingLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 

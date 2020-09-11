@@ -14,9 +14,8 @@
 
 package com.liferay.social.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.social.kernel.model.SocialActivityInterpreter;
 
 /**
  * Provides a wrapper for {@link SocialActivityInterpreterLocalService}.
@@ -25,10 +24,9 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see SocialActivityInterpreterLocalService
  * @generated
  */
-@ProviderType
 public class SocialActivityInterpreterLocalServiceWrapper
-	implements SocialActivityInterpreterLocalService,
-			   ServiceWrapper<SocialActivityInterpreterLocalService> {
+	implements ServiceWrapper<SocialActivityInterpreterLocalService>,
+			   SocialActivityInterpreterLocalService {
 
 	public SocialActivityInterpreterLocalServiceWrapper(
 		SocialActivityInterpreterLocalService
@@ -45,8 +43,7 @@ public class SocialActivityInterpreterLocalServiceWrapper
 	 */
 	@Override
 	public void addActivityInterpreter(
-		com.liferay.social.kernel.model.SocialActivityInterpreter
-			activityInterpreter) {
+		SocialActivityInterpreter activityInterpreter) {
 
 		_socialActivityInterpreterLocalService.addActivityInterpreter(
 			activityInterpreter);
@@ -59,27 +56,22 @@ public class SocialActivityInterpreterLocalServiceWrapper
 	 */
 	@Override
 	public void deleteActivityInterpreter(
-		com.liferay.social.kernel.model.SocialActivityInterpreter
-			activityInterpreter) {
+		SocialActivityInterpreter activityInterpreter) {
 
 		_socialActivityInterpreterLocalService.deleteActivityInterpreter(
 			activityInterpreter);
 	}
 
 	@Override
-	public java.util.Map
-		<String,
-		 java.util.List
-			 <com.liferay.social.kernel.model.SocialActivityInterpreter>>
-				getActivityInterpreters() {
+	public java.util.Map<String, java.util.List<SocialActivityInterpreter>>
+		getActivityInterpreters() {
 
 		return _socialActivityInterpreterLocalService.getActivityInterpreters();
 	}
 
 	@Override
-	public java.util.List
-		<com.liferay.social.kernel.model.SocialActivityInterpreter>
-			getActivityInterpreters(String selector) {
+	public java.util.List<SocialActivityInterpreter> getActivityInterpreters(
+		String selector) {
 
 		return _socialActivityInterpreterLocalService.getActivityInterpreters(
 			selector);

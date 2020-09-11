@@ -15,7 +15,7 @@
 package com.liferay.users.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.petra.string.StringPool;
@@ -55,11 +55,11 @@ import javax.servlet.http.HttpServletRequest;
 public class SelectOrganizationUsersManagementToolbarDisplayContext {
 
 	public SelectOrganizationUsersManagementToolbarDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse, Organization organization,
 		String displayStyle) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_organization = organization;
@@ -75,25 +75,21 @@ public class SelectOrganizationUsersManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public String getOrderByCol() {
@@ -124,7 +120,8 @@ public class SelectOrganizationUsersManagementToolbarDisplayContext {
 			String.valueOf(_organization.getOrganizationId()));
 		portletURL.setParameter("displayStyle", _displayStyle);
 
-		String[] keywords = ParamUtil.getStringValues(_request, "keywords");
+		String[] keywords = ParamUtil.getStringValues(
+			_httpServletRequest, "keywords");
 
 		if (ArrayUtil.isNotEmpty(keywords)) {
 			portletURL.setParameter("keywords", keywords[keywords.length - 1]);
@@ -142,7 +139,7 @@ public class SelectOrganizationUsersManagementToolbarDisplayContext {
 		return searchActionURL.toString();
 	}
 
-	public SearchContainer getSearchContainer() {
+	public SearchContainer<User> getSearchContainer() {
 		if (_userSearch != null) {
 			return _userSearch;
 		}
@@ -154,8 +151,9 @@ public class SelectOrganizationUsersManagementToolbarDisplayContext {
 
 		userSearch.setRowChecker(rowChecker);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PermissionChecker permissionChecker =
 			themeDisplay.getPermissionChecker();
@@ -173,8 +171,8 @@ public class SelectOrganizationUsersManagementToolbarDisplayContext {
 			try {
 				userParams.put("usersOrgsTree", user.getOrganizations(true));
 			}
-			catch (PortalException pe) {
-				_log.error(pe, pe);
+			catch (PortalException portalException) {
+				_log.error(portalException, portalException);
 			}
 		}
 
@@ -220,65 +218,57 @@ public class SelectOrganizationUsersManagementToolbarDisplayContext {
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(StringPool.BLANK);
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(true);
+				dropdownItem.setHref(StringPool.BLANK);
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-		};
+		).build();
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "first-name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "first-name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "first-name"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "last-name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "last-name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "last-name"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "screen-name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "screen-name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "screen-name"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(getOrderByCol(), "first-name"));
+				dropdownItem.setHref(
+					getPortletURL(), "orderByCol", "first-name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "first-name"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(getOrderByCol(), "last-name"));
+				dropdownItem.setHref(
+					getPortletURL(), "orderByCol", "last-name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "last-name"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(getOrderByCol(), "screen-name"));
+				dropdownItem.setHref(
+					getPortletURL(), "orderByCol", "screen-name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "screen-name"));
+			}
+		).build();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SelectOrganizationUsersManagementToolbarDisplayContext.class);
 
 	private final String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _orderByCol;
 	private String _orderByType;
 	private final Organization _organization;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private UserSearch _userSearch;
 
 }

@@ -15,8 +15,7 @@
 package com.liferay.password.policies.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
-import com.liferay.petra.string.StringPool;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -41,15 +40,17 @@ import javax.servlet.http.HttpServletRequest;
 public class PasswordPolicyDisplayContext {
 
 	public PasswordPolicyDisplayContext(
-		HttpServletRequest request, RenderResponse renderResponse) {
+		HttpServletRequest httpServletRequest, RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderResponse = renderResponse;
 
-		_passwordPolicyId = ParamUtil.getLong(_request, "passwordPolicyId");
+		_passwordPolicyId = ParamUtil.getLong(
+			_httpServletRequest, "passwordPolicyId");
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_permissionChecker = themeDisplay.getPermissionChecker();
 	}
@@ -57,34 +58,32 @@ public class PasswordPolicyDisplayContext {
 	public List<NavigationItem> getEditPasswordPolicyAssignmentsNavigationItems(
 		PortletURL portletURL) {
 
-		String tabs2 = ParamUtil.getString(_request, "tabs2", "users");
+		String tabs2 = ParamUtil.getString(
+			_httpServletRequest, "tabs2", "users");
 
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(tabs2.equals("users"));
-						navigationItem.setHref(portletURL, "tabs2", "users");
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "users"));
-					});
-				add(
-					navigationItem -> {
-						navigationItem.setActive(tabs2.equals("organizations"));
-						navigationItem.setHref(
-							portletURL, "tabs2", "organizations");
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "organizations"));
-					});
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(tabs2.equals("users"));
+				navigationItem.setHref(portletURL, "tabs2", "users");
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "users"));
 			}
-		};
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(tabs2.equals("organizations"));
+				navigationItem.setHref(portletURL, "tabs2", "organizations");
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "organizations"));
+			}
+		).build();
 	}
 
 	public List<NavigationItem> getEditPasswordPolicyNavigationItems()
 		throws PortletException {
 
-		String tabs1 = ParamUtil.getString(_request, "tabs1", "details");
-		String redirect = ParamUtil.getString(_request, "redirect");
+		String tabs1 = ParamUtil.getString(
+			_httpServletRequest, "tabs1", "details");
+		String redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
@@ -92,50 +91,40 @@ public class PasswordPolicyDisplayContext {
 		portletURL.setParameter(
 			"passwordPolicyId", String.valueOf(_passwordPolicyId));
 
-		List<NavigationItem> navigationItems = new NavigationItemList() {
-			{
-				if ((_passwordPolicyId == 0) ||
-					_hasPermission(ActionKeys.UPDATE)) {
+		List<NavigationItem> navigationItems = NavigationItemListBuilder.add(
+			() -> (_passwordPolicyId == 0) || _hasPermission(ActionKeys.UPDATE),
+			navigationItem -> {
+				navigationItem.setActive(tabs1.equals("details"));
 
-					add(
-						navigationItem -> {
-							navigationItem.setActive(tabs1.equals("details"));
+				PortletURL detailsURL = PortletURLUtil.clone(
+					portletURL, _renderResponse);
 
-							PortletURL detailsURL = PortletURLUtil.clone(
-								portletURL, _renderResponse);
+				detailsURL.setParameter("mvcPath", "/edit_password_policy.jsp");
+				detailsURL.setParameter("tabs1", "details");
 
-							detailsURL.setParameter(
-								"mvcPath", "/edit_password_policy.jsp");
-							detailsURL.setParameter("tabs1", "details");
+				navigationItem.setHref(detailsURL.toString());
 
-							navigationItem.setHref(detailsURL.toString());
-
-							navigationItem.setLabel(
-								LanguageUtil.get(_request, "details"));
-						});
-				}
-
-				if (_hasPermission(ActionKeys.ASSIGN_MEMBERS)) {
-					add(
-						navigationItem -> {
-							navigationItem.setActive(tabs1.equals("assignees"));
-
-							PortletURL assigneesURL = PortletURLUtil.clone(
-								portletURL, _renderResponse);
-
-							assigneesURL.setParameter(
-								"mvcPath",
-								"/edit_password_policy_assignments.jsp");
-							assigneesURL.setParameter("tabs1", "assignees");
-
-							navigationItem.setHref(assigneesURL.toString());
-
-							navigationItem.setLabel(
-								LanguageUtil.get(_request, "assignees"));
-						});
-				}
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "details"));
 			}
-		};
+		).add(
+			() -> _hasPermission(ActionKeys.ASSIGN_MEMBERS),
+			navigationItem -> {
+				navigationItem.setActive(tabs1.equals("assignees"));
+
+				PortletURL assigneesURL = PortletURLUtil.clone(
+					portletURL, _renderResponse);
+
+				assigneesURL.setParameter(
+					"mvcPath", "/edit_password_policy_assignments.jsp");
+				assigneesURL.setParameter("tabs1", "assignees");
+
+				navigationItem.setHref(assigneesURL.toString());
+
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "assignees"));
+			}
+		).build();
 
 		if (navigationItems.isEmpty()) {
 			return null;
@@ -145,30 +134,16 @@ public class PasswordPolicyDisplayContext {
 	}
 
 	public List<NavigationItem> getSelectMembersNavigationItems() {
-		String tabs2 = ParamUtil.getString(_request, "tabs2", "users");
+		String tabs2 = ParamUtil.getString(
+			_httpServletRequest, "tabs2", "users");
 
 		List<NavigationItem> navigationItems = new ArrayList<>();
 
 		NavigationItem entriesNavigationItem = new NavigationItem();
 
 		entriesNavigationItem.setActive(true);
-		entriesNavigationItem.setHref(StringPool.BLANK);
-		entriesNavigationItem.setLabel(LanguageUtil.get(_request, tabs2));
-
-		navigationItems.add(entriesNavigationItem);
-
-		return navigationItems;
-	}
-
-	public List<NavigationItem> getViewPasswordPoliciesNavigationItems() {
-		List<NavigationItem> navigationItems = new ArrayList<>();
-
-		NavigationItem entriesNavigationItem = new NavigationItem();
-
-		entriesNavigationItem.setActive(true);
-		entriesNavigationItem.setHref(StringPool.BLANK);
 		entriesNavigationItem.setLabel(
-			LanguageUtil.get(_request, "password-policies"));
+			LanguageUtil.get(_httpServletRequest, tabs2));
 
 		navigationItems.add(entriesNavigationItem);
 
@@ -192,9 +167,9 @@ public class PasswordPolicyDisplayContext {
 			_permissionChecker, passwordPolicyId, actionId);
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private final Long _passwordPolicyId;
 	private final PermissionChecker _permissionChecker;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

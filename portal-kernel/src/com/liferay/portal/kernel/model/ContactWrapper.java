@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
@@ -31,7 +29,6 @@ import java.util.Map;
  * @see Contact
  * @generated
  */
-@ProviderType
 public class ContactWrapper
 	extends BaseModelWrapper<Contact>
 	implements Contact, ModelWrapper<Contact> {

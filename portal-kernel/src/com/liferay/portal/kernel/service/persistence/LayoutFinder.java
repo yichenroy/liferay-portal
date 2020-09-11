@@ -14,7 +14,7 @@
 
 package com.liferay.portal.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -22,9 +22,6 @@ import aQute.bnd.annotation.ProviderType;
  */
 @ProviderType
 public interface LayoutFinder {
-
-	public java.util.List<com.liferay.portal.kernel.model.Layout>
-		findByNoPermissions(long roleId);
 
 	public java.util.List<com.liferay.portal.kernel.model.Layout>
 		findByNullFriendlyURL();

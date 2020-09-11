@@ -14,8 +14,6 @@
 
 package com.liferay.segments.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,17 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.segments.service.http.SegmentsEntryServiceSoap}.
  *
  * @author Eduardo Garcia
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class SegmentsEntrySoap implements Serializable {
 
 	public static SegmentsEntrySoap toSoapModel(SegmentsEntry model) {
 		SegmentsEntrySoap soapModel = new SegmentsEntrySoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setSegmentsEntryId(model.getSegmentsEntryId());
 		soapModel.setGroupId(model.getGroupId());
@@ -101,6 +102,22 @@ public class SegmentsEntrySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setSegmentsEntryId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public String getUuid() {
@@ -235,6 +252,8 @@ public class SegmentsEntrySoap implements Serializable {
 		_lastPublishDate = lastPublishDate;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _segmentsEntryId;
 	private long _groupId;

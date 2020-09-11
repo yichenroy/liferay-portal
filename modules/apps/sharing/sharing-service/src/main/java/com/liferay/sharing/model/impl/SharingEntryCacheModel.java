@@ -14,8 +14,6 @@
 
 package com.liferay.sharing.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -34,22 +32,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class SharingEntryCacheModel
 	implements CacheModel<SharingEntry>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof SharingEntryCacheModel)) {
+		if (!(object instanceof SharingEntryCacheModel)) {
 			return false;
 		}
 
 		SharingEntryCacheModel sharingEntryCacheModel =
-			(SharingEntryCacheModel)obj;
+			(SharingEntryCacheModel)object;
 
 		if (sharingEntryId == sharingEntryCacheModel.sharingEntryId) {
 			return true;

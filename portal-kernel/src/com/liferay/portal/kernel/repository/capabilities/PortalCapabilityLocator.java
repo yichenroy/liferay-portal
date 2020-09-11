@@ -14,10 +14,10 @@
 
 package com.liferay.portal.kernel.repository.capabilities;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.repository.DocumentRepository;
 import com.liferay.portal.kernel.repository.event.RepositoryEventTrigger;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Adolfo Pérez
@@ -36,6 +36,8 @@ public interface PortalCapabilityLocator {
 
 	public DynamicCapability getDynamicCapability(
 		DocumentRepository documentRepository, String repositoryClassName);
+
+	public FileEntryTypeCapability getFileEntryTypeCapability();
 
 	public ProcessorCapability getProcessorCapability(
 		DocumentRepository documentRepository,

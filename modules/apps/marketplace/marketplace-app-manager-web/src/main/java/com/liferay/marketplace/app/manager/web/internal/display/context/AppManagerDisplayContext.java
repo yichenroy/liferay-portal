@@ -15,7 +15,7 @@
 package com.liferay.marketplace.app.manager.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 
@@ -32,57 +32,40 @@ import javax.servlet.http.HttpServletRequest;
 public class AppManagerDisplayContext {
 
 	public AppManagerDisplayContext(
-		HttpServletRequest request, RenderResponse renderResponse) {
+		HttpServletRequest httpServletRequest, RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderResponse = renderResponse;
 	}
 
 	public List<NavigationItem> getModuleNavigationItems() {
 		String pluginType = ParamUtil.getString(
-			_request, "pluginType", "components");
+			_httpServletRequest, "pluginType", "components");
 
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(
-							pluginType.equals("components"));
-						navigationItem.setHref(_getViewModuleURL("components"));
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "components"));
-					});
-
-				add(
-					navigationItem -> {
-						navigationItem.setActive(pluginType.equals("portlets"));
-						navigationItem.setHref(_getViewModuleURL("portlets"));
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "portlets"));
-					});
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(pluginType.equals("components"));
+				navigationItem.setHref(_getViewModuleURL("components"));
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "components"));
 			}
-		};
-	}
-
-	public List<NavigationItem> getNavigationItems(String url, String label) {
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(url);
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, label));
-					});
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(pluginType.equals("portlets"));
+				navigationItem.setHref(_getViewModuleURL("portlets"));
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "portlets"));
 			}
-		};
+		).build();
 	}
 
 	private String _getViewModuleURL(String pluginType) {
-		String app = ParamUtil.getString(_request, "app");
-		String moduleGroup = ParamUtil.getString(_request, "moduleGroup");
-		String symbolicName = ParamUtil.getString(_request, "symbolicName");
-		String version = ParamUtil.getString(_request, "version");
+		String app = ParamUtil.getString(_httpServletRequest, "app");
+		String moduleGroup = ParamUtil.getString(
+			_httpServletRequest, "moduleGroup");
+		String symbolicName = ParamUtil.getString(
+			_httpServletRequest, "symbolicName");
+		String version = ParamUtil.getString(_httpServletRequest, "version");
 
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
@@ -96,7 +79,7 @@ public class AppManagerDisplayContext {
 		return portletURL.toString();
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

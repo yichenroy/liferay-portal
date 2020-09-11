@@ -20,13 +20,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
 
@@ -42,7 +45,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Phone")
 public class Phone {
 
-	@Schema(description = "the phone extension.")
+	public static Phone toDTO(String json) {
+		return ObjectMapperUtil.readValue(Phone.class, json);
+	}
+
+	@Schema(description = "The phone number's extension.")
 	public String getExtension() {
 		return extension;
 	}
@@ -66,11 +73,11 @@ public class Phone {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The phone number's extension.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String extension;
 
-	@Schema(description = "The identifier of the resource.")
+	@Schema(description = "The phone number's ID.")
 	public Long getId() {
 		return id;
 	}
@@ -92,11 +99,11 @@ public class Phone {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The phone number's ID.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
-	@Schema(description = "the phone number, without extension.")
+	@Schema(description = "The phone number without its extension.")
 	public String getPhoneNumber() {
 		return phoneNumber;
 	}
@@ -120,11 +127,11 @@ public class Phone {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The phone number without its extension.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String phoneNumber;
 
-	@Schema(description = "the type of phone number.")
+	@Schema(description = "The phone number's type.")
 	public String getPhoneType() {
 		return phoneType;
 	}
@@ -148,12 +155,12 @@ public class Phone {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The phone number's type.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String phoneType;
 
 	@Schema(
-		description = "A flag that identifies if the phone is the main one of the UserAccount/Organization."
+		description = "A flag that identifies whether this is the main phone number of the user/organization."
 	)
 	public Boolean getPrimary() {
 		return primary;
@@ -178,8 +185,10 @@ public class Phone {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(
+		description = "A flag that identifies whether this is the main phone number of the user/organization."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean primary;
 
 	@Override
@@ -214,7 +223,7 @@ public class Phone {
 				sb.append(", ");
 			}
 
-			sb.append("\"extension\":");
+			sb.append("\"extension\": ");
 
 			sb.append("\"");
 
@@ -228,7 +237,7 @@ public class Phone {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(id);
 		}
@@ -238,7 +247,7 @@ public class Phone {
 				sb.append(", ");
 			}
 
-			sb.append("\"phoneNumber\":");
+			sb.append("\"phoneNumber\": ");
 
 			sb.append("\"");
 
@@ -252,7 +261,7 @@ public class Phone {
 				sb.append(", ");
 			}
 
-			sb.append("\"phoneType\":");
+			sb.append("\"phoneType\": ");
 
 			sb.append("\"");
 
@@ -266,7 +275,7 @@ public class Phone {
 				sb.append(", ");
 			}
 
-			sb.append("\"primary\":");
+			sb.append("\"primary\": ");
 
 			sb.append(primary);
 		}
@@ -276,10 +285,88 @@ public class Phone {
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.Phone",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

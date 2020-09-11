@@ -14,22 +14,22 @@
 
 package com.liferay.petra.json.web.service.client.server.simulator;
 
+import com.liferay.petra.json.web.service.client.server.simulator.constants.SimulatorConstants;
+
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-
-import java.net.URI;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -170,10 +170,8 @@ public class BaseHttpHandlerImpl implements HttpHandler {
 	protected String getBody(HttpExchange httpExchange) throws IOException {
 		StringBuffer sb = new StringBuffer();
 
-		InputStream requestBody = httpExchange.getRequestBody();
-
 		BufferedReader bufferedReader = new BufferedReader(
-			new InputStreamReader(requestBody));
+			new InputStreamReader(httpExchange.getRequestBody()));
 
 		String line = null;
 
@@ -199,9 +197,7 @@ public class BaseHttpHandlerImpl implements HttpHandler {
 	}
 
 	protected String getQuery(HttpExchange httpExchange) throws IOException {
-		URI requestURI = httpExchange.getRequestURI();
-
-		String requestURIString = requestURI.toString();
+		String requestURIString = String.valueOf(httpExchange.getRequestURI());
 
 		if (!requestURIString.contains("?")) {
 			return null;
@@ -213,7 +209,7 @@ public class BaseHttpHandlerImpl implements HttpHandler {
 	protected String getResponseBody(HttpExchange httpExchange) {
 		String contentType = getAccept(httpExchange);
 
-		if ("application/json".equals(contentType)) {
+		if (Objects.equals(contentType, "application/json")) {
 			return SimulatorConstants.RESPONSE_SUCCESS_IN_JSON;
 		}
 
@@ -225,7 +221,7 @@ public class BaseHttpHandlerImpl implements HttpHandler {
 
 		String acceptContentType = getAccept(httpExchange);
 
-		if ("application/json".equals(acceptContentType)) {
+		if (Objects.equals(acceptContentType, "application/json")) {
 			return getAsJSON(parameters);
 		}
 

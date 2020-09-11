@@ -68,10 +68,12 @@ public abstract class BaseAlloyControllerInvokerImpl
 
 		AlloyController alloyController = constructor.newInstance();
 
-		HttpServletRequest request = createRequest(lifecycle, parameters);
-		HttpServletResponse response = createResponse();
+		HttpServletRequest httpServletRequest = createRequest(
+			lifecycle, parameters);
+		HttpServletResponse httpServletResponse = createResponse();
 
-		PageContext pageContext = createPageContext(request, response);
+		PageContext pageContext = createPageContext(
+			httpServletRequest, httpServletResponse);
 
 		alloyController.setPageContext(pageContext);
 
@@ -103,18 +105,19 @@ public abstract class BaseAlloyControllerInvokerImpl
 	}
 
 	protected PageContext createPageContext(
-		final ServletRequest request, final ServletResponse response) {
+		final ServletRequest servletRequest,
+		final ServletResponse servletResponse) {
 
 		return new AlloyMockUtil.MockPageContext() {
 
 			@Override
 			public ServletRequest getRequest() {
-				return request;
+				return servletRequest;
 			}
 
 			@Override
 			public ServletResponse getResponse() {
-				return response;
+				return servletResponse;
 			}
 
 		};
@@ -125,7 +128,7 @@ public abstract class BaseAlloyControllerInvokerImpl
 	}
 
 	protected RenderResponse createRenderResponse(
-		final HttpServletRequest request, final String portletId,
+		final HttpServletRequest httpServletRequest, final String portletId,
 		final long plid, final String lifecycle) {
 
 		return new AlloyMockUtil.MockRenderResponse() {
@@ -133,7 +136,7 @@ public abstract class BaseAlloyControllerInvokerImpl
 			@Override
 			public PortletURL createRenderURL() {
 				return PortletURLFactoryUtil.create(
-					request, portletId, plid, lifecycle);
+					httpServletRequest, portletId, plid, lifecycle);
 			}
 
 			@Override
@@ -142,8 +145,8 @@ public abstract class BaseAlloyControllerInvokerImpl
 			}
 
 			@Override
-			public void setContentType(String type) {
-				contentType = type;
+			public void setContentType(String contentType) {
+				this.contentType = contentType;
 			}
 
 			protected String contentType;

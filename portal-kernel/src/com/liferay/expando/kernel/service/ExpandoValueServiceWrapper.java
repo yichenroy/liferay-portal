@@ -14,8 +14,7 @@
 
 package com.liferay.expando.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.expando.kernel.model.ExpandoValue;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,7 +24,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see ExpandoValueService
  * @generated
  */
-@ProviderType
 public class ExpandoValueServiceWrapper
 	implements ExpandoValueService, ServiceWrapper<ExpandoValueService> {
 
@@ -34,7 +32,7 @@ public class ExpandoValueServiceWrapper
 	}
 
 	@Override
-	public com.liferay.expando.kernel.model.ExpandoValue addValue(
+	public ExpandoValue addValue(
 			long companyId, String className, String tableName,
 			String columnName, long classPK, Object data)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -44,7 +42,7 @@ public class ExpandoValueServiceWrapper
 	}
 
 	@Override
-	public com.liferay.expando.kernel.model.ExpandoValue addValue(
+	public ExpandoValue addValue(
 			long companyId, String className, String tableName,
 			String columnName, long classPK, String data)
 		throws com.liferay.portal.kernel.exception.PortalException {

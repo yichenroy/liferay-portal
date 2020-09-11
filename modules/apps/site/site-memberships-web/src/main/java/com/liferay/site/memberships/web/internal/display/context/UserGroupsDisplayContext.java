@@ -16,17 +16,22 @@ package com.liferay.site.memberships.web.internal.display.context;
 
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
-import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.UserGroupServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.service.persistence.constants.UserGroupFinderConstants;
 import com.liferay.portlet.usergroupsadmin.search.UserGroupDisplayTerms;
 import com.liferay.portlet.usergroupsadmin.search.UserGroupSearch;
+import com.liferay.site.memberships.web.internal.util.GroupUtil;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,10 +48,10 @@ import javax.servlet.http.HttpServletRequest;
 public class UserGroupsDisplayContext {
 
 	public UserGroupsDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 	}
@@ -56,7 +61,8 @@ public class UserGroupsDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
@@ -66,11 +72,13 @@ public class UserGroupsDisplayContext {
 			return _groupId;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_groupId = ParamUtil.getLong(
-			_request, "groupId", themeDisplay.getSiteGroupIdOrLiveGroupId());
+			_httpServletRequest, "groupId",
+			themeDisplay.getSiteGroupIdOrLiveGroupId());
 
 		return _groupId;
 	}
@@ -90,7 +98,8 @@ public class UserGroupsDisplayContext {
 			return _navigation;
 		}
 
-		_navigation = ParamUtil.getString(_request, "navigation", "all");
+		_navigation = ParamUtil.getString(
+			_httpServletRequest, "navigation", "all");
 
 		return _navigation;
 	}
@@ -117,8 +126,9 @@ public class UserGroupsDisplayContext {
 	}
 
 	public PortletURL getPortletURL() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
@@ -171,7 +181,7 @@ public class UserGroupsDisplayContext {
 			return _role;
 		}
 
-		long roleId = ParamUtil.getLong(_request, "roleId");
+		long roleId = ParamUtil.getLong(_httpServletRequest, "roleId");
 
 		if (roleId > 0) {
 			_role = RoleLocalServiceUtil.fetchRole(roleId);
@@ -180,30 +190,39 @@ public class UserGroupsDisplayContext {
 		return _role;
 	}
 
-	public SearchContainer getUserGroupSearchContainer() {
+	public SearchContainer<UserGroup> getUserGroupSearchContainer() {
 		if (_userGroupSearch != null) {
 			return _userGroupSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		UserGroupSearch userGroupSearch = new UserGroupSearch(
 			_renderRequest, getPortletURL());
 
 		userGroupSearch.setEmptyResultsMessage(
-			"no-user-group-was-found-that-is-a-member-of-this-site");
+			LanguageUtil.format(
+				ResourceBundleUtil.getBundle(
+					themeDisplay.getLocale(), getClass()),
+				"no-user-group-was-found-that-is-a-member-of-this-x",
+				StringUtil.toLowerCase(
+					GroupUtil.getGroupTypeLabel(
+						_groupId, themeDisplay.getLocale())),
+				false));
+
 		userGroupSearch.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
 
 		UserGroupDisplayTerms searchTerms =
 			(UserGroupDisplayTerms)userGroupSearch.getSearchTerms();
 
-		LinkedHashMap<String, Object> userGroupParams = new LinkedHashMap<>();
-
-		userGroupParams.put(
-			UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_GROUPS,
-			Long.valueOf(getGroupId()));
+		LinkedHashMap<String, Object> userGroupParams =
+			LinkedHashMapBuilder.<String, Object>put(
+				UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_GROUPS,
+				Long.valueOf(getGroupId())
+			).build();
 
 		Role role = getRole();
 
@@ -215,13 +234,13 @@ public class UserGroupsDisplayContext {
 				});
 		}
 
-		int userGroupsCount = UserGroupLocalServiceUtil.searchCount(
+		int userGroupsCount = UserGroupServiceUtil.searchCount(
 			themeDisplay.getCompanyId(), searchTerms.getKeywords(),
 			userGroupParams);
 
 		userGroupSearch.setTotal(userGroupsCount);
 
-		List<UserGroup> userGroups = UserGroupLocalServiceUtil.search(
+		List<UserGroup> userGroups = UserGroupServiceUtil.search(
 			themeDisplay.getCompanyId(), searchTerms.getKeywords(),
 			userGroupParams, userGroupSearch.getStart(),
 			userGroupSearch.getEnd(), userGroupSearch.getOrderByComparator());
@@ -235,13 +254,13 @@ public class UserGroupsDisplayContext {
 
 	private String _displayStyle;
 	private Long _groupId;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _navigation;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private Role _role;
 	private UserGroupSearch _userGroupSearch;
 

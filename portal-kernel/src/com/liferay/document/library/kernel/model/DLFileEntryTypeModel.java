@@ -14,18 +14,20 @@
 
 package com.liferay.document.library.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the DLFileEntryType service. Represents a row in the &quot;DLFileEntryType&quot; database table, with each column mapped to a property of this class.
@@ -40,8 +42,8 @@ import java.util.Map;
  */
 @ProviderType
 public interface DLFileEntryTypeModel
-	extends BaseModel<DLFileEntryType>, LocalizedModel, ShardedModel,
-			StagedGroupedModel {
+	extends BaseModel<DLFileEntryType>, CTModel<DLFileEntryType>,
+			LocalizedModel, MVCCModel, ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -54,6 +56,7 @@ public interface DLFileEntryTypeModel
 	 *
 	 * @return the primary key of this document library file entry type
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -61,7 +64,40 @@ public interface DLFileEntryTypeModel
 	 *
 	 * @param primaryKey the primary key of this document library file entry type
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this document library file entry type.
+	 *
+	 * @return the mvcc version of this document library file entry type
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this document library file entry type.
+	 *
+	 * @param mvccVersion the mvcc version of this document library file entry type
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this document library file entry type.
+	 *
+	 * @return the ct collection ID of this document library file entry type
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this document library file entry type.
+	 *
+	 * @param ctCollectionId the ct collection ID of this document library file entry type
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this document library file entry type.
@@ -206,6 +242,20 @@ public interface DLFileEntryTypeModel
 	 */
 	@Override
 	public void setModifiedDate(Date modifiedDate);
+
+	/**
+	 * Returns the data definition ID of this document library file entry type.
+	 *
+	 * @return the data definition ID of this document library file entry type
+	 */
+	public long getDataDefinitionId();
+
+	/**
+	 * Sets the data definition ID of this document library file entry type.
+	 *
+	 * @param dataDefinitionId the data definition ID of this document library file entry type
+	 */
+	public void setDataDefinitionId(long dataDefinitionId);
 
 	/**
 	 * Returns the file entry type key of this document library file entry type.

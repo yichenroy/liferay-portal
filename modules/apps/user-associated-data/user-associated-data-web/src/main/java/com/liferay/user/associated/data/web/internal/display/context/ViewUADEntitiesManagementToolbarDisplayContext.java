@@ -16,8 +16,9 @@ package com.liferay.user.associated.data.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.user.associated.data.web.internal.constants.UADConstants;
 import com.liferay.user.associated.data.web.internal.display.ViewUADEntitiesDisplay;
@@ -44,13 +46,13 @@ public class ViewUADEntitiesManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public ViewUADEntitiesManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request,
 		ViewUADEntitiesDisplay viewUADEntitiesDisplay) {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			viewUADEntitiesDisplay.getSearchContainer());
 
 		_viewUADEntitiesDisplay = viewUADEntitiesDisplay;
@@ -58,29 +60,22 @@ public class ViewUADEntitiesManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							StringBundler.concat(
-								"javascript:", getNamespace(),
-								"doAnonymizeMultiple();"));
-						dropdownItem.setLabel(
-							LanguageUtil.get(request, "anonymize"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							StringBundler.concat(
-								"javascript:", getNamespace(),
-								"doDeleteMultiple();"));
-						dropdownItem.setLabel(
-							LanguageUtil.get(request, "delete"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					StringBundler.concat(
+						"javascript:", getNamespace(),
+						"doAnonymizeMultiple();"));
+				dropdownItem.setLabel(LanguageUtil.get(request, "anonymize"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					StringBundler.concat(
+						"javascript:", getNamespace(), "doDeleteMultiple();"));
+				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+			}
+		).build();
 	}
 
 	@Override
@@ -90,6 +85,13 @@ public class ViewUADEntitiesManagementToolbarDisplayContext
 		portletURL.setParameter("keywords", (String)null);
 
 		return portletURL.toString();
+	}
+
+	@Override
+	public String getComponentId() {
+		return StringBundler.concat(
+			"viewUADEntitiesManagementToolbar", StringPool.UNDERLINE,
+			StringUtil.randomId());
 	}
 
 	@Override
@@ -133,9 +135,9 @@ public class ViewUADEntitiesManagementToolbarDisplayContext
 			portletURL = PortletURLUtil.clone(
 				portletURL, liferayPortletResponse);
 		}
-		catch (PortletException pe) {
+		catch (PortletException portletException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(pe, pe);
+				_log.warn(portletException, portletException);
 			}
 
 			portletURL = liferayPortletResponse.createRenderURL();

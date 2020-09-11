@@ -14,16 +14,18 @@
 
 package com.liferay.layout.page.template.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedAuditedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the LayoutPageTemplateStructure service. Represents a row in the &quot;LayoutPageTemplateStructure&quot; database table, with each column mapped to a property of this class.
@@ -38,7 +40,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface LayoutPageTemplateStructureModel
-	extends AttachedModel, BaseModel<LayoutPageTemplateStructure>, GroupedModel,
+	extends AttachedModel, BaseModel<LayoutPageTemplateStructure>,
+			CTModel<LayoutPageTemplateStructure>, GroupedModel, MVCCModel,
 			ShardedModel, StagedAuditedModel {
 
 	/*
@@ -52,6 +55,7 @@ public interface LayoutPageTemplateStructureModel
 	 *
 	 * @return the primary key of this layout page template structure
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -59,7 +63,40 @@ public interface LayoutPageTemplateStructureModel
 	 *
 	 * @param primaryKey the primary key of this layout page template structure
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this layout page template structure.
+	 *
+	 * @return the mvcc version of this layout page template structure
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this layout page template structure.
+	 *
+	 * @param mvccVersion the mvcc version of this layout page template structure
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this layout page template structure.
+	 *
+	 * @return the ct collection ID of this layout page template structure
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this layout page template structure.
+	 *
+	 * @param ctCollectionId the ct collection ID of this layout page template structure
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this layout page template structure.

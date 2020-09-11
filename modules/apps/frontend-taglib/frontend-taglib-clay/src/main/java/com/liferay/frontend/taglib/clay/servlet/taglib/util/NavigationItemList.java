@@ -15,6 +15,7 @@
 package com.liferay.frontend.taglib.clay.servlet.taglib.util;
 
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.function.UnsafeSupplier;
 
 import java.util.ArrayList;
 
@@ -23,14 +24,49 @@ import java.util.ArrayList;
  */
 public class NavigationItemList extends ArrayList<NavigationItem> {
 
+	public static NavigationItemList of(NavigationItem... navigationItems) {
+		NavigationItemList navigationItemList = new NavigationItemList();
+
+		for (NavigationItem navigationItem : navigationItems) {
+			if (navigationItem != null) {
+				navigationItemList.add(navigationItem);
+			}
+		}
+
+		return navigationItemList;
+	}
+
+	public static NavigationItemList of(
+		UnsafeSupplier<NavigationItem, Exception>... unsafeSuppliers) {
+
+		NavigationItemList navigationItemList = new NavigationItemList();
+
+		for (UnsafeSupplier<NavigationItem, Exception> unsafeSupplier :
+				unsafeSuppliers) {
+
+			try {
+				NavigationItem navigationItem = unsafeSupplier.get();
+
+				if (navigationItem != null) {
+					navigationItemList.add(navigationItem);
+				}
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		}
+
+		return navigationItemList;
+	}
+
 	public void add(UnsafeConsumer<NavigationItem, Exception> unsafeConsumer) {
 		NavigationItem navigationItem = new NavigationItem();
 
 		try {
 			unsafeConsumer.accept(navigationItem);
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
 		}
 
 		add(navigationItem);

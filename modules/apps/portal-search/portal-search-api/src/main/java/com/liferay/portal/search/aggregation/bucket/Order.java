@@ -14,14 +14,11 @@
 
 package com.liferay.portal.search.aggregation.bucket;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Objects;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class Order {
 
 	public static final String COUNT_METRIC_NAME = "_count";

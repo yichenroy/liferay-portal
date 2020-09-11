@@ -14,31 +14,16 @@
 
 package com.liferay.asset.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class AssetEntryFinderUtil {
 
 	public static int countEntries(AssetEntryQuery entryQuery) {
 		return getFinder().countEntries(entryQuery);
-	}
-
-	public static java.util.List<com.liferay.asset.kernel.model.AssetEntry>
-		findByDLFileEntryC_T(long classNameId, String treePath) {
-
-		return getFinder().findByDLFileEntryC_T(classNameId, treePath);
-	}
-
-	public static java.util.List<com.liferay.asset.kernel.model.AssetEntry>
-		findByDLFolderC_T(long classNameId, String treePath) {
-
-		return getFinder().findByDLFolderC_T(classNameId, treePath);
 	}
 
 	public static java.util.List<com.liferay.asset.kernel.model.AssetEntry>

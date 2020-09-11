@@ -14,7 +14,7 @@
 
 package com.liferay.portal.action;
 
-import com.liferay.layouts.admin.kernel.util.SitemapUtil;
+import com.liferay.layout.admin.kernel.util.SitemapUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutSetException;
 import com.liferay.portal.kernel.log.Log;
@@ -23,9 +23,11 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.VirtualHost;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -49,16 +51,18 @@ public class SitemapAction implements Action {
 
 	@Override
 	public ActionForward execute(
-			ActionMapping actionMapping, HttpServletRequest request,
-			HttpServletResponse response)
+			ActionMapping actionMapping, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		try {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
-			String layoutUuid = ParamUtil.getString(request, "layoutUuid");
-			long groupId = ParamUtil.getLong(request, "groupId");
+			String layoutUuid = ParamUtil.getString(
+				httpServletRequest, "layoutUuid");
+			long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 
 			LayoutSet layoutSet = null;
 
@@ -70,13 +74,13 @@ public class SitemapAction implements Action {
 				}
 
 				boolean privateLayout = ParamUtil.getBoolean(
-					request, "privateLayout");
+					httpServletRequest, "privateLayout");
 
 				layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
 					groupId, privateLayout);
 			}
 			else {
-				String host = PortalUtil.getHost(request);
+				String host = PortalUtil.getHost(httpServletRequest);
 
 				host = StringUtil.toLowerCase(host);
 				host = host.trim();
@@ -89,6 +93,14 @@ public class SitemapAction implements Action {
 
 					layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
 						virtualHost.getLayoutSetId());
+
+					Group group = layoutSet.getGroup();
+
+					if (group.isStagingGroup()) {
+						GroupPermissionUtil.check(
+							themeDisplay.getPermissionChecker(),
+							group.getGroupId(), ActionKeys.VIEW_STAGING);
+					}
 				}
 				else {
 					String groupName =
@@ -111,21 +123,22 @@ public class SitemapAction implements Action {
 				themeDisplay);
 
 			ServletResponseUtil.sendFile(
-				request, response, null, sitemap.getBytes(StringPool.UTF8),
-				ContentTypes.TEXT_XML_UTF8);
+				httpServletRequest, httpServletResponse, null,
+				sitemap.getBytes(StringPool.UTF8), ContentTypes.TEXT_XML_UTF8);
 		}
-		catch (NoSuchLayoutSetException nslse) {
+		catch (NoSuchLayoutSetException noSuchLayoutSetException) {
 			PortalUtil.sendError(
-				HttpServletResponse.SC_NOT_FOUND, nslse, request, response);
+				HttpServletResponse.SC_NOT_FOUND, noSuchLayoutSetException,
+				httpServletRequest, httpServletResponse);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 
 			PortalUtil.sendError(
-				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e, request,
-				response);
+				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, exception,
+				httpServletRequest, httpServletResponse);
 		}
 
 		return null;

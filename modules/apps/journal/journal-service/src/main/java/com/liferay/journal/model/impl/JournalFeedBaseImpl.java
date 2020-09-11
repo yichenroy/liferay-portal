@@ -14,8 +14,6 @@
 
 package com.liferay.journal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.journal.service.JournalFeedLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.journal.service.JournalFeedLocalServiceUtil;
  * @see JournalFeed
  * @generated
  */
-@ProviderType
 public abstract class JournalFeedBaseImpl
 	extends JournalFeedModelImpl implements JournalFeed {
 

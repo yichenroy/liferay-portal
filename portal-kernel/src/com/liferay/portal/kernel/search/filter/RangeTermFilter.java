@@ -14,8 +14,8 @@
 
 package com.liferay.portal.kernel.search.filter;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 
 /**
  * @author Michael C. Han
@@ -126,7 +126,7 @@ public class RangeTermFilter extends BaseFilter {
 				return StringPool.LESS_THAN;
 			}
 			else if (name.equals(LTE.name())) {
-				return StringPool.GREATER_THAN_OR_EQUAL;
+				return StringPool.LESS_THAN_OR_EQUAL;
 			}
 
 			return StringPool.BLANK;

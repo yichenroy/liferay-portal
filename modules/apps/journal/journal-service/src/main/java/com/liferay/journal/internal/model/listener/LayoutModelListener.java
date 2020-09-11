@@ -32,10 +32,6 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 
 	@Override
 	public void onBeforeRemove(Layout layout) throws ModelListenerException {
-		if (!layout.isHead()) {
-			return;
-		}
-
 		try {
 			_journalArticleLocalService.deleteLayoutArticleReferences(
 				layout.getGroupId(), layout.getUuid());
@@ -44,8 +40,8 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 				layout.getGroupId(), layout.isPrivateLayout(),
 				layout.getLayoutId());
 		}
-		catch (Exception e) {
-			throw new ModelListenerException(e);
+		catch (Exception exception) {
+			throw new ModelListenerException(exception);
 		}
 	}
 

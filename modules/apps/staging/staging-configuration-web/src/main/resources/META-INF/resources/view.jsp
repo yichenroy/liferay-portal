@@ -42,7 +42,9 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 	<c:when test="<%= GroupPermissionUtil.contains(permissionChecker, liveGroup, ActionKeys.MANAGE_STAGING) && GroupPermissionUtil.contains(permissionChecker, liveGroup, ActionKeys.VIEW_STAGING) %>">
 		<%@ include file="/staging_configuration_exceptions.jspf" %>
 
-		<div class="custom-sheet sheet sheet-lg">
+		<clay:sheet
+			cssClass="custom-sheet"
+		>
 			<liferay-ui:success key="stagingDisabled" message="staging-is-successfully-disabled" />
 
 			<liferay-ui:success key="localStagingModified" message="local-staging-configuration-is-successfully-modified" />
@@ -57,7 +59,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 				<portlet:param name="mvcRenderCommandName" value="staging" />
 			</portlet:renderURL>
 
-			<aui:form action="<%= editStagingConfigurationURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveGroup();" %>'>
+			<aui:form action="<%= editStagingConfigurationURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveGroup();" %>'>
 				<aui:input name="redirect" type="hidden" value="<%= redirectURL %>" />
 				<aui:input name="groupId" type="hidden" value="<%= liveGroupId %>" />
 				<aui:input name="liveGroupId" type="hidden" value="<%= liveGroupId %>" />
@@ -65,11 +67,11 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 				<aui:input name="forceDisable" type="hidden" value="<%= false %>" />
 
 				<c:if test="<%= !privateLayoutSet.isLayoutSetPrototypeLinkActive() && !publicLayoutSet.isLayoutSetPrototypeLinkActive() %>">
-					<div class="sheet-header">
+					<clay:sheet-header>
 						<div class="sheet-title">
 							<liferay-ui:message key="javax.portlet.title.com_liferay_staging_configuration_web_portlet_StagingConfigurationPortlet" />
 						</div>
-					</div>
+					</clay:sheet-header>
 
 					<%@ include file="/staging_configuration_select_staging_type.jspf" %>
 
@@ -77,7 +79,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 
 					<%@ include file="/staging_configuration_staged_portlets.jspf" %>
 
-					<div class="sheet-footer">
+					<clay:sheet-footer>
 						<div class="btn-group-item">
 							<div class="btn-group-item">
 								<button class="btn btn-primary">
@@ -87,35 +89,62 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 								</button>
 							</div>
 						</div>
-					</div>
+					</clay:sheet-footer>
 
-					<aui:script sandbox="<%= true %>">
-						var pwcWarning = $('#<portlet:namespace />pwcWarning');
-						var remoteStagingOptions = $('#<portlet:namespace />remoteStagingOptions');
-						var stagedPortlets = $('#<portlet:namespace />stagedPortlets');
-						var trashWarning = $('#<portlet:namespace />trashWarning');
-
-						var stagingTypes = $('#<portlet:namespace />stagingTypes');
-
-						stagingTypes.on(
-							'click',
-							'input',
-							function(event) {
-								var value = $(event.currentTarget).val();
-
-								pwcWarning.toggleClass('hide', value != '<%= StagingConstants.TYPE_LOCAL_STAGING %>');
-
-								stagedPortlets.toggleClass('hide', value == '<%= StagingConstants.TYPE_NOT_STAGED %>');
-
-								remoteStagingOptions.toggleClass('hide', value != '<%= StagingConstants.TYPE_REMOTE_STAGING %>');
-
-								trashWarning.toggleClass('hide', value != '<%= StagingConstants.TYPE_LOCAL_STAGING %>');
-							}
+					<aui:script require="metal-dom/src/dom as dom">
+						var pwcWarning = document.getElementById('<portlet:namespace />pwcWarning');
+						var remoteStagingOptions = document.getElementById(
+							'<portlet:namespace />remoteStagingOptions'
 						);
+						var stagedPortlets = document.getElementById(
+							'<portlet:namespace />stagedPortlets'
+						);
+						var trashWarning = document.getElementById('<portlet:namespace />trashWarning');
+						var stagingTypes = document.getElementById('<portlet:namespace />stagingTypes');
+
+						if (
+							stagingTypes &&
+							pwcWarning &&
+							stagedPortlets &&
+							remoteStagingOptions &&
+							trashWarning
+						) {
+							dom.delegate(stagingTypes, 'click', 'input', function (event) {
+								var value = event.delegateTarget.value;
+
+								if (value != '<%= StagingConstants.TYPE_LOCAL_STAGING %>') {
+									pwcWarning.classList.add('hide');
+								}
+								else {
+									pwcWarning.classList.remove('hide');
+								}
+
+								if (value == '<%= StagingConstants.TYPE_NOT_STAGED %>') {
+									stagedPortlets.classList.add('hide');
+								}
+								else {
+									stagedPortlets.classList.remove('hide');
+								}
+
+								if (value != '<%= StagingConstants.TYPE_REMOTE_STAGING %>') {
+									remoteStagingOptions.classList.add('hide');
+								}
+								else {
+									remoteStagingOptions.classList.remove('hide');
+								}
+
+								if (value != '<%= StagingConstants.TYPE_LOCAL_STAGING %>') {
+									trashWarning.classList.add('hide');
+								}
+								else {
+									trashWarning.classList.remove('hide');
+								}
+							});
+						}
 					</aui:script>
 				</c:if>
 			</aui:form>
-		</div>
+		</clay:sheet>
 	</c:when>
 	<c:otherwise>
 		<liferay-staging:alert
@@ -126,17 +155,12 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 	</c:otherwise>
 </c:choose>
 
-<aui:script>
+<script>
 	function <portlet:namespace />saveGroup(forceDisable) {
-		var $ = AUI.$;
-
-		var form = $(document.<portlet:namespace />fm);
-
+		var form = document.<portlet:namespace />fm;
 		var ok = true;
 
 		<c:if test="<%= liveGroup != null %>">
-			var stagingTypeEl = $('input[name=<portlet:namespace />stagingType]:checked');
-
 			var oldValue;
 
 			<c:choose>
@@ -151,46 +175,62 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 				</c:otherwise>
 			</c:choose>
 
-			var currentValue = stagingTypeEl.val();
+			var selectedStagingTypeInput = document.querySelector(
+				'input[name=<portlet:namespace />stagingType]:checked'
+			);
 
-			if (stagingTypeEl.length && (currentValue != oldValue)) {
-				ok = false;
+			if (selectedStagingTypeInput) {
+				var currentValue = selectedStagingTypeInput.value;
 
-				if (currentValue == <%= StagingConstants.TYPE_NOT_STAGED %>) {
-					ok = confirm('<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-deactivate-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>');
-				}
-				else if (currentValue == <%= StagingConstants.TYPE_LOCAL_STAGING %>) {
-					ok = confirm('<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-activate-local-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>');
-				}
-				else if (currentValue == <%= StagingConstants.TYPE_REMOTE_STAGING %>) {
-					ok = confirm('<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-activate-remote-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>');
+				if (currentValue != oldValue) {
+					ok = false;
+
+					if (currentValue == <%= StagingConstants.TYPE_NOT_STAGED %>) {
+						ok = confirm(
+							'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-deactivate-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>'
+						);
+					}
+					else if (
+						currentValue == <%= StagingConstants.TYPE_LOCAL_STAGING %>
+					) {
+						ok = confirm(
+							'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-activate-local-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>'
+						);
+					}
+					else if (
+						currentValue == <%= StagingConstants.TYPE_REMOTE_STAGING %>
+					) {
+						ok = confirm(
+							'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-activate-remote-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>'
+						);
+					}
 				}
 			}
 		</c:if>
 
 		if (ok) {
 			if (forceDisable) {
-				form.fm('forceDisable').val(true);
-				form.fm('local').prop('checked', false);
-				form.fm('none').prop('checked', true);
-				form.fm('redirect').val('<portlet:renderURL><portlet:param name="mvcPath" value="/view.jsp" /><portlet:param name="historyKey" value='<%= renderResponse.getNamespace() + "staging" %>' /></portlet:renderURL>');
-				form.fm('remote').prop('checked', false);
+				form.elements['<portlet:namespace />forceDisable'].value = true;
 			}
 
 			submitForm(form);
 		}
 	}
-</aui:script>
 
-<aui:script sandbox="<%= true %>">
-	var stagingConfigurationControls = $('#stagingConfigurationControls');
+	(function () {
+		var allCheckboxes = document.querySelectorAll(
+			'#stagingConfigurationControls input[type=checkbox]'
+		);
+		var selectAllCheckbox = document.getElementById(
+			'<portlet:namespace />selectAllCheckbox'
+		);
 
-	var allCheckboxes = stagingConfigurationControls.find('input[type=checkbox]');
-
-	$('#<portlet:namespace />selectAllCheckbox').on(
-		'change',
-		function() {
-			allCheckboxes.prop('checked', this.checked);
+		if (selectAllCheckbox) {
+			selectAllCheckbox.addEventListener('change', function () {
+				Array.prototype.forEach.call(allCheckboxes, function (checkbox) {
+					checkbox.checked = selectAllCheckbox.checked;
+				});
+			});
 		}
-	);
-</aui:script>
+	})();
+</script>

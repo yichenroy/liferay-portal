@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -32,7 +30,6 @@ import org.osgi.util.tracker.ServiceTracker;
  * @see KaleoInstanceLocalService
  * @generated
  */
-@ProviderType
 public class KaleoInstanceLocalServiceUtil {
 
 	/*
@@ -43,6 +40,10 @@ public class KaleoInstanceLocalServiceUtil {
 
 	/**
 	 * Adds the kaleo instance to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoInstance the kaleo instance
 	 * @return the kaleo instance that was added
@@ -57,14 +58,14 @@ public class KaleoInstanceLocalServiceUtil {
 
 	public static com.liferay.portal.workflow.kaleo.model.KaleoInstance
 			addKaleoInstance(
-				long kaleoDefinitionVersionId, String kaleoDefinitionName,
-				int kaleoDefinitionVersion,
+				long kaleoDefinitionId, long kaleoDefinitionVersionId,
+				String kaleoDefinitionName, int kaleoDefinitionVersion,
 				java.util.Map<String, java.io.Serializable> workflowContext,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addKaleoInstance(
-			kaleoDefinitionVersionId, kaleoDefinitionName,
+			kaleoDefinitionId, kaleoDefinitionVersionId, kaleoDefinitionName,
 			kaleoDefinitionVersion, workflowContext, serviceContext);
 	}
 
@@ -87,6 +88,16 @@ public class KaleoInstanceLocalServiceUtil {
 		return getService().createKaleoInstance(kaleoInstanceId);
 	}
 
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
+	}
+
 	public static void deleteCompanyKaleoInstances(long companyId) {
 		getService().deleteCompanyKaleoInstances(companyId);
 	}
@@ -101,6 +112,10 @@ public class KaleoInstanceLocalServiceUtil {
 	/**
 	 * Deletes the kaleo instance from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoInstance the kaleo instance
 	 * @return the kaleo instance that was removed
 	 */
@@ -114,6 +129,10 @@ public class KaleoInstanceLocalServiceUtil {
 
 	/**
 	 * Deletes the kaleo instance with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoInstanceId the primary key of the kaleo instance
 	 * @return the kaleo instance that was removed
@@ -135,6 +154,12 @@ public class KaleoInstanceLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
+	}
+
+	public static <T> T dslQuery(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return getService().dslQuery(dslQuery);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
@@ -159,7 +184,7 @@ public class KaleoInstanceLocalServiceUtil {
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoInstanceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -178,7 +203,7 @@ public class KaleoInstanceLocalServiceUtil {
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoInstanceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -228,6 +253,13 @@ public class KaleoInstanceLocalServiceUtil {
 		return getService().fetchKaleoInstance(kaleoInstanceId);
 	}
 
+	public static com.liferay.portal.workflow.kaleo.model.KaleoInstance
+		fetchKaleoInstance(long kaleoInstanceId, long companyId, long userId) {
+
+		return getService().fetchKaleoInstance(
+			kaleoInstanceId, companyId, userId);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -239,6 +271,13 @@ public class KaleoInstanceLocalServiceUtil {
 			getIndexableActionableDynamicQuery() {
 
 		return getService().getIndexableActionableDynamicQuery();
+	}
+
+	public static int getKaleoDefinitionKaleoInstancesCount(
+		long kaleoDefinitionId, boolean completed) {
+
+		return getService().getKaleoDefinitionKaleoInstancesCount(
+			kaleoDefinitionId, completed);
 	}
 
 	/**
@@ -259,7 +298,7 @@ public class KaleoInstanceLocalServiceUtil {
 	 * Returns a range of all the kaleo instances.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoInstanceModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoInstanceModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of kaleo instances
@@ -373,6 +412,9 @@ public class KaleoInstanceLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -443,8 +485,32 @@ public class KaleoInstanceLocalServiceUtil {
 			kaleoDefinitionName, completed, serviceContext);
 	}
 
+	public static com.liferay.portal.kernel.search.BaseModelSearchResult
+		<com.liferay.portal.workflow.kaleo.model.KaleoInstance>
+				searchKaleoInstances(
+					Long userId, String assetClassName, String assetTitle,
+					String assetDescription, String nodeName,
+					String kaleoDefinitionName, Boolean completed, int start,
+					int end,
+					com.liferay.portal.kernel.util.OrderByComparator
+						<com.liferay.portal.workflow.kaleo.model.KaleoInstance>
+							orderByComparator,
+					com.liferay.portal.kernel.service.ServiceContext
+						serviceContext)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().searchKaleoInstances(
+			userId, assetClassName, assetTitle, assetDescription, nodeName,
+			kaleoDefinitionName, completed, start, end, orderByComparator,
+			serviceContext);
+	}
+
 	/**
 	 * Updates the kaleo instance in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoInstance the kaleo instance
 	 * @return the kaleo instance that was updated

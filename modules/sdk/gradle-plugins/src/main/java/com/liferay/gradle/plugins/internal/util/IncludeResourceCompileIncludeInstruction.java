@@ -42,8 +42,8 @@ public class IncludeResourceCompileIncludeInstruction {
 			expand = _expandCallable.call();
 			files = _filesIterable.call();
 		}
-		catch (Exception e) {
-			throw new GradleException("Unable to build instruction", e);
+		catch (Exception exception) {
+			throw new GradleException("Unable to build instruction", exception);
 		}
 
 		StringBuilder sb = new StringBuilder();
@@ -60,7 +60,13 @@ public class IncludeResourceCompileIncludeInstruction {
 				sb.append("lib/=");
 			}
 
-			sb.append(file.getAbsolutePath());
+			String absolutePath = file.getAbsolutePath();
+
+			if (File.separatorChar != '/') {
+				absolutePath = absolutePath.replace(File.separatorChar, '/');
+			}
+
+			sb.append(absolutePath);
 
 			if (!expand) {
 				sb.append(";lib:=true");

@@ -15,8 +15,10 @@
 package com.liferay.portal.vulcan.yaml.config;
 
 /**
- * @author Peter Shin
+ * @author     Peter Shin
+ * @deprecated As of Athanasius (7.3.x)
  */
+@Deprecated
 public class ConfigYAML {
 
 	public String getApiDir() {
@@ -39,16 +41,48 @@ public class ConfigYAML {
 		return _clientDir;
 	}
 
+	public String getClientMavenGroupId() {
+		return _clientMavenGroupId;
+	}
+
 	public String getImplDir() {
 		return _implDir;
+	}
+
+	public String getLicenseName() {
+		return _licenseName;
+	}
+
+	public String getLicenseURL() {
+		return _licenseURL;
 	}
 
 	public String getTestDir() {
 		return _testDir;
 	}
 
+	public boolean isForcePredictableContentApplicationXML() {
+		return _forcePredictableContentApplicationXML;
+	}
+
 	public boolean isForcePredictableOperationId() {
 		return _forcePredictableOperationId;
+	}
+
+	public boolean isForcePredictableSchemaPropertyName() {
+		return _forcePredictableSchemaPropertyName;
+	}
+
+	public boolean isGenerateBatch() {
+		return _generateBatch;
+	}
+
+	public boolean isGenerateGraphQL() {
+		return _generateGraphQL;
+	}
+
+	public boolean isGenerateREST() {
+		return _generateREST;
 	}
 
 	public boolean isWarningsEnabled() {
@@ -75,14 +109,52 @@ public class ConfigYAML {
 		_clientDir = clientDir;
 	}
 
+	public void setClientMavenGroupId(String clientMavenGroupId) {
+		_clientMavenGroupId = clientMavenGroupId;
+	}
+
+	public void setForcePredictableContentApplicationXML(
+		boolean forcePredictableContentApplicationXML) {
+
+		_forcePredictableContentApplicationXML =
+			forcePredictableContentApplicationXML;
+	}
+
 	public void setForcePredictableOperationId(
 		boolean forcePredictableOperationId) {
 
 		_forcePredictableOperationId = forcePredictableOperationId;
 	}
 
+	public void setForcePredictableSchemaPropertyName(
+		boolean forcePredictableSchemaPropertyName) {
+
+		_forcePredictableSchemaPropertyName =
+			forcePredictableSchemaPropertyName;
+	}
+
+	public void setGenerateBatch(boolean generateBatch) {
+		_generateBatch = generateBatch;
+	}
+
+	public void setGenerateGraphQL(boolean generateGraphQL) {
+		_generateGraphQL = generateGraphQL;
+	}
+
+	public void setGenerateREST(boolean generateREST) {
+		_generateREST = generateREST;
+	}
+
 	public void setImplDir(String implDir) {
 		_implDir = implDir;
+	}
+
+	public void setLicenseName(String licenseName) {
+		_licenseName = licenseName;
+	}
+
+	public void setLicenseURL(String licenseURL) {
+		_licenseURL = licenseURL;
 	}
 
 	public void setTestDir(String testDir) {
@@ -98,8 +170,17 @@ public class ConfigYAML {
 	private Application _application;
 	private String _author;
 	private String _clientDir;
+	private String _clientMavenGroupId;
+	private boolean _forcePredictableContentApplicationXML = true;
 	private boolean _forcePredictableOperationId = true;
+	private boolean _forcePredictableSchemaPropertyName = true;
+	private boolean _generateBatch = true;
+	private boolean _generateGraphQL = true;
+	private boolean _generateREST = true;
 	private String _implDir = "src/main/java";
+	private String _licenseName = "Apache 2.0";
+	private String _licenseURL =
+		"http://www.apache.org/licenses/LICENSE-2.0.html";
 	private String _testDir;
 	private boolean _warningsEnabled = true;
 

@@ -14,12 +14,12 @@
 
 package com.liferay.asset.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
-import com.liferay.portal.kernel.model.NestedSetsTreeNodeModel;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.TreeModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the AssetCategory service. Represents a row in the &quot;AssetCategory&quot; database table, with each column mapped to a property of this class.
@@ -33,7 +33,7 @@ import com.liferay.portal.kernel.util.Accessor;
 )
 @ProviderType
 public interface AssetCategory
-	extends AssetCategoryModel, NestedSetsTreeNodeModel, PersistedModel {
+	extends AssetCategoryModel, PersistedModel, TreeModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:

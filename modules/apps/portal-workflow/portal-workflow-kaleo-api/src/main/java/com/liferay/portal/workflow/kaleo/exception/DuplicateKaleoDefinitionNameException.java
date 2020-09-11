@@ -14,14 +14,11 @@
 
 package com.liferay.portal.workflow.kaleo.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DuplicateKaleoDefinitionNameException extends PortalException {
 
 	public DuplicateKaleoDefinitionNameException() {
@@ -31,12 +28,14 @@ public class DuplicateKaleoDefinitionNameException extends PortalException {
 		super(msg);
 	}
 
-	public DuplicateKaleoDefinitionNameException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DuplicateKaleoDefinitionNameException(
+		String msg, Throwable throwable) {
+
+		super(msg, throwable);
 	}
 
-	public DuplicateKaleoDefinitionNameException(Throwable cause) {
-		super(cause);
+	public DuplicateKaleoDefinitionNameException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

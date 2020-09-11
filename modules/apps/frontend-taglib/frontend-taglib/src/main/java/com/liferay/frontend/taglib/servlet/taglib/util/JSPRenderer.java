@@ -41,41 +41,46 @@ import org.osgi.service.component.annotations.Reference;
 public class JSPRenderer {
 
 	public void renderJSP(
-			HttpServletRequest request, HttpServletResponse response,
-			String path)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String path)
 		throws IOException {
 
-		renderJSP(getServletContext(request), request, response, path);
+		renderJSP(
+			getServletContext(httpServletRequest), httpServletRequest,
+			httpServletResponse, path);
 	}
 
 	public void renderJSP(
-			ServletContext servletContext, HttpServletRequest request,
-			HttpServletResponse response, String path)
+			ServletContext servletContext,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String path)
 		throws IOException {
 
 		RequestDispatcher requestDispatcher =
 			servletContext.getRequestDispatcher(path);
 
 		try {
-			requestDispatcher.include(request, response);
+			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
-		catch (ServletException se) {
-			_log.error("Unable to render JSP " + path, se);
+		catch (ServletException servletException) {
+			_log.error("Unable to render JSP " + path, servletException);
 
-			throw new IOException("Unable to render " + path, se);
+			throw new IOException("Unable to render " + path, servletException);
 		}
 	}
 
+	/**
+	 * @param      servletContext
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
 	}
 
-	protected ServletContext getServletContext(HttpServletRequest request) {
-		if (_servletContext != null) {
-			return _servletContext;
-		}
+	protected ServletContext getServletContext(
+		HttpServletRequest httpServletRequest) {
 
-		String portletId = _portal.getPortletId(request);
+		String portletId = _portal.getPortletId(httpServletRequest);
 
 		if (Validator.isNotNull(portletId)) {
 			String rootPortletId = PortletIdCodec.decodePortletName(portletId);
@@ -85,14 +90,12 @@ public class JSPRenderer {
 			return portletBag.getServletContext();
 		}
 
-		return (ServletContext)request.getAttribute(WebKeys.CTX);
+		return (ServletContext)httpServletRequest.getAttribute(WebKeys.CTX);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(JSPRenderer.class);
 
 	@Reference
 	private Portal _portal;
-
-	private ServletContext _servletContext;
 
 }

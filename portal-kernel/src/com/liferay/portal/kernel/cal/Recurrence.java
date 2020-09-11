@@ -44,10 +44,10 @@
 
 package com.liferay.portal.kernel.cal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 
 import java.io.Serializable;
@@ -1099,7 +1099,7 @@ public class Recurrence implements Serializable {
 			return "null";
 		}
 
-		StringBundler sb = new StringBundler(2 * a.length + 1);
+		StringBundler sb = new StringBundler((2 * a.length) + 1);
 
 		sb.append("[");
 

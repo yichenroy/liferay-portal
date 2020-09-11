@@ -27,6 +27,7 @@ import com.liferay.document.library.kernel.service.DLFileEntryServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileShortcutLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.NoSuchRepositoryException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -45,12 +46,11 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionHelper;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RepositoryEntryLocalService;
 import com.liferay.portal.kernel.service.RepositoryLocalService;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,20 +61,46 @@ import java.util.List;
 public class RepositoryProviderImpl implements RepositoryProvider {
 
 	@Override
+	public LocalRepository fetchFileEntryLocalRepository(long fileEntryId)
+		throws PortalException {
+
+		long repositoryId = fetchFileEntryRepositoryId(fileEntryId);
+
+		if (repositoryId != -1) {
+			try {
+				return getLocalRepository(repositoryId);
+			}
+			catch (InvalidRepositoryIdException invalidRepositoryIdException) {
+				StringBundler sb = new StringBundler(3);
+
+				sb.append("No FileEntry exists with the key {fileEntryId=");
+				sb.append(fileEntryId);
+				sb.append("}");
+
+				throw new NoSuchFileEntryException(
+					sb.toString(), invalidRepositoryIdException);
+			}
+		}
+
+		return null;
+	}
+
+	@Override
 	public LocalRepository getFileEntryLocalRepository(long fileEntryId)
 		throws PortalException {
 
 		try {
 			return getLocalRepository(getFileEntryRepositoryId(fileEntryId));
 		}
-		catch (InvalidRepositoryIdException irie) {
+		catch (InvalidRepositoryIdException invalidRepositoryIdException) {
 			StringBundler sb = new StringBundler(3);
 
 			sb.append("No FileEntry exists with the key {fileEntryId=");
 			sb.append(fileEntryId);
 			sb.append("}");
 
-			throw new NoSuchFileEntryException(sb.toString(), irie);
+			throw new NoSuchFileEntryException(
+				sb.toString(), invalidRepositoryIdException);
 		}
 	}
 
@@ -87,14 +113,15 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 
 			return getRepository(getFileEntryRepositoryId(fileEntryId));
 		}
-		catch (InvalidRepositoryIdException irie) {
+		catch (InvalidRepositoryIdException invalidRepositoryIdException) {
 			StringBundler sb = new StringBundler(3);
 
 			sb.append("No FileEntry exists with the key {fileEntryId=");
 			sb.append(fileEntryId);
 			sb.append("}");
 
-			throw new NoSuchFileEntryException(sb.toString(), irie);
+			throw new NoSuchFileEntryException(
+				sb.toString(), invalidRepositoryIdException);
 		}
 	}
 
@@ -106,14 +133,15 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 			return getLocalRepository(
 				getFileShortcutRepositoryId(fileShortcutId));
 		}
-		catch (InvalidRepositoryIdException irie) {
+		catch (InvalidRepositoryIdException invalidRepositoryIdException) {
 			StringBundler sb = new StringBundler(3);
 
 			sb.append("No FileShortcut exists with the key {fileShortcutId=");
 			sb.append(fileShortcutId);
 			sb.append("}");
 
-			throw new NoSuchFileShortcutException(sb.toString(), irie);
+			throw new NoSuchFileShortcutException(
+				sb.toString(), invalidRepositoryIdException);
 		}
 	}
 
@@ -126,14 +154,15 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 
 			return getRepository(getFileShortcutRepositoryId(fileShortcutId));
 		}
-		catch (InvalidRepositoryIdException irie) {
+		catch (InvalidRepositoryIdException invalidRepositoryIdException) {
 			StringBundler sb = new StringBundler(3);
 
 			sb.append("No FileShortcut exists with the key {fileShortcutId=");
 			sb.append(fileShortcutId);
 			sb.append("}");
 
-			throw new NoSuchFileShortcutException(sb.toString(), irie);
+			throw new NoSuchFileShortcutException(
+				sb.toString(), invalidRepositoryIdException);
 		}
 	}
 
@@ -145,14 +174,15 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 			return getLocalRepository(
 				getFileVersionRepositoryId(fileVersionId));
 		}
-		catch (InvalidRepositoryIdException irie) {
+		catch (InvalidRepositoryIdException invalidRepositoryIdException) {
 			StringBundler sb = new StringBundler(3);
 
 			sb.append("No FileVersion exists with the key {fileVersionId=");
 			sb.append(fileVersionId);
 			sb.append("}");
 
-			throw new NoSuchFileVersionException(sb.toString(), irie);
+			throw new NoSuchFileVersionException(
+				sb.toString(), invalidRepositoryIdException);
 		}
 	}
 
@@ -165,14 +195,15 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 
 			return getRepository(getFileVersionRepositoryId(fileVersionId));
 		}
-		catch (InvalidRepositoryIdException irie) {
+		catch (InvalidRepositoryIdException invalidRepositoryIdException) {
 			StringBundler sb = new StringBundler(3);
 
 			sb.append("No FileVersion exists with the key {fileVersionId=");
 			sb.append(fileVersionId);
 			sb.append("}");
 
-			throw new NoSuchFileVersionException(sb.toString(), irie);
+			throw new NoSuchFileVersionException(
+				sb.toString(), invalidRepositoryIdException);
 		}
 	}
 
@@ -183,14 +214,15 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 		try {
 			return getLocalRepository(getFolderRepositoryId(folderId));
 		}
-		catch (InvalidRepositoryIdException irie) {
+		catch (InvalidRepositoryIdException invalidRepositoryIdException) {
 			StringBundler sb = new StringBundler(3);
 
 			sb.append("No Folder exists with the key {folderId=");
 			sb.append(folderId);
 			sb.append("}");
 
-			throw new NoSuchFolderException(sb.toString(), irie);
+			throw new NoSuchFolderException(
+				sb.toString(), invalidRepositoryIdException);
 		}
 	}
 
@@ -203,14 +235,15 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 
 			return getRepository(getFolderRepositoryId(folderId));
 		}
-		catch (InvalidRepositoryIdException irie) {
+		catch (InvalidRepositoryIdException invalidRepositoryIdException) {
 			StringBundler sb = new StringBundler(3);
 
 			sb.append("No Folder exists with the key {folderId=");
 			sb.append(folderId);
 			sb.append("}");
 
-			throw new NoSuchFolderException(sb.toString(), irie);
+			throw new NoSuchFolderException(
+				sb.toString(), invalidRepositoryIdException);
 		}
 	}
 
@@ -351,8 +384,9 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 		try {
 			repositoryLocalService.getRepository(repositoryId);
 		}
-		catch (NoSuchRepositoryException nsre) {
-			throw new InvalidRepositoryIdException(nsre.getMessage());
+		catch (NoSuchRepositoryException noSuchRepositoryException) {
+			throw new InvalidRepositoryIdException(
+				noSuchRepositoryException.getMessage());
 		}
 	}
 
@@ -374,26 +408,44 @@ public class RepositoryProviderImpl implements RepositoryProvider {
 
 			if ((repository != null) && (permissionChecker != null)) {
 				try {
-					ModelResourcePermissionHelper.check(
+					ModelResourcePermissionUtil.check(
 						_folderModelResourcePermission, permissionChecker,
 						repository.getGroupId(), repository.getDlFolderId(),
 						ActionKeys.VIEW);
 				}
-				catch (NoSuchFolderException nsfe) {
+				catch (NoSuchFolderException noSuchFolderException) {
 
 					// LPS-52675
 
 					if (_log.isDebugEnabled()) {
-						_log.debug(nsfe, nsfe);
+						_log.debug(
+							noSuchFolderException, noSuchFolderException);
 					}
 				}
-
-				return;
 			}
 		}
-		catch (NoSuchRepositoryException nsre) {
-			throw new InvalidRepositoryIdException(nsre.getMessage());
+		catch (NoSuchRepositoryException noSuchRepositoryException) {
+			throw new InvalidRepositoryIdException(
+				noSuchRepositoryException.getMessage());
 		}
+	}
+
+	protected long fetchFileEntryRepositoryId(long fileEntryId) {
+		DLFileEntry dlFileEntry = dlFileEntryLocalService.fetchDLFileEntry(
+			fileEntryId);
+
+		if (dlFileEntry != null) {
+			return dlFileEntry.getRepositoryId();
+		}
+
+		RepositoryEntry repositoryEntry =
+			repositoryEntryLocalService.fetchRepositoryEntry(fileEntryId);
+
+		if (repositoryEntry != null) {
+			return repositoryEntry.getRepositoryId();
+		}
+
+		return -1;
 	}
 
 	protected long getFileEntryRepositoryId(long fileEntryId) {

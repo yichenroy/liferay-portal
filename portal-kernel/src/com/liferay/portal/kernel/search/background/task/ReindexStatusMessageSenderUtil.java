@@ -14,24 +14,12 @@
 
 package com.liferay.portal.kernel.search.background.task;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 /**
  * @author Andrew Betts
  */
-@ProviderType
 public class ReindexStatusMessageSenderUtil {
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #_getReindexStatusMessageSender()}
-	 */
-	@Deprecated
-	public static ReindexStatusMessageSender getReindexStatusMessageSender() {
-		return _getReindexStatusMessageSender();
-	}
 
 	public static void sendStatusMessage(
 		String className, long count, long total) {

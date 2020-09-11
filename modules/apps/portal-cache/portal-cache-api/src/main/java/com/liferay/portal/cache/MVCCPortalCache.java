@@ -31,6 +31,11 @@ public class MVCCPortalCache<K extends Serializable, V extends MVCCModel>
 	}
 
 	@Override
+	public boolean isMVCC() {
+		return true;
+	}
+
+	@Override
 	public void put(K key, V value) {
 		put(key, value, DEFAULT_TIME_TO_LIVE);
 	}
@@ -48,7 +53,7 @@ public class MVCCPortalCache<K extends Serializable, V extends MVCCModel>
 				}
 			}
 
-			if (value.getMvccVersion() <= oldValue.getMvccVersion()) {
+			if (value.getMvccVersion() < oldValue.getMvccVersion()) {
 				return;
 			}
 

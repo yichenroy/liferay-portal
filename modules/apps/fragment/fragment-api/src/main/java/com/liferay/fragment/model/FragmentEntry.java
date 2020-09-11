@@ -14,11 +14,11 @@
 
 package com.liferay.fragment.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the FragmentEntry service. Represents a row in the &quot;FragmentEntry&quot; database table, with each column mapped to a property of this class.
@@ -56,7 +56,13 @@ public interface FragmentEntry extends FragmentEntryModel, PersistedModel {
 
 		};
 
+	public FragmentEntry fetchDraftFragmentEntry();
+
 	public String getContent();
+
+	public int getGlobalUsageCount();
+
+	public String getIcon();
 
 	public String getImagePreviewURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay);
@@ -68,6 +74,8 @@ public interface FragmentEntry extends FragmentEntryModel, PersistedModel {
 	public void populateZipWriter(
 			com.liferay.portal.kernel.zip.ZipWriter zipWriter, String path)
 		throws Exception;
+
+	public void setIcon(String icon);
 
 	public void setImagePreviewURL(String imagePreviewURL);
 

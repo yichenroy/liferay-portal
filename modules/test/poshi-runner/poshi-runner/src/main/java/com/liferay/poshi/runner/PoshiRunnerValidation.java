@@ -15,7 +15,6 @@
 package com.liferay.poshi.runner;
 
 import com.liferay.poshi.runner.elements.PoshiElement;
-import com.liferay.poshi.runner.script.PoshiScriptParserException;
 import com.liferay.poshi.runner.util.OSDetector;
 import com.liferay.poshi.runner.util.PropsUtil;
 import com.liferay.poshi.runner.util.StringUtil;
@@ -54,22 +53,17 @@ public class PoshiRunnerValidation {
 	public static void main(String[] args) throws Exception {
 		PoshiRunnerContext.readFiles();
 
-		List<String> failingFilePaths =
-			PoshiScriptParserException.getFailingFilePaths();
-
-		if (!failingFilePaths.isEmpty()) {
-			throw new RuntimeException(
-				"Found " + failingFilePaths.size() + " Poshi Script parsing " +
-					"errors");
-		}
-
 		validate();
 	}
 
 	public static void validate() throws Exception {
+		System.out.print("Running Poshi validation...");
+
+		long start = System.currentTimeMillis();
+
 		for (String filePath : PoshiRunnerContext.getFilePaths()) {
 			if (OSDetector.isWindows()) {
-				filePath = filePath.replace("/", "\\");
+				filePath = StringUtil.replace(filePath, "/", "\\");
 			}
 
 			String className = PoshiRunnerGetterUtil.getClassNameFromFilePath(
@@ -108,6 +102,9 @@ public class PoshiRunnerValidation {
 		if (!_exceptions.isEmpty()) {
 			_throwExceptions();
 		}
+
+		System.out.println(
+			" Completed in " + (System.currentTimeMillis() - start) + "ms.");
 	}
 
 	public static void validate(String testName) throws Exception {
@@ -884,7 +881,7 @@ public class PoshiRunnerValidation {
 	protected static void validateHasRequiredPropertyElements(
 		Element element, String filePath) {
 
-		List<String> requiredPropertyNames = new ArrayList(
+		List<String> requiredPropertyNames = new ArrayList<>(
 			PoshiRunnerContext.getTestCaseRequiredPropertyNames());
 
 		List<Element> propertyElements = element.elements("property");
@@ -1056,10 +1053,14 @@ public class PoshiRunnerValidation {
 
 		Class<?> clazz = null;
 
+		if (className.matches("[\\w]*")) {
+			className = "com.liferay.poshi.runner.util." + className;
+		}
+
 		try {
 			clazz = Class.forName(className);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_exceptions.add(
 				new ValidationException(
 					element, "Unable to find class ", className, "\n",
@@ -1071,8 +1072,8 @@ public class PoshiRunnerValidation {
 		try {
 			validateUtilityClassName(element, filePath, className);
 		}
-		catch (Exception e) {
-			_exceptions.add(e);
+		catch (Exception exception) {
+			_exceptions.add(exception);
 
 			return;
 		}
@@ -1096,8 +1097,6 @@ public class PoshiRunnerValidation {
 				new ValidationException(
 					element, "Unable to find method ", className, "#",
 					methodName, "\n", filePath));
-
-			return;
 		}
 	}
 
@@ -1632,9 +1631,10 @@ public class PoshiRunnerValidation {
 					className = PoshiRunnerGetterUtil.getUtilityClassName(
 						className);
 				}
-				catch (IllegalArgumentException iae) {
+				catch (IllegalArgumentException illegalArgumentException) {
 					throw new ValidationException(
-						element, iae.getMessage(), "\n", filePath);
+						element, illegalArgumentException.getMessage(), "\n",
+						filePath);
 				}
 			}
 
@@ -1659,12 +1659,12 @@ public class PoshiRunnerValidation {
 			minimumAttributeSize = 1;
 		}
 
-		if (attributes.size() <= minimumAttributeSize) {
-			if (Validator.isNull(element.getText())) {
-				_exceptions.add(
-					new ValidationException(
-						element, "Missing value attribute\n", filePath));
-			}
+		if ((attributes.size() <= minimumAttributeSize) &&
+			Validator.isNull(element.getText())) {
+
+			_exceptions.add(
+				new ValidationException(
+					element, "Missing value attribute\n", filePath));
 		}
 
 		List<String> possibleAttributeNames = new ArrayList<>();
@@ -1705,8 +1705,8 @@ public class PoshiRunnerValidation {
 			try {
 				validateUtilityClassName(element, filePath, className);
 			}
-			catch (Exception e) {
-				_exceptions.add(e);
+			catch (Exception exception) {
+				_exceptions.add(exception);
 			}
 
 			int expectedAttributeCount = 1;
@@ -1788,8 +1788,9 @@ public class PoshiRunnerValidation {
 	private static void _throwExceptions() throws Exception {
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(String.valueOf(_exceptions.size()));
-		sb.append(" errors in POSHI\n\n\n");
+		sb.append("\n\n");
+		sb.append(_exceptions.size());
+		sb.append(" errors in POSHI\n\n");
 
 		for (Exception exception : _exceptions) {
 			sb.append(exception.getMessage());

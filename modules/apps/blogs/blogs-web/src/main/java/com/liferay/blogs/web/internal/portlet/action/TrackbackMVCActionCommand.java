@@ -76,25 +76,30 @@ public class TrackbackMVCActionCommand extends BaseMVCActionCommand {
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
-			HttpServletRequest request = _portal.getHttpServletRequest(
-				actionRequest);
+			HttpServletRequest httpServletRequest =
+				_portal.getHttpServletRequest(actionRequest);
 
-			HttpServletRequest originalRequest =
-				_portal.getOriginalServletRequest(request);
+			HttpServletRequest originalHttpServletRequest =
+				_portal.getOriginalServletRequest(httpServletRequest);
 
-			String excerpt = ParamUtil.getString(originalRequest, "excerpt");
-			String url = ParamUtil.getString(originalRequest, "url");
-			String blogName = ParamUtil.getString(originalRequest, "blog_name");
-			String title = ParamUtil.getString(originalRequest, "title");
+			String excerpt = ParamUtil.getString(
+				originalHttpServletRequest, "excerpt");
+			String url = ParamUtil.getString(originalHttpServletRequest, "url");
+			String blogName = ParamUtil.getString(
+				originalHttpServletRequest, "blog_name");
+			String title = ParamUtil.getString(
+				originalHttpServletRequest, "title");
 
-			validate(actionRequest, request.getRemoteAddr(), url);
+			validate(actionRequest, httpServletRequest.getRemoteAddr(), url);
 
 			_trackback.addTrackback(
 				entry, themeDisplay, excerpt, url, blogName, title,
 				new ServiceContextFunction(actionRequest));
 		}
-		catch (TrackbackValidationException tve) {
-			sendError(actionRequest, actionResponse, tve.getMessage());
+		catch (TrackbackValidationException trackbackValidationException) {
+			sendError(
+				actionRequest, actionResponse,
+				trackbackValidationException.getMessage());
 
 			return;
 		}
@@ -110,13 +115,13 @@ public class TrackbackMVCActionCommand extends BaseMVCActionCommand {
 		try {
 			addTrackback(actionRequest, actionResponse);
 		}
-		catch (NoSuchEntryException nsee) {
+		catch (NoSuchEntryException noSuchEntryException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(nsee, nsee);
+				_log.warn(noSuchEntryException, noSuchEntryException);
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -126,11 +131,11 @@ public class TrackbackMVCActionCommand extends BaseMVCActionCommand {
 		try {
 			return ActionUtil.getEntry(actionRequest);
 		}
-		catch (PrincipalException pe) {
+		catch (PrincipalException principalException) {
 			throw new TrackbackValidationException(
 				"Blog entry must have guest view permissions to enable " +
 					"trackbacks",
-				pe);
+				principalException);
 		}
 	}
 
@@ -179,16 +184,16 @@ public class TrackbackMVCActionCommand extends BaseMVCActionCommand {
 
 		sb.append("</response>");
 
-		HttpServletRequest request = _portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			actionRequest);
-		HttpServletResponse response = _portal.getHttpServletResponse(
-			actionResponse);
+		HttpServletResponse httpServletResponse =
+			_portal.getHttpServletResponse(actionResponse);
 
 		String s = sb.toString();
 
 		ServletResponseUtil.sendFile(
-			request, response, null, s.getBytes(StringPool.UTF8),
-			ContentTypes.TEXT_XML_UTF8);
+			httpServletRequest, httpServletResponse, null,
+			s.getBytes(StringPool.UTF8), ContentTypes.TEXT_XML_UTF8);
 	}
 
 	protected void sendSuccess(

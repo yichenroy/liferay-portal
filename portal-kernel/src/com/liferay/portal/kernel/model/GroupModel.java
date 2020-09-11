@@ -14,13 +14,14 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the Group service. Represents a row in the &quot;Group_&quot; database table, with each column mapped to a property of this class.
@@ -35,8 +36,8 @@ import java.util.Map;
  */
 @ProviderType
 public interface GroupModel
-	extends AttachedModel, BaseModel<Group>, LocalizedModel, MVCCModel,
-			ShardedModel {
+	extends AttachedModel, BaseModel<Group>, CTModel<Group>, LocalizedModel,
+			MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -49,6 +50,7 @@ public interface GroupModel
 	 *
 	 * @return the primary key of this group
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -56,6 +58,7 @@ public interface GroupModel
 	 *
 	 * @param primaryKey the primary key of this group
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -73,6 +76,22 @@ public interface GroupModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this group.
+	 *
+	 * @return the ct collection ID of this group
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this group.
+	 *
+	 * @param ctCollectionId the ct collection ID of this group
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this group.

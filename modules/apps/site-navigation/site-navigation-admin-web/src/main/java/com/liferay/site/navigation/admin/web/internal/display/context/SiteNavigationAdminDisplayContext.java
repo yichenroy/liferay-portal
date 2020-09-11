@@ -37,7 +37,9 @@ import com.liferay.site.navigation.admin.web.internal.util.SiteNavigationMenuPor
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
 import com.liferay.site.navigation.service.SiteNavigationMenuService;
+import com.liferay.site.navigation.type.DefaultSiteNavigationMenuItemTypeContext;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
+import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeContext;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
@@ -56,16 +58,16 @@ import javax.servlet.http.HttpServletRequest;
 public class SiteNavigationAdminDisplayContext {
 
 	public SiteNavigationAdminDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request,
 		SiteNavigationMenuItemTypeRegistry siteNavigationMenuItemTypeRegistry,
 		SiteNavigationMenuLocalService siteNavigationMenuLocalService,
 		SiteNavigationMenuService siteNavigationMenuService) {
 
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-		_request = request;
 		_siteNavigationMenuItemTypeRegistry =
 			siteNavigationMenuItemTypeRegistry;
 		_siteNavigationMenuLocalService = siteNavigationMenuLocalService;
@@ -73,8 +75,13 @@ public class SiteNavigationAdminDisplayContext {
 	}
 
 	public List<DropdownItem> getAddSiteNavigationMenuItemDropdownItems() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		SiteNavigationMenuItemTypeContext siteNavigationMenuItemTypeContext =
+			new DefaultSiteNavigationMenuItemTypeContext(
+				themeDisplay.getScopeGroup());
 
 		return new DropdownItemList() {
 			{
@@ -82,12 +89,18 @@ public class SiteNavigationAdminDisplayContext {
 						_siteNavigationMenuItemTypeRegistry.
 							getSiteNavigationMenuItemTypes()) {
 
+					if (!siteNavigationMenuItemType.isAvailable(
+							siteNavigationMenuItemTypeContext)) {
+
+						continue;
+					}
+
 					add(
 						dropdownItem -> {
 							dropdownItem.setData(
-								Collections.singletonMap("type", "add-button"));
-							dropdownItem.setHref(
-								_getAddURL(siteNavigationMenuItemType));
+								Collections.singletonMap(
+									"href",
+									_getAddURL(siteNavigationMenuItemType)));
 							dropdownItem.setLabel(
 								siteNavigationMenuItemType.getLabel(
 									themeDisplay.getLocale()));
@@ -102,7 +115,8 @@ public class SiteNavigationAdminDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
@@ -112,7 +126,7 @@ public class SiteNavigationAdminDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		return _keywords;
 	}
@@ -123,7 +137,7 @@ public class SiteNavigationAdminDisplayContext {
 		}
 
 		_orderByCol = ParamUtil.getString(
-			_request, "orderByCol", "create-date");
+			_httpServletRequest, "orderByCol", "create-date");
 
 		return _orderByCol;
 	}
@@ -133,7 +147,8 @@ public class SiteNavigationAdminDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -141,7 +156,8 @@ public class SiteNavigationAdminDisplayContext {
 	public PortletURL getPortletURL() {
 		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
 
-		String displayStyle = ParamUtil.getString(_request, "displayStyle");
+		String displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle");
 
 		if (Validator.isNotNull(displayStyle)) {
 			portletURL.setParameter("displayStyle", getDisplayStyle());
@@ -163,24 +179,27 @@ public class SiteNavigationAdminDisplayContext {
 	}
 
 	public SiteNavigationMenu getPrimarySiteNavigationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return _siteNavigationMenuLocalService.fetchPrimarySiteNavigationMenu(
 			themeDisplay.getScopeGroupId());
 	}
 
-	public SearchContainer getSearchContainer() {
+	public SearchContainer<SiteNavigationMenu> getSearchContainer() {
 		if (_searchContainer != null) {
 			return _searchContainer;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		SearchContainer searchContainer = new SearchContainer(
-			_liferayPortletRequest, getPortletURL(), null,
-			"there-are-no-navigation-menus");
+		SearchContainer<SiteNavigationMenu> searchContainer =
+			new SearchContainer(
+				_liferayPortletRequest, getPortletURL(), null,
+				"there-are-no-navigation-menus");
 
 		OrderByComparator<SiteNavigationMenu> orderByComparator =
 			SiteNavigationMenuPortletUtil.getOrderByComparator(
@@ -239,7 +258,7 @@ public class SiteNavigationAdminDisplayContext {
 		}
 
 		_siteNavigationMenuId = ParamUtil.getLong(
-			_request, "siteNavigationMenuId");
+			_httpServletRequest, "siteNavigationMenuId");
 
 		return _siteNavigationMenuId;
 	}
@@ -263,8 +282,9 @@ public class SiteNavigationAdminDisplayContext {
 	}
 
 	public boolean hasEditPermission() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Group group = themeDisplay.getScopeGroup();
 
@@ -287,8 +307,9 @@ public class SiteNavigationAdminDisplayContext {
 			return _updatePermission;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_updatePermission = SiteNavigationMenuPermission.contains(
 			themeDisplay.getPermissionChecker(), getSiteNavigationMenuId(),
@@ -300,8 +321,9 @@ public class SiteNavigationAdminDisplayContext {
 	private String _getAddURL(
 		SiteNavigationMenuItemType siteNavigationMenuItemType) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
@@ -327,7 +349,7 @@ public class SiteNavigationAdminDisplayContext {
 		try {
 			addURL.setWindowState(LiferayWindowState.POP_UP);
 		}
-		catch (WindowStateException wse) {
+		catch (WindowStateException windowStateException) {
 			return StringPool.BLANK;
 		}
 
@@ -335,13 +357,13 @@ public class SiteNavigationAdminDisplayContext {
 	}
 
 	private String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private String _orderByCol;
 	private String _orderByType;
-	private final HttpServletRequest _request;
-	private SearchContainer _searchContainer;
+	private SearchContainer<SiteNavigationMenu> _searchContainer;
 	private Long _siteNavigationMenuId;
 	private final SiteNavigationMenuItemTypeRegistry
 		_siteNavigationMenuItemTypeRegistry;

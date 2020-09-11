@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.geolocation;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum DistanceUnit {
 
 	CENTIMETERS("cm"), FEET("ft"), INCHES("in"), KILOMETERS("km"), METERS("m"),

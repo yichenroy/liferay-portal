@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -33,21 +31,20 @@ import java.io.ObjectOutput;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class CountryCacheModel
 	implements CacheModel<Country>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof CountryCacheModel)) {
+		if (!(object instanceof CountryCacheModel)) {
 			return false;
 		}
 
-		CountryCacheModel countryCacheModel = (CountryCacheModel)obj;
+		CountryCacheModel countryCacheModel = (CountryCacheModel)object;
 
 		if ((countryId == countryCacheModel.countryId) &&
 			(mvccVersion == countryCacheModel.mvccVersion)) {

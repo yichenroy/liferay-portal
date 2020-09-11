@@ -39,20 +39,22 @@ import javax.servlet.http.HttpServletRequest;
 public class FragmentCollectionResourcesDisplayContext {
 
 	public FragmentCollectionResourcesDisplayContext(
-		RenderRequest renderRequest, RenderResponse renderResponse,
-		HttpServletRequest request,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse,
 		FragmentDisplayContext fragmentDisplayContext) {
 
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-		_request = request;
 		_fragmentDisplayContext = fragmentDisplayContext;
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public SearchContainer getSearchContainer() throws PortalException {
+	public SearchContainer<FileEntry> getSearchContainer()
+		throws PortalException {
+
 		if (_searchContainer != null) {
 			return _searchContainer;
 		}
@@ -67,7 +69,7 @@ public class FragmentCollectionResourcesDisplayContext {
 			"fragmentCollectionId",
 			String.valueOf(_fragmentDisplayContext.getFragmentCollectionId()));
 
-		SearchContainer searchContainer = new SearchContainer(
+		SearchContainer<FileEntry> searchContainer = new SearchContainer(
 			_renderRequest, portletURL, null, "there-are-no-resources");
 
 		searchContainer.setRowChecker(
@@ -109,10 +111,10 @@ public class FragmentCollectionResourcesDisplayContext {
 
 	private Long _folderId;
 	private final FragmentDisplayContext _fragmentDisplayContext;
+	private final HttpServletRequest _httpServletRequest;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
-	private SearchContainer _searchContainer;
+	private SearchContainer<FileEntry> _searchContainer;
 	private final ThemeDisplay _themeDisplay;
 
 }

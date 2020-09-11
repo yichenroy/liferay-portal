@@ -14,8 +14,6 @@
 
 package com.liferay.site.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * The extended model implementation for the SiteFriendlyURL service. Represents
  * a row in the &quot;SiteFriendlyURL&quot; database table, with each column
@@ -29,7 +27,6 @@ import aQute.bnd.annotation.ProviderType;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class SiteFriendlyURLImpl extends SiteFriendlyURLBaseImpl {
 
 	/**

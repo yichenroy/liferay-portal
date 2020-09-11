@@ -35,13 +35,8 @@ import java.util.regex.Pattern;
 public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
-	}
-
-	public void setImmutableFieldTypes(String immutableFieldTypes) {
-		_immutableFieldTypes = ListUtil.fromString(
-			immutableFieldTypes, StringPool.COMMA);
 	}
 
 	@Override
@@ -73,9 +68,7 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 		String absolutePath, JavaClass javaClass, String classContent,
 		JavaVariable javaVariable) {
 
-		String accessModifier = javaVariable.getAccessModifier();
-
-		if (accessModifier.equals(JavaTerm.ACCESS_MODIFIER_PUBLIC)) {
+		if (javaVariable.isPublic()) {
 			return classContent;
 		}
 
@@ -87,15 +80,16 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 				classContent, javaVariable, fieldType);
 		}
 
-		if (!accessModifier.equals(JavaTerm.ACCESS_MODIFIER_PRIVATE)) {
+		if (!javaVariable.isPrivate()) {
 			return classContent;
 		}
 
 		if (isFinal) {
 			JavaClass parentJavaClass = javaClass.getParentJavaClass();
 
-			if ((parentJavaClass == null) && !javaVariable.isStatic() &&
-				(_isImmutableField(fieldType) ||
+			if (!javaClass.isAnonymous() && (parentJavaClass == null) &&
+				!javaVariable.isStatic() &&
+				(_isImmutableField(fieldType, absolutePath) ||
 				 fieldType.matches("Pattern(\\[\\])*") ||
 				 (fieldType.equals("Log") &&
 				  !isExcludedPath(_STATIC_LOG_EXCLUDES, absolutePath)))) {
@@ -122,9 +116,9 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 		Matcher matcher = pattern.matcher(javaVariable.getContent());
 
 		if (matcher.find()) {
-			String nonAccessModifiers = matcher.group(1);
+			String nonaccessModifiers = matcher.group(1);
 
-			if (nonAccessModifiers.contains(modifier)) {
+			if (nonaccessModifiers.contains(modifier)) {
 				return true;
 			}
 		}
@@ -246,11 +240,9 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 	private synchronized List<String> _getAnnotationsExclusions() {
 		if (_annotationsExclusions == null) {
 			_annotationsExclusions = ListUtil.fromArray(
-				new String[] {
-					"ArquillianResource", "Autowired", "BeanReference",
-					"Captor", "Context", "Inject", "Mock", "Parameter",
-					"Reference", "ServiceReference", "SuppressWarnings", "Value"
-				});
+				"ArquillianResource", "Autowired", "BeanReference", "Captor",
+				"Context", "Inject", "Mock", "Parameter", "Reference",
+				"ServiceReference", "SuppressWarnings", "Value");
 		}
 
 		return _annotationsExclusions;
@@ -338,8 +330,11 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 		return true;
 	}
 
-	private boolean _isImmutableField(String fieldType) {
-		for (String immutableFieldType : _immutableFieldTypes) {
+	private boolean _isImmutableField(String fieldType, String absolutePath) {
+		List<String> immutableFieldTypes = getAttributeValues(
+			_IMMUTABLE_FIELD_TYPES_KEY, absolutePath);
+
+		for (String immutableFieldType : immutableFieldTypes) {
 			if (fieldType.equals(immutableFieldType) ||
 				fieldType.startsWith(immutableFieldType + "[]")) {
 
@@ -350,10 +345,12 @@ public class JavaVariableTypeCheck extends BaseJavaTermCheck {
 		return false;
 	}
 
+	private static final String _IMMUTABLE_FIELD_TYPES_KEY =
+		"immutableFieldTypes";
+
 	private static final String _STATIC_LOG_EXCLUDES = "static.log.excludes";
 
 	private List<String> _annotationsExclusions;
 	private Map<String, String> _defaultPrimitiveValues;
-	private List<String> _immutableFieldTypes = new ArrayList<>();
 
 }

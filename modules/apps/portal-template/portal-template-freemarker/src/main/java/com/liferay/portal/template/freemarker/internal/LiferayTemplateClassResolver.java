@@ -107,8 +107,7 @@ public class LiferayTemplateClassResolver implements TemplateClassResolver {
 		if (allowed) {
 			try {
 				ClassLoader[] wwhitelistedClassLoaders =
-					_whitelistedClassLoaders.toArray(
-						new ClassLoader[_whitelistedClassLoaders.size()]);
+					_whitelistedClassLoaders.toArray(new ClassLoader[0]);
 
 				Thread currentThread = Thread.currentThread();
 
@@ -122,8 +121,8 @@ public class LiferayTemplateClassResolver implements TemplateClassResolver {
 				return Class.forName(
 					className, true, wwhitelistedAggregateClassLoader);
 			}
-			catch (Exception e) {
-				throw new TemplateException(e, environment);
+			catch (Exception exception) {
+				throw new TemplateException(exception, environment);
 			}
 		}
 

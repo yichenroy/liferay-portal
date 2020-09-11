@@ -62,15 +62,15 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 	public void setUp() throws Exception {
 		super.setUp();
 
-		UnicodeProperties properties = new UnicodeProperties();
+		UnicodeProperties unicodeProperties = new UnicodeProperties();
 
-		populateLegacyProperties(properties);
+		populateLegacyProperties(unicodeProperties);
 
 		List<Company> companies = companyLocalService.getCompanies(false);
 
 		for (Company company : companies) {
 			companyLocalService.updatePreferences(
-				company.getCompanyId(), properties);
+				company.getCompanyId(), unicodeProperties);
 		}
 	}
 
@@ -116,13 +116,11 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 
 	protected Settings getSettings(long companyId) {
 		try {
-			Settings settings = settingsFactory.getSettings(
+			return settingsFactory.getSettings(
 				new CompanyServiceSettingsLocator(companyId, getSettingsId()));
-
-			return settings;
 		}
-		catch (SettingsException se) {
-			throw new IllegalStateException(se);
+		catch (SettingsException settingsException) {
+			throw new IllegalStateException(settingsException);
 		}
 	}
 
@@ -146,7 +144,7 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 			return (VerifyProcess)_bundleContext.getService(
 				serviceReferences[0]);
 		}
-		catch (Exception ise) {
+		catch (Exception exception) {
 			throw new IllegalStateException("Unable to get verify process");
 		}
 	}
@@ -154,7 +152,7 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 	protected abstract String getVerifyProcessName();
 
 	protected abstract void populateLegacyProperties(
-		UnicodeProperties properties);
+		UnicodeProperties unicodeProperties);
 
 	@Inject
 	protected CompanyLocalService companyLocalService;

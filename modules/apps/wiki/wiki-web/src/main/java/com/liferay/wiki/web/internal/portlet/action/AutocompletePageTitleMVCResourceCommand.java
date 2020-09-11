@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
@@ -69,15 +70,16 @@ public class AutocompletePageTitleMVCResourceCommand
 			JSONArray jsonArray = getJSONArray(
 				resourceRequest, resourceResponse);
 
-			HttpServletResponse response = _portal.getHttpServletResponse(
-				resourceResponse);
+			HttpServletResponse httpServletResponse =
+				_portal.getHttpServletResponse(resourceResponse);
 
-			response.setContentType(ContentTypes.APPLICATION_JSON);
+			httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-			ServletResponseUtil.write(response, jsonArray.toString());
+			ServletResponseUtil.write(
+				httpServletResponse, jsonArray.toString());
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -87,14 +89,15 @@ public class AutocompletePageTitleMVCResourceCommand
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		HttpServletRequest request = _portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			resourceRequest);
 
-		SearchContext searchContext = SearchContextFactory.getInstance(request);
+		SearchContext searchContext = SearchContextFactory.getInstance(
+			httpServletRequest);
 
 		searchContext.setEnd(20);
 
-		String query = ParamUtil.getString(request, "query");
+		String query = ParamUtil.getString(httpServletRequest, "query");
 
 		searchContext.setKeywords(StringUtil.toLowerCase(query));
 
@@ -107,9 +110,8 @@ public class AutocompletePageTitleMVCResourceCommand
 		Hits hits = _wikiPageSearcher.search(searchContext);
 
 		for (Document document : hits.getDocs()) {
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-			jsonObject.put("title", document.get(Field.TITLE));
+			JSONObject jsonObject = JSONUtil.put(
+				"title", document.get(Field.TITLE));
 
 			jsonArray.put(jsonObject);
 		}

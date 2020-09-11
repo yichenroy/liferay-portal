@@ -14,14 +14,11 @@
 
 package com.liferay.asset.list.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class AssetListEntryTitleException extends PortalException {
 
 	public AssetListEntryTitleException() {
@@ -31,12 +28,12 @@ public class AssetListEntryTitleException extends PortalException {
 		super(msg);
 	}
 
-	public AssetListEntryTitleException(String msg, Throwable cause) {
-		super(msg, cause);
+	public AssetListEntryTitleException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public AssetListEntryTitleException(Throwable cause) {
-		super(cause);
+	public AssetListEntryTitleException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

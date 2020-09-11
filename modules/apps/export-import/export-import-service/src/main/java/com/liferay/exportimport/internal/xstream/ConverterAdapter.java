@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.xstream;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.xstream.XStreamConverter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -29,7 +27,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author Daniel Kocsis
  */
-@ProviderType
 public class ConverterAdapter implements Converter {
 
 	public ConverterAdapter(XStreamConverter xStreamConverter) {
@@ -53,8 +50,8 @@ public class ConverterAdapter implements Converter {
 					hierarchicalStreamWriter),
 				new XStreamMarshallingContextAdapter(marshallingContext));
 		}
-		catch (Exception e) {
-			_log.error("Unable to marshal object", e);
+		catch (Exception exception) {
+			_log.error("Unable to marshal object", exception);
 		}
 	}
 
@@ -69,8 +66,8 @@ public class ConverterAdapter implements Converter {
 					hierarchicalStreamReader),
 				new XStreamUnmarshallingContextAdapter(unmarshallingContext));
 		}
-		catch (Exception e) {
-			_log.error("Unable to un-marshal object", e);
+		catch (Exception exception) {
+			_log.error("Unable to un-marshal object", exception);
 
 			return null;
 		}

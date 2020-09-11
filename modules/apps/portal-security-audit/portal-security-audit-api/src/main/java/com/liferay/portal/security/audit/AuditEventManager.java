@@ -14,13 +14,13 @@
 
 package com.liferay.portal.security.audit;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.audit.AuditMessage;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.Date;
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Greenwald
@@ -35,14 +35,18 @@ public interface AuditEventManager {
 
 	public List<AuditEvent> getAuditEvents(
 		long companyId, int start, int end,
-		OrderByComparator orderByComparator);
+		OrderByComparator
+			<com.liferay.portal.security.audit.storage.model.AuditEvent>
+				orderByComparator);
 
 	public List<AuditEvent> getAuditEvents(
 		long companyId, long userId, String userName, Date createDateGT,
 		Date createDateLT, String eventType, String className, String classPK,
 		String clientHost, String clientIP, String serverName, int serverPort,
 		String sessionID, boolean andSearch, int start, int end,
-		OrderByComparator orderByComparator);
+		OrderByComparator
+			<com.liferay.portal.security.audit.storage.model.AuditEvent>
+				orderByComparator);
 
 	public int getAuditEventsCount(long companyId);
 

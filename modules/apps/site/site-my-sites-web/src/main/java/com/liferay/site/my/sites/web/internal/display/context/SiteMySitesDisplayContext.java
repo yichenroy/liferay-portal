@@ -16,7 +16,7 @@ package com.liferay.site.my.sites.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -59,17 +60,7 @@ public class SiteMySitesDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
-	}
-
-	public List<DropdownItem> getArticleActionDropdownItems(Group group)
-		throws Exception {
-
-		SiteActionDropdownItemsProvider siteActionDropdownItemsProvider =
-			new SiteActionDropdownItemsProvider(
-				group, _renderRequest, _renderResponse, getTabs1());
-
-		return siteActionDropdownItemsProvider.getActionDropdownItems();
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 	}
 
 	public String getDisplayStyle() {
@@ -81,6 +72,16 @@ public class SiteMySitesDisplayContext {
 			_renderRequest, "displayStyle", "descriptive");
 
 		return _displayStyle;
+	}
+
+	public List<DropdownItem> getGroupActionDropdownItems(Group group)
+		throws Exception {
+
+		SiteActionDropdownItemsProvider siteActionDropdownItemsProvider =
+			new SiteActionDropdownItemsProvider(
+				group, _renderRequest, _renderResponse, getTabs1());
+
+		return siteActionDropdownItemsProvider.getActionDropdownItems();
 	}
 
 	public GroupSearch getGroupSearchContainer() {
@@ -105,9 +106,10 @@ public class SiteMySitesDisplayContext {
 		GroupSearchTerms searchTerms =
 			(GroupSearchTerms)groupSearch.getSearchTerms();
 
-		LinkedHashMap<String, Object> groupParams = new LinkedHashMap<>();
-
-		groupParams.put("site", Boolean.TRUE);
+		LinkedHashMap<String, Object> groupParams =
+			LinkedHashMapBuilder.<String, Object>put(
+				"site", Boolean.TRUE
+			).build();
 
 		if (Objects.equals(getTabs1(), "my-sites")) {
 			groupParams.put("usersGroups", themeDisplay.getUserId());
@@ -159,29 +161,24 @@ public class SiteMySitesDisplayContext {
 	}
 
 	public List<NavigationItem> getNavigationItems() {
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(
-							Objects.equals(getTabs1(), "my-sites"));
-						navigationItem.setHref(
-							getPortletURL(), "tabs1", "my-sites");
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "my-sites"));
-					});
-
-				add(
-					navigationItem -> {
-						navigationItem.setActive(
-							Objects.equals(getTabs1(), "available-sites"));
-						navigationItem.setHref(
-							getPortletURL(), "tabs1", "available-sites");
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "available-sites"));
-					});
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(
+					Objects.equals(getTabs1(), "my-sites"));
+				navigationItem.setHref(getPortletURL(), "tabs1", "my-sites");
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "my-sites"));
 			}
-		};
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(
+					Objects.equals(getTabs1(), "available-sites"));
+				navigationItem.setHref(
+					getPortletURL(), "tabs1", "available-sites");
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "available-sites"));
+			}
+		).build();
 	}
 
 	public String getOrderByCol() {
@@ -189,7 +186,8 @@ public class SiteMySitesDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
@@ -199,7 +197,8 @@ public class SiteMySitesDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -235,11 +234,11 @@ public class SiteMySitesDisplayContext {
 
 	private String _displayStyle;
 	private GroupSearch _groupSearch;
+	private final HttpServletRequest _httpServletRequest;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private String _tabs1;
 
 }

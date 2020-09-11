@@ -57,18 +57,38 @@ import javax.servlet.http.HttpServletResponse;
 public class DefaultMBListDisplayContext implements MBListDisplayContext {
 
 	public DefaultMBListDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
-		long categoryId) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, long categoryId,
+		String mvcRenderCommandName) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 
 		_categoryId = categoryId;
+
+		boolean showMyPosts = false;
+		boolean showRecentPosts = false;
+		boolean showSearch = false;
+
+		if (mvcRenderCommandName.equals("/message_boards/view_my_posts")) {
+			showMyPosts = true;
+		}
+		else if (_isShowRecentPosts(mvcRenderCommandName)) {
+			showRecentPosts = true;
+		}
+		else if (_isShowSearch(mvcRenderCommandName)) {
+			showSearch = true;
+		}
+
+		_showMyPosts = showMyPosts;
+		_showRecentPosts = showRecentPosts;
+		_showSearch = showSearch;
 	}
 
 	@Override
 	public int getCategoryEntriesDelta() {
 		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(_request);
+			PortletPreferencesFactoryUtil.getPortalPreferences(
+				_httpServletRequest);
 
 		return GetterUtil.getInteger(
 			portalPreferences.getValue(
@@ -79,7 +99,8 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 	@Override
 	public int getThreadEntriesDelta() {
 		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(_request);
+			PortletPreferencesFactoryUtil.getPortalPreferences(
+				_httpServletRequest);
 
 		return GetterUtil.getInteger(
 			portalPreferences.getValue(
@@ -94,51 +115,17 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 
 	@Override
 	public boolean isShowMyPosts() {
-		String mvcRenderCommandName = ParamUtil.getString(
-			_request, "mvcRenderCommandName");
-
-		if (mvcRenderCommandName.equals("/message_boards/view_my_posts")) {
-			return true;
-		}
-
-		return false;
+		return _showMyPosts;
 	}
 
 	@Override
 	public boolean isShowRecentPosts() {
-		String mvcRenderCommandName = ParamUtil.getString(
-			_request, "mvcRenderCommandName");
-
-		if (mvcRenderCommandName.equals("/message_boards/view_recent_posts")) {
-			return true;
-		}
-
-		String entriesNavigation = ParamUtil.getString(
-			_request, "entriesNavigation");
-
-		if (entriesNavigation.equals("recent")) {
-			return true;
-		}
-
-		return false;
+		return _showRecentPosts;
 	}
 
 	@Override
 	public boolean isShowSearch() {
-		String keywords = ParamUtil.getString(_request, "keywords");
-
-		if (Validator.isNotNull(keywords)) {
-			return true;
-		}
-
-		String mvcRenderCommandName = ParamUtil.getString(
-			_request, "mvcRenderCommandName");
-
-		if (mvcRenderCommandName.equals("/message_boards/search")) {
-			return true;
-		}
-
-		return false;
+		return _showSearch;
 	}
 
 	@Override
@@ -150,8 +137,9 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 			return;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		int status = WorkflowConstants.STATUS_APPROVED;
 
@@ -176,51 +164,41 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 				themeDisplay.getScopeGroupId(), _categoryId, queryDefinition));
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void populateResultsAndTotal(SearchContainer searchContainer)
-		throws PortalException {
-
-		populateThreadsResultsAndTotal(searchContainer);
-	}
-
 	@Override
 	public void populateThreadsResultsAndTotal(SearchContainer searchContainer)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (isShowSearch()) {
 			long searchCategoryId = ParamUtil.getLong(
-				_request, "searchCategoryId");
+				_httpServletRequest, "searchCategoryId");
 
-			long[] categoryIdsArray = null;
-
-			List categoryIds = new ArrayList();
+			List<Long> categoryIds = new ArrayList<>();
 
 			categoryIds.add(Long.valueOf(searchCategoryId));
 
 			MBCategoryServiceUtil.getSubcategoryIds(
 				categoryIds, themeDisplay.getScopeGroupId(), searchCategoryId);
 
-			categoryIdsArray = StringUtil.split(
+			long[] categoryIdsArray = StringUtil.split(
 				StringUtil.merge(categoryIds), 0L);
 
-			Indexer indexer = IndexerRegistryUtil.getIndexer(MBMessage.class);
+			Indexer<MBMessage> indexer = IndexerRegistryUtil.getIndexer(
+				MBMessage.class);
 
 			SearchContext searchContext = SearchContextFactory.getInstance(
-				_request);
+				_httpServletRequest);
 
 			searchContext.setAttribute("paginationType", "more");
 			searchContext.setCategoryIds(categoryIdsArray);
 			searchContext.setEnd(searchContainer.getEnd());
 			searchContext.setIncludeAttachments(true);
 
-			String keywords = ParamUtil.getString(_request, "keywords");
+			String keywords = ParamUtil.getString(
+				_httpServletRequest, "keywords");
 
 			searchContext.setKeywords(keywords);
 
@@ -229,7 +207,8 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 			Hits hits = indexer.search(searchContext);
 
 			searchContainer.setResults(
-				SearchResultUtil.getSearchResults(hits, _request.getLocale()));
+				SearchResultUtil.getSearchResults(
+					hits, _httpServletRequest.getLocale()));
 
 			searchContainer.setTotal(hits.getLength());
 		}
@@ -237,7 +216,7 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 			searchContainer.setEmptyResultsMessage("there-are-no-recent-posts");
 
 			long groupThreadsUserId = ParamUtil.getLong(
-				_request, "groupThreadsUserId");
+				_httpServletRequest, "groupThreadsUserId");
 
 			Calendar calendar = Calendar.getInstance();
 
@@ -322,11 +301,12 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 	@Override
 	public void setCategoryEntriesDelta(SearchContainer searchContainer) {
 		int categoryEntriesDelta = ParamUtil.getInteger(
-			_request, searchContainer.getDeltaParam());
+			_httpServletRequest, searchContainer.getDeltaParam());
 
 		if (categoryEntriesDelta > 0) {
 			PortalPreferences portalPreferences =
-				PortletPreferencesFactoryUtil.getPortalPreferences(_request);
+				PortletPreferencesFactoryUtil.getPortalPreferences(
+					_httpServletRequest);
 
 			portalPreferences.setValue(
 				MBPortletKeys.MESSAGE_BOARDS, "categoryEntriesDelta",
@@ -337,11 +317,12 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 	@Override
 	public void setThreadEntriesDelta(SearchContainer searchContainer) {
 		int threadEntriesDelta = ParamUtil.getInteger(
-			_request, searchContainer.getDeltaParam());
+			_httpServletRequest, searchContainer.getDeltaParam());
 
 		if (threadEntriesDelta > 0) {
 			PortalPreferences portalPreferences =
-				PortletPreferencesFactoryUtil.getPortalPreferences(_request);
+				PortletPreferencesFactoryUtil.getPortalPreferences(
+					_httpServletRequest);
 
 			portalPreferences.setValue(
 				MBPortletKeys.MESSAGE_BOARDS, "threadEntriesDelta",
@@ -349,10 +330,42 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 		}
 	}
 
+	private boolean _isShowRecentPosts(String mvcRenderCommandName) {
+		if (mvcRenderCommandName.equals("/message_boards/view_recent_posts")) {
+			return true;
+		}
+
+		String entriesNavigation = ParamUtil.getString(
+			_httpServletRequest, "entriesNavigation");
+
+		if (entriesNavigation.equals("recent")) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isShowSearch(String mvcRenderCommandName) {
+		if (Validator.isNotNull(
+				ParamUtil.getString(_httpServletRequest, "keywords"))) {
+
+			return true;
+		}
+
+		if (mvcRenderCommandName.equals("/message_boards/search")) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private static final UUID _UUID = UUID.fromString(
 		"c29b2669-a9ce-45e3-aa4e-9ec766a4ffad");
 
 	private final long _categoryId;
-	private final HttpServletRequest _request;
+	private final HttpServletRequest _httpServletRequest;
+	private final boolean _showMyPosts;
+	private final boolean _showRecentPosts;
+	private final boolean _showSearch;
 
 }

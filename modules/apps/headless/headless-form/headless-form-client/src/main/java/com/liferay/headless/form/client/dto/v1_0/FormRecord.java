@@ -27,7 +27,11 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class FormRecord {
+public class FormRecord implements Cloneable {
+
+	public static FormRecord toDTO(String json) {
+		return FormRecordSerDes.toDTO(json);
+	}
 
 	public Creator getCreator() {
 		return creator;
@@ -134,45 +138,27 @@ public class FormRecord {
 
 	protected Boolean draft;
 
-	public FieldValue[] getFieldValues() {
-		return fieldValues;
+	public FormFieldValue[] getFormFieldValues() {
+		return formFieldValues;
 	}
 
-	public void setFieldValues(FieldValue[] fieldValues) {
-		this.fieldValues = fieldValues;
+	public void setFormFieldValues(FormFieldValue[] formFieldValues) {
+		this.formFieldValues = formFieldValues;
 	}
 
-	public void setFieldValues(
-		UnsafeSupplier<FieldValue[], Exception> fieldValuesUnsafeSupplier) {
+	public void setFormFieldValues(
+		UnsafeSupplier<FormFieldValue[], Exception>
+			formFieldValuesUnsafeSupplier) {
 
 		try {
-			fieldValues = fieldValuesUnsafeSupplier.get();
+			formFieldValues = formFieldValuesUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected FieldValue[] fieldValues;
-
-	public Form getForm() {
-		return form;
-	}
-
-	public void setForm(Form form) {
-		this.form = form;
-	}
-
-	public void setForm(UnsafeSupplier<Form, Exception> formUnsafeSupplier) {
-		try {
-			form = formUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Form form;
+	protected FormFieldValue[] formFieldValues;
 
 	public Long getFormId() {
 		return formId;
@@ -213,6 +199,11 @@ public class FormRecord {
 	}
 
 	protected Long id;
+
+	@Override
+	public FormRecord clone() throws CloneNotSupportedException {
+		return (FormRecord)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

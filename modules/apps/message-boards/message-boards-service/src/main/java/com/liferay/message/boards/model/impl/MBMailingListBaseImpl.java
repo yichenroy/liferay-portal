@@ -14,8 +14,6 @@
 
 package com.liferay.message.boards.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.message.boards.model.MBMailingList;
 import com.liferay.message.boards.service.MBMailingListLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.message.boards.service.MBMailingListLocalServiceUtil;
  * @see MBMailingList
  * @generated
  */
-@ProviderType
 public abstract class MBMailingListBaseImpl
 	extends MBMailingListModelImpl implements MBMailingList {
 

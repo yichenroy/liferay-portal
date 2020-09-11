@@ -5,23 +5,26 @@
 	flex: 1;
 	padding: 8px 0;
 
-	.criterion-string {
-		color: $mainLighten28;
-		font-weight: 600;
-
-		b {
-			color: $main;
-			font-weight: bold;
-		}
+	&.criterion-row-root-error {
+		background: #feefef;
+		border: 1px solid #f48989;
+		border-left: 3px solid #f48989;
+		border-radius: 4px;
+		padding: 16px;
 	}
 
-	.drag-icon {
-		margin-right: 8px;
+	&.criterion-row-root-warning {
+		background: #fff4ec;
+		border: 1px solid #ff8f38;
+		border-left: 3px solid #ff8f38;
+		border-radius: 4px;
+		padding: 16px;
 	}
 
 	.edit-container {
 		align-items: center;
 		display: flex;
+		flex-wrap: wrap;
 		margin: 0;
 		padding: 0;
 		width: 100%;
@@ -41,24 +44,13 @@
 		}
 
 		.criterion-string {
-			flex: 1;
-			margin-right: 8px;
+			margin-right: 16px;
 		}
 	}
 
-	.operator, .operator-input {
+	.operator,
+	.operator-input {
 		text-transform: lowercase;
-	}
-
-	.read-only-container {
-		display: flex;
-		margin: 0;
-		padding: 0;
-		width: 100%;
-
-		.criterion-string {
-			margin-left: 8px;
-		}
 	}
 
 	&.dnd-drag {

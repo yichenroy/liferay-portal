@@ -14,12 +14,16 @@
 
 package com.liferay.portal.vulcan.yaml.openapi;
 
+import java.beans.Transient;
+
 import java.util.List;
 import java.util.Map;
 
 /**
- * @author Peter Shin
+ * @author     Peter Shin
+ * @deprecated As of Athanasius (7.3.x)
  */
+@Deprecated
 public class Schema {
 
 	public Schema() {
@@ -43,6 +47,10 @@ public class Schema {
 		return _anyOfSchemas;
 	}
 
+	public String getDefault() {
+		return _default;
+	}
+
 	public String getDescription() {
 		return _description;
 	}
@@ -51,12 +59,29 @@ public class Schema {
 		return _enumValues;
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x)
+	 */
+	@Deprecated
+	@Transient
+	public String getExample() {
+		return _example;
+	}
+
 	public String getFormat() {
 		return _format;
 	}
 
 	public Items getItems() {
 		return _items;
+	}
+
+	public Double getMaximum() {
+		return _maximum;
+	}
+
+	public Double getMinimum() {
+		return _minimum;
 	}
 
 	public List<Schema> getOneOfSchemas() {
@@ -79,6 +104,10 @@ public class Schema {
 		return _type;
 	}
 
+	public boolean isDeprecated() {
+		return _deprecated;
+	}
+
 	public boolean isReadOnly() {
 		return _readOnly;
 	}
@@ -99,6 +128,14 @@ public class Schema {
 		_anyOfSchemas = anyOfSchemas;
 	}
 
+	public void setDefault(String d) {
+		_default = d;
+	}
+
+	public void setDeprecated(boolean deprecated) {
+		_deprecated = deprecated;
+	}
+
 	public void setDescription(String description) {
 		_description = description;
 	}
@@ -107,12 +144,29 @@ public class Schema {
 		_enumValues = enumValues;
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x)
+	 */
+	@Deprecated
+	@Transient
+	public void setExample(String example) {
+		_example = example;
+	}
+
 	public void setFormat(String format) {
 		_format = format;
 	}
 
 	public void setItems(Items items) {
 		_items = items;
+	}
+
+	public void setMaximum(Double maximum) {
+		_maximum = maximum;
+	}
+
+	public void setMinimum(Double minimum) {
+		_minimum = minimum;
 	}
 
 	public void setOneOfSchemas(List<Schema> oneOfSchemas) {
@@ -148,10 +202,15 @@ public class Schema {
 	private Schema _additionalPropertySchema;
 	private List<Schema> _allOfSchemas;
 	private List<Schema> _anyOfSchemas;
+	private String _default;
+	private boolean _deprecated;
 	private String _description;
 	private List<String> _enumValues;
+	private String _example;
 	private String _format;
 	private Items _items;
+	private Double _maximum;
+	private Double _minimum;
 	private List<Schema> _oneOfSchemas;
 	private Map<String, Schema> _propertySchemas;
 	private boolean _readOnly;

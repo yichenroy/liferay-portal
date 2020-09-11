@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -29,12 +27,15 @@ import com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalServiceUtil;
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class KaleoDefinitionVersionImpl extends KaleoDefinitionVersionBaseImpl {
 
 	public KaleoDefinitionVersionImpl() {
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public KaleoDefinition fetchKaleoDefinition() {
 		ServiceContext serviceContext = new ServiceContext();
@@ -60,12 +61,12 @@ public class KaleoDefinitionVersionImpl extends KaleoDefinitionVersionBaseImpl {
 		return KaleoNodeLocalServiceUtil.getKaleoNode(getStartKaleoNodeId());
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean hasIncompleteKaleoInstances() {
-		ServiceContext serviceContext = new ServiceContext();
-
-		serviceContext.setCompanyId(getCompanyId());
-
 		int count = KaleoInstanceLocalServiceUtil.getKaleoInstancesCount(
 			getKaleoDefinitionVersionId(), false);
 

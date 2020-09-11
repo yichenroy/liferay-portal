@@ -14,8 +14,6 @@
 
 package com.liferay.staging.taglib.servlet.taglib;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.staging.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.taglib.util.IncludeTag;
 
@@ -25,7 +23,6 @@ import javax.servlet.jsp.PageContext;
 /**
  * @author Péter Alius
  */
-@ProviderType
 public class ProcessSummaryLinkTag extends IncludeTag {
 
 	public long getBackgroundTaskId() {
@@ -56,8 +53,8 @@ public class ProcessSummaryLinkTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-staging:process-summary-link:backgroundTaskId",
 			_backgroundTaskId);
 	}

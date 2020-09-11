@@ -14,9 +14,9 @@
 
 package com.liferay.portal.tools.service.builder.test.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -26,20 +26,21 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
+import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapperFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.exception.NoSuchLVEntryVersionException;
 import com.liferay.portal.tools.service.builder.test.model.LVEntryVersion;
+import com.liferay.portal.tools.service.builder.test.model.LVEntryVersionTable;
 import com.liferay.portal.tools.service.builder.test.model.impl.LVEntryVersionImpl;
 import com.liferay.portal.tools.service.builder.test.model.impl.LVEntryVersionModelImpl;
 import com.liferay.portal.tools.service.builder.test.service.persistence.BigDecimalEntryPersistence;
@@ -47,17 +48,20 @@ import com.liferay.portal.tools.service.builder.test.service.persistence.LVEntry
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The persistence implementation for the lv entry version service.
@@ -69,7 +73,6 @@ import java.util.Set;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class LVEntryVersionPersistenceImpl
 	extends BasePersistenceImpl<LVEntryVersion>
 	implements LVEntryVersionPersistence {
@@ -111,7 +114,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where lvEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param lvEntryId the lv entry ID
@@ -130,7 +133,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where lvEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param lvEntryId the lv entry ID
@@ -151,34 +154,34 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where lvEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param lvEntryId the lv entry ID
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByLvEntryId(
 		long lvEntryId, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByLvEntryId;
-			finderArgs = new Object[] {lvEntryId};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByLvEntryId;
+				finderArgs = new Object[] {lvEntryId};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByLvEntryId;
 			finderArgs = new Object[] {
 				lvEntryId, start, end, orderByComparator
@@ -187,13 +190,13 @@ public class LVEntryVersionPersistenceImpl
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (LVEntryVersion lvEntryVersion : list) {
-					if ((lvEntryId != lvEntryVersion.getLvEntryId())) {
+					if (lvEntryId != lvEntryVersion.getLvEntryId()) {
 						list = null;
 
 						break;
@@ -203,62 +206,52 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(lvEntryId);
+				queryPos.add(lvEntryId);
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -288,16 +281,16 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("lvEntryId=");
-		msg.append(lvEntryId);
+		sb.append("lvEntryId=");
+		sb.append(lvEntryId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -341,16 +334,16 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("lvEntryId=");
-		msg.append(lvEntryId);
+		sb.append("lvEntryId=");
+		sb.append(lvEntryId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -414,8 +407,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -426,102 +419,102 @@ public class LVEntryVersionPersistenceImpl
 		Session session, LVEntryVersion lvEntryVersion, long lvEntryId,
 		OrderByComparator<LVEntryVersion> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-		query.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
+		sb.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(lvEntryId);
+		queryPos.add(lvEntryId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -561,33 +554,31 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(lvEntryId);
+				queryPos.add(lvEntryId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -619,23 +610,23 @@ public class LVEntryVersionPersistenceImpl
 			lvEntryId, version);
 
 		if (lvEntryVersion == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("lvEntryId=");
-			msg.append(lvEntryId);
+			sb.append("lvEntryId=");
+			sb.append(lvEntryId);
 
-			msg.append(", version=");
-			msg.append(version);
+			sb.append(", version=");
+			sb.append(version);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchLVEntryVersionException(msg.toString());
+			throw new NoSuchLVEntryVersionException(sb.toString());
 		}
 
 		return lvEntryVersion;
@@ -660,18 +651,22 @@ public class LVEntryVersionPersistenceImpl
 	 *
 	 * @param lvEntryId the lv entry ID
 	 * @param version the version
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching lv entry version, or <code>null</code> if a matching lv entry version could not be found
 	 */
 	@Override
 	public LVEntryVersion fetchByLvEntryId_Version(
-		long lvEntryId, int version, boolean retrieveFromCache) {
+		long lvEntryId, int version, boolean useFinderCache) {
 
-		Object[] finderArgs = new Object[] {lvEntryId, version};
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {lvEntryId, version};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByLvEntryId_Version, finderArgs, this);
 		}
@@ -687,34 +682,37 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_VERSION_LVENTRYID_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_VERSION_LVENTRYID_2);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(lvEntryId);
+				queryPos.add(lvEntryId);
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				List<LVEntryVersion> list = q.list();
+				List<LVEntryVersion> list = query.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(
-						_finderPathFetchByLvEntryId_Version, finderArgs, list);
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByLvEntryId_Version, finderArgs,
+							list);
+					}
 				}
 				else {
 					LVEntryVersion lvEntryVersion = list.get(0);
@@ -724,11 +722,8 @@ public class LVEntryVersionPersistenceImpl
 					cacheResult(lvEntryVersion);
 				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(
-					_finderPathFetchByLvEntryId_Version, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -776,37 +771,35 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_VERSION_LVENTRYID_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_VERSION_LVENTRYID_2);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(lvEntryId);
+				queryPos.add(lvEntryId);
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -841,7 +834,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -858,7 +851,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -879,43 +872,43 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByUuid(
 		String uuid, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUuid;
-			finderArgs = new Object[] {uuid};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByUuid;
+				finderArgs = new Object[] {uuid};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByUuid;
 			finderArgs = new Object[] {uuid, start, end, orderByComparator};
 		}
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -931,73 +924,63 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_UUID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1027,16 +1010,16 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -1079,16 +1062,16 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -1154,8 +1137,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1166,28 +1149,28 @@ public class LVEntryVersionPersistenceImpl
 		Session session, LVEntryVersion lvEntryVersion, String uuid,
 		OrderByComparator<LVEntryVersion> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_UUID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -1195,72 +1178,72 @@ public class LVEntryVersionPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
 		if (orderByComparator != null) {
@@ -1268,11 +1251,11 @@ public class LVEntryVersionPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1313,44 +1296,42 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_UUID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1387,7 +1368,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where uuid = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1407,7 +1388,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1430,7 +1411,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1438,29 +1419,29 @@ public class LVEntryVersionPersistenceImpl
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByUuid_Version(
 		String uuid, int version, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUuid_Version;
-			finderArgs = new Object[] {uuid, version};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByUuid_Version;
+				finderArgs = new Object[] {uuid, version};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByUuid_Version;
 			finderArgs = new Object[] {
 				uuid, version, start, end, orderByComparator
@@ -1469,7 +1450,7 @@ public class LVEntryVersionPersistenceImpl
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -1487,77 +1468,67 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_VERSION_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_VERSION_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_VERSION_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_VERSION_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_UUID_VERSION_VERSION_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1589,19 +1560,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", version=");
-		msg.append(version);
+		sb.append(", version=");
+		sb.append(version);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -1649,19 +1620,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", version=");
-		msg.append(version);
+		sb.append(", version=");
+		sb.append(version);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -1732,8 +1703,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1745,117 +1716,117 @@ public class LVEntryVersionPersistenceImpl
 		int version, OrderByComparator<LVEntryVersion> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_VERSION_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_VERSION_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_VERSION_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_VERSION_UUID_2);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_VERSION_VERSION_2);
+		sb.append(_FINDER_COLUMN_UUID_VERSION_VERSION_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
-		qPos.add(version);
+		queryPos.add(version);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1900,48 +1871,46 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_VERSION_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_VERSION_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_VERSION_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_VERSION_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_UUID_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1981,7 +1950,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where uuid = &#63; and groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -2001,7 +1970,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63; and groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -2023,7 +1992,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63; and groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -2031,29 +2000,29 @@ public class LVEntryVersionPersistenceImpl
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByUUID_G(
 		String uuid, long groupId, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUUID_G;
-			finderArgs = new Object[] {uuid, groupId};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByUUID_G;
+				finderArgs = new Object[] {uuid, groupId};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByUUID_G;
 			finderArgs = new Object[] {
 				uuid, groupId, start, end, orderByComparator
@@ -2062,7 +2031,7 @@ public class LVEntryVersionPersistenceImpl
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -2080,77 +2049,67 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_G_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_G_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+			sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2182,19 +2141,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", groupId=");
-		msg.append(groupId);
+		sb.append(", groupId=");
+		sb.append(groupId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -2242,19 +2201,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", groupId=");
-		msg.append(groupId);
+		sb.append(", groupId=");
+		sb.append(groupId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -2325,8 +2284,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2338,117 +2297,117 @@ public class LVEntryVersionPersistenceImpl
 		long groupId, OrderByComparator<LVEntryVersion> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_G_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_G_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+		sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2493,48 +2452,46 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_G_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_G_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+			sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2574,26 +2531,26 @@ public class LVEntryVersionPersistenceImpl
 			uuid, groupId, version);
 
 		if (lvEntryVersion == null) {
-			StringBundler msg = new StringBundler(8);
+			StringBundler sb = new StringBundler(8);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("uuid=");
-			msg.append(uuid);
+			sb.append("uuid=");
+			sb.append(uuid);
 
-			msg.append(", groupId=");
-			msg.append(groupId);
+			sb.append(", groupId=");
+			sb.append(groupId);
 
-			msg.append(", version=");
-			msg.append(version);
+			sb.append(", version=");
+			sb.append(version);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchLVEntryVersionException(msg.toString());
+			throw new NoSuchLVEntryVersionException(sb.toString());
 		}
 
 		return lvEntryVersion;
@@ -2620,20 +2577,24 @@ public class LVEntryVersionPersistenceImpl
 	 * @param uuid the uuid
 	 * @param groupId the group ID
 	 * @param version the version
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching lv entry version, or <code>null</code> if a matching lv entry version could not be found
 	 */
 	@Override
 	public LVEntryVersion fetchByUUID_G_Version(
-		String uuid, long groupId, int version, boolean retrieveFromCache) {
+		String uuid, long groupId, int version, boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] {uuid, groupId, version};
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {uuid, groupId, version};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByUUID_G_Version, finderArgs, this);
 		}
@@ -2650,49 +2611,51 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(5);
+			StringBundler sb = new StringBundler(5);
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_G_VERSION_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_G_VERSION_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_G_VERSION_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_G_VERSION_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_G_VERSION_GROUPID_2);
+			sb.append(_FINDER_COLUMN_UUID_G_VERSION_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_UUID_G_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_UUID_G_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				List<LVEntryVersion> list = q.list();
+				List<LVEntryVersion> list = query.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(
-						_finderPathFetchByUUID_G_Version, finderArgs, list);
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByUUID_G_Version, finderArgs, list);
+					}
 				}
 				else {
 					LVEntryVersion lvEntryVersion = list.get(0);
@@ -2702,11 +2665,8 @@ public class LVEntryVersionPersistenceImpl
 					cacheResult(lvEntryVersion);
 				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(
-					_finderPathFetchByUUID_G_Version, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2759,52 +2719,50 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_G_VERSION_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_G_VERSION_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_G_VERSION_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_G_VERSION_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_G_VERSION_GROUPID_2);
+			sb.append(_FINDER_COLUMN_UUID_G_VERSION_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_UUID_G_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_UUID_G_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2847,7 +2805,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -2867,7 +2825,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -2890,7 +2848,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -2898,29 +2856,29 @@ public class LVEntryVersionPersistenceImpl
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByUuid_C(
 		String uuid, long companyId, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUuid_C;
-			finderArgs = new Object[] {uuid, companyId};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByUuid_C;
+				finderArgs = new Object[] {uuid, companyId};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByUuid_C;
 			finderArgs = new Object[] {
 				uuid, companyId, start, end, orderByComparator
@@ -2929,7 +2887,7 @@ public class LVEntryVersionPersistenceImpl
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -2947,77 +2905,67 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3049,19 +2997,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -3109,19 +3057,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -3192,8 +3140,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -3205,117 +3153,117 @@ public class LVEntryVersionPersistenceImpl
 		long companyId, OrderByComparator<LVEntryVersion> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -3360,48 +3308,46 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3445,7 +3391,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where uuid = &#63; and companyId = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -3466,7 +3412,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63; and companyId = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -3490,7 +3436,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where uuid = &#63; and companyId = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -3499,29 +3445,29 @@ public class LVEntryVersionPersistenceImpl
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByUuid_C_Version(
 		String uuid, long companyId, int version, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUuid_C_Version;
-			finderArgs = new Object[] {uuid, companyId, version};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByUuid_C_Version;
+				finderArgs = new Object[] {uuid, companyId, version};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByUuid_C_Version;
 			finderArgs = new Object[] {
 				uuid, companyId, version, start, end, orderByComparator
@@ -3530,7 +3476,7 @@ public class LVEntryVersionPersistenceImpl
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -3549,81 +3495,71 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_VERSION_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_VERSION_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_UUID_C_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_UUID_C_VERSION_VERSION_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3656,22 +3592,22 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append(", version=");
-		msg.append(version);
+		sb.append(", version=");
+		sb.append(version);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -3721,22 +3657,22 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append(", version=");
-		msg.append(version);
+		sb.append(", version=");
+		sb.append(version);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -3809,8 +3745,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -3822,121 +3758,121 @@ public class LVEntryVersionPersistenceImpl
 		long companyId, int version,
 		OrderByComparator<LVEntryVersion> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_2);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_C_VERSION_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_UUID_C_VERSION_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_UUID_C_VERSION_VERSION_2);
+		sb.append(_FINDER_COLUMN_UUID_C_VERSION_VERSION_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
-		qPos.add(version);
+		queryPos.add(version);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -3985,52 +3921,50 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_VERSION_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_VERSION_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_VERSION_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_UUID_C_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_UUID_C_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4072,7 +4006,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -4091,7 +4025,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -4112,47 +4046,47 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByGroupId(
 		long groupId, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByGroupId;
-			finderArgs = new Object[] {groupId};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByGroupId;
+				finderArgs = new Object[] {groupId};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByGroupId;
 			finderArgs = new Object[] {groupId, start, end, orderByComparator};
 		}
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (LVEntryVersion lvEntryVersion : list) {
-					if ((groupId != lvEntryVersion.getGroupId())) {
+					if (groupId != lvEntryVersion.getGroupId()) {
 						list = null;
 
 						break;
@@ -4162,62 +4096,52 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4247,16 +4171,16 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -4300,16 +4224,16 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -4373,8 +4297,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -4385,102 +4309,102 @@ public class LVEntryVersionPersistenceImpl
 		Session session, LVEntryVersion lvEntryVersion, long groupId,
 		OrderByComparator<LVEntryVersion> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-		query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+		sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -4520,33 +4444,31 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4582,7 +4504,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where groupId = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -4602,7 +4524,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where groupId = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -4625,7 +4547,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where groupId = &#63; and version = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -4633,27 +4555,27 @@ public class LVEntryVersionPersistenceImpl
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByGroupId_Version(
 		long groupId, int version, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByGroupId_Version;
-			finderArgs = new Object[] {groupId, version};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByGroupId_Version;
+				finderArgs = new Object[] {groupId, version};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByGroupId_Version;
 			finderArgs = new Object[] {
 				groupId, version, start, end, orderByComparator
@@ -4662,7 +4584,7 @@ public class LVEntryVersionPersistenceImpl
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -4680,66 +4602,56 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_GROUPID_VERSION_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GROUPID_VERSION_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_GROUPID_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_GROUPID_VERSION_VERSION_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4771,19 +4683,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", version=");
-		msg.append(version);
+		sb.append(", version=");
+		sb.append(version);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -4831,19 +4743,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", version=");
-		msg.append(version);
+		sb.append(", version=");
+		sb.append(version);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -4912,8 +4824,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -4925,106 +4837,106 @@ public class LVEntryVersionPersistenceImpl
 		int version, OrderByComparator<LVEntryVersion> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-		query.append(_FINDER_COLUMN_GROUPID_VERSION_GROUPID_2);
+		sb.append(_FINDER_COLUMN_GROUPID_VERSION_GROUPID_2);
 
-		query.append(_FINDER_COLUMN_GROUPID_VERSION_VERSION_2);
+		sb.append(_FINDER_COLUMN_GROUPID_VERSION_VERSION_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
-		qPos.add(version);
+		queryPos.add(version);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -5067,37 +4979,35 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_GROUPID_VERSION_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GROUPID_VERSION_GROUPID_2);
 
-			query.append(_FINDER_COLUMN_GROUPID_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_GROUPID_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5137,7 +5047,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions where groupId = &#63; and uniqueGroupKey = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -5157,7 +5067,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where groupId = &#63; and uniqueGroupKey = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -5180,7 +5090,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions where groupId = &#63; and uniqueGroupKey = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -5188,29 +5098,29 @@ public class LVEntryVersionPersistenceImpl
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findByG_UGK(
 		long groupId, String uniqueGroupKey, int start, int end,
 		OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uniqueGroupKey = Objects.toString(uniqueGroupKey, "");
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByG_UGK;
-			finderArgs = new Object[] {groupId, uniqueGroupKey};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByG_UGK;
+				finderArgs = new Object[] {groupId, uniqueGroupKey};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByG_UGK;
 			finderArgs = new Object[] {
 				groupId, uniqueGroupKey, start, end, orderByComparator
@@ -5219,7 +5129,7 @@ public class LVEntryVersionPersistenceImpl
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 
@@ -5238,77 +5148,67 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_G_UGK_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_UGK_GROUPID_2);
 
 			boolean bindUniqueGroupKey = false;
 
 			if (uniqueGroupKey.isEmpty()) {
-				query.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_3);
+				sb.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_3);
 			}
 			else {
 				bindUniqueGroupKey = true;
 
-				query.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_2);
+				sb.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
 				if (bindUniqueGroupKey) {
-					qPos.add(uniqueGroupKey);
+					queryPos.add(uniqueGroupKey);
 				}
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5340,19 +5240,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", uniqueGroupKey=");
-		msg.append(uniqueGroupKey);
+		sb.append(", uniqueGroupKey=");
+		sb.append(uniqueGroupKey);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -5400,19 +5300,19 @@ public class LVEntryVersionPersistenceImpl
 			return lvEntryVersion;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append(", uniqueGroupKey=");
-		msg.append(uniqueGroupKey);
+		sb.append(", uniqueGroupKey=");
+		sb.append(uniqueGroupKey);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryVersionException(msg.toString());
+		throw new NoSuchLVEntryVersionException(sb.toString());
 	}
 
 	/**
@@ -5483,8 +5383,8 @@ public class LVEntryVersionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -5496,30 +5396,30 @@ public class LVEntryVersionPersistenceImpl
 		String uniqueGroupKey,
 		OrderByComparator<LVEntryVersion> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-		query.append(_FINDER_COLUMN_G_UGK_GROUPID_2);
+		sb.append(_FINDER_COLUMN_G_UGK_GROUPID_2);
 
 		boolean bindUniqueGroupKey = false;
 
 		if (uniqueGroupKey.isEmpty()) {
-			query.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_3);
+			sb.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_3);
 		}
 		else {
 			bindUniqueGroupKey = true;
 
-			query.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_2);
+			sb.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_2);
 		}
 
 		if (orderByComparator != null) {
@@ -5527,74 +5427,74 @@ public class LVEntryVersionPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
 		if (bindUniqueGroupKey) {
-			qPos.add(uniqueGroupKey);
+			queryPos.add(uniqueGroupKey);
 		}
 
 		if (orderByComparator != null) {
@@ -5602,11 +5502,11 @@ public class LVEntryVersionPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						lvEntryVersion)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryVersion> list = q.list();
+		List<LVEntryVersion> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -5651,48 +5551,46 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_G_UGK_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_UGK_GROUPID_2);
 
 			boolean bindUniqueGroupKey = false;
 
 			if (uniqueGroupKey.isEmpty()) {
-				query.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_3);
+				sb.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_3);
 			}
 			else {
 				bindUniqueGroupKey = true;
 
-				query.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_2);
+				sb.append(_FINDER_COLUMN_G_UGK_UNIQUEGROUPKEY_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
 				if (bindUniqueGroupKey) {
-					qPos.add(uniqueGroupKey);
+					queryPos.add(uniqueGroupKey);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5732,26 +5630,26 @@ public class LVEntryVersionPersistenceImpl
 			groupId, uniqueGroupKey, version);
 
 		if (lvEntryVersion == null) {
-			StringBundler msg = new StringBundler(8);
+			StringBundler sb = new StringBundler(8);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("groupId=");
-			msg.append(groupId);
+			sb.append("groupId=");
+			sb.append(groupId);
 
-			msg.append(", uniqueGroupKey=");
-			msg.append(uniqueGroupKey);
+			sb.append(", uniqueGroupKey=");
+			sb.append(uniqueGroupKey);
 
-			msg.append(", version=");
-			msg.append(version);
+			sb.append(", version=");
+			sb.append(version);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchLVEntryVersionException(msg.toString());
+			throw new NoSuchLVEntryVersionException(sb.toString());
 		}
 
 		return lvEntryVersion;
@@ -5778,21 +5676,25 @@ public class LVEntryVersionPersistenceImpl
 	 * @param groupId the group ID
 	 * @param uniqueGroupKey the unique group key
 	 * @param version the version
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching lv entry version, or <code>null</code> if a matching lv entry version could not be found
 	 */
 	@Override
 	public LVEntryVersion fetchByG_UGK_Version(
 		long groupId, String uniqueGroupKey, int version,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
 		uniqueGroupKey = Objects.toString(uniqueGroupKey, "");
 
-		Object[] finderArgs = new Object[] {groupId, uniqueGroupKey, version};
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {groupId, uniqueGroupKey, version};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			result = finderCache.getResult(
 				_finderPathFetchByG_UGK_Version, finderArgs, this);
 		}
@@ -5810,49 +5712,51 @@ public class LVEntryVersionPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(5);
+			StringBundler sb = new StringBundler(5);
 
-			query.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_G_UGK_VERSION_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_UGK_VERSION_GROUPID_2);
 
 			boolean bindUniqueGroupKey = false;
 
 			if (uniqueGroupKey.isEmpty()) {
-				query.append(_FINDER_COLUMN_G_UGK_VERSION_UNIQUEGROUPKEY_3);
+				sb.append(_FINDER_COLUMN_G_UGK_VERSION_UNIQUEGROUPKEY_3);
 			}
 			else {
 				bindUniqueGroupKey = true;
 
-				query.append(_FINDER_COLUMN_G_UGK_VERSION_UNIQUEGROUPKEY_2);
+				sb.append(_FINDER_COLUMN_G_UGK_VERSION_UNIQUEGROUPKEY_2);
 			}
 
-			query.append(_FINDER_COLUMN_G_UGK_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_G_UGK_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
 				if (bindUniqueGroupKey) {
-					qPos.add(uniqueGroupKey);
+					queryPos.add(uniqueGroupKey);
 				}
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				List<LVEntryVersion> list = q.list();
+				List<LVEntryVersion> list = query.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(
-						_finderPathFetchByG_UGK_Version, finderArgs, list);
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByG_UGK_Version, finderArgs, list);
+					}
 				}
 				else {
 					LVEntryVersion lvEntryVersion = list.get(0);
@@ -5862,11 +5766,8 @@ public class LVEntryVersionPersistenceImpl
 					cacheResult(lvEntryVersion);
 				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(
-					_finderPathFetchByG_UGK_Version, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5921,52 +5822,50 @@ public class LVEntryVersionPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYVERSION_WHERE);
 
-			query.append(_FINDER_COLUMN_G_UGK_VERSION_GROUPID_2);
+			sb.append(_FINDER_COLUMN_G_UGK_VERSION_GROUPID_2);
 
 			boolean bindUniqueGroupKey = false;
 
 			if (uniqueGroupKey.isEmpty()) {
-				query.append(_FINDER_COLUMN_G_UGK_VERSION_UNIQUEGROUPKEY_3);
+				sb.append(_FINDER_COLUMN_G_UGK_VERSION_UNIQUEGROUPKEY_3);
 			}
 			else {
 				bindUniqueGroupKey = true;
 
-				query.append(_FINDER_COLUMN_G_UGK_VERSION_UNIQUEGROUPKEY_2);
+				sb.append(_FINDER_COLUMN_G_UGK_VERSION_UNIQUEGROUPKEY_2);
 			}
 
-			query.append(_FINDER_COLUMN_G_UGK_VERSION_VERSION_2);
+			sb.append(_FINDER_COLUMN_G_UGK_VERSION_VERSION_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
 				if (bindUniqueGroupKey) {
-					qPos.add(uniqueGroupKey);
+					queryPos.add(uniqueGroupKey);
 				}
 
-				qPos.add(version);
+				queryPos.add(version);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5989,25 +5888,18 @@ public class LVEntryVersionPersistenceImpl
 		"lvEntryVersion.version = ?";
 
 	public LVEntryVersionPersistenceImpl() {
-		setModelClass(LVEntryVersion.class);
-
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
 		dbColumnNames.put("uuid", "uuid_");
 
-		try {
-			Field field = BasePersistenceImpl.class.getDeclaredField(
-				"_dbColumnNames");
+		setDBColumnNames(dbColumnNames);
 
-			field.setAccessible(true);
+		setModelClass(LVEntryVersion.class);
 
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setModelImplClass(LVEntryVersionImpl.class);
+		setModelPKClass(long.class);
+
+		setTable(LVEntryVersionTable.INSTANCE);
 	}
 
 	/**
@@ -6018,7 +5910,6 @@ public class LVEntryVersionPersistenceImpl
 	@Override
 	public void cacheResult(LVEntryVersion lvEntryVersion) {
 		entityCache.putResult(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
 			LVEntryVersionImpl.class, lvEntryVersion.getPrimaryKey(),
 			lvEntryVersion);
 
@@ -6044,8 +5935,6 @@ public class LVEntryVersionPersistenceImpl
 				lvEntryVersion.getVersion()
 			},
 			lvEntryVersion);
-
-		lvEntryVersion.resetOriginalValues();
 	}
 
 	/**
@@ -6057,14 +5946,10 @@ public class LVEntryVersionPersistenceImpl
 	public void cacheResult(List<LVEntryVersion> lvEntryVersions) {
 		for (LVEntryVersion lvEntryVersion : lvEntryVersions) {
 			if (entityCache.getResult(
-					LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
 					LVEntryVersionImpl.class, lvEntryVersion.getPrimaryKey()) ==
 						null) {
 
 				cacheResult(lvEntryVersion);
-			}
-			else {
-				lvEntryVersion.resetOriginalValues();
 			}
 		}
 	}
@@ -6094,28 +5979,24 @@ public class LVEntryVersionPersistenceImpl
 	 */
 	@Override
 	public void clearCache(LVEntryVersion lvEntryVersion) {
-		entityCache.removeResult(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionImpl.class, lvEntryVersion.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache((LVEntryVersionModelImpl)lvEntryVersion, true);
+		entityCache.removeResult(LVEntryVersionImpl.class, lvEntryVersion);
 	}
 
 	@Override
 	public void clearCache(List<LVEntryVersion> lvEntryVersions) {
+		for (LVEntryVersion lvEntryVersion : lvEntryVersions) {
+			entityCache.removeResult(LVEntryVersionImpl.class, lvEntryVersion);
+		}
+	}
+
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
-		for (LVEntryVersion lvEntryVersion : lvEntryVersions) {
-			entityCache.removeResult(
-				LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-				LVEntryVersionImpl.class, lvEntryVersion.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(LVEntryVersionModelImpl)lvEntryVersion, true);
+		for (Serializable primaryKey : primaryKeys) {
+			entityCache.removeResult(LVEntryVersionImpl.class, primaryKey);
 		}
 	}
 
@@ -6158,80 +6039,6 @@ public class LVEntryVersionPersistenceImpl
 			false);
 	}
 
-	protected void clearUniqueFindersCache(
-		LVEntryVersionModelImpl lvEntryVersionModelImpl, boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				lvEntryVersionModelImpl.getLvEntryId(),
-				lvEntryVersionModelImpl.getVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByLvEntryId_Version, args);
-			finderCache.removeResult(_finderPathFetchByLvEntryId_Version, args);
-		}
-
-		if ((lvEntryVersionModelImpl.getColumnBitmask() &
-			 _finderPathFetchByLvEntryId_Version.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				lvEntryVersionModelImpl.getOriginalLvEntryId(),
-				lvEntryVersionModelImpl.getOriginalVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByLvEntryId_Version, args);
-			finderCache.removeResult(_finderPathFetchByLvEntryId_Version, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				lvEntryVersionModelImpl.getUuid(),
-				lvEntryVersionModelImpl.getGroupId(),
-				lvEntryVersionModelImpl.getVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G_Version, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G_Version, args);
-		}
-
-		if ((lvEntryVersionModelImpl.getColumnBitmask() &
-			 _finderPathFetchByUUID_G_Version.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				lvEntryVersionModelImpl.getOriginalUuid(),
-				lvEntryVersionModelImpl.getOriginalGroupId(),
-				lvEntryVersionModelImpl.getOriginalVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G_Version, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G_Version, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				lvEntryVersionModelImpl.getGroupId(),
-				lvEntryVersionModelImpl.getUniqueGroupKey(),
-				lvEntryVersionModelImpl.getVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_UGK_Version, args);
-			finderCache.removeResult(_finderPathFetchByG_UGK_Version, args);
-		}
-
-		if ((lvEntryVersionModelImpl.getColumnBitmask() &
-			 _finderPathFetchByG_UGK_Version.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				lvEntryVersionModelImpl.getOriginalGroupId(),
-				lvEntryVersionModelImpl.getOriginalUniqueGroupKey(),
-				lvEntryVersionModelImpl.getOriginalVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_UGK_Version, args);
-			finderCache.removeResult(_finderPathFetchByG_UGK_Version, args);
-		}
-	}
-
 	/**
 	 * Creates a new lv entry version with the primary key. Does not add the lv entry version to the database.
 	 *
@@ -6245,7 +6052,7 @@ public class LVEntryVersionPersistenceImpl
 		lvEntryVersion.setNew(true);
 		lvEntryVersion.setPrimaryKey(lvEntryVersionId);
 
-		lvEntryVersion.setCompanyId(companyProvider.getCompanyId());
+		lvEntryVersion.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return lvEntryVersion;
 	}
@@ -6294,11 +6101,11 @@ public class LVEntryVersionPersistenceImpl
 
 			return remove(lvEntryVersion);
 		}
-		catch (NoSuchLVEntryVersionException nsee) {
-			throw nsee;
+		catch (NoSuchLVEntryVersionException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -6325,8 +6132,8 @@ public class LVEntryVersionPersistenceImpl
 				session.delete(lvEntryVersion);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -6368,318 +6175,29 @@ public class LVEntryVersionPersistenceImpl
 		try {
 			session = openSession();
 
-			if (lvEntryVersion.isNew()) {
+			if (isNew) {
 				session.save(lvEntryVersion);
-
-				lvEntryVersion.setNew(false);
 			}
 			else {
 				throw new IllegalArgumentException(
 					"LVEntryVersion is read only, create a new version instead");
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!LVEntryVersionModelImpl.COLUMN_BITMASK_ENABLED) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {
-				lvEntryVersionModelImpl.getLvEntryId()
-			};
-
-			finderCache.removeResult(_finderPathCountByLvEntryId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByLvEntryId, args);
-
-			args = new Object[] {lvEntryVersionModelImpl.getUuid()};
-
-			finderCache.removeResult(_finderPathCountByUuid, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid, args);
-
-			args = new Object[] {
-				lvEntryVersionModelImpl.getUuid(),
-				lvEntryVersionModelImpl.getVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByUuid_Version, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid_Version, args);
-
-			args = new Object[] {
-				lvEntryVersionModelImpl.getUuid(),
-				lvEntryVersionModelImpl.getGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUUID_G, args);
-
-			args = new Object[] {
-				lvEntryVersionModelImpl.getUuid(),
-				lvEntryVersionModelImpl.getCompanyId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUuid_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C, args);
-
-			args = new Object[] {
-				lvEntryVersionModelImpl.getUuid(),
-				lvEntryVersionModelImpl.getCompanyId(),
-				lvEntryVersionModelImpl.getVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByUuid_C_Version, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C_Version, args);
-
-			args = new Object[] {lvEntryVersionModelImpl.getGroupId()};
-
-			finderCache.removeResult(_finderPathCountByGroupId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByGroupId, args);
-
-			args = new Object[] {
-				lvEntryVersionModelImpl.getGroupId(),
-				lvEntryVersionModelImpl.getVersion()
-			};
-
-			finderCache.removeResult(_finderPathCountByGroupId_Version, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByGroupId_Version, args);
-
-			args = new Object[] {
-				lvEntryVersionModelImpl.getGroupId(),
-				lvEntryVersionModelImpl.getUniqueGroupKey()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_UGK, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_UGK, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByLvEntryId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalLvEntryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByLvEntryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByLvEntryId, args);
-
-				args = new Object[] {lvEntryVersionModelImpl.getLvEntryId()};
-
-				finderCache.removeResult(_finderPathCountByLvEntryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByLvEntryId, args);
-			}
-
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalUuid()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-
-				args = new Object[] {lvEntryVersionModelImpl.getUuid()};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-			}
-
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_Version.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalUuid(),
-					lvEntryVersionModelImpl.getOriginalVersion()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_Version, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_Version, args);
-
-				args = new Object[] {
-					lvEntryVersionModelImpl.getUuid(),
-					lvEntryVersionModelImpl.getVersion()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_Version, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_Version, args);
-			}
-
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUUID_G.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalUuid(),
-					lvEntryVersionModelImpl.getOriginalGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUUID_G, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUUID_G, args);
-
-				args = new Object[] {
-					lvEntryVersionModelImpl.getUuid(),
-					lvEntryVersionModelImpl.getGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUUID_G, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUUID_G, args);
-			}
-
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalUuid(),
-					lvEntryVersionModelImpl.getOriginalCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-
-				args = new Object[] {
-					lvEntryVersionModelImpl.getUuid(),
-					lvEntryVersionModelImpl.getCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-			}
-
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C_Version.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalUuid(),
-					lvEntryVersionModelImpl.getOriginalCompanyId(),
-					lvEntryVersionModelImpl.getOriginalVersion()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountByUuid_C_Version, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C_Version, args);
-
-				args = new Object[] {
-					lvEntryVersionModelImpl.getUuid(),
-					lvEntryVersionModelImpl.getCompanyId(),
-					lvEntryVersionModelImpl.getVersion()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountByUuid_C_Version, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C_Version, args);
-			}
-
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-
-				args = new Object[] {lvEntryVersionModelImpl.getGroupId()};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-			}
-
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId_Version.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalGroupId(),
-					lvEntryVersionModelImpl.getOriginalVersion()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountByGroupId_Version, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId_Version, args);
-
-				args = new Object[] {
-					lvEntryVersionModelImpl.getGroupId(),
-					lvEntryVersionModelImpl.getVersion()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountByGroupId_Version, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId_Version, args);
-			}
-
-			if ((lvEntryVersionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_UGK.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					lvEntryVersionModelImpl.getOriginalGroupId(),
-					lvEntryVersionModelImpl.getOriginalUniqueGroupKey()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_UGK, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_UGK, args);
-
-				args = new Object[] {
-					lvEntryVersionModelImpl.getGroupId(),
-					lvEntryVersionModelImpl.getUniqueGroupKey()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_UGK, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_UGK, args);
-			}
-		}
-
 		entityCache.putResult(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionImpl.class, lvEntryVersion.getPrimaryKey(),
-			lvEntryVersion, false);
+			LVEntryVersionImpl.class, lvEntryVersionModelImpl, false, true);
 
-		clearUniqueFindersCache(lvEntryVersionModelImpl, false);
 		cacheUniqueFindersCache(lvEntryVersionModelImpl);
+
+		if (isNew) {
+			lvEntryVersion.setNew(false);
+		}
 
 		lvEntryVersion.resetOriginalValues();
 
@@ -6728,163 +6246,12 @@ public class LVEntryVersionPersistenceImpl
 	/**
 	 * Returns the lv entry version with the primary key or returns <code>null</code> if it could not be found.
 	 *
-	 * @param primaryKey the primary key of the lv entry version
-	 * @return the lv entry version, or <code>null</code> if a lv entry version with the primary key could not be found
-	 */
-	@Override
-	public LVEntryVersion fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionImpl.class, primaryKey);
-
-		if (serializable == nullModel) {
-			return null;
-		}
-
-		LVEntryVersion lvEntryVersion = (LVEntryVersion)serializable;
-
-		if (lvEntryVersion == null) {
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				lvEntryVersion = (LVEntryVersion)session.get(
-					LVEntryVersionImpl.class, primaryKey);
-
-				if (lvEntryVersion != null) {
-					cacheResult(lvEntryVersion);
-				}
-				else {
-					entityCache.putResult(
-						LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-						LVEntryVersionImpl.class, primaryKey, nullModel);
-				}
-			}
-			catch (Exception e) {
-				entityCache.removeResult(
-					LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-					LVEntryVersionImpl.class, primaryKey);
-
-				throw processException(e);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return lvEntryVersion;
-	}
-
-	/**
-	 * Returns the lv entry version with the primary key or returns <code>null</code> if it could not be found.
-	 *
 	 * @param lvEntryVersionId the primary key of the lv entry version
 	 * @return the lv entry version, or <code>null</code> if a lv entry version with the primary key could not be found
 	 */
 	@Override
 	public LVEntryVersion fetchByPrimaryKey(long lvEntryVersionId) {
 		return fetchByPrimaryKey((Serializable)lvEntryVersionId);
-	}
-
-	@Override
-	public Map<Serializable, LVEntryVersion> fetchByPrimaryKeys(
-		Set<Serializable> primaryKeys) {
-
-		if (primaryKeys.isEmpty()) {
-			return Collections.emptyMap();
-		}
-
-		Map<Serializable, LVEntryVersion> map =
-			new HashMap<Serializable, LVEntryVersion>();
-
-		if (primaryKeys.size() == 1) {
-			Iterator<Serializable> iterator = primaryKeys.iterator();
-
-			Serializable primaryKey = iterator.next();
-
-			LVEntryVersion lvEntryVersion = fetchByPrimaryKey(primaryKey);
-
-			if (lvEntryVersion != null) {
-				map.put(primaryKey, lvEntryVersion);
-			}
-
-			return map;
-		}
-
-		Set<Serializable> uncachedPrimaryKeys = null;
-
-		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(
-				LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-				LVEntryVersionImpl.class, primaryKey);
-
-			if (serializable != nullModel) {
-				if (serializable == null) {
-					if (uncachedPrimaryKeys == null) {
-						uncachedPrimaryKeys = new HashSet<Serializable>();
-					}
-
-					uncachedPrimaryKeys.add(primaryKey);
-				}
-				else {
-					map.put(primaryKey, (LVEntryVersion)serializable);
-				}
-			}
-		}
-
-		if (uncachedPrimaryKeys == null) {
-			return map;
-		}
-
-		StringBundler query = new StringBundler(
-			uncachedPrimaryKeys.size() * 2 + 1);
-
-		query.append(_SQL_SELECT_LVENTRYVERSION_WHERE_PKS_IN);
-
-		for (Serializable primaryKey : uncachedPrimaryKeys) {
-			query.append((long)primaryKey);
-
-			query.append(",");
-		}
-
-		query.setIndex(query.index() - 1);
-
-		query.append(")");
-
-		String sql = query.toString();
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			Query q = session.createQuery(sql);
-
-			for (LVEntryVersion lvEntryVersion :
-					(List<LVEntryVersion>)q.list()) {
-
-				map.put(lvEntryVersion.getPrimaryKeyObj(), lvEntryVersion);
-
-				cacheResult(lvEntryVersion);
-
-				uncachedPrimaryKeys.remove(lvEntryVersion.getPrimaryKeyObj());
-			}
-
-			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(
-					LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-					LVEntryVersionImpl.class, primaryKey, nullModel);
-			}
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-
-		return map;
 	}
 
 	/**
@@ -6901,7 +6268,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the lv entry versions.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of lv entry versions
@@ -6917,7 +6284,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of lv entry versions
@@ -6937,64 +6304,62 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the lv entry versions.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of lv entry versions
 	 * @param end the upper bound of the range of lv entry versions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of lv entry versions
 	 */
 	@Override
 	public List<LVEntryVersion> findAll(
 		int start, int end, OrderByComparator<LVEntryVersion> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindAll;
-			finderArgs = FINDER_ARGS_EMPTY;
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<LVEntryVersion> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<LVEntryVersion>)finderCache.getResult(
 				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_LVENTRYVERSION);
+				sb.append(_SQL_SELECT_LVENTRYVERSION);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_LVENTRYVERSION;
 
-				if (pagination) {
-					sql = sql.concat(LVEntryVersionModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(LVEntryVersionModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -7002,29 +6367,19 @@ public class LVEntryVersionPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryVersion>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<LVEntryVersion>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7061,18 +6416,15 @@ public class LVEntryVersionPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_LVENTRYVERSION);
+				Query query = session.createQuery(_SQL_COUNT_LVENTRYVERSION);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7114,7 +6466,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns a range of all the big decimal entries associated with the lv entry version.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the lv entry version
@@ -7134,7 +6486,7 @@ public class LVEntryVersionPersistenceImpl
 	 * Returns an ordered range of all the big decimal entries associated with the lv entry version.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryVersionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the lv entry version
@@ -7211,7 +6563,7 @@ public class LVEntryVersionPersistenceImpl
 
 		if (lvEntryVersion == null) {
 			lvEntryVersionToBigDecimalEntryTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, bigDecimalEntryPK);
+				CompanyThreadLocal.getCompanyId(), pk, bigDecimalEntryPK);
 		}
 		else {
 			lvEntryVersionToBigDecimalEntryTableMapper.addTableMapping(
@@ -7235,7 +6587,7 @@ public class LVEntryVersionPersistenceImpl
 
 		if (lvEntryVersion == null) {
 			lvEntryVersionToBigDecimalEntryTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk,
+				CompanyThreadLocal.getCompanyId(), pk,
 				bigDecimalEntry.getPrimaryKey());
 		}
 		else {
@@ -7258,7 +6610,7 @@ public class LVEntryVersionPersistenceImpl
 		LVEntryVersion lvEntryVersion = fetchByPrimaryKey(pk);
 
 		if (lvEntryVersion == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = lvEntryVersion.getCompanyId();
@@ -7389,7 +6741,7 @@ public class LVEntryVersionPersistenceImpl
 		LVEntryVersion lvEntryVersion = fetchByPrimaryKey(pk);
 
 		if (lvEntryVersion == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = lvEntryVersion.getCompanyId();
@@ -7424,14 +6776,29 @@ public class LVEntryVersionPersistenceImpl
 
 			setBigDecimalEntries(pk, bigDecimalEntryPKs);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 	}
 
 	@Override
 	public Set<String> getBadColumnNames() {
 		return _badColumnNames;
+	}
+
+	@Override
+	protected EntityCache getEntityCache() {
+		return entityCache;
+	}
+
+	@Override
+	protected String getPKDBName() {
+		return "lvEntryVersionId";
+	}
+
+	@Override
+	protected String getSelectSQL() {
+		return _SQL_SELECT_LVENTRYVERSION;
 	}
 
 	@Override
@@ -7443,339 +6810,266 @@ public class LVEntryVersionPersistenceImpl
 	 * Initializes the lv entry version persistence.
 	 */
 	public void afterPropertiesSet() {
+		Bundle bundle = FrameworkUtil.getBundle(
+			LVEntryVersionPersistenceImpl.class);
+
+		_bundleContext = bundle.getBundleContext();
+
+		_argumentsResolverServiceRegistration = _bundleContext.registerService(
+			ArgumentsResolver.class, new LVEntryVersionModelArgumentsResolver(),
+			MapUtil.singletonDictionary(
+				"model.class.name", LVEntryVersion.class.getName()));
+
 		lvEntryVersionToBigDecimalEntryTableMapper =
 			TableMapperFactory.getTableMapper(
 				"BigDecimalEntries_LVEntries", "companyId", "lvEntryVersionId",
 				"bigDecimalEntryId", this, bigDecimalEntryPersistence);
 
-		_finderPathWithPaginationFindAll = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findAll", new String[0]);
+		_finderPathWithPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findAll", new String[0]);
+		_finderPathWithoutPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
-		_finderPathCountAll = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountAll = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByLvEntryId = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByLvEntryId",
+		_finderPathWithPaginationFindByLvEntryId = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLvEntryId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"lvEntryId"}, true);
 
-		_finderPathWithoutPaginationFindByLvEntryId = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByLvEntryId", new String[] {Long.class.getName()},
-			LVEntryVersionModelImpl.LVENTRYID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+		_finderPathWithoutPaginationFindByLvEntryId = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByLvEntryId",
+			new String[] {Long.class.getName()}, new String[] {"lvEntryId"},
+			true);
 
-		_finderPathCountByLvEntryId = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByLvEntryId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByLvEntryId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"lvEntryId"},
+			false);
 
-		_finderPathFetchByLvEntryId_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByLvEntryId_Version",
+		_finderPathFetchByLvEntryId_Version = _createFinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByLvEntryId_Version",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			LVEntryVersionModelImpl.LVENTRYID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"lvEntryId", "version"}, true);
 
-		_finderPathCountByLvEntryId_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByLvEntryId_Version = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByLvEntryId_Version",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"lvEntryId", "version"}, false);
 
-		_finderPathWithPaginationFindByUuid = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUuid",
+		_finderPathWithPaginationFindByUuid = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByUuid", new String[] {String.class.getName()},
-			LVEntryVersionModelImpl.UUID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			true);
 
-		_finderPathCountByUuid = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUuid = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			false);
 
-		_finderPathWithPaginationFindByUuid_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUuid_Version",
+		_finderPathWithPaginationFindByUuid_Version = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_Version",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "version"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByUuid_Version",
+		_finderPathWithoutPaginationFindByUuid_Version = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_Version",
 			new String[] {String.class.getName(), Integer.class.getName()},
-			LVEntryVersionModelImpl.UUID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"uuid_", "version"}, true);
 
-		_finderPathCountByUuid_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUuid_Version = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_Version",
-			new String[] {String.class.getName(), Integer.class.getName()});
+			new String[] {String.class.getName(), Integer.class.getName()},
+			new String[] {"uuid_", "version"}, false);
 
-		_finderPathWithPaginationFindByUUID_G = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUUID_G",
+		_finderPathWithPaginationFindByUUID_G = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUUID_G",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathWithoutPaginationFindByUUID_G = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByUUID_G",
+		_finderPathWithoutPaginationFindByUUID_G = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			LVEntryVersionModelImpl.UUID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.GROUPID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUUID_G = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "groupId"}, false);
 
-		_finderPathFetchByUUID_G_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByUUID_G_Version",
+		_finderPathFetchByUUID_G_Version = _createFinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G_Version",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName()
 			},
-			LVEntryVersionModelImpl.UUID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.GROUPID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"uuid_", "groupId", "version"}, true);
 
-		_finderPathCountByUUID_G_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUUID_G_Version = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G_Version",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"uuid_", "groupId", "version"}, false);
 
-		_finderPathWithPaginationFindByUuid_C = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUuid_C",
+		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByUuid_C",
+		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			LVEntryVersionModelImpl.UUID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.COMPANYID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUuid_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindByUuid_C_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUuid_C_Version",
+		_finderPathWithPaginationFindByUuid_C_Version = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C_Version",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId", "version"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByUuid_C_Version",
+		_finderPathWithoutPaginationFindByUuid_C_Version = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C_Version",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName()
 			},
-			LVEntryVersionModelImpl.UUID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.COMPANYID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId", "version"}, true);
 
-		_finderPathCountByUuid_C_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUuid_C_Version = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C_Version",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId", "version"}, false);
 
-		_finderPathWithPaginationFindByGroupId = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByGroupId",
+		_finderPathWithPaginationFindByGroupId = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId"}, true);
 
-		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByGroupId", new String[] {Long.class.getName()},
-			LVEntryVersionModelImpl.GROUPID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+		_finderPathWithoutPaginationFindByGroupId = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			true);
 
-		_finderPathCountByGroupId = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByGroupId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			false);
 
-		_finderPathWithPaginationFindByGroupId_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByGroupId_Version",
+		_finderPathWithPaginationFindByGroupId_Version = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId_Version",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "version"}, true);
 
-		_finderPathWithoutPaginationFindByGroupId_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByGroupId_Version",
+		_finderPathWithoutPaginationFindByGroupId_Version = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId_Version",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			LVEntryVersionModelImpl.GROUPID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"groupId", "version"}, true);
 
-		_finderPathCountByGroupId_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByGroupId_Version = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId_Version",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"groupId", "version"}, false);
 
-		_finderPathWithPaginationFindByG_UGK = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByG_UGK",
+		_finderPathWithPaginationFindByG_UGK = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_UGK",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "uniqueGroupKey"}, true);
 
-		_finderPathWithoutPaginationFindByG_UGK = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByG_UGK",
+		_finderPathWithoutPaginationFindByG_UGK = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_UGK",
 			new String[] {Long.class.getName(), String.class.getName()},
-			LVEntryVersionModelImpl.GROUPID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.UNIQUEGROUPKEY_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"groupId", "uniqueGroupKey"}, true);
 
-		_finderPathCountByG_UGK = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByG_UGK = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_UGK",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "uniqueGroupKey"}, false);
 
-		_finderPathFetchByG_UGK_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryVersionImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByG_UGK_Version",
+		_finderPathFetchByG_UGK_Version = _createFinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByG_UGK_Version",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
 				Integer.class.getName()
 			},
-			LVEntryVersionModelImpl.GROUPID_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.UNIQUEGROUPKEY_COLUMN_BITMASK |
-			LVEntryVersionModelImpl.VERSION_COLUMN_BITMASK);
+			new String[] {"groupId", "uniqueGroupKey", "version"}, true);
 
-		_finderPathCountByG_UGK_Version = new FinderPath(
-			LVEntryVersionModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryVersionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByG_UGK_Version = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_UGK_Version",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"groupId", "uniqueGroupKey", "version"}, false);
 	}
 
 	public void destroy() {
 		entityCache.removeCache(LVEntryVersionImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		_argumentsResolverServiceRegistration.unregister();
+
+		for (ServiceRegistration<FinderPath> serviceRegistration :
+				_serviceRegistrations) {
+
+			serviceRegistration.unregister();
+		}
 
 		TableMapperFactory.removeTableMapper("BigDecimalEntries_LVEntries");
 	}
 
-	@ServiceReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
+	private BundleContext _bundleContext;
 
 	@ServiceReference(type = EntityCache.class)
 	protected EntityCache entityCache;
@@ -7793,9 +7087,6 @@ public class LVEntryVersionPersistenceImpl
 
 	private static final String _SQL_SELECT_LVENTRYVERSION =
 		"SELECT lvEntryVersion FROM LVEntryVersion lvEntryVersion";
-
-	private static final String _SQL_SELECT_LVENTRYVERSION_WHERE_PKS_IN =
-		"SELECT lvEntryVersion FROM LVEntryVersion lvEntryVersion WHERE lvEntryVersionId IN (";
 
 	private static final String _SQL_SELECT_LVENTRYVERSION_WHERE =
 		"SELECT lvEntryVersion FROM LVEntryVersion lvEntryVersion WHERE ";
@@ -7819,5 +7110,106 @@ public class LVEntryVersionPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid"});
+
+	private FinderPath _createFinderPath(
+		String cacheName, String methodName, String[] params,
+		String[] columnNames, boolean baseModelResult) {
+
+		FinderPath finderPath = new FinderPath(
+			cacheName, methodName, params, columnNames, baseModelResult);
+
+		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+			_serviceRegistrations.add(
+				_bundleContext.registerService(
+					FinderPath.class, finderPath,
+					MapUtil.singletonDictionary("cache.name", cacheName)));
+		}
+
+		return finderPath;
+	}
+
+	private ServiceRegistration<ArgumentsResolver>
+		_argumentsResolverServiceRegistration;
+	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
+		new HashSet<>();
+
+	private static class LVEntryVersionModelArgumentsResolver
+		implements ArgumentsResolver {
+
+		@Override
+		public Object[] getArguments(
+			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
+			boolean original) {
+
+			String[] columnNames = finderPath.getColumnNames();
+
+			if ((columnNames == null) || (columnNames.length == 0)) {
+				if (baseModel.isNew()) {
+					return FINDER_ARGS_EMPTY;
+				}
+
+				return null;
+			}
+
+			LVEntryVersionModelImpl lvEntryVersionModelImpl =
+				(LVEntryVersionModelImpl)baseModel;
+
+			long columnBitmask = lvEntryVersionModelImpl.getColumnBitmask();
+
+			if (!checkColumn || (columnBitmask == 0)) {
+				return _getValue(
+					lvEntryVersionModelImpl, columnNames, original);
+			}
+
+			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
+				finderPath);
+
+			if (finderPathColumnBitmask == null) {
+				finderPathColumnBitmask = 0L;
+
+				for (String columnName : columnNames) {
+					finderPathColumnBitmask |=
+						lvEntryVersionModelImpl.getColumnBitmask(columnName);
+				}
+
+				_finderPathColumnBitmasksCache.put(
+					finderPath, finderPathColumnBitmask);
+			}
+
+			if ((columnBitmask & finderPathColumnBitmask) != 0) {
+				return _getValue(
+					lvEntryVersionModelImpl, columnNames, original);
+			}
+
+			return null;
+		}
+
+		private Object[] _getValue(
+			LVEntryVersionModelImpl lvEntryVersionModelImpl,
+			String[] columnNames, boolean original) {
+
+			Object[] arguments = new Object[columnNames.length];
+
+			for (int i = 0; i < arguments.length; i++) {
+				String columnName = columnNames[i];
+
+				if (original) {
+					arguments[i] =
+						lvEntryVersionModelImpl.getColumnOriginalValue(
+							columnName);
+				}
+				else {
+					arguments[i] = lvEntryVersionModelImpl.getColumnValue(
+						columnName);
+				}
+			}
+
+			return arguments;
+		}
+
+		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
+			new ConcurrentHashMap<>();
+
+	}
 
 }

@@ -15,8 +15,8 @@
 package com.liferay.dynamic.data.mapping.web.internal.context.util;
 
 import com.liferay.dynamic.data.mapping.configuration.DDMGroupServiceConfiguration;
+import com.liferay.dynamic.data.mapping.configuration.DDMWebConfiguration;
 import com.liferay.dynamic.data.mapping.constants.DDMConstants;
-import com.liferay.dynamic.data.mapping.web.configuration.DDMWebConfiguration;
 import com.liferay.portal.kernel.display.context.util.BaseRequestHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -33,8 +33,8 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class DDMWebRequestHelper extends BaseRequestHelper {
 
-	public DDMWebRequestHelper(HttpServletRequest request) {
-		super(request);
+	public DDMWebRequestHelper(HttpServletRequest httpServletRequest) {
+		super(httpServletRequest);
 	}
 
 	public DDMGroupServiceConfiguration getDDMGroupServiceConfiguration() {
@@ -46,8 +46,8 @@ public class DDMWebRequestHelper extends BaseRequestHelper {
 
 			return _ddmGroupServiceConfiguration;
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
@@ -60,8 +60,8 @@ public class DDMWebRequestHelper extends BaseRequestHelper {
 
 			return _ddmWebConfiguration;
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
@@ -69,12 +69,12 @@ public class DDMWebRequestHelper extends BaseRequestHelper {
 		throws ConfigurationException {
 
 		if (Validator.isNotNull(getPortletResource())) {
-			HttpServletRequest request = getRequest();
+			HttpServletRequest httpServletRequest = getRequest();
 
 			return (T)ConfigurationProviderUtil.getConfiguration(
 				clazz,
 				new ParameterMapSettingsLocator(
-					request.getParameterMap(),
+					httpServletRequest.getParameterMap(),
 					new GroupServiceSettingsLocator(
 						getSiteGroupId(), DDMConstants.SERVICE_NAME)));
 		}

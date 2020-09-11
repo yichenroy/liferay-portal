@@ -146,8 +146,9 @@
 		${addPageURL.setParameter("parentTitle", entry.getTitle())}
 
 		<@liferay_ui["icon"]
-			iconCssClass="icon-plus"
+			icon="plus"
 			label=true
+			markupView="lexicon"
 			message="add-child-page"
 			url=addPageURL?string
 		/>
@@ -160,8 +161,9 @@
 	${viewPageAttachmentsURL.setParameter("mvcRenderCommandName", "/wiki/view_page_attachments") }
 
 	<@liferay_ui["icon"]
-		iconCssClass="icon-paperclip"
+		icon="paperclip"
 		label=true
+		markupView="lexicon"
 		message='${entry.getAttachmentsFileEntriesCount() + languageUtil.get(locale, "attachments")}'
 		url=viewPageAttachmentsURL?string
 	/>
@@ -171,15 +173,9 @@
 	<#if validator.isNotNull(assetRenderer.getDiscussionPath()) && wikiPortletInstanceConfiguration.enableComments()>
 		<br />
 
-		<#assign discussionURL = renderResponse.createActionURL() />
-
-		${discussionURL.setParameter("javax.portlet.action", "/wiki/" + assetRenderer.getDiscussionPath())}
-
 		<@liferay_comment["discussion"]
 			className=wikiPageClassName
 			classPK=entry.getResourcePrimKey()
-			formAction=discussionURL?string
-			formName="fm2"
 			ratingsEnabled=wikiPortletInstanceConfiguration.enableCommentRatings()
 			redirect=currentURL
 			subject=assetRenderer.getTitle(locale)
@@ -198,7 +194,8 @@
 		${editPageURL.setParameter("title", entry.getTitle())}
 
 		<@liferay_ui["icon"]
-			iconCssClass="icon-edit"
+			icon="pencil"
+			markupView="lexicon"
 			message=entry.getTitle()
 			url=editPageURL?string
 		/>
@@ -212,7 +209,8 @@
 	${viewPageDetailsURL.setParameter("redirect", currentURL)}
 
 	<@liferay_ui["icon"]
-		iconCssClass="icon-file-alt"
+		icon="document"
+		markupView="lexicon"
 		message="details"
 		url=viewPageDetailsURL?string
 	/>
@@ -230,7 +228,8 @@
 	/>
 
 	<@liferay_ui["icon"]
-		iconCssClass="icon-print"
+		icon="print"
+		markupView="lexicon"
 		message="print"
 		url=taglibPrintURL
 	/>

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,10 +28,9 @@ import java.util.Map;
  * @see RecentLayoutSetBranch
  * @generated
  */
-@ProviderType
 public class RecentLayoutSetBranchWrapper
 	extends BaseModelWrapper<RecentLayoutSetBranch>
-	implements RecentLayoutSetBranch, ModelWrapper<RecentLayoutSetBranch> {
+	implements ModelWrapper<RecentLayoutSetBranch>, RecentLayoutSetBranch {
 
 	public RecentLayoutSetBranchWrapper(
 		RecentLayoutSetBranch recentLayoutSetBranch) {

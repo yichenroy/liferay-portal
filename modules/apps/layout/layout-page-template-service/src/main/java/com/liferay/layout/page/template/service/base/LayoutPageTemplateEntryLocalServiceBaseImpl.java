@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -26,7 +24,9 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.persistence.LayoutPageTemplateEntryPersistence;
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -51,21 +51,22 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
-import com.liferay.portal.kernel.service.persistence.LayoutPersistence;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
 import java.util.List;
 
 import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the base implementation for the layout page template entry local service.
@@ -78,10 +79,10 @@ import javax.sql.DataSource;
  * @see com.liferay.layout.page.template.service.impl.LayoutPageTemplateEntryLocalServiceImpl
  * @generated
  */
-@ProviderType
 public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
-	implements LayoutPageTemplateEntryLocalService, IdentifiableOSGiService {
+	implements AopService, IdentifiableOSGiService,
+			   LayoutPageTemplateEntryLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -91,6 +92,10 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 
 	/**
 	 * Adds the layout page template entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutPageTemplateEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutPageTemplateEntry the layout page template entry
 	 * @return the layout page template entry that was added
@@ -124,6 +129,10 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the layout page template entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutPageTemplateEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutPageTemplateEntryId the primary key of the layout page template entry
 	 * @return the layout page template entry that was removed
 	 * @throws PortalException if a layout page template entry with the primary key could not be found
@@ -141,6 +150,10 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the layout page template entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutPageTemplateEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutPageTemplateEntry the layout page template entry
 	 * @return the layout page template entry that was removed
 	 * @throws PortalException
@@ -153,6 +166,11 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 
 		return layoutPageTemplateEntryPersistence.remove(
 			layoutPageTemplateEntry);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return layoutPageTemplateEntryPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
@@ -179,7 +197,7 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -199,7 +217,7 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -487,6 +505,16 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return layoutPageTemplateEntryPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
@@ -496,6 +524,13 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 				(LayoutPageTemplateEntry)persistedModel);
 	}
 
+	public BasePersistence<LayoutPageTemplateEntry> getBasePersistence() {
+		return layoutPageTemplateEntryPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
@@ -559,7 +594,7 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * Returns a range of all the layout page template entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of layout page template entries
@@ -586,6 +621,10 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	/**
 	 * Updates the layout page template entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutPageTemplateEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutPageTemplateEntry the layout page template entry
 	 * @return the layout page template entry that was updated
 	 */
@@ -598,232 +637,19 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 			layoutPageTemplateEntry);
 	}
 
-	/**
-	 * Returns the layout page template entry local service.
-	 *
-	 * @return the layout page template entry local service
-	 */
-	public LayoutPageTemplateEntryLocalService
-		getLayoutPageTemplateEntryLocalService() {
-
-		return layoutPageTemplateEntryLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			LayoutPageTemplateEntryLocalService.class,
+			IdentifiableOSGiService.class, CTService.class,
+			PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the layout page template entry local service.
-	 *
-	 * @param layoutPageTemplateEntryLocalService the layout page template entry local service
-	 */
-	public void setLayoutPageTemplateEntryLocalService(
-		LayoutPageTemplateEntryLocalService
-			layoutPageTemplateEntryLocalService) {
-
-		this.layoutPageTemplateEntryLocalService =
-			layoutPageTemplateEntryLocalService;
-	}
-
-	/**
-	 * Returns the layout page template entry persistence.
-	 *
-	 * @return the layout page template entry persistence
-	 */
-	public LayoutPageTemplateEntryPersistence
-		getLayoutPageTemplateEntryPersistence() {
-
-		return layoutPageTemplateEntryPersistence;
-	}
-
-	/**
-	 * Sets the layout page template entry persistence.
-	 *
-	 * @param layoutPageTemplateEntryPersistence the layout page template entry persistence
-	 */
-	public void setLayoutPageTemplateEntryPersistence(
-		LayoutPageTemplateEntryPersistence layoutPageTemplateEntryPersistence) {
-
-		this.layoutPageTemplateEntryPersistence =
-			layoutPageTemplateEntryPersistence;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService
-		getCounterLocalService() {
-
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService
-			counterLocalService) {
-
-		this.counterLocalService = counterLocalService;
-	}
-
-	/**
-	 * Returns the class name local service.
-	 *
-	 * @return the class name local service
-	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService
-		getClassNameLocalService() {
-
-		return classNameLocalService;
-	}
-
-	/**
-	 * Sets the class name local service.
-	 *
-	 * @param classNameLocalService the class name local service
-	 */
-	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService
-			classNameLocalService) {
-
-		this.classNameLocalService = classNameLocalService;
-	}
-
-	/**
-	 * Returns the class name persistence.
-	 *
-	 * @return the class name persistence
-	 */
-	public ClassNamePersistence getClassNamePersistence() {
-		return classNamePersistence;
-	}
-
-	/**
-	 * Sets the class name persistence.
-	 *
-	 * @param classNamePersistence the class name persistence
-	 */
-	public void setClassNamePersistence(
-		ClassNamePersistence classNamePersistence) {
-
-		this.classNamePersistence = classNamePersistence;
-	}
-
-	/**
-	 * Returns the layout local service.
-	 *
-	 * @return the layout local service
-	 */
-	public com.liferay.portal.kernel.service.LayoutLocalService
-		getLayoutLocalService() {
-
-		return layoutLocalService;
-	}
-
-	/**
-	 * Sets the layout local service.
-	 *
-	 * @param layoutLocalService the layout local service
-	 */
-	public void setLayoutLocalService(
-		com.liferay.portal.kernel.service.LayoutLocalService
-			layoutLocalService) {
-
-		this.layoutLocalService = layoutLocalService;
-	}
-
-	/**
-	 * Returns the layout persistence.
-	 *
-	 * @return the layout persistence
-	 */
-	public LayoutPersistence getLayoutPersistence() {
-		return layoutPersistence;
-	}
-
-	/**
-	 * Sets the layout persistence.
-	 *
-	 * @param layoutPersistence the layout persistence
-	 */
-	public void setLayoutPersistence(LayoutPersistence layoutPersistence) {
-		this.layoutPersistence = layoutPersistence;
-	}
-
-	/**
-	 * Returns the resource local service.
-	 *
-	 * @return the resource local service
-	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService
-		getResourceLocalService() {
-
-		return resourceLocalService;
-	}
-
-	/**
-	 * Sets the resource local service.
-	 *
-	 * @param resourceLocalService the resource local service
-	 */
-	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService
-			resourceLocalService) {
-
-		this.resourceLocalService = resourceLocalService;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
-
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register(
-			"com.liferay.layout.page.template.model.LayoutPageTemplateEntry",
-			layoutPageTemplateEntryLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.layout.page.template.model.LayoutPageTemplateEntry");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		layoutPageTemplateEntryLocalService =
+			(LayoutPageTemplateEntryLocalService)aopProxy;
 	}
 
 	/**
@@ -836,8 +662,23 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 		return LayoutPageTemplateEntryLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<LayoutPageTemplateEntry> getCTPersistence() {
+		return layoutPageTemplateEntryPersistence;
+	}
+
+	@Override
+	public Class<LayoutPageTemplateEntry> getModelClass() {
 		return LayoutPageTemplateEntry.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<LayoutPageTemplateEntry>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(layoutPageTemplateEntryPersistence);
 	}
 
 	protected String getModelClassName() {
@@ -864,60 +705,40 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = LayoutPageTemplateEntryLocalService.class)
 	protected LayoutPageTemplateEntryLocalService
 		layoutPageTemplateEntryLocalService;
 
-	@BeanReference(type = LayoutPageTemplateEntryPersistence.class)
+	@Reference
 	protected LayoutPageTemplateEntryPersistence
 		layoutPageTemplateEntryPersistence;
 
-	@ServiceReference(
-		type = com.liferay.counter.kernel.service.CounterLocalService.class
-	)
+	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@ServiceReference(
-		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
-	)
+	@Reference
 	protected com.liferay.portal.kernel.service.ClassNameLocalService
 		classNameLocalService;
 
-	@ServiceReference(type = ClassNamePersistence.class)
-	protected ClassNamePersistence classNamePersistence;
-
-	@ServiceReference(
-		type = com.liferay.portal.kernel.service.LayoutLocalService.class
-	)
+	@Reference
 	protected com.liferay.portal.kernel.service.LayoutLocalService
 		layoutLocalService;
 
-	@ServiceReference(type = LayoutPersistence.class)
-	protected LayoutPersistence layoutPersistence;
+	@Reference
+	protected com.liferay.portal.kernel.service.LayoutSetLocalService
+		layoutSetLocalService;
 
-	@ServiceReference(
-		type = com.liferay.portal.kernel.service.ResourceLocalService.class
-	)
+	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
-	@ServiceReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
+	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
-
-	@ServiceReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry
-		persistedModelLocalServiceRegistry;
 
 }

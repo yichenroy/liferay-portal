@@ -19,17 +19,17 @@ import com.liferay.layout.admin.web.internal.handler.LayoutExceptionRequestHandl
 import com.liferay.layout.admin.web.internal.security.permission.resource.LayoutPageTemplateEntryPermission;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.portal.kernel.change.tracking.CTTransactionException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeService;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -45,7 +46,6 @@ import com.liferay.sites.kernel.util.SitesUtil;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -79,16 +79,13 @@ public class AddContentLayoutMVCActionCommand
 			actionRequest, "privateLayout");
 		long parentLayoutId = ParamUtil.getLong(
 			actionRequest, "parentLayoutId");
-		String name = ParamUtil.getString(actionRequest, "name");
-
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(LocaleUtil.getSiteDefault(), name);
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(),
+			ParamUtil.getString(actionRequest, "name")
+		).build();
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			Layout.class.getName(), actionRequest);
-
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
 		Layout layout = null;
 
@@ -118,14 +115,27 @@ public class AddContentLayoutMVCActionCommand
 				SitesUtil.mergeLayoutPrototypeLayout(layout.getGroup(), layout);
 			}
 			else {
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)actionRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
 				if (layoutPageTemplateEntryId > 0) {
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)actionRequest.getAttribute(
+							WebKeys.THEME_DISPLAY);
+
 					LayoutPageTemplateEntryPermission.check(
 						themeDisplay.getPermissionChecker(),
 						layoutPageTemplateEntryId, ActionKeys.VIEW);
+				}
+
+				long masterLayoutPlid = 0;
+
+				if (layoutPageTemplateEntry != null) {
+					Layout layoutPageTemplateEntryLayout =
+						_layoutLocalService.fetchLayout(
+							layoutPageTemplateEntry.getPlid());
+
+					if (layoutPageTemplateEntryLayout != null) {
+						masterLayoutPlid =
+							layoutPageTemplateEntryLayout.getMasterLayoutPlid();
+					}
 				}
 
 				layout = _layoutService.addLayout(
@@ -134,44 +144,50 @@ public class AddContentLayoutMVCActionCommand
 					layoutPageTemplateEntryId, nameMap, new HashMap<>(),
 					new HashMap<>(), new HashMap<>(), new HashMap<>(),
 					LayoutConstants.TYPE_CONTENT, null, false, false,
-					new HashMap<>(), serviceContext);
+					masterLayoutPlid, new HashMap<>(), serviceContext);
 			}
 
 			String redirectURL = getRedirectURL(
 				actionRequest, actionResponse, layout);
 
-			if (Objects.equals(
-					layout.getType(), LayoutConstants.TYPE_CONTENT)) {
-
+			if (layout.isTypeContent()) {
 				redirectURL = getContentRedirectURL(actionRequest, layout);
 			}
-
-			jsonObject.put("redirectURL", redirectURL);
 
 			MultiSessionMessages.add(actionRequest, "layoutAdded", layout);
 
 			JSONPortletResponseUtil.writeJSON(
-				actionRequest, actionResponse, jsonObject);
+				actionRequest, actionResponse,
+				JSONUtil.put("redirectURL", redirectURL));
 		}
-		catch (PortalException pe) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
-			}
+		catch (CTTransactionException ctTransactionException) {
+			hideDefaultErrorMessage(actionRequest);
 
+			LiferayPortletResponse liferayPortletResponse =
+				portal.getLiferayPortletResponse(actionResponse);
+
+			JSONPortletResponseUtil.writeJSON(
+				actionRequest, actionResponse,
+				JSONUtil.put(
+					"redirectURL", liferayPortletResponse.createRenderURL()));
+
+			throw ctTransactionException;
+		}
+		catch (PortalException portalException) {
 			SessionErrors.add(actionRequest, "layoutNameInvalid");
 
 			hideDefaultErrorMessage(actionRequest);
 
 			_layoutExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, pe);
+				actionRequest, actionResponse, portalException);
 		}
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		AddContentLayoutMVCActionCommand.class);
-
 	@Reference
 	private LayoutExceptionRequestHandler _layoutExceptionRequestHandler;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private LayoutPageTemplateEntryLocalService

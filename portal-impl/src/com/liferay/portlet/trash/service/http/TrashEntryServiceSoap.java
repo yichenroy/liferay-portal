@@ -14,7 +14,7 @@
 
 package com.liferay.portlet.trash.service.http;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -66,7 +66,6 @@ import java.rmi.RemoteException;
  * @generated
  */
 @Deprecated
-@ProviderType
 public class TrashEntryServiceSoap {
 	/**
 	* Deletes the trash entries with the matching group ID considering

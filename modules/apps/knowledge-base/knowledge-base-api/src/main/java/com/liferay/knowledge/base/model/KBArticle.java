@@ -14,11 +14,11 @@
 
 package com.liferay.knowledge.base.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the KBArticle service. Represents a row in the &quot;KBArticle&quot; database table, with each column mapped to a property of this class.
@@ -75,6 +75,8 @@ public interface KBArticle extends KBArticleModel, PersistedModel {
 
 	public String getParentTitle(java.util.Locale locale, int status)
 		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public long getViewCount();
 
 	public boolean isFirstVersion();
 

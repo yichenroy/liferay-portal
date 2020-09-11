@@ -55,13 +55,14 @@ public class SimpleRedirectActionHandler extends BaseRedirectActionHandler {
 
 	@Override
 	protected String getURL(
-		MDRAction mdrAction, HttpServletRequest request,
-		HttpServletResponse response) {
+		MDRAction mdrAction, HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			mdrAction.getTypeSettingsProperties();
 
-		return GetterUtil.getString(typeSettingsProperties.getProperty("url"));
+		return GetterUtil.getString(
+			typeSettingsUnicodeProperties.getProperty("url"));
 	}
 
 	private static final Collection<String> _propertyNames =

@@ -14,10 +14,10 @@
 
 package com.liferay.exportimport.kernel.staging;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Akos Thurzo
@@ -32,6 +32,7 @@ public interface StagingURLHelper {
 		String remoteAddress, int remotePort, String remotePathContext,
 		boolean secureConnection);
 
-	public String buildRemoteURL(UnicodeProperties typeSettingsProperties);
+	public String buildRemoteURL(
+		UnicodeProperties typeSettingsUnicodeProperties);
 
 }

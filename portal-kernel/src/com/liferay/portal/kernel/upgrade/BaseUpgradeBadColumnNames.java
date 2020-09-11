@@ -102,14 +102,11 @@ public abstract class BaseUpgradeBadColumnNames extends UpgradeProcess {
 			alterColumnNames.add(new AlterColumnName(columnName, columnSQL));
 		}
 
-		alter(
-			tableClass,
-			alterColumnNames.toArray(
-				new AlterColumnName[alterColumnNames.size()]));
+		alter(tableClass, alterColumnNames.toArray(new AlterColumnName[0]));
 	}
 
 	private Map<String, String> _getTableColumnSQLs(Class<?> tableClass)
-		throws ReflectiveOperationException {
+		throws Exception {
 
 		Field tableSQLCreateField = tableClass.getField("TABLE_SQL_CREATE");
 

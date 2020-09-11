@@ -18,6 +18,7 @@ import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -33,7 +34,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
-import com.liferay.portal.kernel.service.ExceptionRetryAcceptor;
+import com.liferay.portal.kernel.service.SQLStateAcceptor;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.settings.PortletInstanceSettingsLocator;
@@ -45,7 +46,6 @@ import com.liferay.portal.kernel.spring.aop.Retry;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.service.base.PortletPreferencesLocalServiceBaseImpl;
@@ -111,22 +111,23 @@ public class PortletPreferencesLocalServiceImpl
 		}
 
 		try {
-			portletPreferencesPersistence.update(portletPreferences);
+			portletPreferences = portletPreferencesPersistence.update(
+				portletPreferences);
 		}
-		catch (SystemException se) {
+		catch (SystemException systemException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
-						"Add failed, fetch {ownerId=", String.valueOf(ownerId),
-						", ownerType=", String.valueOf(ownerType), ", plid=",
-						String.valueOf(plid), ", portletId=", portletId, "}"));
+						"Add failed, fetch {ownerId=", ownerId, ", ownerType=",
+						ownerType, ", plid=", plid, ", portletId=", portletId,
+						"}"));
 			}
 
 			portletPreferences = portletPreferencesPersistence.fetchByO_O_P_P(
 				ownerId, ownerType, plid, portletId, false);
 
 			if (portletPreferences == null) {
-				throw se;
+				throw systemException;
 			}
 		}
 
@@ -148,9 +149,8 @@ public class PortletPreferencesLocalServiceImpl
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
-					"Delete {ownerId=", String.valueOf(ownerId), ", ownerType=",
-					String.valueOf(ownerType), ", plid=", String.valueOf(plid),
-					", portletId=", portletId, "}"));
+					"Delete {ownerId=", ownerId, ", ownerType=", ownerType,
+					", plid=", plid, ", portletId=", portletId, "}"));
 		}
 
 		portletPreferencesPersistence.removeByO_O_P_P(
@@ -188,6 +188,8 @@ public class PortletPreferencesLocalServiceImpl
 	public javax.portlet.PortletPreferences fetchPreferences(
 		long companyId, long ownerId, int ownerType, long plid,
 		String portletId) {
+
+		plid = _swapPlidForPortletPreferences(plid);
 
 		PortletPreferences portletPreferences =
 			portletPreferencesPersistence.fetchByO_O_P_P(
@@ -410,11 +412,11 @@ public class PortletPreferencesLocalServiceImpl
 
 	@Override
 	@Retry(
-		acceptor = ExceptionRetryAcceptor.class,
+		acceptor = SQLStateAcceptor.class,
 		properties = {
 			@Property(
-				name = ExceptionRetryAcceptor.EXCEPTION_NAME,
-				value = "org.springframework.dao.DataIntegrityViolationException"
+				name = SQLStateAcceptor.SQLSTATE,
+				value = SQLStateAcceptor.SQLSTATE_INTEGRITY_CONSTRAINT_VIOLATION
 			)
 		}
 	)
@@ -428,11 +430,11 @@ public class PortletPreferencesLocalServiceImpl
 
 	@Override
 	@Retry(
-		acceptor = ExceptionRetryAcceptor.class,
+		acceptor = SQLStateAcceptor.class,
 		properties = {
 			@Property(
-				name = ExceptionRetryAcceptor.EXCEPTION_NAME,
-				value = "org.springframework.dao.DataIntegrityViolationException"
+				name = SQLStateAcceptor.SQLSTATE,
+				value = SQLStateAcceptor.SQLSTATE_INTEGRITY_CONSTRAINT_VIOLATION
 			)
 		}
 	)
@@ -463,11 +465,11 @@ public class PortletPreferencesLocalServiceImpl
 
 	@Override
 	@Retry(
-		acceptor = ExceptionRetryAcceptor.class,
+		acceptor = SQLStateAcceptor.class,
 		properties = {
 			@Property(
-				name = ExceptionRetryAcceptor.EXCEPTION_NAME,
-				value = "org.springframework.dao.DataIntegrityViolationException"
+				name = SQLStateAcceptor.SQLSTATE,
+				value = SQLStateAcceptor.SQLSTATE_INTEGRITY_CONSTRAINT_VIOLATION
 			)
 		}
 	)
@@ -617,9 +619,9 @@ public class PortletPreferencesLocalServiceImpl
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
-					"Update {ownerId=", String.valueOf(ownerId), ", ownerType=",
-					String.valueOf(ownerType), ", plid=", String.valueOf(plid),
-					", portletId=", portletId, ", xml=", xml, "}"));
+					"Update {ownerId=", ownerId, ", ownerType=", ownerType,
+					", plid=", plid, ", portletId=", portletId, ", xml=", xml,
+					"}"));
 		}
 
 		PortletPreferences portletPreferences =
@@ -640,9 +642,7 @@ public class PortletPreferencesLocalServiceImpl
 
 		portletPreferences.setPreferences(xml);
 
-		portletPreferencesPersistence.update(portletPreferences);
-
-		return portletPreferences;
+		return portletPreferencesPersistence.update(portletPreferences);
 	}
 
 	private boolean _exists(long plid, long companyId, String portletId) {
@@ -757,8 +757,8 @@ public class PortletPreferencesLocalServiceImpl
 				user, layoutRevision.getLayoutSetBranchId(),
 				layoutRevision.getPlid());
 		}
-		catch (PortalException pe) {
-			return ReflectionUtil.throwException(pe);
+		catch (PortalException portalException) {
+			return ReflectionUtil.throwException(portalException);
 		}
 	}
 
@@ -808,8 +808,8 @@ public class PortletPreferencesLocalServiceImpl
 				layoutRevision.getColorSchemeId(), layoutRevision.getCss(),
 				serviceContext);
 		}
-		catch (PortalException pe) {
-			ReflectionUtil.throwException(pe);
+		catch (PortalException portalException) {
+			ReflectionUtil.throwException(portalException);
 		}
 
 		plid = layoutRevision.getLayoutRevisionId();

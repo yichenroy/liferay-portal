@@ -14,15 +14,12 @@
 
 package com.liferay.portal.kernel.json;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Collection;
 import java.util.List;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class JSONFactoryUtil {
 
 	public static String convertJSONMLArrayToXML(String jsonml) {
@@ -82,8 +79,8 @@ public class JSONFactoryUtil {
 		return getJSONFactory().createJSONSerializer();
 	}
 
-	public static Object deserialize(JSONObject jsonObj) {
-		return getJSONFactory().deserialize(jsonObj);
+	public static Object deserialize(JSONObject jsonObject) {
+		return getJSONFactory().deserialize(jsonObject);
 	}
 
 	public static Object deserialize(String json) {

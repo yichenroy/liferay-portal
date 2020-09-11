@@ -14,11 +14,11 @@
 
 package com.liferay.portal.dao.sql.transformer;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.internal.dao.sql.transformer.SQLFunctionTransformer;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.function.Function;
@@ -66,6 +66,7 @@ public class OracleSQLTransformerLogic extends BaseSQLTransformerLogic {
 		return matcher.replaceAll("CAST($1 AS VARCHAR(4000))");
 	}
 
+	@Override
 	protected String replaceDropTableIfExistsText(Matcher matcher) {
 		StringBundler sb = new StringBundler(9);
 

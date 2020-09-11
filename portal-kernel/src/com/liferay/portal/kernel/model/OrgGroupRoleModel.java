@@ -14,9 +14,9 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.persistence.OrgGroupRolePK;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the OrgGroupRole service. Represents a row in the &quot;OrgGroupRole&quot; database table, with each column mapped to a property of this class.
@@ -27,8 +27,10 @@ import com.liferay.portal.kernel.service.persistence.OrgGroupRolePK;
  *
  * @author Brian Wing Shun Chan
  * @see OrgGroupRole
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
+@Deprecated
 @ProviderType
 public interface OrgGroupRoleModel
 	extends BaseModel<OrgGroupRole>, MVCCModel, ShardedModel {

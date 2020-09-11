@@ -14,10 +14,11 @@
 
 package com.liferay.oauth2.provider.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Stian Sigvartsen
@@ -81,5 +82,22 @@ public interface OAuth2ProviderConfiguration {
 		name = "oauth2-recycle-refresh-token", required = false
 	)
 	public boolean recycleRefreshToken();
+
+	@Meta.AD(
+		deflt = "86400",
+		description = "oauth2-expired-authorizations-afterlife-duration-description",
+		id = "oauth2.expired.authorizations.afterlife.duration",
+		name = "oauth2-expired-authorizations-afterlife-duration",
+		required = false
+	)
+	public int expiredAuthorizationsAfterlifeDuration();
+
+	@Meta.AD(
+		deflt = "60",
+		description = "oauth2-expired-authorizations-check-interval-description",
+		id = "oauth2.expired.authorizations.check.interval",
+		name = "oauth2-expired-authorizations-check-interval", required = false
+	)
+	public int expiredAuthorizationsCheckInterval();
 
 }

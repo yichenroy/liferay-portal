@@ -300,11 +300,8 @@ public abstract class BasePropMethodImpl implements Method {
 			if (customProps.contains(qName)) {
 				Namespace namespace = qName.getNamespace();
 
-				String name = qName.getName();
-				String prefix = namespace.getPrefix();
-				String uri = namespace.getURI();
-
-				String text = webDAVProps.getText(name, prefix, uri);
+				String text = webDAVProps.getText(
+					qName.getName(), namespace.getPrefix(), namespace.getURI());
 
 				DocUtil.add(successPropElement, qName, text);
 
@@ -389,20 +386,20 @@ public abstract class BasePropMethodImpl implements Method {
 
 			int status = WebDAVUtil.SC_MULTI_STATUS;
 
-			HttpServletResponse response =
+			HttpServletResponse httpServletResponse =
 				webDAVRequest.getHttpServletResponse();
 
-			response.setContentType(ContentTypes.TEXT_XML_UTF8);
-			response.setStatus(status);
+			httpServletResponse.setContentType(ContentTypes.TEXT_XML_UTF8);
+			httpServletResponse.setStatus(status);
 
 			try {
-				ServletResponseUtil.write(response, xml);
+				ServletResponseUtil.write(httpServletResponse, xml);
 
-				response.flushBuffer();
+				httpServletResponse.flushBuffer();
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(e, e);
+					_log.warn(exception, exception);
 				}
 			}
 

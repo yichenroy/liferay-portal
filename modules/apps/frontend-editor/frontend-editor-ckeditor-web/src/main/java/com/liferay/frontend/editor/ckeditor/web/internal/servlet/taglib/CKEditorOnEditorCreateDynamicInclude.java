@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.util.StreamUtil;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.net.URL;
 
@@ -37,8 +38,8 @@ public class CKEditorOnEditorCreateDynamicInclude implements DynamicInclude {
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
 		Bundle bundle = _bundleContext.getBundle();
@@ -47,13 +48,21 @@ public class CKEditorOnEditorCreateDynamicInclude implements DynamicInclude {
 			"/META-INF/resources/ckeditor/extension/anchor_dialog_show.js");
 
 		StreamUtil.transfer(
-			entryURL.openStream(), response.getOutputStream(), false);
+			entryURL.openStream(), httpServletResponse.getOutputStream(),
+			false);
+
+		PrintWriter printWriter = httpServletResponse.getWriter();
+
+		printWriter.println();
 
 		entryURL = bundle.getEntry(
 			"/META-INF/resources/ckeditor/extension/dialog_definition.js");
 
 		StreamUtil.transfer(
-			entryURL.openStream(), response.getOutputStream(), false);
+			entryURL.openStream(), httpServletResponse.getOutputStream(),
+			false);
+
+		printWriter.println();
 	}
 
 	@Override

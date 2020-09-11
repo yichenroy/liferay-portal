@@ -16,27 +16,18 @@ package com.liferay.document.library.web.internal.display.context;
 
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.web.internal.display.context.util.DLRequestHelper;
-import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.PortletProvider;
-import com.liferay.portal.kernel.portlet.PortletProviderUtil;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
-import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
-import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.webdav.WebDAVUtil;
 
 import java.util.List;
 
-import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -55,52 +46,43 @@ public class DLAdminNavigationDisplayContext {
 
 		_currentURLObj = PortletURLUtil.getCurrent(
 			liferayPortletRequest, liferayPortletResponse);
-		_request = liferayPortletRequest.getHttpServletRequest();
 
-		_dlRequestHelper = new DLRequestHelper(_request);
+		_httpServletRequest = liferayPortletRequest.getHttpServletRequest();
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_dlRequestHelper = new DLRequestHelper(_httpServletRequest);
+
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<NavigationItem> getNavigationItems() {
-		String navigation = ParamUtil.getString(_request, "navigation");
+		String navigation = ParamUtil.getString(
+			_httpServletRequest, "navigation");
 
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						_populateDocumentLibraryNavigationItem(
-							navigationItem, navigation);
-					});
-
-				if (DLPortletKeys.DOCUMENT_LIBRARY_ADMIN.equals(
-						_dlRequestHelper.getPortletName())) {
-
-					add(
-						navigationItem -> {
-							_populateFileEntryTypesNavigationItem(
-								navigationItem, navigation);
-						});
-
-					add(
-						DLAdminNavigationDisplayContext.this::
-							_populateMetadataSetsNavigationItem);
-				}
-			}
-		};
-	}
-
-	private Portlet _getPortlet(ThemeDisplay themeDisplay) {
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
-		return PortletLocalServiceUtil.getPortletById(portletDisplay.getId());
+		return NavigationItemListBuilder.add(
+			navigationItem -> _populateDocumentLibraryNavigationItem(
+				navigationItem, navigation)
+		).add(
+			() -> DLPortletKeys.DOCUMENT_LIBRARY_ADMIN.equals(
+				_dlRequestHelper.getPortletName()),
+			navigationItem -> _populateFileEntryTypesNavigationItem(
+				navigationItem, navigation)
+		).add(
+			() -> DLPortletKeys.DOCUMENT_LIBRARY_ADMIN.equals(
+				_dlRequestHelper.getPortletName()),
+			navigationItem -> _populateMetadataSetsNavigationItem(
+				navigationItem, navigation)
+		).build();
 	}
 
 	private void _populateDocumentLibraryNavigationItem(
 		NavigationItem navigationItem, String navigation) {
 
-		navigationItem.setActive(!navigation.equals("file_entry_types"));
+		if (!navigation.equals("file_entry_types") &&
+			!navigation.equals("file_entry_metadata_sets")) {
+
+			navigationItem.setActive(true);
+		}
 
 		PortletURL viewDocumentLibraryURL =
 			_liferayPortletResponse.createRenderURL();
@@ -139,33 +121,21 @@ public class DLAdminNavigationDisplayContext {
 	}
 
 	private void _populateMetadataSetsNavigationItem(
-		NavigationItem navigationItem) {
+		NavigationItem navigationItem, String navigation) {
 
-		navigationItem.setActive(false);
+		if (navigation.equals("file_entry_metadata_sets")) {
+			navigationItem.setActive(true);
+		}
 
-		Portlet portlet = _getPortlet(_themeDisplay);
+		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
 
-		PortletURL viewMetadataSetsURL = PortletURLFactoryUtil.create(
-			_liferayPortletRequest,
-			PortletProviderUtil.getPortletId(
-				DDMStructure.class.getName(), PortletProvider.Action.VIEW),
-			PortletRequest.RENDER_PHASE);
-
-		viewMetadataSetsURL.setParameter("mvcPath", "/view.jsp");
-		viewMetadataSetsURL.setParameter(
-			"backURL", _themeDisplay.getURLCurrent());
-		viewMetadataSetsURL.setParameter(
+		portletURL.setParameter("navigation", "file_entry_metadata_sets");
+		portletURL.setParameter("redirect", _currentURLObj.toString());
+		portletURL.setParameter("backURL", _themeDisplay.getURLCurrent());
+		portletURL.setParameter(
 			"groupId", String.valueOf(_themeDisplay.getScopeGroupId()));
-		viewMetadataSetsURL.setParameter(
-			"refererPortletName", DLPortletKeys.DOCUMENT_LIBRARY);
-		viewMetadataSetsURL.setParameter(
-			"refererWebDAVToken", WebDAVUtil.getStorageToken(portlet));
-		viewMetadataSetsURL.setParameter(
-			"showAncestorScopes", Boolean.TRUE.toString());
-		viewMetadataSetsURL.setParameter(
-			"showManageTemplates", Boolean.FALSE.toString());
 
-		navigationItem.setHref(viewMetadataSetsURL.toString());
+		navigationItem.setHref(portletURL.toString());
 
 		navigationItem.setLabel(
 			LanguageUtil.get(
@@ -175,9 +145,9 @@ public class DLAdminNavigationDisplayContext {
 
 	private final PortletURL _currentURLObj;
 	private final DLRequestHelper _dlRequestHelper;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
-	private final HttpServletRequest _request;
 	private final ThemeDisplay _themeDisplay;
 
 }

@@ -19,9 +19,10 @@ import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryService;
 import com.liferay.fragment.web.internal.handler.FragmentEntryExceptionRequestHandler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -72,11 +73,20 @@ public class AddFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 			FragmentEntry fragmentEntry =
 				_fragmentEntryService.addFragmentEntry(
 					serviceContext.getScopeGroupId(), fragmentCollectionId,
-					name, type, WorkflowConstants.STATUS_DRAFT, serviceContext);
+					null, name, 0, type, WorkflowConstants.STATUS_DRAFT,
+					serviceContext);
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+			fragmentEntry.setCss(
+				StringBundler.concat(
+					".fragment_", fragmentEntry.getFragmentEntryId(), " {\n}"));
+			fragmentEntry.setHtml(
+				StringBundler.concat(
+					"<div class=\"fragment_",
+					fragmentEntry.getFragmentEntryId(), "\">\n</div>"));
 
-			jsonObject.put(
+			fragmentEntry = _fragmentEntryService.updateDraft(fragmentEntry);
+
+			JSONObject jsonObject = JSONUtil.put(
 				"redirectURL", getRedirectURL(actionResponse, fragmentEntry));
 
 			if (SessionErrors.contains(actionRequest, "fragmentNameInvalid")) {
@@ -86,13 +96,13 @@ public class AddFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			SessionErrors.add(actionRequest, "fragmentNameInvalid");
 
 			hideDefaultErrorMessage(actionRequest);
 
 			_fragmentEntryExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, pe);
+				actionRequest, actionResponse, portalException);
 		}
 	}
 

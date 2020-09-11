@@ -14,12 +14,12 @@
 
 package com.liferay.portal.kernel.upgrade.v6_2_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.PreparedStatement;
@@ -37,7 +37,7 @@ public abstract class BaseUpgradePortletPreferences
 			String[]... joinTables)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(9 * joinTables.length + 5);
+		StringBundler sb = new StringBundler((9 * joinTables.length) + 5);
 
 		sb.append("delete from PortletPreferences where ownerType = ");
 		sb.append(String.valueOf(ownerType));

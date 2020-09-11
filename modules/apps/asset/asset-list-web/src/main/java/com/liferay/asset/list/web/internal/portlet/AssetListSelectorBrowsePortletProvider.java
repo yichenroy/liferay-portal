@@ -42,12 +42,13 @@ public class AssetListSelectorBrowsePortletProvider
 	}
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request)
+	public PortletURL getPortletURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		PortletURL portletURL = super.getPortletURL(request);
+		PortletURL portletURL = super.getPortletURL(httpServletRequest);
 
-		portletURL.setParameter("mvcPath", "/select_asset_list.jsp");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/asset_list/view_list_items");
 
 		return portletURL;
 	}

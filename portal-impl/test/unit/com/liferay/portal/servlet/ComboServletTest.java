@@ -216,6 +216,14 @@ public class ComboServletTest extends PowerMockito {
 	}
 
 	@Test
+	public void testInvalidResourcePath() throws Exception {
+		Assert.assertNull(
+			_comboServlet.getResourceRequestDispatcher(
+				_mockHttpServletRequest, _mockHttpServletResponse,
+				_TEST_PORTLET_ID + ":js/javascript.js"));
+	}
+
+	@Test
 	public void testMixedExtensionsRequest() throws Exception {
 		FileUtil fileUtil = new FileUtil();
 
@@ -272,18 +280,13 @@ public class ComboServletTest extends PowerMockito {
 	}
 
 	protected ServletConfig getServletConfig() {
-		ServletConfig servletConfig = new MockServletConfig(
-			_portalServletContext);
-
-		return servletConfig;
+		return new MockServletConfig(_portalServletContext);
 	}
 
 	protected void setUpComboServlet() throws ServletException {
 		_comboServlet = new ComboServlet();
 
-		ServletConfig servletConfig = getServletConfig();
-
-		_comboServlet.init(servletConfig);
+		_comboServlet.init(getServletConfig());
 	}
 
 	protected void setUpPluginServletContext() {

@@ -31,15 +31,15 @@ public class AssetDisplayPagesItemSelectorViewManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public AssetDisplayPagesItemSelectorViewManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request,
 			AssetDisplayPagesItemSelectorViewDisplayContext
 				assetDisplayPagesItemSelectorViewDisplayContext)
 		throws PortletException {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			assetDisplayPagesItemSelectorViewDisplayContext.
 				getAssetDisplayPageSearchContainer());
 	}

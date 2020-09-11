@@ -38,6 +38,8 @@ import org.osgi.service.component.annotations.Component;
 		"init.param.auth.verifier.OAuth2JSONWSAuthVerifier.urls.includes=/*",
 		"servlet-context-name=",
 		"servlet-filter-name=OAuth2 Web Server Servlet Auth Verifier Filter",
+		"url-pattern=/c/portal/fragment/*",
+		"url-pattern=/c/portal/layout_page_template/*",
 		"url-pattern=/documents/*", "url-pattern=/image/*"
 	},
 	service = Filter.class
@@ -47,9 +49,11 @@ public class OAuth2WebServerServletAuthVerifierFilter
 
 	@Override
 	public boolean isFilterEnabled(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+		String authorization = httpServletRequest.getHeader(
+			HttpHeaders.AUTHORIZATION);
 
 		if (Validator.isBlank(authorization)) {
 			return false;
@@ -59,13 +63,13 @@ public class OAuth2WebServerServletAuthVerifierFilter
 			return false;
 		}
 
-		return super.isFilterEnabled(request, response);
+		return super.isFilterEnabled(httpServletRequest, httpServletResponse);
 	}
 
 	@Override
 	protected void processFilter(
-			String logName, HttpServletRequest request,
-			HttpServletResponse response, FilterChain filterChain)
+			String logName, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
 		boolean remoteAccess = AccessControlThreadLocal.isRemoteAccess();
@@ -73,7 +77,8 @@ public class OAuth2WebServerServletAuthVerifierFilter
 		AccessControlThreadLocal.setRemoteAccess(true);
 
 		try {
-			super.processFilter(logName, request, response, filterChain);
+			super.processFilter(
+				logName, httpServletRequest, httpServletResponse, filterChain);
 		}
 		finally {
 			AccessControlThreadLocal.setRemoteAccess(remoteAccess);

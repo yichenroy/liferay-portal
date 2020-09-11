@@ -14,12 +14,15 @@
 
 package com.liferay.portal.internal.servlet;
 
+import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.EventsProcessorUtil;
 import com.liferay.portal.events.StartupAction;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
+import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.deploy.hot.HotDeployUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -35,7 +38,6 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.PortletFilter;
 import com.liferay.portal.kernel.model.PortletURLListener;
-import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.patcher.PatchInconsistencyException;
@@ -52,12 +54,12 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutTemplateLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
-import com.liferay.portal.kernel.service.ThemeLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.InactiveRequestHandler;
 import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
 import com.liferay.portal.kernel.template.TemplateManager;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -66,7 +68,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -111,7 +112,6 @@ import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -121,7 +121,6 @@ import java.util.TimeZone;
 
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletContext;
-import javax.portlet.PortletException;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
@@ -147,6 +146,8 @@ public class MainServlet extends HttpServlet {
 			_log.debug("Destroy plugins");
 		}
 
+		DependencyManagerSyncUtil.sync();
+
 		_portalInitializedModuleServiceLifecycleServiceRegistration.
 			unregister();
 		_portalPortletsInitializedModuleServiceLifecycleServiceRegistration.
@@ -165,8 +166,8 @@ public class MainServlet extends HttpServlet {
 		try {
 			_destroyPortlets(portlets);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -176,8 +177,8 @@ public class MainServlet extends HttpServlet {
 		try {
 			_destroyCompanies();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -189,23 +190,29 @@ public class MainServlet extends HttpServlet {
 				PropsKeys.GLOBAL_SHUTDOWN_EVENTS,
 				PropsValues.GLOBAL_SHUTDOWN_EVENTS);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
 	@Override
-	public void doGet(HttpServletRequest request, HttpServletResponse response)
+	public void doGet(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		_portalRequestProcessor.process(request, response);
+		_portalRequestProcessor.process(
+			httpServletRequest, httpServletResponse);
 	}
 
 	@Override
-	public void doPost(HttpServletRequest request, HttpServletResponse response)
+	public void doPost(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		_portalRequestProcessor.process(request, response);
+		_portalRequestProcessor.process(
+			httpServletRequest, httpServletResponse);
 	}
 
 	@Override
@@ -228,7 +235,7 @@ public class MainServlet extends HttpServlet {
 		try {
 			PatcherUtil.verifyPatchLevels();
 		}
-		catch (PatchInconsistencyException pie) {
+		catch (PatchInconsistencyException patchInconsistencyException) {
 			if (!PropsValues.VERIFY_PATCH_LEVELS_DISABLED) {
 				_log.error(
 					"Stopping the server due to the inconsistent patch levels");
@@ -238,7 +245,7 @@ public class MainServlet extends HttpServlet {
 						"Set the property \"verify.patch.levels.disabled\" " +
 							"to override stopping the server due to the " +
 								"inconsistent patch levels",
-						pie);
+						patchInconsistencyException);
 				}
 
 				System.exit(0);
@@ -288,8 +295,8 @@ public class MainServlet extends HttpServlet {
 
 			startupAction.run(null);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
 			System.out.println(
 				"Stopping the server due to unexpected startup errors");
@@ -307,8 +314,8 @@ public class MainServlet extends HttpServlet {
 			pluginPackage = PluginPackageUtil.readPluginPackageServletContext(
 				servletContext);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -320,15 +327,15 @@ public class MainServlet extends HttpServlet {
 		try {
 			portlets.addAll(_initPortlets(pluginPackage));
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		try {
 			_initLayoutTemplates(pluginPackage);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -337,41 +344,23 @@ public class MainServlet extends HttpServlet {
 
 		try {
 			String[] xmls = {
-				HttpUtil.URLtoString(
-					servletContext.getResource("/WEB-INF/liferay-social.xml")),
-				HttpUtil.URLtoString(
-					servletContext.getResource(
+				StreamUtil.toString(
+					servletContext.getResourceAsStream(
+						"/WEB-INF/liferay-social.xml")),
+				StreamUtil.toString(
+					servletContext.getResourceAsStream(
 						"/WEB-INF/liferay-social-ext.xml"))
 			};
 
 			SocialConfigurationUtil.read(
 				PortalClassLoaderUtil.getClassLoader(), xmls);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Initialize themes");
-		}
-
-		try {
-			String[] xmls = {
-				HttpUtil.URLtoString(
-					servletContext.getResource(
-						"/WEB-INF/liferay-look-and-feel.xml")),
-				HttpUtil.URLtoString(
-					servletContext.getResource(
-						"/WEB-INF/liferay-look-and-feel-ext.xml"))
-			};
-
-			List<Theme> themes = ThemeLocalServiceUtil.init(
-				servletContext, null, true, xmls, pluginPackage);
-
-			servletContext.setAttribute(WebKeys.PLUGIN_THEMES, themes);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -379,13 +368,13 @@ public class MainServlet extends HttpServlet {
 		}
 
 		try {
-			String xml = HttpUtil.URLtoString(
-				servletContext.getResource("/WEB-INF/web.xml"));
+			String xml = StreamUtil.toString(
+				servletContext.getResourceAsStream("/WEB-INF/web.xml"));
 
 			_checkWebSettings(xml);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -395,8 +384,8 @@ public class MainServlet extends HttpServlet {
 		try {
 			ExtRegistry.registerPortal(servletContext);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -408,8 +397,8 @@ public class MainServlet extends HttpServlet {
 				PropsKeys.GLOBAL_STARTUP_EVENTS,
 				PropsValues.GLOBAL_STARTUP_EVENTS);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -419,15 +408,15 @@ public class MainServlet extends HttpServlet {
 		try {
 			_initResourceActions(portlets);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		try {
 			_initCompanies();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (StartupHelperUtil.isDBNew() &&
@@ -437,8 +426,8 @@ public class MainServlet extends HttpServlet {
 				SetupWizardSampleDataUtil.addSampleData(
 					PortalInstances.getDefaultCompanyId());
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -451,8 +440,8 @@ public class MainServlet extends HttpServlet {
 
 			PortalLifecycleUtil.flushInits();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		servletContext.setAttribute(WebKeys.STARTUP_FINISHED, Boolean.TRUE);
@@ -466,14 +455,15 @@ public class MainServlet extends HttpServlet {
 
 	@Override
 	public void service(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Process service request");
 		}
 
-		if (_processShutdownRequest(request, response)) {
+		if (_processShutdownRequest(httpServletRequest, httpServletResponse)) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("Processed shutdown request");
 			}
@@ -481,7 +471,9 @@ public class MainServlet extends HttpServlet {
 			return;
 		}
 
-		if (_processMaintenanceRequest(request, response)) {
+		if (_processMaintenanceRequest(
+				httpServletRequest, httpServletResponse)) {
+
 			if (_log.isDebugEnabled()) {
 				_log.debug("Processed maintenance request");
 			}
@@ -493,9 +485,11 @@ public class MainServlet extends HttpServlet {
 			_log.debug("Get company id");
 		}
 
-		long companyId = PortalInstances.getCompanyId(request);
+		long companyId = PortalInstances.getCompanyId(httpServletRequest);
 
-		if (_processCompanyInactiveRequest(request, response, companyId)) {
+		if (_processCompanyInactiveRequest(
+				httpServletRequest, httpServletResponse, companyId)) {
+
 			if (_log.isDebugEnabled()) {
 				_log.debug("Processed company inactive request");
 			}
@@ -504,7 +498,9 @@ public class MainServlet extends HttpServlet {
 		}
 
 		try {
-			if (_processGroupInactiveRequest(request, response)) {
+			if (_processGroupInactiveRequest(
+					httpServletRequest, httpServletResponse)) {
+
 				if (_log.isDebugEnabled()) {
 					_log.debug("Processed site inactive request");
 				}
@@ -512,14 +508,14 @@ public class MainServlet extends HttpServlet {
 				return;
 			}
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchLayoutException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchLayoutException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
+					_log.debug(exception, exception);
 				}
 			}
 			else {
-				_log.error(e, e);
+				_log.error(exception, exception);
 			}
 		}
 
@@ -527,15 +523,13 @@ public class MainServlet extends HttpServlet {
 			_log.debug("Set portal port");
 		}
 
-		PortalUtil.setPortalInetSocketAddresses(request);
+		PortalUtil.setPortalInetSocketAddresses(httpServletRequest);
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Check variables");
 		}
 
-		ServletContext servletContext = getServletContext();
-
-		request.setAttribute(WebKeys.CTX, servletContext);
+		httpServletRequest.setAttribute(WebKeys.CTX, getServletContext());
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Handle non-serializable request");
@@ -545,41 +539,45 @@ public class MainServlet extends HttpServlet {
 			_log.debug("Encrypt request");
 		}
 
-		request = _encryptRequest(request, companyId);
+		httpServletRequest = _encryptRequest(httpServletRequest, companyId);
 
-		long userId = PortalUtil.getUserId(request);
+		long userId = PortalUtil.getUserId(httpServletRequest);
 
-		String remoteUser = _getRemoteUser(request, userId);
+		String remoteUser = _getRemoteUser(httpServletRequest, userId);
 
 		try {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					StringBundler.concat(
-						"Authenticate user id ", String.valueOf(userId),
-						" and remote user ", remoteUser));
+						"Authenticate user id ", userId, " and remote user ",
+						remoteUser));
 			}
 
-			userId = _loginUser(request, response, userId, remoteUser);
+			userId = _loginUser(
+				httpServletRequest, httpServletResponse, userId, remoteUser);
 
 			if (_log.isDebugEnabled()) {
 				_log.debug("Authenticated user id " + userId);
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Set session thread local");
 		}
 
-		PortalSessionThreadLocal.setHttpSession(request.getSession());
+		PortalSessionThreadLocal.setHttpSession(
+			httpServletRequest.getSession());
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Process service pre events");
 		}
 
-		if (_processServicePre(request, response, userId)) {
+		if (_processServicePre(
+				httpServletRequest, httpServletResponse, userId)) {
+
 			if (_log.isDebugEnabled()) {
 				_log.debug("Processing service pre events has errors");
 			}
@@ -587,11 +585,13 @@ public class MainServlet extends HttpServlet {
 			return;
 		}
 
-		if (request.getAttribute(AbsoluteRedirectsResponse.class.getName()) !=
-				null) {
+		Object classNameAttribute = httpServletRequest.getAttribute(
+			AbsoluteRedirectsResponse.class.getName());
 
+		if (classNameAttribute != null) {
 			if (_log.isDebugEnabled()) {
-				String currentURL = PortalUtil.getCurrentURL(request);
+				String currentURL = PortalUtil.getCurrentURL(
+					httpServletRequest);
 
 				_log.debug(
 					"Current URL " + currentURL + " has absolute redirect");
@@ -600,9 +600,10 @@ public class MainServlet extends HttpServlet {
 			return;
 		}
 
-		if (request.getAttribute(WebKeys.THEME_DISPLAY) == null) {
+		if (httpServletRequest.getAttribute(WebKeys.THEME_DISPLAY) == null) {
 			if (_log.isDebugEnabled()) {
-				String currentURL = PortalUtil.getCurrentURL(request);
+				String currentURL = PortalUtil.getCurrentURL(
+					httpServletRequest);
 
 				_log.debug(
 					"Current URL " + currentURL +
@@ -617,7 +618,7 @@ public class MainServlet extends HttpServlet {
 				_log.debug("Call parent service");
 			}
 
-			super.service(request, response);
+			super.service(httpServletRequest, httpServletResponse);
 		}
 		finally {
 			if (_log.isDebugEnabled()) {
@@ -627,10 +628,11 @@ public class MainServlet extends HttpServlet {
 			try {
 				EventsProcessorUtil.process(
 					PropsKeys.SERVLET_SERVICE_EVENTS_POST,
-					PropsValues.SERVLET_SERVICE_EVENTS_POST, request, response);
+					PropsValues.SERVLET_SERVICE_EVENTS_POST, httpServletRequest,
+					httpServletResponse);
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 	}
@@ -679,8 +681,8 @@ public class MainServlet extends HttpServlet {
 				PropsValues.APPLICATION_SHUTDOWN_EVENTS,
 				new String[] {String.valueOf(companyId)});
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -698,30 +700,34 @@ public class MainServlet extends HttpServlet {
 	}
 
 	private HttpServletRequest _encryptRequest(
-		HttpServletRequest request, long companyId) {
+		HttpServletRequest httpServletRequest, long companyId) {
 
-		boolean encryptRequest = ParamUtil.getBoolean(request, WebKeys.ENCRYPT);
+		boolean encryptRequest = ParamUtil.getBoolean(
+			httpServletRequest, WebKeys.ENCRYPT);
 
 		if (!encryptRequest) {
-			return request;
+			return httpServletRequest;
 		}
 
 		try {
 			Company company = CompanyLocalServiceUtil.getCompanyById(companyId);
 
-			request = new EncryptedServletRequest(request, company.getKeyObj());
+			httpServletRequest = new EncryptedServletRequest(
+				httpServletRequest, company.getKeyObj());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
-		return request;
+		return httpServletRequest;
 	}
 
-	private String _getRemoteUser(HttpServletRequest request, long userId) {
-		String remoteUser = request.getRemoteUser();
+	private String _getRemoteUser(
+		HttpServletRequest httpServletRequest, long userId) {
+
+		String remoteUser = httpServletRequest.getRemoteUser();
 
 		if (!PropsValues.PORTAL_JAAS_ENABLE) {
-			HttpSession session = request.getSession();
+			HttpSession session = httpServletRequest.getSession();
 
 			String jRemoteUser = (String)session.getAttribute("j_remoteuser");
 
@@ -745,14 +751,20 @@ public class MainServlet extends HttpServlet {
 
 			return _initModuleConfig();
 		}
-		catch (Exception e) {
-			throw new ServletException(e);
+		catch (Exception exception) {
+			throw new ServletException(exception);
 		}
 	}
 
 	private void _initCompanies() throws Exception {
 		if (_log.isDebugEnabled()) {
 			_log.debug("Initialize companies");
+		}
+
+		if (StartupHelperUtil.isDBNew()) {
+			CompanyLocalServiceUtil.addCompany(
+				null, PropsValues.COMPANY_DEFAULT_WEB_ID, "localhost",
+				PropsValues.COMPANY_DEFAULT_WEB_ID, false, 0, true);
 		}
 
 		ServletContext servletContext = getServletContext();
@@ -787,11 +799,11 @@ public class MainServlet extends HttpServlet {
 						ServletContext servletContext = getServletContext();
 
 						String[] xmls = {
-							HttpUtil.URLtoString(
-								servletContext.getResource(
+							StreamUtil.toString(
+								servletContext.getResourceAsStream(
 									"/WEB-INF/liferay-layout-templates.xml")),
-							HttpUtil.URLtoString(
-								servletContext.getResource(
+							StreamUtil.toString(
+								servletContext.getResourceAsStream(
 									"/WEB-INF" +
 										"/liferay-layout-templates-ext.xml"))
 						};
@@ -803,8 +815,8 @@ public class MainServlet extends HttpServlet {
 						servletContext.setAttribute(
 							WebKeys.PLUGIN_LAYOUT_TEMPLATES, layoutTemplates);
 					}
-					catch (Exception e) {
-						_log.error(e, e);
+					catch (Exception exception) {
+						_log.error(exception, exception);
 					}
 				}
 
@@ -829,9 +841,7 @@ public class MainServlet extends HttpServlet {
 			sb.append(TemplateManager.class.getName());
 			sb.append("))");
 
-			Filter filter = registry.getFilter(sb.toString());
-
-			filters.add(filter);
+			filters.add(registry.getFilter(sb.toString()));
 		}
 
 		serviceDependencyManager.registerDependencies(
@@ -903,7 +913,7 @@ public class MainServlet extends HttpServlet {
 	}
 
 	private void _initPortletApp(Portlet portlet, ServletContext servletContext)
-		throws PortletException {
+		throws Exception {
 
 		PortletApp portletApp = portlet.getPortletApp();
 
@@ -934,8 +944,9 @@ public class MainServlet extends HttpServlet {
 		String[] xmls = new String[PropsValues.PORTLET_CONFIGS.length];
 
 		for (int i = 0; i < PropsValues.PORTLET_CONFIGS.length; i++) {
-			xmls[i] = HttpUtil.URLtoString(
-				servletContext.getResource(PropsValues.PORTLET_CONFIGS[i]));
+			xmls[i] = StreamUtil.toString(
+				servletContext.getResourceAsStream(
+					PropsValues.PORTLET_CONFIGS[i]));
 		}
 
 		PortletLocalServiceUtil.initEAR(servletContext, xmls, pluginPackage);
@@ -967,7 +978,8 @@ public class MainServlet extends HttpServlet {
 	private void _initResourceActions(List<Portlet> portlets) throws Exception {
 		for (Portlet portlet : portlets) {
 			List<String> portletActions =
-				ResourceActionsUtil.getPortletResourceActions(portlet);
+				ResourceActionsUtil.getPortletResourceActions(
+					portlet.getPortletId());
 
 			ResourceActionLocalServiceUtil.checkResourceActions(
 				portlet.getPortletId(), portletActions);
@@ -1006,8 +1018,9 @@ public class MainServlet extends HttpServlet {
 	}
 
 	private long _loginUser(
-			HttpServletRequest request, HttpServletResponse response,
-			long userId, String remoteUser)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, long userId,
+			String remoteUser)
 		throws PortalException {
 
 		if ((userId > 0) || (remoteUser == null)) {
@@ -1021,22 +1034,23 @@ public class MainServlet extends HttpServlet {
 		if (!user.isDefaultUser()) {
 			EventsProcessorUtil.process(
 				PropsKeys.LOGIN_EVENTS_PRE, PropsValues.LOGIN_EVENTS_PRE,
-				request, response);
+				httpServletRequest, httpServletResponse);
 
 			if (PropsValues.USERS_UPDATE_LAST_LOGIN ||
 				(user.getLastLoginDate() == null)) {
 
 				user = UserLocalServiceUtil.updateLastLogin(
-					userId, request.getRemoteAddr());
+					userId, httpServletRequest.getRemoteAddr());
 			}
 		}
 
-		if (request.getAttribute(WebKeys.USER) != null) {
-			request.setAttribute(WebKeys.USER, user);
-			request.setAttribute(WebKeys.USER_ID, Long.valueOf(userId));
+		if (httpServletRequest.getAttribute(WebKeys.USER) != null) {
+			httpServletRequest.setAttribute(WebKeys.USER, user);
+			httpServletRequest.setAttribute(
+				WebKeys.USER_ID, Long.valueOf(userId));
 		}
 
-		HttpSession session = request.getSession();
+		HttpSession session = httpServletRequest.getSession();
 
 		session.setAttribute(WebKeys.LOCALE, user.getLocale());
 		session.setAttribute(WebKeys.USER, user);
@@ -1047,15 +1061,15 @@ public class MainServlet extends HttpServlet {
 		if (!user.isDefaultUser()) {
 			EventsProcessorUtil.process(
 				PropsKeys.LOGIN_EVENTS_POST, PropsValues.LOGIN_EVENTS_POST,
-				request, response);
+				httpServletRequest, httpServletResponse);
 		}
 
 		return userId;
 	}
 
 	private boolean _processCompanyInactiveRequest(
-			HttpServletRequest request, HttpServletResponse response,
-			long companyId)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, long companyId)
 		throws IOException {
 
 		if (PortalInstances.isCompanyActive(companyId)) {
@@ -1063,17 +1077,18 @@ public class MainServlet extends HttpServlet {
 		}
 
 		_inactiveRequestHandler.processInactiveRequest(
-			request, response,
+			httpServletRequest, httpServletResponse,
 			"this-instance-is-inactive-please-contact-the-administrator");
 
 		return true;
 	}
 
 	private boolean _processGroupInactiveRequest(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, PortalException {
 
-		long plid = ParamUtil.getLong(request, "p_l_id");
+		long plid = ParamUtil.getLong(httpServletRequest, "p_l_id");
 
 		if (plid <= 0) {
 			return false;
@@ -1081,80 +1096,87 @@ public class MainServlet extends HttpServlet {
 
 		Layout layout = LayoutLocalServiceUtil.getLayout(plid);
 
-		Group group = layout.getGroup();
-
-		if (GroupLocalServiceUtil.isLiveGroupActive(group)) {
+		if (GroupLocalServiceUtil.isLiveGroupActive(layout.getGroup())) {
 			return false;
 		}
 
 		_inactiveRequestHandler.processInactiveRequest(
-			request, response,
+			httpServletRequest, httpServletResponse,
 			"this-site-is-inactive-please-contact-the-administrator");
 
 		return true;
 	}
 
 	private boolean _processMaintenanceRequest(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		if (!MaintenanceUtil.isMaintaining()) {
 			return false;
 		}
 
-		RequestDispatcher requestDispatcher = request.getRequestDispatcher(
-			"/html/portal/maintenance.jsp");
+		RequestDispatcher requestDispatcher =
+			httpServletRequest.getRequestDispatcher(
+				"/html/portal/maintenance.jsp");
 
-		requestDispatcher.include(request, response);
+		requestDispatcher.include(httpServletRequest, httpServletResponse);
 
 		return true;
 	}
 
 	private boolean _processServicePre(
-			HttpServletRequest request, HttpServletResponse response,
-			long userId)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, long userId)
 		throws IOException, ServletException {
 
 		try {
 			EventsProcessorUtil.process(
 				PropsKeys.SERVLET_SERVICE_EVENTS_PRE,
-				PropsValues.SERVLET_SERVICE_EVENTS_PRE, request, response);
+				PropsValues.SERVLET_SERVICE_EVENTS_PRE, httpServletRequest,
+				httpServletResponse);
 		}
-		catch (Exception e) {
-			Throwable cause = e.getCause();
+		catch (Exception exception) {
+			Throwable throwable = exception.getCause();
 
-			if (cause instanceof NoSuchLayoutException) {
+			if (throwable instanceof NoSuchLayoutException) {
 				PortalUtil.sendError(
-					HttpServletResponse.SC_NOT_FOUND, (Exception)cause, request,
-					response);
+					HttpServletResponse.SC_NOT_FOUND, (Exception)throwable,
+					httpServletRequest, httpServletResponse);
 
 				return true;
 			}
-			else if (cause instanceof PrincipalException) {
+			else if (throwable instanceof PrincipalException) {
 				_processServicePrePrincipalException(
-					cause, userId, request, response);
+					throwable, userId, httpServletRequest, httpServletResponse);
 
 				return true;
 			}
 
-			_log.error(e, e);
+			_log.error(exception, exception);
 
-			request.setAttribute(PageContext.EXCEPTION, e);
-
-			ServletContext servletContext = getServletContext();
+			httpServletRequest.setAttribute(PageContext.EXCEPTION, exception);
 
 			StrutsUtil.forward(
 				PropsValues.SERVLET_SERVICE_EVENTS_PRE_ERROR_PAGE,
-				servletContext, request, response);
+				getServletContext(), httpServletRequest, httpServletResponse);
 
-			if (e == request.getAttribute(PageContext.EXCEPTION)) {
-				request.removeAttribute(PageContext.EXCEPTION);
-				request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION);
-				request.removeAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
-				request.removeAttribute(RequestDispatcher.ERROR_MESSAGE);
-				request.removeAttribute(RequestDispatcher.ERROR_REQUEST_URI);
-				request.removeAttribute(RequestDispatcher.ERROR_SERVLET_NAME);
-				request.removeAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+			if (exception == httpServletRequest.getAttribute(
+					PageContext.EXCEPTION)) {
+
+				httpServletRequest.removeAttribute(PageContext.EXCEPTION);
+				httpServletRequest.removeAttribute(
+					RequestDispatcher.ERROR_EXCEPTION);
+				httpServletRequest.removeAttribute(
+					RequestDispatcher.ERROR_EXCEPTION_TYPE);
+				httpServletRequest.removeAttribute(
+					RequestDispatcher.ERROR_MESSAGE);
+				httpServletRequest.removeAttribute(
+					RequestDispatcher.ERROR_REQUEST_URI);
+				httpServletRequest.removeAttribute(
+					RequestDispatcher.ERROR_SERVLET_NAME);
+				httpServletRequest.removeAttribute(
+					RequestDispatcher.ERROR_STATUS_CODE);
 			}
 
 			return true;
@@ -1163,11 +1185,11 @@ public class MainServlet extends HttpServlet {
 		if (_HTTP_HEADER_VERSION_VERBOSITY_DEFAULT) {
 		}
 		else if (_HTTP_HEADER_VERSION_VERBOSITY_PARTIAL) {
-			response.addHeader(
+			httpServletResponse.addHeader(
 				_LIFERAY_PORTAL_REQUEST_HEADER, ReleaseInfo.getName());
 		}
 		else {
-			response.addHeader(
+			httpServletResponse.addHeader(
 				_LIFERAY_PORTAL_REQUEST_HEADER, ReleaseInfo.getReleaseInfo());
 		}
 
@@ -1175,16 +1197,17 @@ public class MainServlet extends HttpServlet {
 	}
 
 	private void _processServicePrePrincipalException(
-			Throwable t, long userId, HttpServletRequest request,
-			HttpServletResponse response)
+			Throwable throwable, long userId,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		if ((userId > 0) ||
-			(ParamUtil.getInteger(request, "p_p_lifecycle") == 2)) {
+			(ParamUtil.getInteger(httpServletRequest, "p_p_lifecycle") == 2)) {
 
 			PortalUtil.sendError(
-				HttpServletResponse.SC_UNAUTHORIZED, (Exception)t, request,
-				response);
+				HttpServletResponse.SC_UNAUTHORIZED, (Exception)throwable,
+				httpServletRequest, httpServletResponse);
 
 			return;
 		}
@@ -1193,11 +1216,10 @@ public class MainServlet extends HttpServlet {
 
 		String redirect = mainPath.concat("/portal/login");
 
-		String currentURL = PortalUtil.getCurrentURL(request);
+		redirect = HttpUtil.addParameter(
+			redirect, "redirect", PortalUtil.getCurrentURL(httpServletRequest));
 
-		redirect = HttpUtil.addParameter(redirect, "redirect", currentURL);
-
-		long plid = ParamUtil.getLong(request, "p_l_id");
+		long plid = ParamUtil.getLong(httpServletRequest, "p_l_id");
 
 		if (plid > 0) {
 			try {
@@ -1220,15 +1242,16 @@ public class MainServlet extends HttpServlet {
 
 				redirect = HttpUtil.addParameter(redirect, "p_l_id", plid);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
-		response.sendRedirect(redirect);
+		httpServletResponse.sendRedirect(redirect);
 	}
 
 	private boolean _processShutdownRequest(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		if (!ShutdownUtil.isShutdown()) {
@@ -1242,7 +1265,7 @@ public class MainServlet extends HttpServlet {
 		}
 
 		_inactiveRequestHandler.processInactiveRequest(
-			request, response, messageKey);
+			httpServletRequest, httpServletResponse, messageKey);
 
 		return true;
 	}
@@ -1250,11 +1273,13 @@ public class MainServlet extends HttpServlet {
 	private void _registerPortalInitialized() {
 		Registry registry = RegistryUtil.getRegistry();
 
-		Map<String, Object> properties = new HashMap<>();
-
-		properties.put("module.service.lifecycle", "portal.initialized");
-		properties.put("service.vendor", ReleaseInfo.getVendor());
-		properties.put("service.version", ReleaseInfo.getVersion());
+		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+			"module.service.lifecycle", "portal.initialized"
+		).put(
+			"service.vendor", ReleaseInfo.getVendor()
+		).put(
+			"service.version", ReleaseInfo.getVersion()
+		).build();
 
 		_portalInitializedModuleServiceLifecycleServiceRegistration =
 			registry.registerService(
@@ -1263,11 +1288,13 @@ public class MainServlet extends HttpServlet {
 				},
 				properties);
 
-		properties = new HashMap<>();
-
-		properties.put("module.service.lifecycle", "portlets.initialized");
-		properties.put("service.vendor", ReleaseInfo.getVendor());
-		properties.put("service.version", ReleaseInfo.getVersion());
+		properties = HashMapBuilder.<String, Object>put(
+			"module.service.lifecycle", "portlets.initialized"
+		).put(
+			"service.vendor", ReleaseInfo.getVendor()
+		).put(
+			"service.version", ReleaseInfo.getVersion()
+		).build();
 
 		_portalPortletsInitializedModuleServiceLifecycleServiceRegistration =
 			registry.registerService(
@@ -1276,20 +1303,24 @@ public class MainServlet extends HttpServlet {
 				},
 				properties);
 
-		properties = new HashMap<>();
-
-		properties.put("bean.id", ServletContext.class.getName());
-		properties.put("original.bean", Boolean.TRUE);
-		properties.put("service.vendor", ReleaseInfo.getVendor());
+		properties = HashMapBuilder.<String, Object>put(
+			"bean.id", ServletContext.class.getName()
+		).put(
+			"original.bean", Boolean.TRUE
+		).put(
+			"service.vendor", ReleaseInfo.getVendor()
+		).build();
 
 		_servletContextServiceRegistration = registry.registerService(
 			ServletContext.class, getServletContext(), properties);
 
-		properties = new HashMap<>();
-
-		properties.put("module.service.lifecycle", "system.check");
-		properties.put("service.vendor", ReleaseInfo.getVendor());
-		properties.put("service.version", ReleaseInfo.getVersion());
+		properties = HashMapBuilder.<String, Object>put(
+			"module.service.lifecycle", "system.check"
+		).put(
+			"service.vendor", ReleaseInfo.getVendor()
+		).put(
+			"service.version", ReleaseInfo.getVersion()
+		).build();
 
 		_systemCheckModuleServiceLifecycleServiceRegistration =
 			registry.registerService(

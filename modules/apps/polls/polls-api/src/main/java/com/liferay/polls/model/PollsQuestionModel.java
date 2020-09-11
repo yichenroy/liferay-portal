@@ -14,18 +14,19 @@
 
 package com.liferay.polls.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the PollsQuestion service. Represents a row in the &quot;PollsQuestion&quot; database table, with each column mapped to a property of this class.
@@ -40,7 +41,7 @@ import java.util.Map;
  */
 @ProviderType
 public interface PollsQuestionModel
-	extends BaseModel<PollsQuestion>, LocalizedModel, ShardedModel,
+	extends BaseModel<PollsQuestion>, LocalizedModel, MVCCModel, ShardedModel,
 			StagedGroupedModel {
 
 	/*
@@ -62,6 +63,22 @@ public interface PollsQuestionModel
 	 * @param primaryKey the primary key of this polls question
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this polls question.
+	 *
+	 * @return the mvcc version of this polls question
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this polls question.
+	 *
+	 * @param mvccVersion the mvcc version of this polls question
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this polls question.

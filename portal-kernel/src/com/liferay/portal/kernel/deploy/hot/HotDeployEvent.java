@@ -14,8 +14,7 @@
 
 package com.liferay.portal.kernel.deploy.hot;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.deploy.DeployManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,7 +23,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PortalLifecycle;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
@@ -45,7 +43,6 @@ import javax.servlet.ServletContext;
  * @author Raymond Augé
  * @author Miguel Pastor
  */
-@ProviderType
 public class HotDeployEvent {
 
 	public HotDeployEvent(ServletContext servletContext) {
@@ -61,8 +58,8 @@ public class HotDeployEvent {
 		try {
 			initDependentServletContextNames();
 		}
-		catch (IOException ioe) {
-			_log.error(ioe, ioe);
+		catch (IOException ioException) {
+			_log.error(ioException, ioException);
 		}
 	}
 
@@ -148,11 +145,10 @@ public class HotDeployEvent {
 		}
 
 		if (!_dependentServletContextNames.isEmpty() && _log.isInfoEnabled()) {
-			String servletContextName = _servletContext.getServletContextName();
-
 			_log.info(
 				StringBundler.concat(
-					"Plugin ", servletContextName, " requires ",
+					"Plugin ", _servletContext.getServletContextName(),
+					" requires ",
 					StringUtil.merge(_dependentServletContextNames, ", ")));
 		}
 	}

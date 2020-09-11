@@ -14,10 +14,10 @@
 
 package com.liferay.portlet.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.portlet.async.PortletAsyncListenerFactory;
 import com.liferay.portal.kernel.portlet.async.PortletAsyncScopeManager;
 import com.liferay.portal.kernel.portlet.async.PortletAsyncScopeManagerFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portlet.AsyncPortletServletRequest;
 import com.liferay.portlet.PortletAsyncListenerAdapter;
 import com.liferay.registry.collections.ServiceTrackerCollections;
@@ -288,8 +288,10 @@ public class PortletAsyncContextImpl implements PortletAsyncContext {
 				try {
 					return clazz.newInstance();
 				}
-				catch (ReflectiveOperationException roe) {
-					throw new PortletException(roe);
+				catch (ReflectiveOperationException
+							reflectiveOperationException) {
+
+					throw new PortletException(reflectiveOperationException);
 				}
 			}
 

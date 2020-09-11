@@ -20,6 +20,8 @@ import com.liferay.adaptive.media.exception.AMException;
 import com.liferay.adaptive.media.handler.AMRequestHandler;
 import com.liferay.adaptive.media.web.internal.constants.AMWebConstants;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
@@ -57,23 +59,26 @@ public class AMServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		try {
-			AMRequestHandler amRequestHandler =
+			AMRequestHandler<?> amRequestHandler =
 				_amRequestHandlerLocator.locateForPattern(
-					_getRequestHandlerPattern(request));
+					_getRequestHandlerPattern(httpServletRequest));
 
 			if (amRequestHandler == null) {
-				response.sendError(
-					HttpServletResponse.SC_NOT_FOUND, request.getRequestURI());
+				httpServletResponse.sendError(
+					HttpServletResponse.SC_NOT_FOUND,
+					httpServletRequest.getRequestURI());
 
 				return;
 			}
 
 			Optional<AdaptiveMedia<?>> adaptiveMediaOptional =
-				amRequestHandler.handleRequest(request);
+				(Optional<AdaptiveMedia<?>>)amRequestHandler.handleRequest(
+					httpServletRequest);
 
 			AdaptiveMedia<?> adaptiveMedia = adaptiveMediaOptional.orElseThrow(
 				AMException.AMNotFound::new);
@@ -96,51 +101,60 @@ public class AMServlet extends HttpServlet {
 
 			String fileName = fileNameOptional.orElse(null);
 
-			boolean download = ParamUtil.getBoolean(request, "download");
+			boolean download = ParamUtil.getBoolean(
+				httpServletRequest, "download");
 
 			if (download) {
 				ServletResponseUtil.sendFile(
-					request, response, fileName, adaptiveMedia.getInputStream(),
-					contentLength, contentType,
+					httpServletRequest, httpServletResponse, fileName,
+					adaptiveMedia.getInputStream(), contentLength, contentType,
 					HttpHeaders.CONTENT_DISPOSITION_ATTACHMENT);
 			}
 			else {
 				ServletResponseUtil.sendFile(
-					request, response, fileName, adaptiveMedia.getInputStream(),
-					contentLength, contentType);
+					httpServletRequest, httpServletResponse, fileName,
+					adaptiveMedia.getInputStream(), contentLength, contentType);
 			}
 		}
-		catch (AMException.AMNotFound amnf) {
-			response.sendError(
-				HttpServletResponse.SC_NOT_FOUND, request.getRequestURI());
+		catch (AMException.AMNotFound amException) {
+			httpServletResponse.sendError(
+				HttpServletResponse.SC_NOT_FOUND,
+				httpServletRequest.getRequestURI());
 		}
-		catch (Exception e) {
-			Throwable cause = e.getCause();
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(exception, exception);
+			}
 
-			if (cause instanceof PrincipalException) {
-				response.sendError(
-					HttpServletResponse.SC_FORBIDDEN, request.getRequestURI());
+			Throwable throwable = exception.getCause();
+
+			if (throwable instanceof PrincipalException) {
+				httpServletResponse.sendError(
+					HttpServletResponse.SC_FORBIDDEN,
+					httpServletRequest.getRequestURI());
 			}
 			else {
-				response.sendError(
+				httpServletResponse.sendError(
 					HttpServletResponse.SC_BAD_REQUEST,
-					request.getRequestURI());
+					httpServletRequest.getRequestURI());
 			}
 		}
 	}
 
 	@Override
 	protected void doHead(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		doGet(request, response);
+		doGet(httpServletRequest, httpServletResponse);
 	}
 
-	private String _getRequestHandlerPattern(HttpServletRequest request) {
-		String pathInfo = request.getPathInfo();
+	private String _getRequestHandlerPattern(
+		HttpServletRequest httpServletRequest) {
 
-		Matcher matcher = _requestHandlerPattern.matcher(pathInfo);
+		Matcher matcher = _requestHandlerPattern.matcher(
+			httpServletRequest.getPathInfo());
 
 		if (matcher.find()) {
 			return matcher.group(1);
@@ -148,6 +162,8 @@ public class AMServlet extends HttpServlet {
 
 		return StringPool.BLANK;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(AMServlet.class);
 
 	private static final Pattern _requestHandlerPattern = Pattern.compile(
 		"^/([^/]*)");

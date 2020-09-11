@@ -22,9 +22,9 @@ import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletModeFactory;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.portlet.PortletQName;
 import com.liferay.portal.kernel.portlet.WindowStateFactory;
+import com.liferay.portal.kernel.portlet.constants.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -61,15 +61,17 @@ public class ActionURLTag
 			String portletName, Boolean anchor, Boolean encrypt,
 			long doAsGroupId, long doAsUserId, Boolean portletConfiguration,
 			Map<String, String[]> parameterMap,
-			Set<String> removedParameterNames, HttpServletRequest request)
+			Set<String> removedParameterNames,
+			HttpServletRequest httpServletRequest)
 		throws Exception {
 
 		if (portletName == null) {
-			portletName = _getPortletName(request);
+			portletName = _getPortletName(httpServletRequest);
 		}
 
 		LiferayPortletURL liferayPortletURL = _getLiferayPortletURL(
-			request, plid, portletName, lifecycle, copyCurrentRenderParameters);
+			httpServletRequest, plid, portletName, lifecycle,
+			copyCurrentRenderParameters);
 
 		if (liferayPortletURL == null) {
 			_log.error(
@@ -93,7 +95,8 @@ public class ActionURLTag
 			liferayPortletURL.setSecure(secure.booleanValue());
 		}
 		else {
-			liferayPortletURL.setSecure(PortalUtil.isSecure(request));
+			liferayPortletURL.setSecure(
+				PortalUtil.isSecure(httpServletRequest));
 		}
 
 		if (copyCurrentRenderParameters != null) {
@@ -145,12 +148,13 @@ public class ActionURLTag
 			portletConfiguration.booleanValue()) {
 
 			String returnToFullPageURL = ParamUtil.getString(
-				request, "returnToFullPageURL");
+				httpServletRequest, "returnToFullPageURL");
 			String portletResource = ParamUtil.getString(
-				request, "portletResource");
-			String previewWidth = ParamUtil.getString(request, "previewWidth");
+				httpServletRequest, "portletResource");
+			String previewWidth = ParamUtil.getString(
+				httpServletRequest, "previewWidth");
 			settingsScope = ParamUtil.getString(
-				request, "settingsScope",
+				httpServletRequest, "settingsScope",
 				PortletPreferencesFactoryConstants.
 					SETTINGS_SCOPE_PORTLET_INSTANCE);
 
@@ -240,8 +244,8 @@ public class ActionURLTag
 
 			return EVAL_PAGE;
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 		finally {
 			clearParams();
@@ -339,18 +343,20 @@ public class ActionURLTag
 	}
 
 	private static LiferayPortletURL _getLiferayPortletURL(
-		HttpServletRequest request, long plid, String portletName,
+		HttpServletRequest httpServletRequest, long plid, String portletName,
 		String lifecycle, Boolean copyCurrentRenderParameters) {
 
-		PortletRequest portletRequest = (PortletRequest)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
 
 		if (portletRequest == null) {
 			return null;
 		}
 
-		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+		PortletResponse portletResponse =
+			(PortletResponse)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		LiferayPortletResponse liferayPortletResponse =
 			PortalUtil.getLiferayPortletResponse(portletResponse);
@@ -367,16 +373,19 @@ public class ActionURLTag
 			plid, portletName, lifecycle);
 	}
 
-	private static String _getPortletName(HttpServletRequest request) {
-		PortletRequest portletRequest = (PortletRequest)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+	private static String _getPortletName(
+		HttpServletRequest httpServletRequest) {
+
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
 
 		if (portletRequest == null) {
 			return null;
 		}
 
 		LiferayPortletConfig liferayPortletConfig =
-			(LiferayPortletConfig)request.getAttribute(
+			(LiferayPortletConfig)httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_CONFIG);
 
 		return liferayPortletConfig.getPortletId();

@@ -14,8 +14,6 @@
 
 package com.liferay.expando.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -24,6 +22,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -34,7 +34,6 @@ import java.util.Map;
  * @see ExpandoValue
  * @generated
  */
-@ProviderType
 public class ExpandoValueWrapper
 	extends BaseModelWrapper<ExpandoValue>
 	implements ExpandoValue, ModelWrapper<ExpandoValue> {
@@ -47,6 +46,8 @@ public class ExpandoValueWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("valueId", getValueId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("tableId", getTableId());
@@ -61,6 +62,18 @@ public class ExpandoValueWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
+		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
+
+		if (ctCollectionId != null) {
+			setCtCollectionId(ctCollectionId);
+		}
+
 		Long valueId = (Long)attributes.get("valueId");
 
 		if (valueId != null) {
@@ -189,6 +202,16 @@ public class ExpandoValueWrapper
 	}
 
 	/**
+	 * Returns the ct collection ID of this expando value.
+	 *
+	 * @return the ct collection ID of this expando value
+	 */
+	@Override
+	public long getCtCollectionId() {
+		return model.getCtCollectionId();
+	}
+
+	/**
 	 * Returns the data of this expando value.
 	 *
 	 * @return the data of this expando value
@@ -280,6 +303,16 @@ public class ExpandoValueWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getLongArray();
+	}
+
+	/**
+	 * Returns the mvcc version of this expando value.
+	 *
+	 * @return the mvcc version of this expando value
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	@Override
@@ -469,6 +502,16 @@ public class ExpandoValueWrapper
 	}
 
 	/**
+	 * Sets the ct collection ID of this expando value.
+	 *
+	 * @param ctCollectionId the ct collection ID of this expando value
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
 	 * Sets the data of this expando value.
 	 *
 	 * @param data the data of this expando value
@@ -522,10 +565,10 @@ public class ExpandoValueWrapper
 
 	@Override
 	public void setGeolocationJSONObject(
-			com.liferay.portal.kernel.json.JSONObject data)
+			com.liferay.portal.kernel.json.JSONObject dataJSONObject)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		model.setGeolocationJSONObject(data);
+		model.setGeolocationJSONObject(dataJSONObject);
 	}
 
 	@Override
@@ -554,6 +597,16 @@ public class ExpandoValueWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		model.setLongArray(data);
+	}
+
+	/**
+	 * Sets the mvcc version of this expando value.
+	 *
+	 * @param mvccVersion the mvcc version of this expando value
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	@Override
@@ -672,6 +725,20 @@ public class ExpandoValueWrapper
 	@Override
 	public void setValueId(long valueId) {
 		model.setValueId(valueId);
+	}
+
+	@Override
+	public Map<String, Function<ExpandoValue, Object>>
+		getAttributeGetterFunctions() {
+
+		return model.getAttributeGetterFunctions();
+	}
+
+	@Override
+	public Map<String, BiConsumer<ExpandoValue, Object>>
+		getAttributeSetterBiConsumers() {
+
+		return model.getAttributeSetterBiConsumers();
 	}
 
 	@Override

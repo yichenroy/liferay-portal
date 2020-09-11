@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,9 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.oauth2.provider.service.http.OAuth2ApplicationServiceSoap}.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class OAuth2ApplicationSoap implements Serializable {
 
 	public static OAuth2ApplicationSoap toSoapModel(OAuth2Application model) {
@@ -43,6 +42,9 @@ public class OAuth2ApplicationSoap implements Serializable {
 		soapModel.setOAuth2ApplicationScopeAliasesId(
 			model.getOAuth2ApplicationScopeAliasesId());
 		soapModel.setAllowedGrantTypes(model.getAllowedGrantTypes());
+		soapModel.setClientCredentialUserId(model.getClientCredentialUserId());
+		soapModel.setClientCredentialUserName(
+			model.getClientCredentialUserName());
 		soapModel.setClientId(model.getClientId());
 		soapModel.setClientProfile(model.getClientProfile());
 		soapModel.setClientSecret(model.getClientSecret());
@@ -180,6 +182,22 @@ public class OAuth2ApplicationSoap implements Serializable {
 		_allowedGrantTypes = allowedGrantTypes;
 	}
 
+	public long getClientCredentialUserId() {
+		return _clientCredentialUserId;
+	}
+
+	public void setClientCredentialUserId(long clientCredentialUserId) {
+		_clientCredentialUserId = clientCredentialUserId;
+	}
+
+	public String getClientCredentialUserName() {
+		return _clientCredentialUserName;
+	}
+
+	public void setClientCredentialUserName(String clientCredentialUserName) {
+		_clientCredentialUserName = clientCredentialUserName;
+	}
+
 	public String getClientId() {
 		return _clientId;
 	}
@@ -268,6 +286,8 @@ public class OAuth2ApplicationSoap implements Serializable {
 	private Date _modifiedDate;
 	private long _oAuth2ApplicationScopeAliasesId;
 	private String _allowedGrantTypes;
+	private long _clientCredentialUserId;
+	private String _clientCredentialUserName;
 	private String _clientId;
 	private int _clientProfile;
 	private String _clientSecret;

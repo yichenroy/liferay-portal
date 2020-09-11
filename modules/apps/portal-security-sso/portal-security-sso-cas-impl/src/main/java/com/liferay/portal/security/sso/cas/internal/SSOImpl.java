@@ -51,13 +51,7 @@ public class SSOImpl implements SSO {
 
 	@Override
 	public String getSignInURL(long companyId, String defaultSigninURL) {
-		CASConfiguration casConfiguration = _getCASConfiguration(companyId);
-
-		if (!casConfiguration.enabled()) {
-			return null;
-		}
-
-		return casConfiguration.loginURL();
+		return defaultSigninURL;
 	}
 
 	@Override
@@ -92,16 +86,14 @@ public class SSOImpl implements SSO {
 
 	private CASConfiguration _getCASConfiguration(long companyId) {
 		try {
-			CASConfiguration casCompanyServiceSettings =
-				_configurationProvider.getConfiguration(
-					CASConfiguration.class,
-					new CompanyServiceSettingsLocator(
-						companyId, CASConstants.SERVICE_NAME));
-
-			return casCompanyServiceSettings;
+			return _configurationProvider.getConfiguration(
+				CASConfiguration.class,
+				new CompanyServiceSettingsLocator(
+					companyId, CASConstants.SERVICE_NAME));
 		}
-		catch (ConfigurationException ce) {
-			_log.error("Unable to get CAS configuration", ce);
+		catch (ConfigurationException configurationException) {
+			_log.error(
+				"Unable to get CAS configuration", configurationException);
 		}
 
 		return null;

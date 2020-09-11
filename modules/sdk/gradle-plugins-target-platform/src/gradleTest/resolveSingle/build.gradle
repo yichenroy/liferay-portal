@@ -1,6 +1,13 @@
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins", version: "3.13.172"
+		classpath(group: "com.liferay", name: "com.liferay.gradle.plugins", version: "11.0.45") {
+			exclude group: "biz.aQute.bnd", module: "biz.aQute.bnd"
+			exclude group: "biz.aQute.bnd", module: "biz.aQute.bndlib"
+			exclude group: "biz.aQute.bnd", module: "biz.aQute.gradle"
+			exclude group: "biz.aQute.bnd", module: "biz.aQute.repository"
+			exclude group: "biz.aQute.bnd", module: "biz.aQute.resolve"
+			exclude group: "com.liferay", module: "com.liferay.gradle.util"
+		}
 	}
 
 	repositories {
@@ -32,15 +39,16 @@ task runGradleTest
 dependencies {
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.util.taglib"
-	compileOnly group: "javax.portlet", name: "portlet-api", version: "2.0"
-	compileOnly group: "javax.servlet", name: "javax.servlet-api"
+	compileOnly group: "javax.portlet", name: "portlet-api"
 	compileOnly group: "jstl", name: "jstl"
-	compileOnly group: "org.osgi", name: "osgi.cmpn"
+	compileOnly group: "org.apache.felix", name: "org.apache.felix.http.servlet-api", version: "1.1.2"
+	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations"
 
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.bom", version: "7.0.4"
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.compile.only", version: "7.0.4"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom", version: "7.2.1"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom.compile.only", version: "7.2.1"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom.third.party", version: "7.2.1"
 
-	targetPlatformDistro files("../../repo/distro.jar")
+	targetPlatformDistro group: "com.liferay.portal", name: "release.portal.distro", version: "7.2.1"
 }
 
 repositories {
@@ -50,11 +58,5 @@ repositories {
 }
 
 runGradleTest {
-	dependsOn resolve
-
-	doLast {
-		File bndrunFile = new File(resolve.temporaryDir, "resolve.bndrun")
-
-		assert bndrunFile.text.contains("com.liferay.resolve.single;version='[1.0.0,1.0.1)")
-	}
+	dependsOn ":resolve"
 }

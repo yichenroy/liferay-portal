@@ -30,14 +30,14 @@
 
 </aui:select>
 
-<aui:script require="users-admin-web@4.0.0/js/UserNameFields.es as UserNameFields">
+<aui:script require="users-admin-web/js/UserNameFields.es as UserNameFields">
 	var component = Liferay.component(
 		'<portlet:namespace />UserNameFields',
 		new UserNameFields.default(
 			{
 				baseURL: '<%= HtmlUtil.escapeJS(themeDisplay.getURLCurrent()) %>',
 				formNode: <portlet:namespace />fm,
-				languageIdSelectNode: <portlet:namespace />languageId,
+				languageIdSelectNode: '#<portlet:namespace />languageId',
 				portletNamespace: '<portlet:namespace />',
 				userNameFieldsNode: <portlet:namespace />userNameFields
 			}

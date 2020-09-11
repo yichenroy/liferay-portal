@@ -14,14 +14,11 @@
 
 package com.liferay.portal.search.engine.adapter.index;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Map;
 
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
 public class GetMappingIndexResponse implements IndexResponse {
 
 	public GetMappingIndexResponse(Map<String, String> indexMappings) {

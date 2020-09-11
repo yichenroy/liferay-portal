@@ -1,5 +1,6 @@
 @component-name = "portal-staging"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Site Templates";
@@ -26,193 +27,211 @@ definition {
 
 	@priority = "4"
 	test AddSiteTemplate {
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+		property portal.acceptance = "true";
 
 		SiteTemplates.addCP(
 			siteTemplateActive = "Yes",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
 		SiteTemplates.viewCP(siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		Site.addSiteTemplateCP(
 			siteName = "Site Name",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 	}
 
 	@priority = "4"
 	test AddSiteTemplateApplySiteTemplateChangesToSite {
-		property portal.release = "false";
-
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+		property portal.acceptance = "true";
 
 		SiteTemplates.addCP(siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		Site.addCP(
 			siteName = "Site Template Site Name",
 			siteTemplateName = "Site Template Name",
-			siteType = "Site Template"
-		);
+			siteType = "Site Template");
 
-		ProductMenu.gotoSite(site = "Site Template Site Name");
+		Navigator.openSiteURL(siteName = "Site Template Site Name");
 
 		Portlet.viewNoPortletsPresentPG();
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Manage",
-			rowEntry = "Site Template Name"
-		);
+			rowEntry = "Site Template Name");
 
 		ProductMenu.gotoSiteViaLink(site = "Site Template Name");
 
-		Portlet.addPG(portletName = "Hello World");
+		ContentPages.clickPencil();
 
-		ProductMenu.gotoSite(site = "Site Template Site Name");
+		PageEditor.addWidget(portletName = "Hello World");
+
+		PageEditor.clickPublish();
+
+		Navigator.openSiteURL(siteName = "Site Template Site Name");
 
 		if (IsElementNotPresent(locator1 = "Portlet#PORTLET_CONTENT")) {
 			Refresh();
 		}
 
-		Portlet.viewPG(portletName = "Hello World");
-	}
-
-	@description = "This is a use case for LPS-74307."
-	@priority = "5"
-	test AddSiteTemplateChangeCurrentTheme {
-		property osgi.app.includes = "frontend-theme-fjord";
-
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
-
-		SiteTemplates.addCP(siteTemplateName = "Site Template Name");
-
-		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Manage",
-			rowEntry = "Site Template Name"
-		);
-
-		Page.changeCurrentTheme(pageName = "Home", themeName = "Fjord");
-
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites"
-		);
-
-		Site.addCP(
-			siteName = "Site Template Site Name",
-			siteTemplateName = "Site Template Name",
-			siteType = "Site Template"
-		);
-
-		ProductMenu.gotoSite(site = "Site Template Site Name");
-
-		Page.viewCurrentTheme(
-			page = "Public Pages",
-			pageName = "Home",
-			themeName = "Fjord"
-		);
+		Portlet.viewPortletPresentPG(portletContent = "Welcome to Liferay");
 	}
 
 	@priority = "4"
 	test AddSiteTemplateDisablePageModification {
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+		property portal.acceptance = "true";
 
 		SiteTemplates.addCP(
 			disableChanges = "true",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		Site.addCP(
 			siteName = "Site Template Site Name",
 			siteTemplateName = "Site Template Name",
-			siteType = "Site Template"
-		);
+			siteType = "Site Template");
 
-		ProductMenu.gotoSite(site = "Site Template Site Name");
+		Navigator.openSiteURL(siteName = "Site Template Site Name");
 
 		Page.viewPageLockCheck();
 
 		AssertElementNotPresent(locator1 = "ControlMenu#ADD");
 	}
 
-	@priority = "4"
-	test DeactivateDefaultSiteTemplate {
-		ProductMenu.gotoPortlet(
+	@description = "This is a use case for LPS-118486."
+	@priority = "3"
+	test AssertNoChildPageOptionForPageDerivedFromSiteTemplate {
+		SiteTemplates.addCP(siteTemplateName = "Site Template Name");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
+
+		Site.addSiteTemplateCP(
+			siteName = "Site Name",
+			siteTemplateName = "Site Template Name");
+
+		Navigator.openSiteURL(siteName = "Site Name");
 
 		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			category = "Site Builder",
+			portlet = "Pages");
 
-		SiteTemplates.editTemplateStatusCP(
-			siteTemplateActiveEdit = "No",
-			siteTemplateName = "Community Site"
-		);
+		SitePages.addPublicPage(pageName = "Test Page");
 
 		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			portlet = "Pages");
+
+		MouseOver(
+			key_itemName = "Home",
+			locator1 = "SitePages#LIST_GROUP_ITEM");
+
+		AssertElementNotPresent(
+			key_pageName = "Home",
+			locator1 = "SitePages#LIST_GROUP_ITEM_PLUS_ICON");
+
+		Click(
+			key_itemName = "Home",
+			locator1 = "SitePages#LIST_GROUP_ITEM");
+
+		AssertElementNotPresent(locator1 = "Button#NEW");
+
+		Click(
+			key_itemName = "Test Page",
+			locator1 = "SitePages#LIST_GROUP_ITEM");
+
+		Click(locator1 = "Button#NEW");
+
+		AssertElementPresent(
+			key_menuItem = "Add Child Page of Test Page",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+	@description = "This is a use case for LPS-84497."
+	@priority = "3"
+	test DeactivateActivateSiteTemplate {
+		SiteTemplates.addCP(
+			siteTemplateActive = "Yes",
+			siteTemplateName = "Site Template Name");
+
+		SiteTemplates.viewCP(siteTemplateName = "Site Template Name");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
+
+		SiteTemplates.deactivateCP(siteTemplateName = "Site Template Name");
 
 		SiteTemplates.viewTemplateStatusCP(
 			siteTemplateActiveEdit = "No",
-			siteTemplateName = "Community Site"
-		);
+			siteTemplateName = "Site Template Name");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Site Templates");
+
+		SiteTemplates.activateCP(siteTemplateName = "Site Template Name");
+
+		SiteTemplates.viewTemplateStatusCP(
+			siteTemplateActiveEdit = "Yes",
+			siteTemplateName = "Site Template Name");
+	}
+
+	@priority = "4"
+	test DeactivateDefaultSiteTemplate {
+		property portal.acceptance = "true";
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Site Templates");
+
+		SiteTemplates.editTemplateStatusCP(
+			siteTemplateActiveEdit = "No",
+			siteTemplateName = "Community Site");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Site Templates");
+
+		SiteTemplates.viewTemplateStatusCP(
+			siteTemplateActiveEdit = "No",
+			siteTemplateName = "Community Site");
 
 		Navigator.openSiteURL(siteName = "guest");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		SiteTemplates.viewNoTemplatesDisplay(siteTemplateName = "Community Site");
 	}
@@ -222,308 +241,280 @@ definition {
 	test DeleteSiteTemplate {
 		property portal.acceptance = "true";
 
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
-
 		SiteTemplates.addCP(
 			siteTemplateActive = "Yes",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
 		SiteTemplates.deleteCP(siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
-		SiteTemplates.viewDefaultCP(
-			siteTemplateNameList = "Intranet Site,Community Site"
-		);
+		SiteTemplates.viewDefaultCP(siteTemplateNameList = "Intranet Site,Community Site");
 
 		SiteTemplates.addCP(
 			siteTemplateActive = "Yes",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
 		SiteTemplates.deleteViaDeleteIconCP(siteTemplateName = "Site Template Name");
 
-		SiteTemplates.viewDefaultCP(
-			siteTemplateNameList = "Intranet Site,Community Site"
-		);
+		SiteTemplates.viewDefaultCP(siteTemplateNameList = "Intranet Site,Community Site");
 	}
 
 	@priority = "4"
 	test DeleteSiteTemplateAssociatedWithASite {
 		property portal.acceptance = "true";
 
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
-
 		SiteTemplates.addCP(
 			siteTemplateActive = "Yes",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		Site.addSiteTemplateCP(
 			siteName = "Site Name",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
 		SiteTemplates.deleteCP(
 			associatedToSite = "true",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
 		SiteTemplates.viewCP(siteTemplateName = "Site Template Name");
 	}
 
+	@description = "This is a use case for LPS-98548."
 	@priority = "4"
-	test EditSiteTemplate {
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+	test DeleteSiteTemplateImportedToVirtualInstance {
+		property test.name.skip.portal.instance = "CPSitetemplates#DeleteSiteTemplateImportedToVirtualInstance";
 
 		SiteTemplates.addCP(
 			siteTemplateActive = "Yes",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
+
+		Site.openSitesAdmin();
+
+		Site.addSiteTemplateCP(
+			siteName = "Site Name",
+			siteTemplateName = "Site Template Name");
+
+		SiteTemplatesNavigator.openSiteTemplatesAdmin();
+
+		LAR.exportPortlet(
+			larFileName = "site-template-name.lar",
+			portletName = "Site Templates");
+
+		PortalInstances.openVirtualInstancesAdmin();
+
+		PortalInstances.addCP(
+			mailDomain = "www.able.com",
+			virtualHost = "www.able.com",
+			webId = "www.able.com");
+
+		User.firstLoginPG(
+			password = "test",
+			userEmailAddress = "test@www.able.com",
+			virtualHostsURL = "http://www.able.com:8080");
+
+		SiteTemplatesNavigator.openSiteTemplatesAdmin(baseURL = "http://www.able.com:8080");
+
+		LAR.importPortlet(larFileName = "site-template-name.lar");
+
+		SiteTemplates.viewCP(siteTemplateName = "Site Template Name");
+
+		SiteTemplatesNavigator.openSiteTemplatesAdmin(baseURL = "http://www.able.com:8080");
+
+		SiteTemplates.deleteCP(siteTemplateName = "Site Template Name");
+
+		SiteTemplates.viewNoTemplatesDisplay(siteTemplateName = "Site Template Name");
+	}
+
+	@priority = "4"
+	test EditSiteTemplate {
+		property portal.acceptance = "true";
+
+		SiteTemplates.addCP(
+			siteTemplateActive = "Yes",
+			siteTemplateName = "Site Template Name");
 
 		SiteTemplates.viewCP(
 			siteTemplateDescription = "This is a site template description",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
 		SiteTemplates.editCP(
 			siteTemplateDescription = "Site Template Description Edit",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
 		SiteTemplates.viewCP(
 			siteTemplateDescription = "Site Template Description Edit",
-			siteTemplateName = "Site Template Name Edit"
-		);
+			siteTemplateName = "Site Template Name Edit");
 	}
 
 	@priority = "5"
 	test EditSiteTemplateStatus {
 		property portal.acceptance = "true";
 
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
-
 		SiteTemplates.addCP(
 			siteTemplateActive = "Yes",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		Site.addSiteTemplateCP(
 			siteName = "Site Name",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
 		SiteTemplates.editTemplateStatusCP(
 			siteTemplateActiveEdit = "No",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
 		SiteTemplates.viewTemplateStatusCP(
 			siteTemplateActiveEdit = "No",
-			siteTemplateName = "Site Template Name"
-		);
+			siteTemplateName = "Site Template Name");
 	}
 
 	@priority = "4"
 	test LocalizeDefaultSiteTemplates {
-		ProductMenu.gotoPortlet(
+		property test.name.skip.portal.instance = "CPSitetemplates#LocalizeDefaultSiteTemplates";
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
-		SiteTemplates.viewDefaultCP(
-			siteTemplateNameList = "Community Site,Intranet Site"
-		);
+		SiteTemplates.viewDefaultCP(siteTemplateNameList = "Community Site,Intranet Site");
 
 		Navigator.gotoAccountSettings();
 
 		MyAccount.changeUserLanguage(
 			languageName = "español (España)",
 			saveButton = "Save",
-			successMessage = "Su petición ha terminado con éxito."
-		);
+			successMessage = "Su petición ha terminado con éxito.");
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
+		ProductMenuHelper.closeProductMenu();
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sitios web",
-			panel = "Control Panel",
-			portlet = "Plantillas de sitio web"
-		);
+			panel = "Panel de control",
+			portlet = "Plantillas de sitio web");
 
 		SiteTemplates.viewDefaultDataLocalizedCP(
 			siteTemplateDescriptionList = "Sitio con foro y wiki,Sitio con documentos y noticias",
-			siteTemplateNameList = "Sitio de comunidad,Sitio de intranet"
-		);
+			siteTemplateNameList = "Sitio de comunidad,Sitio de intranet");
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
-			category = "Mi cuenta",
-			panel = "User",
-			portlet = "Mi cuenta"
-		);
+		UserBar.gotoDropdownItem(dropdownItem = "Mi cuenta");
 
 		MyAccount.changeUserLanguage(
 			languageName = "English (United States)",
 			saveButton = "Guardar",
-			successMessage = "Your request completed successfully."
-		);
+			successMessage = "Your request completed successfully.");
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
+		ProductMenuHelper.closeProductMenu();
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+			portlet = "Site Templates");
 
-		SiteTemplates.viewDefaultCP(
-			siteTemplateNameList = "Community Site,Intranet Site"
-		);
+		SiteTemplates.viewDefaultCP(siteTemplateNameList = "Community Site,Intranet Site");
 	}
 
 	@priority = "4"
 	test OnlySiteAdminCanModifyPageAssociatedWithSiteTemplate {
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
+		property portal.acceptance = "true";
 
 		SiteTemplates.addCP(siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		Site.addCP(
 			siteName = "Site Template Site Name",
 			siteTemplateName = "Site Template Name",
-			siteType = "Site Template"
-		);
+			siteType = "Site Template");
 
-		ProductMenu.gotoSite(site = "Site Template Site Name");
+		Navigator.openSiteURL(siteName = "Site Template Site Name");
 
-		AssertElementPresent(locator1 = "ControlMenu#ADD");
+		AssertElementPresent(locator1 = "Icon#EDIT_PENCIL");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+			portlet = "Users and Organizations");
 
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
-		ProductMenu.gotoSite(site = "Site Template Site Name");
-
-		ProductMenu.gotoPortlet(
-			category = "People",
-			panel = "Site Administration",
-			portlet = "Memberships"
-		);
-
-		Site.assignUserAsMemberCP(
-			userFirstName = "userfn",
-			userLastName = "userln",
-			userScreenName = "usersn"
-		);
+		JSONUser.addUserToSite(
+			groupName = "Site Template Site Name",
+			userEmailAddress = "userea@liferay.com");
 
 		User.logoutUserPG();
 
 		User.loginUserPG(userEmailAddress = "userea@liferay.com");
 
-		Navigator.gotoSitePage(pageName = "Home", siteName = "Site Template Site Name");
+		Navigator.gotoSitePage(
+			pageName = "Home",
+			siteName = "Site Template Site Name");
 
-		AssertElementNotPresent(locator1 = "ControlMenu#ADD");
+		AssertElementNotPresent(locator1 = "Icon#EDIT_PENCIL");
 
 		User.logoutUserPG();
 
@@ -532,21 +523,16 @@ definition {
 
 	@priority = "5"
 	test ResetPageChanges {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "CPSitetemplates#ResetPageChanges";
 		property testray.component.names = "Training";
 
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
-
 		SiteTemplatesNavigator.gotoSiteTemplatesPage(
 			pageName = "Home",
 			siteName = "${siteName}",
-			siteTemplateName = "Community Site"
-		);
+			siteTemplateName = "Community Site");
 
 		Portlet.addPG(portletName = "Asset Publisher");
 
@@ -562,38 +548,37 @@ definition {
 
 		Portlet.addPG(portletName = "Web Content Display");
 
+		ProductMenu.gotoSiteViaLink(site = "Community Site");
+
 		Portlet.dragAndDropPortletToColumnPG(
 			columnNumberFrom = "1",
 			columnNumberTo = "2",
-			portletName = "Asset Publisher"
-		);
+			portletName = "Asset Publisher");
 
 		ProductMenu.gotoSiteViaLink(site = "Community Site");
 
 		SiteTemplates.viewResetPageChanges(
 			columnNumberFrom = "2",
-			portletName = "Asset Publisher"
-		);
+			portletName = "Asset Publisher");
 
 		Portlet.dragAndDropPortletToColumnPG(
 			columnNumberFrom = "1",
 			columnNumberTo = "2",
-			portletName = "Message Boards"
-		);
+			portletName = "Message Boards");
 
 		ProductMenu.gotoSiteViaLink(site = "Community Site");
 
 		Portlet.dragAndDropPortletToColumnPG(
 			columnNumberFrom = "2",
 			columnNumberTo = "1",
-			portletName = "Message Boards"
-		);
+			portletName = "Message Boards");
 
-		ProductMenu.gotoPortlet(
+		Close.closeAndSelectWindow(locator1 = "Site Templates - Control Panel - ${siteName}");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		Site.addCommunityCP(siteName = "Site Name");
 
@@ -602,58 +587,44 @@ definition {
 		Portlet.dragAndDropPortletToColumnPG(
 			columnNumberFrom = "1",
 			columnNumberTo = "2",
-			portletName = "Message Boards"
-		);
+			portletName = "Message Boards");
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
 		SiteTemplates.resetPageChanges(
 			columnNumberTo = "2",
-			portletName = "Message Boards"
-		);
+			portletName = "Message Boards");
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
 		SiteTemplates.viewResetPageChanges(
 			columnNumberFrom = "1",
-			portletName = "Message Boards"
-		);
+			portletName = "Message Boards");
 	}
 
 	@description = "This is a use case for LPS-44550"
 	@priority = "4"
 	test SiteTemplateXSS {
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Site Templates"
-		);
-
 		SiteTemplates.addCP(
 			siteTemplateActive = "Yes",
-			siteTemplateName = '''<script>alert(123);</script>'''
-		);
+			siteTemplateName = '''<script>alert(123);</script>''');
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites"
-		);
+			portlet = "Sites");
 
 		Site.addSiteTemplateCP(
 			siteName = "Site Name",
 			siteTemplateName = '''<script>alert(123);</script>''',
 			siteType = "Site Template",
-			uncheckPropagation = "true"
-		);
+			uncheckPropagation = "true");
 
-		ProductMenu.gotoSite(site = "Site Name");
+		SitePages.openPagesAdmin(siteURLKey = "Site Name");
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
-			portlet = "Settings"
-		);
+			portlet = "Settings");
 
 		AssertAlertNotPresent();
 
@@ -665,4 +636,5 @@ definition {
 
 		AssertHTMLSourceTextPresent(value1 = "${escapedScript}");
 	}
+
 }

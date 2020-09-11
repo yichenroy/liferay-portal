@@ -14,14 +14,11 @@
 
 package com.liferay.message.boards.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchThreadFlagException extends NoSuchModelException {
 
 	public NoSuchThreadFlagException() {
@@ -31,12 +28,12 @@ public class NoSuchThreadFlagException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchThreadFlagException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchThreadFlagException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public NoSuchThreadFlagException(Throwable cause) {
-		super(cause);
+	public NoSuchThreadFlagException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

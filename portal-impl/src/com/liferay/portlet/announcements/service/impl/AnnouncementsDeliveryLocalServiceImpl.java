@@ -16,12 +16,12 @@ package com.liferay.portlet.announcements.service.impl;
 
 import com.liferay.announcements.kernel.model.AnnouncementsDelivery;
 import com.liferay.announcements.kernel.model.AnnouncementsEntryConstants;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portlet.announcements.service.base.AnnouncementsDeliveryLocalServiceBaseImpl;
 
 import java.util.ArrayList;
@@ -52,21 +52,21 @@ public class AnnouncementsDeliveryLocalServiceImpl
 		delivery.setWebsite(true);
 
 		try {
-			announcementsDeliveryPersistence.update(delivery);
+			delivery = announcementsDeliveryPersistence.update(delivery);
 		}
-		catch (SystemException se) {
+		catch (SystemException systemException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
-						"Add failed, fetch {userId=", String.valueOf(userId),
-						", type=", type, "}"));
+						"Add failed, fetch {userId=", userId, ", type=", type,
+						"}"));
 			}
 
 			delivery = announcementsDeliveryPersistence.fetchByU_T(
 				userId, type, false);
 
 			if (delivery == null) {
-				throw se;
+				throw systemException;
 			}
 		}
 
@@ -153,23 +153,7 @@ public class AnnouncementsDeliveryLocalServiceImpl
 		delivery.setSms(sms);
 		delivery.setWebsite(true);
 
-		announcementsDeliveryPersistence.update(delivery);
-
-		return delivery;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #updateDelivery(long, String, boolean, boolean)}
-	 */
-	@Deprecated
-	@Override
-	public AnnouncementsDelivery updateDelivery(
-			long userId, String type, boolean email, boolean sms,
-			boolean website)
-		throws PortalException {
-
-		return updateDelivery(userId, type, email, sms);
+		return announcementsDeliveryPersistence.update(delivery);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -25,8 +25,8 @@ import javax.servlet.http.HttpServletResponseWrapper;
  */
 public class ReadOnlyServletResponse extends HttpServletResponseWrapper {
 
-	public ReadOnlyServletResponse(HttpServletResponse response) {
-		super(response);
+	public ReadOnlyServletResponse(HttpServletResponse httpServletResponse) {
+		super(httpServletResponse);
 	}
 
 	@Override
@@ -81,6 +81,7 @@ public class ReadOnlyServletResponse extends HttpServletResponseWrapper {
 	public void setContentLength(int contentLength) {
 	}
 
+	@Override
 	public void setContentLengthLong(long contentLengthLong) {
 	}
 

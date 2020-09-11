@@ -21,11 +21,11 @@ import com.liferay.fragment.web.internal.constants.FragmentWebKeys;
 import com.liferay.fragment.web.internal.security.permission.resource.FragmentPermission;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
-import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -37,7 +37,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.portlet.ActionRequest;
@@ -52,60 +51,55 @@ public class FragmentCollectionResourcesManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public FragmentCollectionResourcesManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request,
 			FragmentCollectionResourcesDisplayContext
 				fragmentCollectionResourcesDisplayContext)
 		throws PortalException {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			fragmentCollectionResourcesDisplayContext.getSearchContainer());
 
 		_fragmentPortletConfiguration =
-			(FragmentPortletConfiguration)request.getAttribute(
+			(FragmentPortletConfiguration)httpServletRequest.getAttribute(
 				FragmentPortletConfiguration.class.getName());
-		_itemSelector = (ItemSelector)request.getAttribute(
+		_itemSelector = (ItemSelector)httpServletRequest.getAttribute(
 			FragmentWebKeys.ITEM_SELECTOR);
-		_themeDisplay = (ThemeDisplay)request.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
+	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				if (FragmentPermission.contains(
-						_themeDisplay.getPermissionChecker(),
-						_themeDisplay.getScopeGroupId(),
-						FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES)) {
+		return DropdownItemListBuilder.add(
+			() -> FragmentPermission.contains(
+				_themeDisplay.getPermissionChecker(),
+				_themeDisplay.getScopeGroupId(),
+				FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES),
+			dropdownItem -> {
+				dropdownItem.putData(
+					"action", "deleteSelectedFragmentCollectionResources");
 
-					PortletURL deleteFragmentCollectionResourcesURL =
-						liferayPortletResponse.createActionURL();
+				PortletURL deleteFragmentCollectionResourcesURL =
+					liferayPortletResponse.createActionURL();
 
-					deleteFragmentCollectionResourcesURL.setParameter(
-						ActionRequest.ACTION_NAME,
-						"/fragment/delete_fragment_collection_resources");
-					deleteFragmentCollectionResourcesURL.setParameter(
-						"redirect", _themeDisplay.getURLCurrent());
+				deleteFragmentCollectionResourcesURL.setParameter(
+					ActionRequest.ACTION_NAME,
+					"/fragment/delete_fragment_collection_resources");
+				deleteFragmentCollectionResourcesURL.setParameter(
+					"redirect", _themeDisplay.getURLCurrent());
 
-					add(
-						dropdownItem -> {
-							dropdownItem.putData(
-								"action",
-								"deleteSelectedFragmentCollectionResources");
-							dropdownItem.putData(
-								"deleteFragmentCollectionResourcesURL",
-								deleteFragmentCollectionResourcesURL.
-									toString());
-							dropdownItem.setIcon("times-circle");
-							dropdownItem.setLabel(
-								LanguageUtil.get(request, "delete"));
-							dropdownItem.setQuickAction(true);
-						});
-				}
+				dropdownItem.putData(
+					"deleteFragmentCollectionResourcesURL",
+					deleteFragmentCollectionResourcesURL.toString());
+
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -115,18 +109,13 @@ public class FragmentCollectionResourcesManagementToolbarDisplayContext
 
 	@Override
 	public CreationMenu getCreationMenu() {
-		return new CreationMenu() {
-			{
-				addDropdownItem(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "addFragmentCollectionResource");
-						dropdownItem.putData(
-							"itemSelectorURL", _getItemSelectorURL());
-						dropdownItem.setLabel(LanguageUtil.get(request, "add"));
-					});
+		return CreationMenuBuilder.addDropdownItem(
+			dropdownItem -> {
+				dropdownItem.putData("action", "addFragmentCollectionResource");
+				dropdownItem.putData("itemSelectorURL", _getItemSelectorURL());
+				dropdownItem.setLabel(LanguageUtil.get(request, "add"));
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -155,27 +144,21 @@ public class FragmentCollectionResourcesManagementToolbarDisplayContext
 			ActionRequest.ACTION_NAME,
 			"/fragment/upload_fragment_collection_resource");
 
-		ItemSelectorCriterion uploadItemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new UploadItemSelectorCriterion(
 				FragmentPortletKeys.FRAGMENT, uploadURL.toString(),
 				LanguageUtil.get(_themeDisplay.getLocale(), "resources"),
 				UploadServletRequestConfigurationHelperUtil.getMaxSize(),
 				_fragmentPortletConfiguration.thumbnailExtensions());
 
-		List<ItemSelectorReturnType> uploadDesiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		uploadDesiredItemSelectorReturnTypes.add(
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new FileEntryItemSelectorReturnType());
-
-		uploadItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			uploadDesiredItemSelectorReturnTypes);
 
 		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
 			RequestBackedPortletURLFactoryUtil.create(request),
 			liferayPortletResponse.getNamespace() +
 				"uploadFragmentCollectionResource",
-			uploadItemSelectorCriterion);
+			itemSelectorCriterion);
 
 		return itemSelectorURL.toString();
 	}

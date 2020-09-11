@@ -14,8 +14,6 @@
 
 package com.liferay.portal.validation;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 
@@ -25,7 +23,6 @@ import java.util.Map;
 /**
  * @author Máté Thurzó
  */
-@ProviderType
 public class ModelValidationResults {
 
 	public static FailureBuilder failure() {
@@ -115,9 +112,9 @@ public class ModelValidationResults {
 		}
 
 		public FailureBuilder exceptionFailure(
-			String message, Throwable cause) {
+			String message, Throwable throwable) {
 
-			modelValidationResults._exceptions.put(message, cause);
+			modelValidationResults._exceptions.put(message, throwable);
 
 			return this;
 		}
@@ -137,9 +134,9 @@ public class ModelValidationResults {
 		}
 
 		public WarningBuilder exceptionWarning(
-			String message, Throwable cause) {
+			String message, Throwable throwable) {
 
-			modelValidationResults._exceptions.put(message, cause);
+			modelValidationResults._exceptions.put(message, throwable);
 
 			return this;
 		}

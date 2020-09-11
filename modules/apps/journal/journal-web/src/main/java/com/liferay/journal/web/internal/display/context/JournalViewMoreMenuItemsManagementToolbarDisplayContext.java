@@ -30,15 +30,15 @@ public class JournalViewMoreMenuItemsManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public JournalViewMoreMenuItemsManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request,
 			JournalViewMoreMenuItemsDisplayContext
 				journalViewMoreMenuItemsDisplayContext)
 		throws Exception {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			journalViewMoreMenuItemsDisplayContext.
 				getDDMStructuresSearchContainer());
 	}

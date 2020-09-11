@@ -19,6 +19,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.xml.XMLUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Time;
@@ -57,8 +59,8 @@ public abstract class DynamicQueryUADExporter<T extends BaseModel>
 		try {
 			return xml.getBytes(StringPool.UTF8);
 		}
-		catch (UnsupportedEncodingException uee) {
-			throw new PortalException(uee);
+		catch (UnsupportedEncodingException unsupportedEncodingException) {
+			throw new PortalException(unsupportedEncodingException);
 		}
 	}
 
@@ -76,8 +78,8 @@ public abstract class DynamicQueryUADExporter<T extends BaseModel>
 				try {
 					writeToZip(baseModel, zipWriter);
 				}
-				catch (Exception e) {
-					throw new PortalException(e);
+				catch (Exception exception) {
+					_log.error(exception, exception);
 				}
 			});
 
@@ -182,5 +184,8 @@ public abstract class DynamicQueryUADExporter<T extends BaseModel>
 
 		zipWriter.addEntry(baseModel.getPrimaryKeyObj() + ".xml", data);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DynamicQueryUADExporter.class);
 
 }

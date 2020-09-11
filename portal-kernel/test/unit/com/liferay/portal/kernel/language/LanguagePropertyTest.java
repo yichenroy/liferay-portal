@@ -14,8 +14,9 @@
 
 package com.liferay.portal.kernel.language;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.language.constants.LanguageConstants;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.FileInputStream;
@@ -192,9 +193,7 @@ public class LanguagePropertyTest {
 		_testValidKey(LanguageConstants.KEY_USER_NAME_SUFFIX_VALUES);
 	}
 
-	private static List<String> _getFileNames(String pattern)
-		throws IOException {
-
+	private static List<String> _getFileNames(String pattern) throws Exception {
 		final List<String> fileNames = new ArrayList<>();
 
 		FileSystem fileSystem = FileSystems.getDefault();
@@ -231,7 +230,7 @@ public class LanguagePropertyTest {
 
 	private static Map<String, Properties> _getPropertiesMap(
 			List<String> fileNames)
-		throws IOException {
+		throws Exception {
 
 		Map<String, Properties> propertiesMap = new HashMap<>();
 
@@ -265,8 +264,7 @@ public class LanguagePropertyTest {
 
 		Assert.assertTrue(
 			StringBundler.concat(
-				"Special key \"", key, "\" is found in: ",
-				String.valueOf(invalidFileNames)),
+				"Special key \"", key, "\" is found in: ", invalidFileNames),
 			invalidFileNames.isEmpty());
 	}
 
@@ -288,7 +286,7 @@ public class LanguagePropertyTest {
 		Assert.assertTrue(
 			StringBundler.concat(
 				"Invalid values for key \"", key, "\" are found in: ",
-				String.valueOf(invalidFileNames)),
+				invalidFileNames),
 			invalidFileNames.isEmpty());
 	}
 

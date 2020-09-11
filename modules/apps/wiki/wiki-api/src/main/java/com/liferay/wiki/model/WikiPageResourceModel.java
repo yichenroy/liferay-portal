@@ -14,11 +14,12 @@
 
 package com.liferay.wiki.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the WikiPageResource service. Represents a row in the &quot;WikiPageResource&quot; database table, with each column mapped to a property of this class.
@@ -33,7 +34,7 @@ import com.liferay.portal.kernel.model.ShardedModel;
  */
 @ProviderType
 public interface WikiPageResourceModel
-	extends BaseModel<WikiPageResource>, ShardedModel {
+	extends BaseModel<WikiPageResource>, MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -54,6 +55,22 @@ public interface WikiPageResourceModel
 	 * @param primaryKey the primary key of this wiki page resource
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this wiki page resource.
+	 *
+	 * @return the mvcc version of this wiki page resource
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this wiki page resource.
+	 *
+	 * @param mvccVersion the mvcc version of this wiki page resource
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this wiki page resource.

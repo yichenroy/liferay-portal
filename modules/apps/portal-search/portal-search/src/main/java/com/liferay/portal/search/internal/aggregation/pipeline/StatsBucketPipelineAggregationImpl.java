@@ -14,15 +14,12 @@
 
 package com.liferay.portal.search.internal.aggregation.pipeline;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregationVisitor;
 import com.liferay.portal.search.aggregation.pipeline.StatsBucketPipelineAggregation;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class StatsBucketPipelineAggregationImpl
 	extends BucketMetricsPipelineAggregationImpl
 	implements StatsBucketPipelineAggregation {

@@ -70,10 +70,11 @@ public class ApplicationContextServicePublisherUtil {
 						serviceRegistrations.add(serviceRegistration);
 					}
 				}
-				catch (BeanIsAbstractException biae) {
+				catch (BeanIsAbstractException beanIsAbstractException) {
 				}
-				catch (Exception e) {
-					_log.error("Unable to register service " + beanName, e);
+				catch (Exception exception) {
+					_log.error(
+						"Unable to register service " + beanName, exception);
 				}
 			});
 
@@ -127,7 +128,7 @@ public class ApplicationContextServicePublisherUtil {
 
 				clazz = target.getClass();
 			}
-			catch (ReflectiveOperationException roe) {
+			catch (ReflectiveOperationException reflectiveOperationException) {
 			}
 		}
 
@@ -162,7 +163,7 @@ public class ApplicationContextServicePublisherUtil {
 		}
 
 		return bundleContext.registerService(
-			names.toArray(new String[names.size()]), bean, properties);
+			names.toArray(new String[0]), bean, properties);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

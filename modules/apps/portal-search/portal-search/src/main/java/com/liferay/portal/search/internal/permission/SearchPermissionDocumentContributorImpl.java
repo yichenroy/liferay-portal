@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
@@ -135,9 +135,11 @@ public class SearchPermissionDocumentContributorImpl
 				document, className, classPK);
 		}
 
+		String permissionName = _getPermissionName(document, className);
+
 		try {
 			List<Role> roles = _resourcePermissionLocalService.getRoles(
-				companyId, className, ResourceConstants.SCOPE_INDIVIDUAL,
+				companyId, permissionName, ResourceConstants.SCOPE_INDIVIDUAL,
 				String.valueOf(classPK), viewActionId);
 
 			if (roles.isEmpty()) {
@@ -159,26 +161,34 @@ public class SearchPermissionDocumentContributorImpl
 				}
 			}
 
+			document.addKeyword(Field.ROLE_ID, roleIds.toArray(new Long[0]));
 			document.addKeyword(
-				Field.ROLE_ID, roleIds.toArray(new Long[roleIds.size()]));
-			document.addKeyword(
-				Field.GROUP_ROLE_ID,
-				groupRoleIds.toArray(new String[groupRoleIds.size()]));
+				Field.GROUP_ROLE_ID, groupRoleIds.toArray(new String[0]));
 		}
-		catch (NoSuchResourceException nsre) {
+		catch (NoSuchResourceException noSuchResourceException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(nsre, nsre);
+				_log.debug(noSuchResourceException, noSuchResourceException);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
 						"Unable to get permission fields for class name ",
-						className, " and class PK ", classPK),
-					e);
+						permissionName, " and class PK ", classPK),
+					exception);
 			}
 		}
+	}
+
+	private String _getPermissionName(Document document, String defaultValue) {
+		String resourcePermissionName = document.get("resourcePermissionName");
+
+		if (Validator.isNull(resourcePermissionName)) {
+			return defaultValue;
+		}
+
+		return resourcePermissionName;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

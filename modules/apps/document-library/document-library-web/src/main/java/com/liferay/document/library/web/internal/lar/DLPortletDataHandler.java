@@ -33,7 +33,6 @@ import com.liferay.portal.util.PropsValues;
 
 import javax.portlet.PortletPreferences;
 
-import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -51,20 +50,6 @@ import org.osgi.service.component.annotations.Reference;
 	service = PortletDataHandler.class
 )
 public class DLPortletDataHandler extends BasePortletDataHandler {
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             DLAdminPortletDataHandler#NAMESPACE}
-	 */
-	@Deprecated
-	public static final String NAMESPACE = "document_library";
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             DLAdminPortletDataHandler#SCHEMA_VERSION}
-	 */
-	@Deprecated
-	public static final String SCHEMA_VERSION = "1.0.0";
 
 	@Override
 	public PortletPreferences deleteData(
@@ -128,7 +113,7 @@ public class DLPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Activate
-	protected void activate(BundleContext bundleContext) {
+	protected void activate() {
 		setDataLevel(DataLevel.PORTLET_INSTANCE);
 		setDataLocalized(true);
 		setDataPortletPreferences("rootFolderId");

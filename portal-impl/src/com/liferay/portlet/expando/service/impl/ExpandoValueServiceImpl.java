@@ -21,6 +21,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceMode;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -143,10 +144,9 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 			return null;
 		}
 
-		Serializable dataSerializable = expandoValueLocalService.getData(
-			companyId, className, tableName, columnName, classPK);
-
-		String data = dataSerializable.toString();
+		String data = String.valueOf(
+			expandoValueLocalService.getData(
+				companyId, className, tableName, columnName, classPK));
 
 		if (Validator.isNull(data)) {
 			return null;
@@ -156,11 +156,7 @@ public class ExpandoValueServiceImpl extends ExpandoValueServiceBaseImpl {
 			return JSONFactoryUtil.createJSONObject(data);
 		}
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("data", data);
-
-		return jsonObject;
+		return JSONUtil.put("data", data);
 	}
 
 }

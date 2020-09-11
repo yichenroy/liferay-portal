@@ -14,11 +14,13 @@
 
 package com.liferay.portal.search.internal.document;
 
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.Field;
 import com.liferay.portal.search.geolocation.GeoLocationPoint;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Michael C. Han
@@ -39,6 +42,16 @@ public class DocumentImpl implements Document {
 
 	public DocumentImpl(DocumentImpl documentImpl) {
 		_fields = new LinkedHashMap<>(documentImpl._fields);
+	}
+
+	@Override
+	public Boolean getBoolean(String name) {
+		return GetterUtil.getBoolean(getValue(name));
+	}
+
+	@Override
+	public List<Boolean> getBooleans(String name) {
+		return getValues(name, GetterUtil::getBoolean);
 	}
 
 	@Override
@@ -151,8 +164,9 @@ public class DocumentImpl implements Document {
 	public <T> List<T> getValues(String name, Function<Object, T> function) {
 		List<Object> values = getValues(name);
 
-		return values.stream(
-		).map(
+		Stream<Object> stream = values.stream();
+
+		return stream.map(
 			function
 		).collect(
 			Collectors.toList()
@@ -160,11 +174,70 @@ public class DocumentImpl implements Document {
 	}
 
 	public void setFieldValues(String name, Collection<Object> values) {
-		_fields.put(name, new FieldImpl(name, values));
+		if ((values == null) || values.isEmpty()) {
+			removeField(name);
+		}
+		else {
+			putField(name, values);
+		}
+	}
+
+	@Override
+	public String toString() {
+		return _fields.toString();
 	}
 
 	public void unsetField(String name) {
-		_fields.remove(name);
+		removeField(name);
+	}
+
+	protected Field putField(String name, Collection<Object> values) {
+		return _fields.put(name, new FieldImpl(name, values));
+	}
+
+	protected Field removeField(String name) {
+		return _fields.remove(name);
+	}
+
+	protected void setFieldValue(String name, Object value) {
+		if (_isEmpty(value)) {
+			removeField(name);
+		}
+		else {
+			putField(name, Collections.singleton(value));
+		}
+	}
+
+	protected void setFieldValues(String name, Object[] values) {
+		setFieldValues(name, _toCollection(values));
+	}
+
+	private static Collection<Object> _toCollection(Object[] values) {
+		if (ArrayUtil.isEmpty(values)) {
+			return null;
+		}
+
+		if ((values.length == 1) && (values[0] == null)) {
+			return null;
+		}
+
+		return Arrays.asList(values);
+	}
+
+	private boolean _isEmpty(Object value) {
+		if (value == null) {
+			return true;
+		}
+
+		if (value instanceof Collection) {
+			Collection<?> collection = (Collection<?>)value;
+
+			if (collection.isEmpty()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private final Map<String, Field> _fields;

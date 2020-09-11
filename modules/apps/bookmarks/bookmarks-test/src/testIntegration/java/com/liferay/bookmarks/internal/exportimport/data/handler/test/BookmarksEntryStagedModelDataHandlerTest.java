@@ -21,9 +21,9 @@ import com.liferay.bookmarks.service.BookmarksEntryLocalServiceUtil;
 import com.liferay.bookmarks.service.BookmarksFolderLocalServiceUtil;
 import com.liferay.bookmarks.test.util.BookmarksTestUtil;
 import com.liferay.exportimport.test.util.lar.BaseWorkflowedStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -79,11 +79,9 @@ public class BookmarksEntryStagedModelDataHandlerTest
 
 		BookmarksFolder folder = (BookmarksFolder)dependentStagedModels.get(0);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(group.getGroupId());
-
 		return BookmarksTestUtil.addEntry(
-			folder.getFolderId(), true, serviceContext);
+			folder.getFolderId(), true,
+			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 	}
 
 	@Override
@@ -99,14 +97,11 @@ public class BookmarksEntryStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return BookmarksEntryLocalServiceUtil.
-				getBookmarksEntryByUuidAndGroupId(uuid, group.getGroupId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return BookmarksEntryLocalServiceUtil.getBookmarksEntryByUuidAndGroupId(
+			uuid, group.getGroupId());
 	}
 
 	@Override

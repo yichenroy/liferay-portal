@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
@@ -26,15 +24,17 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalServic
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.storage.StorageType;
+import com.liferay.dynamic.data.mapping.util.DDMFormInstanceFactory;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.cache.CacheField;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DDMFormInstanceImpl extends DDMFormInstanceBaseImpl {
 
 	@Override
@@ -78,6 +78,21 @@ public class DDMFormInstanceImpl extends DDMFormInstanceBaseImpl {
 		}
 
 		return _formInstanceSettings;
+	}
+
+	@Override
+	public String getStorageType() throws PortalException {
+		DDMFormInstanceSettings ddmFormInstanceSettings =
+			DDMFormInstanceFactory.create(
+				DDMFormInstanceSettings.class, getSettingsDDMFormValues());
+
+		String storageType = ddmFormInstanceSettings.storageType();
+
+		if (Validator.isNotNull(storageType)) {
+			return storageType;
+		}
+
+		return StorageType.JSON.toString();
 	}
 
 	@Override

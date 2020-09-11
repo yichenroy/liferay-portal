@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.audit;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.audit.AuditMessage;
 import com.liferay.portal.kernel.audit.AuditRouter;
 import com.liferay.portal.kernel.messaging.proxy.BaseProxyBean;
@@ -23,7 +21,6 @@ import com.liferay.portal.kernel.messaging.proxy.BaseProxyBean;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class AuditRouterProxyBean extends BaseProxyBean implements AuditRouter {
 
 	@Override

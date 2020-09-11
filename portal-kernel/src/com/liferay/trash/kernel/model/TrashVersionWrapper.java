@@ -14,7 +14,7 @@
 
 package com.liferay.trash.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
 
@@ -39,7 +39,6 @@ com.liferay.trash.model.impl.TrashVersionImpl}
  * @generated
  */
 @Deprecated
-@ProviderType
 public class TrashVersionWrapper implements TrashVersion,
 	ModelWrapper<TrashVersion> {
 	public TrashVersionWrapper(TrashVersion trashVersion) {

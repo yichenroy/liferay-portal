@@ -14,14 +14,11 @@
 
 package com.liferay.microblogs.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class UnsupportedMicroblogsEntryException extends PortalException {
 
 	public UnsupportedMicroblogsEntryException() {
@@ -31,12 +28,14 @@ public class UnsupportedMicroblogsEntryException extends PortalException {
 		super(msg);
 	}
 
-	public UnsupportedMicroblogsEntryException(String msg, Throwable cause) {
-		super(msg, cause);
+	public UnsupportedMicroblogsEntryException(
+		String msg, Throwable throwable) {
+
+		super(msg, throwable);
 	}
 
-	public UnsupportedMicroblogsEntryException(Throwable cause) {
-		super(cause);
+	public UnsupportedMicroblogsEntryException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.microblogs.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.microblogs.model.MicroblogsEntry;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
@@ -34,22 +32,21 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class MicroblogsEntryCacheModel
 	implements CacheModel<MicroblogsEntry>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof MicroblogsEntryCacheModel)) {
+		if (!(object instanceof MicroblogsEntryCacheModel)) {
 			return false;
 		}
 
 		MicroblogsEntryCacheModel microblogsEntryCacheModel =
-			(MicroblogsEntryCacheModel)obj;
+			(MicroblogsEntryCacheModel)object;
 
 		if (microblogsEntryId == microblogsEntryCacheModel.microblogsEntryId) {
 			return true;

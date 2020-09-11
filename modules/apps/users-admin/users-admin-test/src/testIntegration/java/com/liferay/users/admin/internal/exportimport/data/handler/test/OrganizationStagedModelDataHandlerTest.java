@@ -16,6 +16,7 @@ package com.liferay.users.admin.internal.exportimport.data.handler.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.EmailAddress;
 import com.liferay.portal.kernel.model.Group;
@@ -32,7 +33,6 @@ import com.liferay.portal.kernel.service.OrgLaborLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.PasswordPolicyRelLocalServiceUtil;
 import com.liferay.portal.kernel.service.PhoneLocalServiceUtil;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.WebsiteLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
@@ -106,12 +106,10 @@ public class OrganizationStagedModelDataHandlerTest
 
 		OrganizationTestUtil.addOrgLabor(_organization);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(group.getGroupId());
-
 		PasswordPolicy passwordPolicy =
 			OrganizationTestUtil.addPasswordPolicyRel(
-				_organization, serviceContext);
+				_organization,
+				ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		addDependentStagedModel(
 			dependentStagedModelsMap, PasswordPolicy.class, passwordPolicy);
@@ -162,14 +160,11 @@ public class OrganizationStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return OrganizationLocalServiceUtil.
-				fetchOrganizationByUuidAndCompanyId(uuid, group.getCompanyId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return OrganizationLocalServiceUtil.getOrganizationByUuidAndCompanyId(
+			uuid, group.getCompanyId());
 	}
 
 	@Override

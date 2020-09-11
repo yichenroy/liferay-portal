@@ -14,12 +14,9 @@
 
 package com.liferay.dynamic.data.mapping.expression.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Leonardo Barros
  */
-@ProviderType
 public class MinusExpression extends UnaryExpression {
 
 	public MinusExpression(Expression operandExpression) {

@@ -26,15 +26,15 @@ import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
+import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
@@ -42,9 +42,9 @@ import com.liferay.dynamic.data.mapping.util.DDMUtil;
 import com.liferay.dynamic.data.mapping.util.DDMXML;
 import com.liferay.exportimport.resources.importer.portlet.preferences.PortletPreferencesTranslator;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.petra.string.CharPool;
@@ -55,6 +55,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -88,6 +89,7 @@ import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.MimeTypes;
@@ -154,6 +156,8 @@ public class FileSystemImporter extends BaseImporter {
 		RepositoryLocalService repositoryLocalService, SAXReader saxReader,
 		ThemeLocalService themeLocalService, DLURLHelper dlURLHelper) {
 
+		_dlURLHelper = dlURLHelper;
+
 		this.assetTagLocalService = assetTagLocalService;
 		this.ddmFormJSONDeserializer = ddmFormJSONDeserializer;
 		this.ddmFormXSDDeserializer = ddmFormXSDDeserializer;
@@ -181,7 +185,6 @@ public class FileSystemImporter extends BaseImporter {
 		this.repositoryLocalService = repositoryLocalService;
 		this.saxReader = saxReader;
 		this.themeLocalService = themeLocalService;
-		_dlURLHelper = dlURLHelper;
 	}
 
 	@Override
@@ -244,13 +247,14 @@ public class FileSystemImporter extends BaseImporter {
 					script, ddmTemplate.isCacheable(), serviceContext);
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"Unable to import widget template " + file.getName(), pe);
+					"Unable to import widget template " + file.getName(),
+					portalException);
 			}
 
-			throw pe;
+			throw portalException;
 		}
 	}
 
@@ -424,12 +428,13 @@ public class FileSystemImporter extends BaseImporter {
 					getMap(name), null, ddmForm, ddmFormLayout, serviceContext);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to import DDM structure " + fileName, e);
+				_log.warn(
+					"Unable to import DDM structure " + fileName, exception);
 			}
 
-			throw e;
+			throw exception;
 		}
 
 		addDDLDisplayTemplates(
@@ -454,19 +459,11 @@ public class FileSystemImporter extends BaseImporter {
 		File[] files = listFiles(dir);
 
 		for (File file : files) {
-			InputStream inputStream = null;
-
-			try {
-				inputStream = new BufferedInputStream(
-					new FileInputStream(file));
+			try (InputStream inputStream = new BufferedInputStream(
+					new FileInputStream(file))) {
 
 				addDDMStructures(
 					parentDDMStructureKey, file.getName(), inputStream);
-			}
-			finally {
-				if (inputStream != null) {
-					inputStream.close();
-				}
 			}
 		}
 	}
@@ -556,12 +553,14 @@ public class FileSystemImporter extends BaseImporter {
 					getMap(name), null, ddmForm, ddmFormLayout, serviceContext);
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to import DDM structure " + fileName, pe);
+				_log.warn(
+					"Unable to import DDM structure " + fileName,
+					portalException);
 			}
 
-			throw pe;
+			throw portalException;
 		}
 
 		_ddmStructureKeys.add(ddmStructure.getStructureKey());
@@ -628,12 +627,14 @@ public class FileSystemImporter extends BaseImporter {
 					serviceContext);
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to import DDM template " + fileName, pe);
+				_log.warn(
+					"Unable to import DDM template " + fileName,
+					portalException);
 			}
 
-			throw pe;
+			throw portalException;
 		}
 	}
 
@@ -649,18 +650,10 @@ public class FileSystemImporter extends BaseImporter {
 		File[] files = listFiles(dir);
 
 		for (File file : files) {
-			InputStream inputStream = null;
-
-			try {
-				inputStream = new BufferedInputStream(
-					new FileInputStream(file));
+			try (InputStream inputStream = new BufferedInputStream(
+					new FileInputStream(file))) {
 
 				addDDMTemplates(ddmStructureKey, file.getName(), inputStream);
-			}
-			finally {
-				if (inputStream != null) {
-					inputStream.close();
-				}
 			}
 		}
 	}
@@ -724,12 +717,14 @@ public class FileSystemImporter extends BaseImporter {
 					ddmTemplate.isCacheable(), serviceContext);
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to import DDM template " + fileName, pe);
+				_log.warn(
+					"Unable to import DDM template " + fileName,
+					portalException);
 			}
 
-			throw pe;
+			throw portalException;
 		}
 
 		addJournalArticles(
@@ -765,18 +760,11 @@ public class FileSystemImporter extends BaseImporter {
 	protected void addDLFileEntry(long parentFolderId, File file)
 		throws Exception {
 
-		InputStream inputStream = null;
-
-		try {
-			inputStream = new BufferedInputStream(new FileInputStream(file));
+		try (InputStream inputStream = new BufferedInputStream(
+				new FileInputStream(file))) {
 
 			addDLFileEntry(
 				parentFolderId, file.getName(), inputStream, file.length());
-		}
-		finally {
-			if (inputStream != null) {
-				inputStream.close();
-			}
 		}
 	}
 
@@ -797,12 +785,14 @@ public class FileSystemImporter extends BaseImporter {
 					StringPool.BLANK, StringPool.BLANK, inputStream, length,
 					serviceContext);
 			}
-			catch (DuplicateFileEntryException dfee) {
+			catch (DuplicateFileEntryException duplicateFileEntryException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(dfee, dfee);
+					_log.debug(
+						duplicateFileEntryException,
+						duplicateFileEntryException);
 				}
 
 				fileEntry = dlAppLocalService.getFileEntry(
@@ -822,12 +812,14 @@ public class FileSystemImporter extends BaseImporter {
 					previousVersion);
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to import DL file entry " + fileName, pe);
+				_log.warn(
+					"Unable to import DL file entry " + fileName,
+					portalException);
 			}
 
-			throw pe;
+			throw portalException;
 		}
 
 		addPrimaryKey(DLFileEntry.class.getName(), fileEntry.getPrimaryKey());
@@ -889,20 +881,12 @@ public class FileSystemImporter extends BaseImporter {
 		File[] files = listFiles(dir);
 
 		for (File file : files) {
-			InputStream inputStream = null;
-
-			try {
-				inputStream = new BufferedInputStream(
-					new FileInputStream(file));
+			try (InputStream inputStream = new BufferedInputStream(
+					new FileInputStream(file))) {
 
 				addJournalArticles(
 					ddmStructureKey, ddmTemplateKey, file.getName(), folderId,
 					inputStream);
-			}
-			finally {
-				if (inputStream != null) {
-					inputStream.close();
-				}
 			}
 		}
 	}
@@ -995,12 +979,14 @@ public class FileSystemImporter extends BaseImporter {
 				StringPool.BLANK, new HashMap<String, Serializable>(),
 				serviceContext);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to import journal article " + fileName, pe);
+				_log.warn(
+					"Unable to import journal article " + fileName,
+					portalException);
 			}
 
-			throw pe;
+			throw portalException;
 		}
 
 		addPrimaryKey(
@@ -1035,8 +1021,6 @@ public class FileSystemImporter extends BaseImporter {
 
 		String colorSchemeId = layoutJSONObject.getString("colorSchemeId");
 
-		Map<Locale, String> friendlyURLMap = new HashMap<>();
-
 		String friendlyURL = layoutJSONObject.getString("friendlyURL");
 
 		if (Validator.isNotNull(friendlyURL) &&
@@ -1045,7 +1029,9 @@ public class FileSystemImporter extends BaseImporter {
 			friendlyURL = StringPool.SLASH + friendlyURL;
 		}
 
-		friendlyURLMap.put(LocaleUtil.getDefault(), friendlyURL);
+		Map<Locale, String> friendlyURLMap = HashMapBuilder.put(
+			LocaleUtil.getDefault(), friendlyURL
+		).build();
 
 		ServiceContext serviceContext = new ServiceContext();
 
@@ -1158,12 +1144,13 @@ public class FileSystemImporter extends BaseImporter {
 
 			addLayouts(privateLayout, layout.getLayoutId(), layoutsJSONArray);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to import layout " + layoutJSONObject, e);
+				_log.warn(
+					"Unable to import layout " + layoutJSONObject, exception);
 			}
 
-			throw e;
+			throw exception;
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -1344,12 +1331,13 @@ public class FileSystemImporter extends BaseImporter {
 						serviceContext);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to import layout prototype " + name, e);
+				_log.warn(
+					"Unable to import layout prototype " + name, exception);
 			}
 
-			throw e;
+			throw exception;
 		}
 
 		JSONArray columnsJSONArray = layoutTemplateJSONObject.getJSONArray(
@@ -1501,20 +1489,18 @@ public class FileSystemImporter extends BaseImporter {
 	}
 
 	protected JSONObject getDefaultPortletJSONObject(String journalArticleId) {
-		JSONObject portletJSONObject = JSONFactoryUtil.createJSONObject();
-
-		portletJSONObject.put("portletId", _JOURNAL_CONTENT_PORTLET_ID);
-
-		JSONObject portletPreferencesJSONObject =
-			JSONFactoryUtil.createJSONObject();
-
-		portletPreferencesJSONObject.put("articleId", journalArticleId);
-		portletPreferencesJSONObject.put("groupId", groupId);
-		portletPreferencesJSONObject.put(
-			"portletSetupPortletDecoratorId", "borderless");
+		JSONObject portletJSONObject = JSONUtil.put(
+			"portletId", _JOURNAL_CONTENT_PORTLET_ID);
 
 		portletJSONObject.put(
-			"portletPreferences", portletPreferencesJSONObject);
+			"portletPreferences",
+			JSONUtil.put(
+				"articleId", journalArticleId
+			).put(
+				"groupId", groupId
+			).put(
+				"portletSetupPortletDecoratorId", "borderless"
+			));
 
 		return portletJSONObject;
 	}
@@ -1554,19 +1540,14 @@ public class FileSystemImporter extends BaseImporter {
 	}
 
 	protected JSONObject getJSONObject(String fileName) throws Exception {
-		InputStream inputStream = getInputStream(fileName);
-
-		if (inputStream == null) {
-			return null;
-		}
-
 		String json = null;
 
-		try {
+		try (InputStream inputStream = getInputStream(fileName)) {
+			if (inputStream == null) {
+				return null;
+			}
+
 			json = StringUtil.read(inputStream);
-		}
-		finally {
-			inputStream.close();
 		}
 
 		json = StringUtil.replace(
@@ -1651,13 +1632,13 @@ public class FileSystemImporter extends BaseImporter {
 				try {
 					indexer.reindex(className, primaryKey);
 				}
-				catch (SearchException se) {
+				catch (SearchException searchException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							StringBundler.concat(
 								"Unable to index entry for class name ",
 								className, " and primary key ", primaryKey),
-							se);
+							searchException);
 					}
 				}
 			}
@@ -1691,7 +1672,7 @@ public class FileSystemImporter extends BaseImporter {
 						JournalArticle.class.getName(),
 						journalArticle.getPrimaryKey());
 				}
-				catch (SearchException se) {
+				catch (SearchException searchException) {
 					if (_log.isWarnEnabled()) {
 						StringBundler sb = new StringBundler(4);
 
@@ -1700,7 +1681,7 @@ public class FileSystemImporter extends BaseImporter {
 						sb.append(", primaryKey=");
 						sb.append(journalArticle.getPrimaryKey());
 
-						_log.warn(sb.toString(), se);
+						_log.warn(sb.toString(), searchException);
 					}
 				}
 			}
@@ -1737,7 +1718,7 @@ public class FileSystemImporter extends BaseImporter {
 			}
 		}
 
-		return filesList.toArray(new File[filesList.size()]);
+		return filesList.toArray(new File[0]);
 	}
 
 	protected String replaceFileEntryURL(String content) throws Exception {
@@ -1777,9 +1758,10 @@ public class FileSystemImporter extends BaseImporter {
 	}
 
 	protected void resetLayoutColumns(Layout layout) throws PortalException {
-		UnicodeProperties typeSettings = layout.getTypeSettingsProperties();
+		UnicodeProperties unicodeProperties =
+			layout.getTypeSettingsProperties();
 
-		Set<Map.Entry<String, String>> set = typeSettings.entrySet();
+		Set<Map.Entry<String, String>> set = unicodeProperties.entrySet();
 
 		Iterator<Map.Entry<String, String>> iterator = set.iterator();
 
@@ -1801,12 +1783,12 @@ public class FileSystemImporter extends BaseImporter {
 						PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid(),
 						portletId);
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to delete portlet preferences for " +
 								"portlet " + portletId,
-							pe);
+							portalException);
 					}
 				}
 			}
@@ -1814,7 +1796,7 @@ public class FileSystemImporter extends BaseImporter {
 			iterator.remove();
 		}
 
-		layout.setTypeSettingsProperties(typeSettings);
+		layout.setTypeSettingsProperties(unicodeProperties);
 
 		layoutLocalService.updateLayout(layout);
 	}

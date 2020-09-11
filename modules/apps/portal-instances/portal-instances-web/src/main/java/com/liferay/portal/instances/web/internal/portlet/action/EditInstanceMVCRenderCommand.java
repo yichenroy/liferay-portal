@@ -56,26 +56,26 @@ public class EditInstanceMVCRenderCommand implements MVCRenderCommand {
 		try {
 			getInstance(renderRequest);
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchCompanyException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchCompanyException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
 
 				return "/error.jsp";
 			}
 
-			throw new PortletException(e);
+			throw new PortletException(exception);
 		}
 
 		return "/edit_instance.jsp";
 	}
 
 	protected void getInstance(PortletRequest portletRequest) throws Exception {
-		HttpServletRequest request = _portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			portletRequest);
 
-		long companyId = ParamUtil.getLong(request, "companyId");
+		long companyId = ParamUtil.getLong(httpServletRequest, "companyId");
 
 		Company company = null;
 
@@ -83,7 +83,7 @@ public class EditInstanceMVCRenderCommand implements MVCRenderCommand {
 			company = _companyLocalService.getCompanyById(companyId);
 		}
 
-		request.setAttribute(WebKeys.SEL_COMPANY, company);
+		httpServletRequest.setAttribute(WebKeys.SEL_COMPANY, company);
 	}
 
 	@Reference

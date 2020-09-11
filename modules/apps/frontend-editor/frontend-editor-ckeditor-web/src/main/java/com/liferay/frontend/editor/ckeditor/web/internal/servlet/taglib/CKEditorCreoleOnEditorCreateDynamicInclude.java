@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.util.StreamUtil;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.net.URL;
 
@@ -39,8 +40,8 @@ public class CKEditorCreoleOnEditorCreateDynamicInclude
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
 		Bundle bundle = _bundleContext.getBundle();
@@ -50,9 +51,14 @@ public class CKEditorCreoleOnEditorCreateDynamicInclude
 				"/creole_dialog_definition.js");
 
 		StreamUtil.transfer(
-			entryURL.openStream(), response.getOutputStream(), false);
+			entryURL.openStream(), httpServletResponse.getOutputStream(),
+			false);
 
-		String toolbarSet = (String)request.getAttribute(
+		PrintWriter printWriter = httpServletResponse.getWriter();
+
+		printWriter.println();
+
+		String toolbarSet = (String)httpServletRequest.getAttribute(
 			CKEditorConstants.ATTRIBUTE_NAMESPACE + ":toolbarSet");
 
 		if (toolbarSet.equals("creole")) {
@@ -60,7 +66,10 @@ public class CKEditorCreoleOnEditorCreateDynamicInclude
 				"/META-INF/resources/ckeditor/extension/creole_dialog_show.js");
 
 			StreamUtil.transfer(
-				entryURL.openStream(), response.getOutputStream(), false);
+				entryURL.openStream(), httpServletResponse.getOutputStream(),
+				false);
+
+			printWriter.println();
 		}
 	}
 

@@ -66,9 +66,9 @@ public class HTMLTag extends BaseHTMLTag {
 		try {
 			return DDMUtil.getDDMForm(getClassNameId(), getClassPK());
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(getLogMessage(), pe);
+				_log.warn(getLogMessage(), portalException);
 			}
 		}
 
@@ -86,9 +86,9 @@ public class HTMLTag extends BaseHTMLTag {
 				return DDMUtil.getDDMFormValues(
 					ddmForm, serializedDDMFormValues);
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
+					_log.debug(portalException, portalException);
 				}
 			}
 		}
@@ -119,9 +119,9 @@ public class HTMLTag extends BaseHTMLTag {
 				return DDMUtil.getFields(ddmStructureId, getDdmFormValues());
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(getLogMessage(), pe);
+				_log.warn(getLogMessage(), portalException);
 			}
 		}
 
@@ -148,21 +148,13 @@ public class HTMLTag extends BaseHTMLTag {
 
 			return ddmTemplate.getMode();
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(getLogMessage(), pe);
+				_log.warn(getLogMessage(), portalException);
 			}
 		}
 
 		return null;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected String getRandomNamespace() {
-		return PortalUtil.generateRandomKey(request, "taglib_ddm_init-ext");
 	}
 
 	@Override
@@ -175,26 +167,26 @@ public class HTMLTag extends BaseHTMLTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		super.setAttributes(request);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		super.setAttributes(httpServletRequest);
 
-		setNamespacedAttribute(request, "ddmForm", getDDMForm());
+		setNamespacedAttribute(httpServletRequest, "ddmForm", getDDMForm());
 		setNamespacedAttribute(
-			request, "ddmFormValuesInputName", getDDMFormValuesInputName());
-		setNamespacedAttribute(request, "fields", getFields());
+			httpServletRequest, "ddmFormValuesInputName",
+			getDDMFormValuesInputName());
+		setNamespacedAttribute(httpServletRequest, "fields", getFields());
 
 		if (getGroupId() <= 0) {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			setNamespacedAttribute(
-				request, "groupId",
+				httpServletRequest, "groupId",
 				String.valueOf(themeDisplay.getSiteGroupId()));
 		}
 
-		setNamespacedAttribute(request, "mode", getMode());
-		setNamespacedAttribute(
-			request, "randomNamespace", getRandomNamespace());
+		setNamespacedAttribute(httpServletRequest, "mode", getMode());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(HTMLTag.class);

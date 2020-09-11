@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.aggregation.metrics;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.AggregationVisitor;
 import com.liferay.portal.search.aggregation.metrics.ScriptedMetricAggregation;
 import com.liferay.portal.search.internal.aggregation.BaseAggregation;
@@ -28,7 +26,6 @@ import java.util.Map;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class ScriptedMetricAggregationImpl
 	extends BaseAggregation implements ScriptedMetricAggregation {
 

@@ -14,8 +14,6 @@
 
 package com.liferay.screens.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.screens.service.ScreensDDMStructureVersionServiceUtil;
@@ -48,9 +46,10 @@ import java.rmi.RemoteException;
  *
  * @author José Manuel Navarro
  * @see ScreensDDMStructureVersionServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class ScreensDDMStructureVersionServiceSoap {
 
 	public static String getDDMStructureVersion(long structureId)
@@ -63,10 +62,10 @@ public class ScreensDDMStructureVersionServiceSoap {
 
 			return returnValue.toString();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 

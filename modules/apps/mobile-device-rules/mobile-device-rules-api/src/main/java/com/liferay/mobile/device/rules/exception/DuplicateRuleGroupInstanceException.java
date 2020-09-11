@@ -14,14 +14,11 @@
 
 package com.liferay.mobile.device.rules.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Edward C. Han
  */
-@ProviderType
 public class DuplicateRuleGroupInstanceException extends PortalException {
 
 	public DuplicateRuleGroupInstanceException() {
@@ -31,12 +28,14 @@ public class DuplicateRuleGroupInstanceException extends PortalException {
 		super(msg);
 	}
 
-	public DuplicateRuleGroupInstanceException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DuplicateRuleGroupInstanceException(
+		String msg, Throwable throwable) {
+
+		super(msg, throwable);
 	}
 
-	public DuplicateRuleGroupInstanceException(Throwable cause) {
-		super(cause);
+	public DuplicateRuleGroupInstanceException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

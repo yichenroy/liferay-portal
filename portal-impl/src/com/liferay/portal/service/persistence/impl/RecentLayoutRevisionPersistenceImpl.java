@@ -14,10 +14,8 @@
 
 package com.liferay.portal.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
@@ -29,23 +27,30 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchRecentLayoutRevisionException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.RecentLayoutRevision;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
+import com.liferay.portal.kernel.model.RecentLayoutRevisionTable;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.RecentLayoutRevisionPersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.model.impl.RecentLayoutRevisionImpl;
 import com.liferay.portal.model.impl.RecentLayoutRevisionModelImpl;
+import com.liferay.registry.Registry;
+import com.liferay.registry.RegistryUtil;
+import com.liferay.registry.ServiceRegistration;
 
 import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The persistence implementation for the recent layout revision service.
@@ -57,7 +62,6 @@ import java.util.Map;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class RecentLayoutRevisionPersistenceImpl
 	extends BasePersistenceImpl<RecentLayoutRevision>
 	implements RecentLayoutRevisionPersistence {
@@ -99,7 +103,7 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns a range of all the recent layout revisions where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -118,7 +122,7 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns an ordered range of all the recent layout revisions where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -139,47 +143,47 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns an ordered range of all the recent layout revisions where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param groupId the group ID
 	 * @param start the lower bound of the range of recent layout revisions
 	 * @param end the upper bound of the range of recent layout revisions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching recent layout revisions
 	 */
 	@Override
 	public List<RecentLayoutRevision> findByGroupId(
 		long groupId, int start, int end,
 		OrderByComparator<RecentLayoutRevision> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByGroupId;
-			finderArgs = new Object[] {groupId};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByGroupId;
+				finderArgs = new Object[] {groupId};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByGroupId;
 			finderArgs = new Object[] {groupId, start, end, orderByComparator};
 		}
 
 		List<RecentLayoutRevision> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<RecentLayoutRevision>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (RecentLayoutRevision recentLayoutRevision : list) {
-					if ((groupId != recentLayoutRevision.getGroupId())) {
+					if (groupId != recentLayoutRevision.getGroupId()) {
 						list = null;
 
 						break;
@@ -189,62 +193,52 @@ public class RecentLayoutRevisionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
+			sb.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
 
-			query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				if (!pagination) {
-					list = (List<RecentLayoutRevision>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<RecentLayoutRevision>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<RecentLayoutRevision>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -275,16 +269,16 @@ public class RecentLayoutRevisionPersistenceImpl
 			return recentLayoutRevision;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchRecentLayoutRevisionException(msg.toString());
+		throw new NoSuchRecentLayoutRevisionException(sb.toString());
 	}
 
 	/**
@@ -330,16 +324,16 @@ public class RecentLayoutRevisionPersistenceImpl
 			return recentLayoutRevision;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("groupId=");
-		msg.append(groupId);
+		sb.append("groupId=");
+		sb.append(groupId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchRecentLayoutRevisionException(msg.toString());
+		throw new NoSuchRecentLayoutRevisionException(sb.toString());
 	}
 
 	/**
@@ -407,8 +401,8 @@ public class RecentLayoutRevisionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -420,102 +414,102 @@ public class RecentLayoutRevisionPersistenceImpl
 		long groupId, OrderByComparator<RecentLayoutRevision> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
+		sb.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
 
-		query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+		sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
+			sb.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(groupId);
+		queryPos.add(groupId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						recentLayoutRevision)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<RecentLayoutRevision> list = q.list();
+		List<RecentLayoutRevision> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -556,33 +550,31 @@ public class RecentLayoutRevisionPersistenceImpl
 			finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_RECENTLAYOUTREVISION_WHERE);
+			sb.append(_SQL_COUNT_RECENTLAYOUTREVISION_WHERE);
 
-			query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(groupId);
+				queryPos.add(groupId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -614,7 +606,7 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns a range of all the recent layout revisions where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -633,7 +625,7 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns an ordered range of all the recent layout revisions where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -654,47 +646,47 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns an ordered range of all the recent layout revisions where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
 	 * @param start the lower bound of the range of recent layout revisions
 	 * @param end the upper bound of the range of recent layout revisions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching recent layout revisions
 	 */
 	@Override
 	public List<RecentLayoutRevision> findByUserId(
 		long userId, int start, int end,
 		OrderByComparator<RecentLayoutRevision> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUserId;
-			finderArgs = new Object[] {userId};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByUserId;
+				finderArgs = new Object[] {userId};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByUserId;
 			finderArgs = new Object[] {userId, start, end, orderByComparator};
 		}
 
 		List<RecentLayoutRevision> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<RecentLayoutRevision>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (RecentLayoutRevision recentLayoutRevision : list) {
-					if ((userId != recentLayoutRevision.getUserId())) {
+					if (userId != recentLayoutRevision.getUserId()) {
 						list = null;
 
 						break;
@@ -704,62 +696,52 @@ public class RecentLayoutRevisionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
+			sb.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
 
-			query.append(_FINDER_COLUMN_USERID_USERID_2);
+			sb.append(_FINDER_COLUMN_USERID_USERID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(userId);
+				queryPos.add(userId);
 
-				if (!pagination) {
-					list = (List<RecentLayoutRevision>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<RecentLayoutRevision>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<RecentLayoutRevision>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -790,16 +772,16 @@ public class RecentLayoutRevisionPersistenceImpl
 			return recentLayoutRevision;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("userId=");
-		msg.append(userId);
+		sb.append("userId=");
+		sb.append(userId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchRecentLayoutRevisionException(msg.toString());
+		throw new NoSuchRecentLayoutRevisionException(sb.toString());
 	}
 
 	/**
@@ -845,16 +827,16 @@ public class RecentLayoutRevisionPersistenceImpl
 			return recentLayoutRevision;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("userId=");
-		msg.append(userId);
+		sb.append("userId=");
+		sb.append(userId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchRecentLayoutRevisionException(msg.toString());
+		throw new NoSuchRecentLayoutRevisionException(sb.toString());
 	}
 
 	/**
@@ -921,8 +903,8 @@ public class RecentLayoutRevisionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -934,102 +916,102 @@ public class RecentLayoutRevisionPersistenceImpl
 		OrderByComparator<RecentLayoutRevision> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
+		sb.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
 
-		query.append(_FINDER_COLUMN_USERID_USERID_2);
+		sb.append(_FINDER_COLUMN_USERID_USERID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
+			sb.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(userId);
+		queryPos.add(userId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						recentLayoutRevision)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<RecentLayoutRevision> list = q.list();
+		List<RecentLayoutRevision> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1070,33 +1052,31 @@ public class RecentLayoutRevisionPersistenceImpl
 			finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_RECENTLAYOUTREVISION_WHERE);
+			sb.append(_SQL_COUNT_RECENTLAYOUTREVISION_WHERE);
 
-			query.append(_FINDER_COLUMN_USERID_USERID_2);
+			sb.append(_FINDER_COLUMN_USERID_USERID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(userId);
+				queryPos.add(userId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1131,7 +1111,7 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns a range of all the recent layout revisions where layoutRevisionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param layoutRevisionId the layout revision ID
@@ -1150,7 +1130,7 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns an ordered range of all the recent layout revisions where layoutRevisionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param layoutRevisionId the layout revision ID
@@ -1172,34 +1152,34 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns an ordered range of all the recent layout revisions where layoutRevisionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param layoutRevisionId the layout revision ID
 	 * @param start the lower bound of the range of recent layout revisions
 	 * @param end the upper bound of the range of recent layout revisions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching recent layout revisions
 	 */
 	@Override
 	public List<RecentLayoutRevision> findByLayoutRevisionId(
 		long layoutRevisionId, int start, int end,
 		OrderByComparator<RecentLayoutRevision> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByLayoutRevisionId;
-			finderArgs = new Object[] {layoutRevisionId};
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByLayoutRevisionId;
+				finderArgs = new Object[] {layoutRevisionId};
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindByLayoutRevisionId;
 			finderArgs = new Object[] {
 				layoutRevisionId, start, end, orderByComparator
@@ -1208,14 +1188,14 @@ public class RecentLayoutRevisionPersistenceImpl
 
 		List<RecentLayoutRevision> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<RecentLayoutRevision>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (RecentLayoutRevision recentLayoutRevision : list) {
-					if ((layoutRevisionId !=
-							recentLayoutRevision.getLayoutRevisionId())) {
+					if (layoutRevisionId !=
+							recentLayoutRevision.getLayoutRevisionId()) {
 
 						list = null;
 
@@ -1226,62 +1206,52 @@ public class RecentLayoutRevisionPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
+			sb.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
 
-			query.append(_FINDER_COLUMN_LAYOUTREVISIONID_LAYOUTREVISIONID_2);
+			sb.append(_FINDER_COLUMN_LAYOUTREVISIONID_LAYOUTREVISIONID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(layoutRevisionId);
+				queryPos.add(layoutRevisionId);
 
-				if (!pagination) {
-					list = (List<RecentLayoutRevision>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<RecentLayoutRevision>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<RecentLayoutRevision>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1312,16 +1282,16 @@ public class RecentLayoutRevisionPersistenceImpl
 			return recentLayoutRevision;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("layoutRevisionId=");
-		msg.append(layoutRevisionId);
+		sb.append("layoutRevisionId=");
+		sb.append(layoutRevisionId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchRecentLayoutRevisionException(msg.toString());
+		throw new NoSuchRecentLayoutRevisionException(sb.toString());
 	}
 
 	/**
@@ -1367,16 +1337,16 @@ public class RecentLayoutRevisionPersistenceImpl
 			return recentLayoutRevision;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("layoutRevisionId=");
-		msg.append(layoutRevisionId);
+		sb.append("layoutRevisionId=");
+		sb.append(layoutRevisionId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchRecentLayoutRevisionException(msg.toString());
+		throw new NoSuchRecentLayoutRevisionException(sb.toString());
 	}
 
 	/**
@@ -1444,8 +1414,8 @@ public class RecentLayoutRevisionPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1458,102 +1428,102 @@ public class RecentLayoutRevisionPersistenceImpl
 		OrderByComparator<RecentLayoutRevision> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
+		sb.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
 
-		query.append(_FINDER_COLUMN_LAYOUTREVISIONID_LAYOUTREVISIONID_2);
+		sb.append(_FINDER_COLUMN_LAYOUTREVISIONID_LAYOUTREVISIONID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
+			sb.append(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(layoutRevisionId);
+		queryPos.add(layoutRevisionId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						recentLayoutRevision)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<RecentLayoutRevision> list = q.list();
+		List<RecentLayoutRevision> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1595,33 +1565,31 @@ public class RecentLayoutRevisionPersistenceImpl
 			finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_RECENTLAYOUTREVISION_WHERE);
+			sb.append(_SQL_COUNT_RECENTLAYOUTREVISION_WHERE);
 
-			query.append(_FINDER_COLUMN_LAYOUTREVISIONID_LAYOUTREVISIONID_2);
+			sb.append(_FINDER_COLUMN_LAYOUTREVISIONID_LAYOUTREVISIONID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(layoutRevisionId);
+				queryPos.add(layoutRevisionId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1656,26 +1624,26 @@ public class RecentLayoutRevisionPersistenceImpl
 			userId, layoutSetBranchId, plid);
 
 		if (recentLayoutRevision == null) {
-			StringBundler msg = new StringBundler(8);
+			StringBundler sb = new StringBundler(8);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("userId=");
-			msg.append(userId);
+			sb.append("userId=");
+			sb.append(userId);
 
-			msg.append(", layoutSetBranchId=");
-			msg.append(layoutSetBranchId);
+			sb.append(", layoutSetBranchId=");
+			sb.append(layoutSetBranchId);
 
-			msg.append(", plid=");
-			msg.append(plid);
+			sb.append(", plid=");
+			sb.append(plid);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchRecentLayoutRevisionException(msg.toString());
+			throw new NoSuchRecentLayoutRevisionException(sb.toString());
 		}
 
 		return recentLayoutRevision;
@@ -1702,19 +1670,23 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * @param userId the user ID
 	 * @param layoutSetBranchId the layout set branch ID
 	 * @param plid the plid
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching recent layout revision, or <code>null</code> if a matching recent layout revision could not be found
 	 */
 	@Override
 	public RecentLayoutRevision fetchByU_L_P(
 		long userId, long layoutSetBranchId, long plid,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		Object[] finderArgs = new Object[] {userId, layoutSetBranchId, plid};
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {userId, layoutSetBranchId, plid};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByU_L_P, finderArgs, this);
 		}
@@ -1733,38 +1705,40 @@ public class RecentLayoutRevisionPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(5);
+			StringBundler sb = new StringBundler(5);
 
-			query.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
+			sb.append(_SQL_SELECT_RECENTLAYOUTREVISION_WHERE);
 
-			query.append(_FINDER_COLUMN_U_L_P_USERID_2);
+			sb.append(_FINDER_COLUMN_U_L_P_USERID_2);
 
-			query.append(_FINDER_COLUMN_U_L_P_LAYOUTSETBRANCHID_2);
+			sb.append(_FINDER_COLUMN_U_L_P_LAYOUTSETBRANCHID_2);
 
-			query.append(_FINDER_COLUMN_U_L_P_PLID_2);
+			sb.append(_FINDER_COLUMN_U_L_P_PLID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(userId);
+				queryPos.add(userId);
 
-				qPos.add(layoutSetBranchId);
+				queryPos.add(layoutSetBranchId);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
-				List<RecentLayoutRevision> list = q.list();
+				List<RecentLayoutRevision> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByU_L_P, finderArgs, list);
+					if (useFinderCache) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByU_L_P, finderArgs, list);
+					}
 				}
 				else {
 					RecentLayoutRevision recentLayoutRevision = list.get(0);
@@ -1774,11 +1748,8 @@ public class RecentLayoutRevisionPersistenceImpl
 					cacheResult(recentLayoutRevision);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByU_L_P, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1830,41 +1801,39 @@ public class RecentLayoutRevisionPersistenceImpl
 			finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_RECENTLAYOUTREVISION_WHERE);
+			sb.append(_SQL_COUNT_RECENTLAYOUTREVISION_WHERE);
 
-			query.append(_FINDER_COLUMN_U_L_P_USERID_2);
+			sb.append(_FINDER_COLUMN_U_L_P_USERID_2);
 
-			query.append(_FINDER_COLUMN_U_L_P_LAYOUTSETBRANCHID_2);
+			sb.append(_FINDER_COLUMN_U_L_P_LAYOUTSETBRANCHID_2);
 
-			query.append(_FINDER_COLUMN_U_L_P_PLID_2);
+			sb.append(_FINDER_COLUMN_U_L_P_PLID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(userId);
+				queryPos.add(userId);
 
-				qPos.add(layoutSetBranchId);
+				queryPos.add(layoutSetBranchId);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1888,8 +1857,8 @@ public class RecentLayoutRevisionPersistenceImpl
 
 		setModelImplClass(RecentLayoutRevisionImpl.class);
 		setModelPKClass(long.class);
-		setEntityCacheEnabled(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED);
+
+		setTable(RecentLayoutRevisionTable.INSTANCE);
 	}
 
 	/**
@@ -1900,7 +1869,6 @@ public class RecentLayoutRevisionPersistenceImpl
 	@Override
 	public void cacheResult(RecentLayoutRevision recentLayoutRevision) {
 		EntityCacheUtil.putResult(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
 			RecentLayoutRevisionImpl.class,
 			recentLayoutRevision.getPrimaryKey(), recentLayoutRevision);
 
@@ -1912,8 +1880,6 @@ public class RecentLayoutRevisionPersistenceImpl
 				recentLayoutRevision.getPlid()
 			},
 			recentLayoutRevision);
-
-		recentLayoutRevision.resetOriginalValues();
 	}
 
 	/**
@@ -1927,14 +1893,10 @@ public class RecentLayoutRevisionPersistenceImpl
 				recentLayoutRevisions) {
 
 			if (EntityCacheUtil.getResult(
-					RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
 					RecentLayoutRevisionImpl.class,
 					recentLayoutRevision.getPrimaryKey()) == null) {
 
 				cacheResult(recentLayoutRevision);
-			}
-			else {
-				recentLayoutRevision.resetOriginalValues();
 			}
 		}
 	}
@@ -1965,32 +1927,28 @@ public class RecentLayoutRevisionPersistenceImpl
 	@Override
 	public void clearCache(RecentLayoutRevision recentLayoutRevision) {
 		EntityCacheUtil.removeResult(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
-			recentLayoutRevision.getPrimaryKey());
-
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache(
-			(RecentLayoutRevisionModelImpl)recentLayoutRevision, true);
+			RecentLayoutRevisionImpl.class, recentLayoutRevision);
 	}
 
 	@Override
 	public void clearCache(List<RecentLayoutRevision> recentLayoutRevisions) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (RecentLayoutRevision recentLayoutRevision :
 				recentLayoutRevisions) {
 
 			EntityCacheUtil.removeResult(
-				RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-				RecentLayoutRevisionImpl.class,
-				recentLayoutRevision.getPrimaryKey());
+				RecentLayoutRevisionImpl.class, recentLayoutRevision);
+		}
+	}
 
-			clearUniqueFindersCache(
-				(RecentLayoutRevisionModelImpl)recentLayoutRevision, true);
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		for (Serializable primaryKey : primaryKeys) {
+			EntityCacheUtil.removeResult(
+				RecentLayoutRevisionImpl.class, primaryKey);
 		}
 	}
 
@@ -2010,35 +1968,6 @@ public class RecentLayoutRevisionPersistenceImpl
 			false);
 	}
 
-	protected void clearUniqueFindersCache(
-		RecentLayoutRevisionModelImpl recentLayoutRevisionModelImpl,
-		boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				recentLayoutRevisionModelImpl.getUserId(),
-				recentLayoutRevisionModelImpl.getLayoutSetBranchId(),
-				recentLayoutRevisionModelImpl.getPlid()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByU_L_P, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByU_L_P, args);
-		}
-
-		if ((recentLayoutRevisionModelImpl.getColumnBitmask() &
-			 _finderPathFetchByU_L_P.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				recentLayoutRevisionModelImpl.getOriginalUserId(),
-				recentLayoutRevisionModelImpl.getOriginalLayoutSetBranchId(),
-				recentLayoutRevisionModelImpl.getOriginalPlid()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByU_L_P, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByU_L_P, args);
-		}
-	}
-
 	/**
 	 * Creates a new recent layout revision with the primary key. Does not add the recent layout revision to the database.
 	 *
@@ -2053,7 +1982,7 @@ public class RecentLayoutRevisionPersistenceImpl
 		recentLayoutRevision.setNew(true);
 		recentLayoutRevision.setPrimaryKey(recentLayoutRevisionId);
 
-		recentLayoutRevision.setCompanyId(companyProvider.getCompanyId());
+		recentLayoutRevision.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return recentLayoutRevision;
 	}
@@ -2103,11 +2032,11 @@ public class RecentLayoutRevisionPersistenceImpl
 
 			return remove(recentLayoutRevision);
 		}
-		catch (NoSuchRecentLayoutRevisionException nsee) {
-			throw nsee;
+		catch (NoSuchRecentLayoutRevisionException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2133,8 +2062,8 @@ public class RecentLayoutRevisionPersistenceImpl
 				session.delete(recentLayoutRevision);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2178,130 +2107,30 @@ public class RecentLayoutRevisionPersistenceImpl
 		try {
 			session = openSession();
 
-			if (recentLayoutRevision.isNew()) {
+			if (isNew) {
 				session.save(recentLayoutRevision);
-
-				recentLayoutRevision.setNew(false);
 			}
 			else {
 				recentLayoutRevision = (RecentLayoutRevision)session.merge(
 					recentLayoutRevision);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!RecentLayoutRevisionModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {
-				recentLayoutRevisionModelImpl.getGroupId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByGroupId, args);
-
-			args = new Object[] {recentLayoutRevisionModelImpl.getUserId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUserId, args);
-
-			args = new Object[] {
-				recentLayoutRevisionModelImpl.getLayoutRevisionId()
-			};
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountByLayoutRevisionId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByLayoutRevisionId, args);
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((recentLayoutRevisionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					recentLayoutRevisionModelImpl.getOriginalGroupId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-
-				args = new Object[] {
-					recentLayoutRevisionModelImpl.getGroupId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-			}
-
-			if ((recentLayoutRevisionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUserId.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					recentLayoutRevisionModelImpl.getOriginalUserId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-
-				args = new Object[] {recentLayoutRevisionModelImpl.getUserId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-			}
-
-			if ((recentLayoutRevisionModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByLayoutRevisionId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					recentLayoutRevisionModelImpl.getOriginalLayoutRevisionId()
-				};
-
-				FinderCacheUtil.removeResult(
-					_finderPathCountByLayoutRevisionId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByLayoutRevisionId, args);
-
-				args = new Object[] {
-					recentLayoutRevisionModelImpl.getLayoutRevisionId()
-				};
-
-				FinderCacheUtil.removeResult(
-					_finderPathCountByLayoutRevisionId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByLayoutRevisionId, args);
-			}
-		}
-
 		EntityCacheUtil.putResult(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
-			recentLayoutRevision.getPrimaryKey(), recentLayoutRevision, false);
+			RecentLayoutRevisionImpl.class, recentLayoutRevisionModelImpl,
+			false, true);
 
-		clearUniqueFindersCache(recentLayoutRevisionModelImpl, false);
 		cacheUniqueFindersCache(recentLayoutRevisionModelImpl);
+
+		if (isNew) {
+			recentLayoutRevision.setNew(false);
+		}
 
 		recentLayoutRevision.resetOriginalValues();
 
@@ -2373,7 +2202,7 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns a range of all the recent layout revisions.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of recent layout revisions
@@ -2389,7 +2218,7 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns an ordered range of all the recent layout revisions.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of recent layout revisions
@@ -2409,66 +2238,63 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Returns an ordered range of all the recent layout revisions.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>RecentLayoutRevisionModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of recent layout revisions
 	 * @param end the upper bound of the range of recent layout revisions (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of recent layout revisions
 	 */
 	@Override
 	public List<RecentLayoutRevision> findAll(
 		int start, int end,
 		OrderByComparator<RecentLayoutRevision> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindAll;
-			finderArgs = FINDER_ARGS_EMPTY;
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<RecentLayoutRevision> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache) {
 			list = (List<RecentLayoutRevision>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_RECENTLAYOUTREVISION);
+				sb.append(_SQL_SELECT_RECENTLAYOUTREVISION);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_RECENTLAYOUTREVISION;
 
-				if (pagination) {
-					sql = sql.concat(
-						RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(RecentLayoutRevisionModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -2476,29 +2302,19 @@ public class RecentLayoutRevisionPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<RecentLayoutRevision>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<RecentLayoutRevision>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<RecentLayoutRevision>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2535,18 +2351,16 @@ public class RecentLayoutRevisionPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_RECENTLAYOUTREVISION);
+				Query query = session.createQuery(
+					_SQL_COUNT_RECENTLAYOUTREVISION);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				FinderCacheUtil.putResult(
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2580,127 +2394,106 @@ public class RecentLayoutRevisionPersistenceImpl
 	 * Initializes the recent layout revision persistence.
 	 */
 	public void afterPropertiesSet() {
-		_finderPathWithPaginationFindAll = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+		Registry registry = RegistryUtil.getRegistry();
 
-		_finderPathWithoutPaginationFindAll = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+		_argumentsResolverServiceRegistration = registry.registerService(
+			ArgumentsResolver.class,
+			new RecentLayoutRevisionModelArgumentsResolver(),
+			HashMapBuilder.<String, Object>put(
+				"model.class.name", RecentLayoutRevision.class.getName()
+			).build());
 
-		_finderPathCountAll = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathWithPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathWithoutPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
+
+		_finderPathCountAll = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByGroupId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
+		_finderPathWithPaginationFindByGroupId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId"}, true);
 
-		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
+		_finderPathWithoutPaginationFindByGroupId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
-			new String[] {Long.class.getName()},
-			RecentLayoutRevisionModelImpl.GROUPID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			true);
 
-		_finderPathCountByGroupId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByGroupId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			false);
 
-		_finderPathWithPaginationFindByUserId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
+		_finderPathWithPaginationFindByUserId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"userId"}, true);
 
-		_finderPathWithoutPaginationFindByUserId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
+		_finderPathWithoutPaginationFindByUserId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
-			new String[] {Long.class.getName()},
-			RecentLayoutRevisionModelImpl.USERID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
 
-		_finderPathCountByUserId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUserId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"userId"},
+			false);
 
-		_finderPathWithPaginationFindByLayoutRevisionId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
+		_finderPathWithPaginationFindByLayoutRevisionId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLayoutRevisionId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"layoutRevisionId"}, true);
 
-		_finderPathWithoutPaginationFindByLayoutRevisionId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class,
+		_finderPathWithoutPaginationFindByLayoutRevisionId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByLayoutRevisionId",
 			new String[] {Long.class.getName()},
-			RecentLayoutRevisionModelImpl.LAYOUTREVISIONID_COLUMN_BITMASK);
+			new String[] {"layoutRevisionId"}, true);
 
-		_finderPathCountByLayoutRevisionId = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByLayoutRevisionId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"countByLayoutRevisionId", new String[] {Long.class.getName()});
+			"countByLayoutRevisionId", new String[] {Long.class.getName()},
+			new String[] {"layoutRevisionId"}, false);
 
-		_finderPathFetchByU_L_P = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED,
-			RecentLayoutRevisionImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByU_L_P",
+		_finderPathFetchByU_L_P = _createFinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByU_L_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
-			RecentLayoutRevisionModelImpl.USERID_COLUMN_BITMASK |
-			RecentLayoutRevisionModelImpl.LAYOUTSETBRANCHID_COLUMN_BITMASK |
-			RecentLayoutRevisionModelImpl.PLID_COLUMN_BITMASK);
+			new String[] {"userId", "layoutSetBranchId", "plid"}, true);
 
-		_finderPathCountByU_L_P = new FinderPath(
-			RecentLayoutRevisionModelImpl.ENTITY_CACHE_ENABLED,
-			RecentLayoutRevisionModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByU_L_P = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_L_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {"userId", "layoutSetBranchId", "plid"}, false);
 	}
 
 	public void destroy() {
 		EntityCacheUtil.removeCache(RecentLayoutRevisionImpl.class.getName());
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-	}
 
-	@BeanReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
+		_argumentsResolverServiceRegistration.unregister();
+
+		for (ServiceRegistration<FinderPath> serviceRegistration :
+				_serviceRegistrations) {
+
+			serviceRegistration.unregister();
+		}
+	}
 
 	private static final String _SQL_SELECT_RECENTLAYOUTREVISION =
 		"SELECT recentLayoutRevision FROM RecentLayoutRevision recentLayoutRevision";
@@ -2725,5 +2518,112 @@ public class RecentLayoutRevisionPersistenceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RecentLayoutRevisionPersistenceImpl.class);
+
+	private FinderPath _createFinderPath(
+		String cacheName, String methodName, String[] params,
+		String[] columnNames, boolean baseModelResult) {
+
+		FinderPath finderPath = new FinderPath(
+			cacheName, methodName, params, columnNames, baseModelResult);
+
+		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+			Registry registry = RegistryUtil.getRegistry();
+
+			_serviceRegistrations.add(
+				registry.registerService(
+					FinderPath.class, finderPath,
+					HashMapBuilder.<String, Object>put(
+						"cache.name", cacheName
+					).build()));
+		}
+
+		return finderPath;
+	}
+
+	private ServiceRegistration<ArgumentsResolver>
+		_argumentsResolverServiceRegistration;
+	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
+		new HashSet<>();
+
+	private static class RecentLayoutRevisionModelArgumentsResolver
+		implements ArgumentsResolver {
+
+		@Override
+		public Object[] getArguments(
+			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
+			boolean original) {
+
+			String[] columnNames = finderPath.getColumnNames();
+
+			if ((columnNames == null) || (columnNames.length == 0)) {
+				if (baseModel.isNew()) {
+					return FINDER_ARGS_EMPTY;
+				}
+
+				return null;
+			}
+
+			RecentLayoutRevisionModelImpl recentLayoutRevisionModelImpl =
+				(RecentLayoutRevisionModelImpl)baseModel;
+
+			long columnBitmask =
+				recentLayoutRevisionModelImpl.getColumnBitmask();
+
+			if (!checkColumn || (columnBitmask == 0)) {
+				return _getValue(
+					recentLayoutRevisionModelImpl, columnNames, original);
+			}
+
+			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
+				finderPath);
+
+			if (finderPathColumnBitmask == null) {
+				finderPathColumnBitmask = 0L;
+
+				for (String columnName : columnNames) {
+					finderPathColumnBitmask |=
+						recentLayoutRevisionModelImpl.getColumnBitmask(
+							columnName);
+				}
+
+				_finderPathColumnBitmasksCache.put(
+					finderPath, finderPathColumnBitmask);
+			}
+
+			if ((columnBitmask & finderPathColumnBitmask) != 0) {
+				return _getValue(
+					recentLayoutRevisionModelImpl, columnNames, original);
+			}
+
+			return null;
+		}
+
+		private Object[] _getValue(
+			RecentLayoutRevisionModelImpl recentLayoutRevisionModelImpl,
+			String[] columnNames, boolean original) {
+
+			Object[] arguments = new Object[columnNames.length];
+
+			for (int i = 0; i < arguments.length; i++) {
+				String columnName = columnNames[i];
+
+				if (original) {
+					arguments[i] =
+						recentLayoutRevisionModelImpl.getColumnOriginalValue(
+							columnName);
+				}
+				else {
+					arguments[i] = recentLayoutRevisionModelImpl.getColumnValue(
+						columnName);
+				}
+			}
+
+			return arguments;
+		}
+
+		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
+			new ConcurrentHashMap<>();
+
+	}
 
 }

@@ -14,14 +14,11 @@
 
 package com.liferay.layout.page.template.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DuplicateLayoutPageTemplateEntryException extends PortalException {
 
 	public DuplicateLayoutPageTemplateEntryException() {
@@ -32,13 +29,13 @@ public class DuplicateLayoutPageTemplateEntryException extends PortalException {
 	}
 
 	public DuplicateLayoutPageTemplateEntryException(
-		String msg, Throwable cause) {
+		String msg, Throwable throwable) {
 
-		super(msg, cause);
+		super(msg, throwable);
 	}
 
-	public DuplicateLayoutPageTemplateEntryException(Throwable cause) {
-		super(cause);
+	public DuplicateLayoutPageTemplateEntryException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

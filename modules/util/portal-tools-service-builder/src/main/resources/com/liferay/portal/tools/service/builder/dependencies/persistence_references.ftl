@@ -1,13 +1,20 @@
 	@Override
 	@Reference(
-		target = ${portletShortName}PersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		target = ${portletShortName}PersistenceConstants.SERVICE_CONFIGURATION_FILTER,
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
+		<#if serviceBuilder.isVersionLTE_7_2_0()>
+			<#if !entity.isCacheEnabled()>
+				entityCacheEnabled = false;
+				finderCacheEnabled = false;
+			</#if>
 
-		<#if persistence>
-			_columnBitmaskEnabled = GetterUtil.getBoolean(configuration.get("value.object.column.bitmask.enabled.${apiPackagePath}.model.${entity.name}"), true);
+			super.setConfiguration(configuration);
+
+			<#if persistence>
+				_columnBitmaskEnabled = GetterUtil.getBoolean(configuration.get("value.object.column.bitmask.enabled.${apiPackagePath}.model.${entity.name}"), true);
+			</#if>
 		</#if>
 	}
 

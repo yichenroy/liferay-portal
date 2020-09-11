@@ -56,11 +56,11 @@ public class UpgradeDDMFormInstanceSettings extends UpgradeProcess {
 	protected void convertToJSONArrayValue(
 		JSONObject fieldJSONObject, String defaultValue) {
 
-		JSONArray jsonArrayValue = _jsonFactory.createJSONArray();
+		JSONArray valueJSONArray = _jsonFactory.createJSONArray();
 
-		jsonArrayValue.put(fieldJSONObject.getString("value", defaultValue));
+		valueJSONArray.put(fieldJSONObject.getString("value", defaultValue));
 
-		fieldJSONObject.put("value", jsonArrayValue);
+		fieldJSONObject.put("value", valueJSONArray);
 	}
 
 	protected JSONObject createSettingJSONObject(
@@ -68,9 +68,13 @@ public class UpgradeDDMFormInstanceSettings extends UpgradeProcess {
 
 		JSONObject settingJSONObject = _jsonFactory.createJSONObject();
 
-		settingJSONObject.put("instanceId", StringUtil.randomString());
-		settingJSONObject.put("name", propertyName);
-		settingJSONObject.put("value", value);
+		settingJSONObject.put(
+			"instanceId", StringUtil.randomString()
+		).put(
+			"name", propertyName
+		).put(
+			"value", value
+		);
 
 		return settingJSONObject;
 	}
@@ -114,26 +118,28 @@ public class UpgradeDDMFormInstanceSettings extends UpgradeProcess {
 	}
 
 	protected JSONObject getFieldValueJSONObject(
-		String fieldName, JSONArray fieldValues) {
+		String fieldName, JSONArray fieldValuesJSONArray) {
 
-		for (int i = 0; i < fieldValues.length(); i++) {
-			JSONObject jsonObject = fieldValues.getJSONObject(i);
+		for (int i = 0; i < fieldValuesJSONArray.length(); i++) {
+			JSONObject jsonObject = fieldValuesJSONArray.getJSONObject(i);
 
 			if (Objects.equals(jsonObject.getString("name"), fieldName)) {
 				return jsonObject;
 			}
 		}
 
-		return null;
+		return _jsonFactory.createJSONObject();
 	}
 
 	protected void updateSettings(JSONObject settingsJSONObject) {
-		JSONArray fieldValues = settingsJSONObject.getJSONArray("fieldValues");
+		JSONArray fieldValuesJSONArray = settingsJSONObject.getJSONArray(
+			"fieldValues");
 
 		convertToJSONArrayValue(
-			getFieldValueJSONObject("storageType", fieldValues), "json");
+			getFieldValueJSONObject("storageType", fieldValuesJSONArray),
+			"json");
 		convertToJSONArrayValue(
-			getFieldValueJSONObject("workflowDefinition", fieldValues),
+			getFieldValueJSONObject("workflowDefinition", fieldValuesJSONArray),
 			"no-workflow");
 	}
 

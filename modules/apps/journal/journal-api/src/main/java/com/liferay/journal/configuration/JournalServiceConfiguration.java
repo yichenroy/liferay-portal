@@ -14,10 +14,11 @@
 
 package com.liferay.journal.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Pavel Savinov
@@ -149,5 +150,11 @@ public interface JournalServiceConfiguration {
 		name = "single-asset-publish-includes-version-history", required = false
 	)
 	public boolean singleAssetPublishIncludeVersionHistory();
+
+	@Meta.AD(
+		deflt = "false", name = "enable-content-transformer-listener",
+		required = false
+	)
+	public boolean enableContentTransformerListener();
 
 }

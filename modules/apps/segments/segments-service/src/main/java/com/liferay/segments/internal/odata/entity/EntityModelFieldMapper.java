@@ -17,6 +17,7 @@ package com.liferay.segments.internal.odata.entity;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -29,6 +30,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.ComplexEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.odata.normalizer.Normalizer;
 import com.liferay.segments.field.Field;
 import com.liferay.segments.field.customizer.SegmentsFieldCustomizer;
 import com.liferay.segments.field.customizer.SegmentsFieldCustomizerRegistry;
@@ -36,6 +38,7 @@ import com.liferay.segments.field.customizer.SegmentsFieldCustomizerRegistry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -50,6 +53,55 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(immediate = true, service = EntityModelFieldMapper.class)
 public class EntityModelFieldMapper {
+
+	public Map<String, EntityField> getCustomFieldEntityFields(
+		EntityModel entityModel) {
+
+		Map<String, EntityField> entityFieldsMap =
+			entityModel.getEntityFieldsMap();
+
+		ComplexEntityField customFieldEntityField =
+			(ComplexEntityField)entityFieldsMap.get("customField");
+
+		if (customFieldEntityField == null) {
+			return Collections.emptyMap();
+		}
+
+		return customFieldEntityField.getEntityFieldsMap();
+	}
+
+	public ExpandoColumn getExpandoColumn(String entityFieldName) {
+		long expandoColumnId = getExpandoColumnId(entityFieldName);
+
+		try {
+			return _expandoColumnLocalService.getColumn(expandoColumnId);
+		}
+		catch (PortalException portalException) {
+			_log.error(
+				"Unable to find Expando Column with id " + expandoColumnId,
+				portalException);
+
+			return null;
+		}
+	}
+
+	public String getExpandoColumnEntityFieldName(ExpandoColumn expandoColumn) {
+		return StringBundler.concat(
+			StringPool.UNDERLINE, expandoColumn.getColumnId(),
+			StringPool.UNDERLINE,
+			Normalizer.normalizeIdentifier(expandoColumn.getName()));
+	}
+
+	public long getExpandoColumnId(String entityFieldName) {
+		String[] split = StringUtil.split(
+			entityFieldName, StringPool.UNDERLINE);
+
+		if (split.length < 2) {
+			return 0;
+		}
+
+		return Long.valueOf(split[1]);
+	}
 
 	public List<Field> getFields(
 		EntityModel entityModel, PortletRequest portletRequest) {
@@ -68,51 +120,66 @@ public class EntityModelFieldMapper {
 		return fields;
 	}
 
-	protected List<Field> getFields(
-		EntityModel entityModel, EntityField entityField,
-		PortletRequest portletRequest) {
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			_portal.getLocale(portletRequest), getClass());
-
-		Optional<SegmentsFieldCustomizer> segmentsFieldCustomizerOptional =
-			_segmentsFieldCustomizerRegistry.getSegmentFieldCustomizerOptional(
-				entityModel.getName(), entityField.getName());
+	protected Field getField(
+		String fieldName, String fieldType, PortletRequest portletRequest,
+		ResourceBundle resourceBundle,
+		Optional<SegmentsFieldCustomizer> segmentsFieldCustomizerOptional) {
 
 		if (segmentsFieldCustomizerOptional.isPresent()) {
 			SegmentsFieldCustomizer segmentsFieldCustomizer =
 				segmentsFieldCustomizerOptional.get();
 
-			return Collections.singletonList(
-				new Field(
-					entityField.getName(),
-					segmentsFieldCustomizer.getLabel(
-						entityField.getName(), resourceBundle.getLocale()),
-					getType(entityField.getType()),
-					segmentsFieldCustomizer.getOptions(
-						resourceBundle.getLocale()),
-					segmentsFieldCustomizer.getSelectEntity(portletRequest)));
+			return new Field(
+				fieldName,
+				segmentsFieldCustomizer.getLabel(
+					fieldName, resourceBundle.getLocale()),
+				fieldType,
+				segmentsFieldCustomizer.getOptions(resourceBundle.getLocale()),
+				segmentsFieldCustomizer.getSelectEntity(portletRequest));
 		}
+
+		String fieldLabel = LanguageUtil.get(
+			resourceBundle, "field." + CamelCaseUtil.fromCamelCase(fieldName));
+
+		return new Field(fieldName, fieldLabel, fieldType);
+	}
+
+	protected List<Field> getFields(
+		EntityModel entityModel, EntityField entityField,
+		PortletRequest portletRequest) {
+
+		Locale locale = _portal.getLocale(portletRequest);
+
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			locale, getClass());
 
 		EntityField.Type entityFieldType = entityField.getType();
 
 		if (entityFieldType == EntityField.Type.COMPLEX) {
-			Map<String, EntityField> entityFieldsMap =
-				((ComplexEntityField)entityField).getEntityFieldsMap();
+			ComplexEntityField complexEntityField =
+				(ComplexEntityField)entityField;
 
 			return _getComplexFields(
-				entityField.getName(), entityFieldsMap, resourceBundle);
+				entityModel.getName(), entityField.getName(),
+				complexEntityField.getEntityFieldsMap(), locale, portletRequest,
+				resourceBundle);
 		}
 
-		if (entityFieldType == EntityField.Type.ID) {
+		Optional<SegmentsFieldCustomizer> segmentsFieldCustomizerOptional =
+			_segmentsFieldCustomizerRegistry.getSegmentsFieldCustomizerOptional(
+				entityModel.getName(), entityField.getName());
+
+		if ((entityFieldType == EntityField.Type.ID) &&
+			!segmentsFieldCustomizerOptional.isPresent()) {
+
 			return Collections.emptyList();
 		}
 
 		return Collections.singletonList(
-			new Field(
-				entityField.getName(),
-				_getEntityFieldLabel(entityField, resourceBundle),
-				getType(entityFieldType)));
+			getField(
+				entityField.getName(), getType(entityField.getType()),
+				portletRequest, resourceBundle,
+				segmentsFieldCustomizerOptional));
 	}
 
 	protected String getType(EntityField.Type entityFieldType) {
@@ -141,64 +208,66 @@ public class EntityModelFieldMapper {
 		return "string";
 	}
 
-	private ExpandoColumn _decodeName(String entityFieldName) {
-		String[] split = StringUtil.split(
-			entityFieldName, StringPool.UNDERLINE);
-
-		if (split.length < 2) {
-			return null;
-		}
-
-		long columnId = Long.valueOf(split[1]);
-
-		try {
-			return _expandoColumnLocalService.getColumn(columnId);
-		}
-		catch (PortalException pe) {
-			_log.error("Unable to find Expando Column with id " + columnId, pe);
-
-			return null;
-		}
-	}
-
 	private List<Field> _getComplexFields(
-		String name, Map<String, EntityField> entityFieldsMap,
-		ResourceBundle resourceBundle) {
+		String entityModelName, String complexEntityFieldName,
+		Map<String, EntityField> entityFieldsMap, Locale locale,
+		PortletRequest portletRequest, ResourceBundle resourceBundle) {
 
-		if (!name.equals("customField")) {
-			return Collections.emptyList();
+		if (complexEntityFieldName.equals("customField")) {
+			return _getCustomFields(entityFieldsMap, locale);
 		}
 
 		List<Field> complexFields = new ArrayList<>();
 
 		entityFieldsMap.forEach(
 			(entityFieldName, entityField) -> {
-				ExpandoColumn expandoColumn = _decodeName(entityFieldName);
+				Optional<SegmentsFieldCustomizer>
+					segmentsFieldCustomizerOptional =
+						_segmentsFieldCustomizerRegistry.
+							getSegmentsFieldCustomizerOptional(
+								entityModelName, entityField.getName());
 
-				if (expandoColumn == null) {
+				if ((entityField.getType() == EntityField.Type.ID) &&
+					!segmentsFieldCustomizerOptional.isPresent()) {
+
 					return;
 				}
 
-				String label = expandoColumn.getDisplayName(
-					resourceBundle.getLocale());
-
-				String type = getType(entityField.getType());
-
 				complexFields.add(
-					new Field(
-						"customField/" + entityFieldName, label, type,
-						_getExpandoColumnFieldOptions(expandoColumn), null));
+					getField(
+						"customContext/" + entityField.getName(),
+						getType(entityField.getType()), portletRequest,
+						resourceBundle, segmentsFieldCustomizerOptional));
 			});
 
 		return complexFields;
 	}
 
-	private String _getEntityFieldLabel(
-		EntityField entityField, ResourceBundle resourceBundle) {
+	private List<Field> _getCustomFields(
+		Map<String, EntityField> entityFieldsMap, Locale locale) {
 
-		return LanguageUtil.get(
-			resourceBundle,
-			"field." + CamelCaseUtil.fromCamelCase(entityField.getName()));
+		List<Field> customFields = new ArrayList<>();
+
+		entityFieldsMap.forEach(
+			(entityFieldName, entityField) -> {
+				ExpandoColumn expandoColumn =
+					_expandoColumnLocalService.fetchExpandoColumn(
+						getExpandoColumnId(entityFieldName));
+
+				if (expandoColumn == null) {
+					return;
+				}
+
+				String label = expandoColumn.getDisplayName(locale);
+
+				customFields.add(
+					new Field(
+						"customField/" + entityFieldName, label,
+						getType(entityField.getType()),
+						_getExpandoColumnFieldOptions(expandoColumn), null));
+			});
+
+		return customFields;
 	}
 
 	private List<Field.Option> _getExpandoColumnFieldOptions(
@@ -214,9 +283,34 @@ public class EntityModelFieldMapper {
 			}
 		}
 		else if (expandoColumn.getType() ==
+					ExpandoColumnConstants.FLOAT_ARRAY) {
+
+			for (float value : (float[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(
+					new Field.Option(
+						String.valueOf(value), String.valueOf(value)));
+			}
+		}
+		else if (expandoColumn.getType() ==
 					ExpandoColumnConstants.INTEGER_ARRAY) {
 
 			for (int value : (int[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(
+					new Field.Option(
+						String.valueOf(value), String.valueOf(value)));
+			}
+		}
+		else if (expandoColumn.getType() == ExpandoColumnConstants.LONG_ARRAY) {
+			for (long value : (long[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(
+					new Field.Option(
+						String.valueOf(value), String.valueOf(value)));
+			}
+		}
+		else if (expandoColumn.getType() ==
+					ExpandoColumnConstants.SHORT_ARRAY) {
+
+			for (short value : (short[])expandoColumn.getDefaultValue()) {
 				fieldOptions.add(
 					new Field.Option(
 						String.valueOf(value), String.valueOf(value)));

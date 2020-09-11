@@ -3,7 +3,13 @@ apply plugin: "com.liferay.target.platform.ide"
 task runGradleTest
 
 dependencies {
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.bom", version: "7.0.4"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom.compile.only", version: "7.2.1"
+}
+
+repositories {
+	maven {
+		url "https://repository-cdn.liferay.com/nexus/content/groups/public"
+	}
 }
 
 runGradleTest {
@@ -24,11 +30,6 @@ runGradleTest {
 
 		Set<Dependency> ideaDependencies = idea.module.resolveDependencies()
 
-		assert ideaDependencies.size() == 653
+		assert ideaDependencies.size() == 12
 	}
-}
-
-targetPlatformIDE {
-	includeGroups "com.liferay"
-	includeGroups "com.liferay.portal"
 }

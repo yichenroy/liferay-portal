@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnect;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectProviderRegistry;
@@ -49,22 +50,24 @@ public class OpenIdConnectNavigationPreJSPDynamicInclude
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
 		Collection<String> openIdConnectProviderNames =
-			_openIdConnectProviderRegistry.getOpenIdConnectProviderNames();
+			_openIdConnectProviderRegistry.getOpenIdConnectProviderNames(
+				_portal.getCompanyId(httpServletRequest));
 
 		if (openIdConnectProviderNames.isEmpty()) {
 			return;
 		}
 
 		String mvcRenderCommandName = ParamUtil.getString(
-			request, "mvcRenderCommandName");
+			httpServletRequest, "mvcRenderCommandName");
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (mvcRenderCommandName.equals(
 				OpenIdConnectWebKeys.OPEN_ID_CONNECT_REQUEST_ACTION_NAME) ||
@@ -73,7 +76,7 @@ public class OpenIdConnectNavigationPreJSPDynamicInclude
 			return;
 		}
 
-		super.include(request, response, key);
+		super.include(httpServletRequest, httpServletResponse, key);
 	}
 
 	@Override
@@ -111,6 +114,9 @@ public class OpenIdConnectNavigationPreJSPDynamicInclude
 	private OpenIdConnect _openIdConnect;
 
 	@Reference
-	private OpenIdConnectProviderRegistry _openIdConnectProviderRegistry;
+	private OpenIdConnectProviderRegistry<?, ?> _openIdConnectProviderRegistry;
+
+	@Reference
+	private Portal _portal;
 
 }

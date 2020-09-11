@@ -24,16 +24,9 @@ import javax.websocket.MessageHandler;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 
-import org.osgi.service.component.annotations.Component;
-
 /**
  * @author Cristina González
  */
-@Component(
-	immediate = true,
-	property = "org.osgi.http.websocket.endpoint.path=/o/websocket/test",
-	service = Endpoint.class
-)
 public class SimpleWebSocketEndpoint extends Endpoint {
 
 	@Override
@@ -48,8 +41,8 @@ public class SimpleWebSocketEndpoint extends Endpoint {
 
 						basic.sendBinary(byteBuffer);
 					}
-					catch (IOException ioe) {
-						throw new RuntimeException(ioe);
+					catch (IOException ioException) {
+						throw new RuntimeException(ioException);
 					}
 				}
 
@@ -64,8 +57,8 @@ public class SimpleWebSocketEndpoint extends Endpoint {
 
 						basic.sendText(text);
 					}
-					catch (IOException ioe) {
-						throw new RuntimeException(ioe);
+					catch (IOException ioException) {
+						throw new RuntimeException(ioException);
 					}
 				}
 

@@ -21,26 +21,16 @@ ItemSelectorURLViewDisplayContext itemSelectorURLViewDisplayContext = (ItemSelec
 %>
 
 <div class="lfr-form-content">
-	<div class="sheet sheet-lg">
+	<clay:sheet>
 		<div class="panel-group panel-group-flush">
-			<aui:input helpMessage='<%= LanguageUtil.format(request, "for-example-x", "http://www.liferay.com/liferay.png", false) %>' label='<%= LanguageUtil.get(resourceBundle, "image-url") %>' name="urlInput" placeholder="http://" />
-
-			<aui:button disabled="<%= true %>" name="previewBtn" value='<%= LanguageUtil.get(resourceBundle, "enter") %>' />
+			<react:component
+				module="js/ItemSelectorUrl.es"
+				props='<%=
+					HashMapBuilder.<String, Object>put(
+						"eventName", itemSelectorURLViewDisplayContext.getItemSelectedEventName()
+					).build()
+				%>'
+			/>
 		</div>
-	</div>
+	</clay:sheet>
 </div>
-
-<aui:script use="liferay-item-selector-url">
-	new Liferay.ItemSelectorUrl(
-		{
-			closeCaption: '<%= itemSelectorURLViewDisplayContext.getTitle(locale) %>',
-			namespace: '<portlet:namespace />',
-			on: {
-				selectedItem: function(event) {
-					Liferay.Util.getOpener().Liferay.fire('<%= itemSelectorURLViewDisplayContext.getItemSelectedEventName() %>', event);
-				}
-			},
-			rootNode: '#<portlet:namespace />itemSelectorUrlContainer'
-		}
-	);
-</aui:script>

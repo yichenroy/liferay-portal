@@ -14,16 +14,18 @@
 
 package com.liferay.asset.display.page.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedAuditedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the AssetDisplayPageEntry service. Represents a row in the &quot;AssetDisplayPageEntry&quot; database table, with each column mapped to a property of this class.
@@ -38,7 +40,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface AssetDisplayPageEntryModel
-	extends AttachedModel, BaseModel<AssetDisplayPageEntry>, GroupedModel,
+	extends AttachedModel, BaseModel<AssetDisplayPageEntry>,
+			CTModel<AssetDisplayPageEntry>, GroupedModel, MVCCModel,
 			ShardedModel, StagedAuditedModel {
 
 	/*
@@ -52,6 +55,7 @@ public interface AssetDisplayPageEntryModel
 	 *
 	 * @return the primary key of this asset display page entry
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -59,7 +63,40 @@ public interface AssetDisplayPageEntryModel
 	 *
 	 * @param primaryKey the primary key of this asset display page entry
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this asset display page entry.
+	 *
+	 * @return the mvcc version of this asset display page entry
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this asset display page entry.
+	 *
+	 * @param mvccVersion the mvcc version of this asset display page entry
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this asset display page entry.
+	 *
+	 * @return the ct collection ID of this asset display page entry
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this asset display page entry.
+	 *
+	 * @param ctCollectionId the ct collection ID of this asset display page entry
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this asset display page entry.

@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.BaseBodyTagSupport;
@@ -34,7 +33,6 @@ import com.liferay.taglib.util.PortalIncludeUtil;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -50,13 +48,14 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 
 	@Override
 	public int doAfterBody() {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		IntegerWrapper iconCount = (IntegerWrapper)request.getAttribute(
-			"liferay-ui:icon-menu:icon-count");
+		IntegerWrapper iconCount =
+			(IntegerWrapper)httpServletRequest.getAttribute(
+				"liferay-ui:icon-menu:icon-count");
 
-		Boolean singleIcon = (Boolean)request.getAttribute(
+		Boolean singleIcon = (Boolean)httpServletRequest.getAttribute(
 			"liferay-ui:icon-menu:single-icon");
 
 		if ((iconCount != null) && (iconCount.getValue() == 1) &&
@@ -64,14 +63,14 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 
 			bodyContent.clearBody();
 
-			ScriptData scriptData = (ScriptData)request.getAttribute(
+			ScriptData scriptData = (ScriptData)httpServletRequest.getAttribute(
 				WebKeys.AUI_SCRIPT_DATA);
 
 			if (scriptData != null) {
 				scriptData.reset();
 			}
 
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				"liferay-ui:icon-menu:single-icon", Boolean.TRUE);
 
 			return EVAL_BODY_AGAIN;
@@ -85,66 +84,65 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 		try {
 			return processEndTag();
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 		finally {
-			if (!ServerDetector.isResin()) {
-				_cssClass = null;
-				_data = null;
-				_direction = "left";
-				_endPage = null;
-				_extended = true;
-				_icon = null;
-				_id = null;
-				_localizeMessage = true;
-				_maxDisplayItems = _DEFAULT_MAX_DISPLAY_ITEMS;
-				_message = "actions";
-				_scroll = false;
-				_select = false;
-				_showArrow = true;
-				_showExpanded = false;
-				_showWhenSingleIcon = false;
-				_startPage = null;
-				_triggerCssClass = null;
-				_triggerLabel = null;
-				_triggerType = null;
-			}
+			_cssClass = null;
+			_data = null;
+			_direction = "left";
+			_endPage = null;
+			_extended = true;
+			_icon = null;
+			_id = null;
+			_localizeMessage = true;
+			_maxDisplayItems = _DEFAULT_MAX_DISPLAY_ITEMS;
+			_message = "actions";
+			_scroll = false;
+			_select = false;
+			_showArrow = true;
+			_showExpanded = false;
+			_showWhenSingleIcon = false;
+			_startPage = null;
+			_triggerCssClass = null;
+			_triggerLabel = null;
+			_triggerType = null;
 		}
 	}
 
 	@Override
 	public int doStartTag() {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		ScriptData scriptData = (ScriptData)request.getAttribute(
+		ScriptData scriptData = (ScriptData)httpServletRequest.getAttribute(
 			WebKeys.AUI_SCRIPT_DATA);
 
 		if (scriptData != null) {
 			scriptData.mark();
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (_direction == null) {
 			_direction = "left";
 		}
 
 		if (Validator.isNull(_id)) {
-			_id = (String)request.getAttribute(
+			_id = (String)httpServletRequest.getAttribute(
 				"liferay-ui:search-container-row:rowId");
 
 			if (Validator.isNull(_id)) {
 				_id = PortalUtil.generateRandomKey(
-					request, IconMenuTag.class.getName());
+					httpServletRequest, IconMenuTag.class.getName());
 			}
 
 			_id = _id.concat("_menu");
 		}
 
-		request.setAttribute("liferay-ui:icon-menu:id", _id);
+		httpServletRequest.setAttribute("liferay-ui:icon-menu:id", _id);
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
@@ -152,9 +150,9 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 
 		_id = namespace.concat(_id);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:icon-menu:icon-count", new IntegerWrapper());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:icon-menu:showWhenSingleIcon",
 			String.valueOf(_showWhenSingleIcon));
 
@@ -280,19 +278,20 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 	}
 
 	protected int processEndTag() throws Exception {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		IntegerWrapper iconCount = (IntegerWrapper)request.getAttribute(
-			"liferay-ui:icon-menu:icon-count");
+		IntegerWrapper iconCount =
+			(IntegerWrapper)httpServletRequest.getAttribute(
+				"liferay-ui:icon-menu:icon-count");
 
-		request.removeAttribute("liferay-ui:icon-menu:icon-count");
-		request.removeAttribute("liferay-ui:icon-menu:id");
+		httpServletRequest.removeAttribute("liferay-ui:icon-menu:icon-count");
+		httpServletRequest.removeAttribute("liferay-ui:icon-menu:id");
 
-		Boolean singleIcon = (Boolean)request.getAttribute(
+		Boolean singleIcon = (Boolean)httpServletRequest.getAttribute(
 			"liferay-ui:icon-menu:single-icon");
 
-		request.removeAttribute("liferay-ui:icon-menu:single-icon");
+		httpServletRequest.removeAttribute("liferay-ui:icon-menu:single-icon");
 
 		JspWriter jspWriter = pageContext.getOut();
 
@@ -300,7 +299,8 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 			((singleIcon == null) || _showWhenSingleIcon)) {
 
 			if (!FileAvailabilityUtil.isAvailable(
-					(ServletContext)request.getAttribute(WebKeys.CTX),
+					(ServletContext)httpServletRequest.getAttribute(
+						WebKeys.CTX),
 					getStartPage())) {
 
 				if (_showExpanded) {
@@ -338,7 +338,7 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 					}
 
 					if (_extended) {
-						jspWriter.write(" btn btn-default");
+						jspWriter.write(" btn btn-secondary");
 					}
 
 					if (_select) {
@@ -352,11 +352,10 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 					String message = _message;
 
 					if (_localizeMessage) {
-						ResourceBundle resourceBundle =
+						message = LanguageUtil.get(
 							TagResourceBundleUtil.getResourceBundle(
-								pageContext);
-
-						message = LanguageUtil.get(resourceBundle, _message);
+								pageContext),
+							_message);
 					}
 
 					jspWriter.write("\" href=\"javascript:;\" id=\"");
@@ -440,7 +439,8 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 			((singleIcon == null) || _showWhenSingleIcon)) {
 
 			if (!FileAvailabilityUtil.isAvailable(
-					(ServletContext)request.getAttribute(WebKeys.CTX),
+					(ServletContext)httpServletRequest.getAttribute(
+						WebKeys.CTX),
 					getEndPage())) {
 
 				jspWriter.write("</ul>");
@@ -460,40 +460,43 @@ public class IconMenuTag extends BaseBodyTagSupport implements BodyTag {
 			}
 		}
 
-		request.removeAttribute("liferay-ui:icon-menu:showWhenSingleIcon");
+		httpServletRequest.removeAttribute(
+			"liferay-ui:icon-menu:showWhenSingleIcon");
 
 		return EVAL_PAGE;
 	}
 
 	protected void setAttributes() {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		request.setAttribute("liferay-ui:icon-menu:cssClass", _cssClass);
-		request.setAttribute("liferay-ui:icon-menu:data", _data);
-		request.setAttribute("liferay-ui:icon-menu:direction", _direction);
-		request.setAttribute("liferay-ui:icon-menu:icon", _icon);
-		request.setAttribute("liferay-ui:icon-menu:id", _id);
+		httpServletRequest.setAttribute(
+			"liferay-ui:icon-menu:cssClass", _cssClass);
+		httpServletRequest.setAttribute("liferay-ui:icon-menu:data", _data);
+		httpServletRequest.setAttribute(
+			"liferay-ui:icon-menu:direction", _direction);
+		httpServletRequest.setAttribute("liferay-ui:icon-menu:icon", _icon);
+		httpServletRequest.setAttribute("liferay-ui:icon-menu:id", _id);
 
 		String message = _message;
 
 		if (_localizeMessage) {
-			ResourceBundle resourceBundle =
-				TagResourceBundleUtil.getResourceBundle(pageContext);
-
-			message = LanguageUtil.get(resourceBundle, _message);
+			message = LanguageUtil.get(
+				TagResourceBundleUtil.getResourceBundle(pageContext), _message);
 		}
 
-		request.setAttribute("liferay-ui:icon-menu:message", message);
+		httpServletRequest.setAttribute(
+			"liferay-ui:icon-menu:message", message);
 
-		request.setAttribute("liferay-ui:icon-menu:scroll", _scroll);
-		request.setAttribute(
+		httpServletRequest.setAttribute("liferay-ui:icon-menu:scroll", _scroll);
+		httpServletRequest.setAttribute(
 			"liferay-ui:icon-menu:triggerCssClass", _triggerCssClass);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:icon-menu:triggerLabel", _triggerLabel);
 
-		request.setAttribute("liferay-ui:icon-menu:triggerType", _triggerType);
+		httpServletRequest.setAttribute(
+			"liferay-ui:icon-menu:triggerType", _triggerType);
 	}
 
 	private static final String _AUI_PATH = "../aui/";

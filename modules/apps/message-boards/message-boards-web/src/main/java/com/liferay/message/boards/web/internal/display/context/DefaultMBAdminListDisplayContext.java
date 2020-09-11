@@ -58,10 +58,10 @@ public class DefaultMBAdminListDisplayContext
 	implements MBAdminListDisplayContext {
 
 	public DefaultMBAdminListDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
-		long categoryId) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, long categoryId) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 
 		_categoryId = categoryId;
 	}
@@ -69,7 +69,8 @@ public class DefaultMBAdminListDisplayContext
 	@Override
 	public int getEntriesDelta() {
 		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(_request);
+			PortletPreferencesFactoryUtil.getPortalPreferences(
+				_httpServletRequest);
 
 		return GetterUtil.getInteger(
 			portalPreferences.getValue(
@@ -84,14 +85,14 @@ public class DefaultMBAdminListDisplayContext
 
 	@Override
 	public boolean isShowSearch() {
-		String keywords = ParamUtil.getString(_request, "keywords");
+		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		if (Validator.isNotNull(keywords)) {
 			return true;
 		}
 
 		String mvcRenderCommandName = ParamUtil.getString(
-			_request, "mvcRenderCommandName");
+			_httpServletRequest, "mvcRenderCommandName");
 
 		if (mvcRenderCommandName.equals("/message_boards/search")) {
 			return true;
@@ -104,36 +105,38 @@ public class DefaultMBAdminListDisplayContext
 	public void populateResultsAndTotal(SearchContainer searchContainer)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (isShowSearch()) {
 			long searchCategoryId = ParamUtil.getLong(
-				_request, "searchCategoryId");
+				_httpServletRequest, "searchCategoryId");
 
-			long[] categoryIdsArray = null;
-
-			List categoryIds = new ArrayList();
+			List<Long> categoryIds = new ArrayList<>();
 
 			categoryIds.add(Long.valueOf(searchCategoryId));
 
 			MBCategoryServiceUtil.getSubcategoryIds(
 				categoryIds, themeDisplay.getScopeGroupId(), searchCategoryId);
 
-			categoryIdsArray = StringUtil.split(
+			long[] categoryIdsArray = StringUtil.split(
 				StringUtil.merge(categoryIds), 0L);
 
-			Indexer indexer = IndexerRegistryUtil.getIndexer(MBMessage.class);
+			Indexer<MBMessage> indexer = IndexerRegistryUtil.getIndexer(
+				MBMessage.class);
 
 			SearchContext searchContext = SearchContextFactory.getInstance(
-				_request);
+				_httpServletRequest);
 
 			searchContext.setAttribute("paginationType", "more");
 			searchContext.setCategoryIds(categoryIdsArray);
 			searchContext.setEnd(searchContainer.getEnd());
 			searchContext.setIncludeAttachments(true);
+			searchContext.setIncludeInternalAssetCategories(true);
 
-			String keywords = ParamUtil.getString(_request, "keywords");
+			String keywords = ParamUtil.getString(
+				_httpServletRequest, "keywords");
 
 			searchContext.setKeywords(keywords);
 
@@ -142,21 +145,21 @@ public class DefaultMBAdminListDisplayContext
 
 			Sort sort = null;
 
-			boolean orderByAsc = true;
+			boolean orderByAsc = false;
 
 			if (Objects.equals(orderByType, "asc")) {
-				orderByAsc = false;
+				orderByAsc = true;
 			}
 
 			if (Objects.equals(orderByCol, "modified-date")) {
 				sort = new Sort(
-					Field.MODIFIED_DATE, Sort.LONG_TYPE, orderByAsc);
+					Field.MODIFIED_DATE, Sort.LONG_TYPE, !orderByAsc);
 			}
 			else if (Objects.equals(orderByCol, "title")) {
 				String sortFieldName = Field.getSortableFieldName(
 					"localized_title_".concat(themeDisplay.getLanguageId()));
 
-				sort = new Sort(sortFieldName, Sort.STRING_TYPE, orderByAsc);
+				sort = new Sort(sortFieldName, Sort.STRING_TYPE, !orderByAsc);
 			}
 
 			searchContext.setSorts(sort);
@@ -166,15 +169,16 @@ public class DefaultMBAdminListDisplayContext
 			Hits hits = indexer.search(searchContext);
 
 			searchContainer.setResults(
-				SearchResultUtil.getSearchResults(hits, _request.getLocale()));
+				SearchResultUtil.getSearchResults(
+					hits, _httpServletRequest.getLocale()));
 
 			searchContainer.setTotal(hits.getLength());
 		}
 		else {
 			String entriesNavigation = ParamUtil.getString(
-				_request, "entriesNavigation", "all");
+				_httpServletRequest, "entriesNavigation", "all");
 
-			if ("all".equals(entriesNavigation)) {
+			if (Objects.equals(entriesNavigation, "all")) {
 				int status = WorkflowConstants.STATUS_APPROVED;
 
 				PermissionChecker permissionChecker =
@@ -201,7 +205,7 @@ public class DefaultMBAdminListDisplayContext
 						themeDisplay.getScopeGroupId(), _categoryId,
 						queryDefinition));
 			}
-			else if ("threads".equals(entriesNavigation)) {
+			else if (Objects.equals(entriesNavigation, "threads")) {
 				int status = WorkflowConstants.STATUS_APPROVED;
 
 				PermissionChecker permissionChecker =
@@ -229,7 +233,7 @@ public class DefaultMBAdminListDisplayContext
 						themeDisplay.getScopeGroupId(), _categoryId,
 						queryDefinition));
 			}
-			else if ("categories".equals(entriesNavigation)) {
+			else if (Objects.equals(entriesNavigation, "categories")) {
 				int status = WorkflowConstants.STATUS_APPROVED;
 
 				PermissionChecker permissionChecker =
@@ -263,11 +267,12 @@ public class DefaultMBAdminListDisplayContext
 	@Override
 	public void setEntriesDelta(SearchContainer searchContainer) {
 		int entriesDelta = ParamUtil.getInteger(
-			_request, searchContainer.getDeltaParam());
+			_httpServletRequest, searchContainer.getDeltaParam());
 
 		if (entriesDelta > 0) {
 			PortalPreferences portalPreferences =
-				PortletPreferencesFactoryUtil.getPortalPreferences(_request);
+				PortletPreferencesFactoryUtil.getPortalPreferences(
+					_httpServletRequest);
 
 			portalPreferences.setValue(
 				MBPortletKeys.MESSAGE_BOARDS_ADMIN, "entriesDelta",
@@ -279,6 +284,6 @@ public class DefaultMBAdminListDisplayContext
 		"f3efa0bd-ca31-43c5-bdfe-164ee683b39e");
 
 	private final long _categoryId;
-	private final HttpServletRequest _request;
+	private final HttpServletRequest _httpServletRequest;
 
 }

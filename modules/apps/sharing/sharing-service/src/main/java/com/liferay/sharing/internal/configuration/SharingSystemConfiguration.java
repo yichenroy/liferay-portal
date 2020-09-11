@@ -14,7 +14,6 @@
 
 package com.liferay.sharing.internal.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
@@ -27,7 +26,6 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 	id = "com.liferay.sharing.internal.configuration.SharingSystemConfiguration",
 	localization = "content/Language", name = "sharing-configuration-name"
 )
-@ProviderType
 public interface SharingSystemConfiguration {
 
 	/**
@@ -44,6 +42,7 @@ public interface SharingSystemConfiguration {
 
 	/**
 	 * Enables sharing.
+	 *
 	 * @review
 	 */
 	@Meta.AD(deflt = "true", name = "enabled", required = false)

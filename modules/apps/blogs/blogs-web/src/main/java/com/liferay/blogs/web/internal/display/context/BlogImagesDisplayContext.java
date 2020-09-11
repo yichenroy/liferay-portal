@@ -54,23 +54,24 @@ public class BlogImagesDisplayContext {
 
 		_liferayPortletRequest = liferayPortletRequest;
 
-		_request = _liferayPortletRequest.getHttpServletRequest();
+		_httpServletRequest = _liferayPortletRequest.getHttpServletRequest();
 	}
 
-	public void populateResults(SearchContainer searchContainer)
+	public void populateResults(SearchContainer<FileEntry> searchContainer)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Folder attachmentsFolder =
 			BlogsEntryLocalServiceUtil.addAttachmentsFolder(
 				themeDisplay.getUserId(), themeDisplay.getScopeGroupId());
 
 		int total = 0;
-		List results = null;
+		List<FileEntry> results = null;
 
-		String keywords = ParamUtil.getString(_request, "keywords");
+		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		if (Validator.isNull(keywords)) {
 			total = PortletFileRepositoryUtil.getPortletFileEntriesCount(
@@ -89,7 +90,7 @@ public class BlogImagesDisplayContext {
 		}
 		else {
 			SearchContext searchContext = SearchContextFactory.getInstance(
-				_request);
+				_httpServletRequest);
 
 			searchContext.setEnd(searchContainer.getEnd());
 			searchContext.setFolderIds(
@@ -97,9 +98,9 @@ public class BlogImagesDisplayContext {
 			searchContext.setStart(searchContainer.getStart());
 
 			String orderByCol = ParamUtil.getString(
-				_request, "orderByCol", "title");
+				_httpServletRequest, "orderByCol", "title");
 			String orderByType = ParamUtil.getString(
-				_request, "orderByType", "asc");
+				_httpServletRequest, "orderByType", "asc");
 
 			Sort sort = new Sort(
 				orderByCol, !StringUtil.equalsIgnoreCase(orderByType, "asc"));
@@ -129,15 +130,13 @@ public class BlogImagesDisplayContext {
 
 					results.add(fileEntry);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							StringBundler.concat(
 								"Documents and Media search index is stale ",
 								"and contains file entry ", fileEntryId));
 					}
-
-					continue;
 				}
 			}
 
@@ -149,7 +148,7 @@ public class BlogImagesDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		BlogImagesDisplayContext.class);
 
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
-	private final HttpServletRequest _request;
 
 }

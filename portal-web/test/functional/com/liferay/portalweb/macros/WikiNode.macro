@@ -1,4 +1,5 @@
 definition {
+
 	var assetType = "Wiki Node";
 
 	macro addCP {
@@ -18,12 +19,36 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Wiki"
-		);
+			portlet = "Wiki");
 
 		if (IsElementNotPresent(locator1 = "Wiki#NODE_TABLE")) {
 			WikiNode.addCP(wikiNodeName = "Main");
+		}
+	}
+
+	macro configureEmailCP {
+		Click(locator1 = "Portlet#OPTIONS_ICON");
+
+		MenuItem.click(menuItem = "Configuration");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		if (isSet(pageAddedEmail)) {
+			AssertClick(
+				locator1 = "Configuration#NAVIGATION_PAGE_ADDED_EMAIL",
+				value1 = "Page Added Email");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+			Type(
+				locator1 = "CKEditor#BODY",
+				value1 = "${bodyContent}");
+
+			SelectFrame(value1 = "relative=top");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			PortletEntry.save();
 		}
 	}
 
@@ -34,14 +59,13 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Wiki#NODE_TABLE_WIKI_NAME",
-			value1 = "${wikiNodeName}"
-		);
+			value1 = "${wikiNodeName}");
 
 		Click(locator1 = "Wiki#NODE_TABLE_ACTIONS_DROPDOWN");
 
 		PortletEntry.clickMoveToRecycleBin();
 
-		AssertElementPresent(locator1 = "Message#SUCCESS");
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
 		RecycleBin.emptyCP();
 	}
@@ -53,8 +77,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Wiki#NODE_TABLE_WIKI_NAME",
-			value1 = "${wikiNodeName}"
-		);
+			value1 = "${wikiNodeName}");
 
 		Click(locator1 = "Wiki#NODE_TABLE_ACTIONS_DROPDOWN");
 
@@ -76,18 +99,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Wiki"
-		);
+			portlet = "Wiki");
 
 		while (IsElementPresent(locator1 = "Wiki#NODE_TABLE_ACTIONS_GENERIC_DROPDOWN_2")) {
 			Click(locator1 = "Wiki#NODE_TABLE_ACTIONS_GENERIC_DROPDOWN_2");
 
 			PortletEntry.clickMoveToRecycleBin();
 
-			AssertElementPresent(locator1 = "Message#SUCCESS");
+			VerifyElementPresent(locator1 = "Message#SUCCESS");
 
-			AssertElementPresent(locator1 = "Message#SUCCESS");
+			VerifyElementPresent(locator1 = "Message#SUCCESS");
 		}
 
 		RecycleBin.emptyCP();
@@ -100,15 +121,15 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Wiki#NODE_TABLE_WIKI_NAME",
-			value1 = "${wikiNodeName}"
-		);
+			value1 = "${wikiNodeName}");
 
 		AssertTextEquals(
 			locator1 = "Wiki#NODE_TABLE_NUMBER_OF_PAGES",
-			value1 = "${numberOfWikiPages}"
-		);
+			value1 = "${numberOfWikiPages}");
 
-		AssertClick(locator1 = "Wiki#NODE_TABLE_WIKI_NAME", value1 = "${wikiNodeName}");
+		AssertClick(
+			locator1 = "Wiki#NODE_TABLE_WIKI_NAME",
+			value1 = "${wikiNodeName}");
 
 		SiteAdmin.viewPortletTitle(portletTitle = "${wikiNodeName}");
 	}
@@ -118,9 +139,9 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Wiki#NODE_TABLE_WIKI_NAME",
-			value1 = "${wikiNodeName}"
-		);
+			value1 = "${wikiNodeName}");
 
 		AssertElementNotPresent(locator1 = "Wiki#NODE_TABLE_WIKI_GENERIC_2");
 	}
+
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.changeset.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.changeset.model.ChangesetEntry;
 import com.liferay.changeset.service.ChangesetEntryLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.changeset.service.ChangesetEntryLocalServiceUtil;
  * @see ChangesetEntry
  * @generated
  */
-@ProviderType
 public abstract class ChangesetEntryBaseImpl
 	extends ChangesetEntryModelImpl implements ChangesetEntry {
 

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.workflow.kaleo.model.KaleoAction;
 import com.liferay.portal.workflow.kaleo.service.KaleoActionLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.portal.workflow.kaleo.service.KaleoActionLocalServiceUtil;
  * @see KaleoAction
  * @generated
  */
-@ProviderType
 public abstract class KaleoActionBaseImpl
 	extends KaleoActionModelImpl implements KaleoAction {
 

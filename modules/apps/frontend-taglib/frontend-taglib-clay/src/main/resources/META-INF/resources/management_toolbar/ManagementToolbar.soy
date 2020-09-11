@@ -6,8 +6,8 @@
 {template .render}
 	{@param spritemap: string}
 	{@param? _handleClearSelectionButtonClicked: any}
+	{@param? _handleCreationMenuMoreButtonClicked: any}
 	{@param? _handleFilterLabelCloseClicked: any }
-	{@param? _handleInfoButtonClicked: any }
 	{@param? _handleSelectAllButtonClicked: any}
 	{@param? _handleSelectPageCheckboxChanged: any}
 	{@param? actionItems: list<[
@@ -19,6 +19,7 @@
 		separator: bool,
 		type: string
 	]>}
+	{@param? active: bool}
 	{@param? checkboxStatus: string}
 	{@param? clearResultsURL: string}
 	{@param? clearSelectionURL: string}
@@ -115,6 +116,7 @@
 	{call ClayManagementToolbar.render}
 		{param defaultEventHandler: $defaultEventHandler /}
 		{param actionItems: $actionItems /}
+		{param active: $active /}
 		{param checkboxStatus: $checkboxStatus /}
 		{param clearResultsURL: $clearResultsURL /}
 		{param clearSelectionURL: $clearSelectionURL /}
@@ -127,10 +129,10 @@
 		{param elementClasses: $elementClasses /}
 		{param events: [
 			'clearSelectionButtonClicked': $_handleClearSelectionButtonClicked,
+			'creationMenuMoreButtonClicked': $_handleCreationMenuMoreButtonClicked,
 			'filterLabelCloseClicked': $_handleFilterLabelCloseClicked,
-			'infoButtonClicked': $_handleInfoButtonClicked,
 			'selectPageCheckboxChanged': $_handleSelectPageCheckboxChanged,
-			'selectAllButtonClicked': $_handleSelectAllButtonClicked
+			'selectAllButtonClicked': $_handleSelectAllButtonClicked,
 		] /}
 		{param filterItems: $filterItems /}
 		{param filterLabels: $filterLabels /}

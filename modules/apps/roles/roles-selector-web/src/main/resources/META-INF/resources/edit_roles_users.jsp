@@ -19,10 +19,7 @@
 <%
 String tabs1 = (String)request.getAttribute("edit_roles.jsp-tabs1");
 
-int cur = (Integer)request.getAttribute("edit_roles.jsp-cur");
-
 Group group = (Group)request.getAttribute("edit_roles.jsp-group");
-String groupDescriptiveName = (String)request.getAttribute("edit_roles.jsp-groupDescriptiveName");
 Role role = (Role)request.getAttribute("edit_roles.jsp-role");
 long roleId = (Long)request.getAttribute("edit_roles.jsp-roleId");
 Organization organization = (Organization)request.getAttribute("edit_roles.jsp-organization");
@@ -44,10 +41,11 @@ PortletURL portletURL = (PortletURL)request.getAttribute("edit_roles.jsp-portlet
 	<%
 	UserSearchTerms searchTerms = (UserSearchTerms)userSearchContainer.getSearchTerms();
 
-	LinkedHashMap<String, Object> userParams = new LinkedHashMap<String, Object>();
-
-	userParams.put("inherit", Boolean.TRUE);
-	userParams.put("usersGroups", Long.valueOf(group.getGroupId()));
+	LinkedHashMap<String, Object> userParams = LinkedHashMapBuilder.<String, Object>put(
+		"inherit", Boolean.TRUE
+	).put(
+		"usersGroups", Long.valueOf(group.getGroupId())
+	).build();
 
 	if (tabs1.equals("current")) {
 		userParams.put("userGroupRole", new Long[] {Long.valueOf(group.getGroupId()), Long.valueOf(roleId)});

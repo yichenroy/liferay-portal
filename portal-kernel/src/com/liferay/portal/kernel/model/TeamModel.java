@@ -14,11 +14,12 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the Team service. Represents a row in the &quot;Team&quot; database table, with each column mapped to a property of this class.
@@ -33,7 +34,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface TeamModel
-	extends BaseModel<Team>, MVCCModel, ShardedModel, StagedGroupedModel {
+	extends BaseModel<Team>, CTModel<Team>, MVCCModel, ShardedModel,
+			StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -46,6 +48,7 @@ public interface TeamModel
 	 *
 	 * @return the primary key of this team
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -53,6 +56,7 @@ public interface TeamModel
 	 *
 	 * @param primaryKey the primary key of this team
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -70,6 +74,22 @@ public interface TeamModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this team.
+	 *
+	 * @return the ct collection ID of this team
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this team.
+	 *
+	 * @param ctCollectionId the ct collection ID of this team
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this team.

@@ -54,8 +54,8 @@ public class SelectLayoutSetBranchMVCActionCommand
 		throws Exception {
 
 		try {
-			HttpServletRequest request = _portal.getHttpServletRequest(
-				actionRequest);
+			HttpServletRequest httpServletRequest =
+				_portal.getHttpServletRequest(actionRequest);
 
 			long groupId = ParamUtil.getLong(actionRequest, "groupId");
 			boolean privateLayout = ParamUtil.getBoolean(
@@ -72,14 +72,14 @@ public class SelectLayoutSetBranchMVCActionCommand
 					layoutSetBranchId);
 
 			_staging.setRecentLayoutSetBranchId(
-				request, layoutSet.getLayoutSetId(),
+				httpServletRequest, layoutSet.getLayoutSetId(),
 				layoutSetBranch.getLayoutSetBranchId());
 
 			ActionUtil.addLayoutBranchSessionMessages(
 				actionRequest, actionResponse);
 		}
-		catch (Exception e) {
-			SessionErrors.add(actionRequest, e.getClass(), e);
+		catch (Exception exception) {
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
 
 			actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 		}

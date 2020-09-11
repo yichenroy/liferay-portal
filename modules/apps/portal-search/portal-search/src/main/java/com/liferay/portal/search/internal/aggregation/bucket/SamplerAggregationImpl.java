@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.aggregation.bucket;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.AggregationVisitor;
 import com.liferay.portal.search.aggregation.bucket.SamplerAggregation;
 import com.liferay.portal.search.internal.aggregation.BaseAggregation;
@@ -23,7 +21,6 @@ import com.liferay.portal.search.internal.aggregation.BaseAggregation;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class SamplerAggregationImpl
 	extends BaseAggregation implements SamplerAggregation {
 

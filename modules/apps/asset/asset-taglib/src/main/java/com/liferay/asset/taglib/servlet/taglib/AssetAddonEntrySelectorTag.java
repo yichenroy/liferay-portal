@@ -30,8 +30,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
 
 /**
- * @author Julio Camarero
+ * @author     Julio Camarero
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class AssetAddonEntrySelectorTag extends IncludeTag {
 
 	public List<AssetAddonEntry> getAssetAddonEntries() {
@@ -107,18 +109,19 @@ public class AssetAddonEntrySelectorTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(WebKeys.ASSET_ADDON_ENTRIES, _assetAddonEntries);
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
+			WebKeys.ASSET_ADDON_ENTRIES, _assetAddonEntries);
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-addon-entry-selector:hiddenInput",
 			_hiddenInput);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-addon-entry-selector:id", getId());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-addon-entry-selector:" +
 				"selectedAssetAddonEntries",
 			_getFilteredSelectedAssetAddonEntries());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-asset:asset-addon-entry-selector:title", _title);
 	}
 

@@ -18,14 +18,21 @@ import com.liferay.osgi.util.BundleUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.WebResourceCollectionDefinition;
 import com.liferay.portal.servlet.delegate.ServletContextDelegate;
+import com.liferay.portal.util.PropsValues;
 
+import java.io.File;
 import java.io.IOException;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 import java.util.Enumeration;
@@ -39,8 +46,6 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.utils.log.Logger;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.http.context.ServletContextHelper;
@@ -52,15 +57,18 @@ public class CustomServletContextHelper
 	extends ServletContextHelper implements ServletContextListener {
 
 	public CustomServletContextHelper(
-		Bundle bundle, Logger logger,
+		Bundle bundle,
 		List<WebResourceCollectionDefinition>
 			webResourceCollectionDefinitions) {
 
 		super(bundle);
 
 		_bundle = bundle;
-		_logger = logger;
 		_webResourceCollectionDefinitions = webResourceCollectionDefinitions;
+
+		_overrideDirName = StringBundler.concat(
+			PropsValues.LIFERAY_HOME, File.separator, "work", File.separator,
+			_bundle.getSymbolicName(), StringPool.DASH, _bundle.getVersion());
 
 		Class<?> clazz = getClass();
 
@@ -105,7 +113,35 @@ public class CustomServletContextHelper
 			name = StringPool.SLASH.concat(name);
 		}
 
-		URL url = BundleUtil.getResourceInBundleOrFragments(_bundle, name);
+		URL url = null;
+
+		if (PropsValues.WORK_DIR_OVERRIDE_ENABLED &&
+			(name.endsWith(".css") || name.endsWith(".js"))) {
+
+			String overrideName = StringUtil.removeSubstring(
+				name, "/META-INF/resources");
+
+			File file = new File(_overrideDirName, overrideName);
+
+			if (file.exists()) {
+				try {
+					URI uri = file.toURI();
+
+					url = uri.toURL();
+				}
+				catch (MalformedURLException malformedURLException) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Invalid override URL " + file.toString(),
+							malformedURLException);
+					}
+				}
+			}
+		}
+
+		if (url == null) {
+			url = BundleUtil.getResourceInBundleOrFragments(_bundle, name);
+		}
 
 		if (url == null) {
 			url = BundleUtil.getResourceInBundleOrFragments(
@@ -121,13 +157,12 @@ public class CustomServletContextHelper
 					url = enumeration.nextElement();
 				}
 			}
-			catch (IOException ioe) {
-				_logger.log(
-					Logger.LOG_ERROR,
+			catch (IOException ioException) {
+				_log.error(
 					StringBundler.concat(
 						"Unable to get resource name ", name, " on bundle ",
 						_bundle),
-					ioe);
+					ioException);
 			}
 		}
 
@@ -140,15 +175,17 @@ public class CustomServletContextHelper
 
 	@Override
 	public boolean handleSecurity(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		if ((request.getDispatcherType() != DispatcherType.ASYNC) &&
-			(request.getDispatcherType() != DispatcherType.REQUEST)) {
+		if ((httpServletRequest.getDispatcherType() != DispatcherType.ASYNC) &&
+			(httpServletRequest.getDispatcherType() !=
+				DispatcherType.REQUEST)) {
 
 			return true;
 		}
 
-		String path = request.getPathInfo();
+		String path = httpServletRequest.getPathInfo();
 
 		if (path == null) {
 			return true;
@@ -161,7 +198,8 @@ public class CustomServletContextHelper
 		if (path.startsWith("/META-INF/") || path.startsWith("/OSGI-INF/") ||
 			path.startsWith("/OSGI-OPT/") || path.startsWith("/WEB-INF/")) {
 
-			return sendErrorForbidden(request, response, path);
+			return sendErrorForbidden(
+				httpServletRequest, httpServletResponse, path);
 		}
 
 		if (ListUtil.isEmpty(_webResourceCollectionDefinitions)) {
@@ -238,7 +276,7 @@ public class CustomServletContextHelper
 					webResourceCollectionDefinition.getHttpMethods();
 
 				if (ListUtil.isNotEmpty(httpMethods) &&
-					!httpMethods.contains(request.getMethod())) {
+					!httpMethods.contains(httpServletRequest.getMethod())) {
 
 					forbidden = false;
 				}
@@ -247,14 +285,16 @@ public class CustomServletContextHelper
 					webResourceCollectionDefinition.getHttpMethodExceptions();
 
 				if (ListUtil.isNotEmpty(httpMethodExceptions) &&
-					httpMethodExceptions.contains(request.getMethod())) {
+					httpMethodExceptions.contains(
+						httpServletRequest.getMethod())) {
 
 					forbidden = false;
 				}
 			}
 
 			if (forbidden) {
-				return sendErrorForbidden(request, response, path);
+				return sendErrorForbidden(
+					httpServletRequest, httpServletResponse, path);
 			}
 		}
 
@@ -267,27 +307,33 @@ public class CustomServletContextHelper
 	}
 
 	protected boolean sendErrorForbidden(
-		HttpServletRequest request, HttpServletResponse response, String path) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, String path) {
 
 		try {
-			ServletContext servletContext = request.getServletContext();
+			ServletContext servletContext =
+				httpServletRequest.getServletContext();
 
 			servletContext.log(
 				StringBundler.concat(
 					"[WAB ERROR] Attempt to load illegal path ", path, " in ",
 					toString()));
 
-			response.sendError(HttpServletResponse.SC_FORBIDDEN, path);
+			httpServletResponse.sendError(
+				HttpServletResponse.SC_FORBIDDEN, path);
 		}
-		catch (IOException ioe) {
-			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+		catch (IOException ioException) {
+			httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
 		}
 
 		return false;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		CustomServletContextHelper.class);
+
 	private final Bundle _bundle;
-	private final Logger _logger;
+	private final String _overrideDirName;
 	private ServletContext _servletContext;
 	private final String _string;
 	private final List<WebResourceCollectionDefinition>

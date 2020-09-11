@@ -14,16 +14,17 @@
 
 package com.liferay.knowledge.base.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ResourcedModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 import com.liferay.portal.kernel.model.WorkflowedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the KBArticle service. Represents a row in the &quot;KBArticle&quot; database table, with each column mapped to a property of this class.
@@ -38,7 +39,7 @@ import java.util.Date;
  */
 @ProviderType
 public interface KBArticleModel
-	extends BaseModel<KBArticle>, ResourcedModel, ShardedModel,
+	extends BaseModel<KBArticle>, MVCCModel, ResourcedModel, ShardedModel,
 			StagedGroupedModel, WorkflowedModel {
 
 	/*
@@ -60,6 +61,22 @@ public interface KBArticleModel
 	 * @param primaryKey the primary key of this kb article
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this kb article.
+	 *
+	 * @return the mvcc version of this kb article
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this kb article.
+	 *
+	 * @param mvccVersion the mvcc version of this kb article
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this kb article.
@@ -382,20 +399,6 @@ public interface KBArticleModel
 	 * @param sections the sections of this kb article
 	 */
 	public void setSections(String sections);
-
-	/**
-	 * Returns the view count of this kb article.
-	 *
-	 * @return the view count of this kb article
-	 */
-	public int getViewCount();
-
-	/**
-	 * Sets the view count of this kb article.
-	 *
-	 * @param viewCount the view count of this kb article
-	 */
-	public void setViewCount(int viewCount);
 
 	/**
 	 * Returns the latest of this kb article.

@@ -134,23 +134,23 @@ public class DDMStructureImplTest extends BaseDDMTestCase {
 
 	@Test
 	public void testGetDDMForm() throws Exception {
-		DDMForm ddmForm = createDDMForm(
+		DDMForm ddmForm1 = createDDMForm(
 			createAvailableLocales(LocaleUtil.US), LocaleUtil.US);
 
-		ddmForm.addDDMFormField(createTextDDMFormField("field1"));
+		ddmForm1.addDDMFormField(createTextDDMFormField("field1"));
 
-		DDMStructure structure = createStructure("Test Structure", ddmForm);
-
-		DDMForm ddmForm1 = structure.getDDMForm();
-
-		ddmForm1.addDDMFormField(createTextDDMFormField("field2"));
+		DDMStructure structure = createStructure("Test Structure", ddmForm1);
 
 		DDMForm ddmForm2 = structure.getDDMForm();
 
-		Map<String, DDMFormField> ddmForm2FieldsMap =
-			ddmForm2.getDDMFormFieldsMap(false);
+		ddmForm2.addDDMFormField(createTextDDMFormField("field2"));
 
-		Assert.assertFalse(ddmForm2FieldsMap.containsKey("field2"));
+		DDMForm ddmForm3 = structure.getDDMForm();
+
+		Map<String, DDMFormField> ddmFormFieldsMap =
+			ddmForm3.getDDMFormFieldsMap(false);
+
+		Assert.assertFalse(ddmFormFieldsMap.containsKey("field2"));
 	}
 
 	@Test

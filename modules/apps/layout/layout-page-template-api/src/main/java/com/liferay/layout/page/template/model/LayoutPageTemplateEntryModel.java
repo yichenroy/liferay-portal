@@ -14,16 +14,18 @@
 
 package com.liferay.layout.page.template.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 import com.liferay.portal.kernel.model.TypedModel;
 import com.liferay.portal.kernel.model.WorkflowedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the LayoutPageTemplateEntry service. Represents a row in the &quot;LayoutPageTemplateEntry&quot; database table, with each column mapped to a property of this class.
@@ -38,7 +40,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface LayoutPageTemplateEntryModel
-	extends BaseModel<LayoutPageTemplateEntry>, ShardedModel,
+	extends BaseModel<LayoutPageTemplateEntry>,
+			CTModel<LayoutPageTemplateEntry>, MVCCModel, ShardedModel,
 			StagedGroupedModel, TypedModel, WorkflowedModel {
 
 	/*
@@ -52,6 +55,7 @@ public interface LayoutPageTemplateEntryModel
 	 *
 	 * @return the primary key of this layout page template entry
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -59,7 +63,40 @@ public interface LayoutPageTemplateEntryModel
 	 *
 	 * @param primaryKey the primary key of this layout page template entry
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this layout page template entry.
+	 *
+	 * @return the mvcc version of this layout page template entry
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this layout page template entry.
+	 *
+	 * @param mvccVersion the mvcc version of this layout page template entry
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this layout page template entry.
+	 *
+	 * @return the ct collection ID of this layout page template entry
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this layout page template entry.
+	 *
+	 * @param ctCollectionId the ct collection ID of this layout page template entry
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this layout page template entry.
@@ -221,6 +258,22 @@ public interface LayoutPageTemplateEntryModel
 		long layoutPageTemplateCollectionId);
 
 	/**
+	 * Returns the layout page template entry key of this layout page template entry.
+	 *
+	 * @return the layout page template entry key of this layout page template entry
+	 */
+	@AutoEscape
+	public String getLayoutPageTemplateEntryKey();
+
+	/**
+	 * Sets the layout page template entry key of this layout page template entry.
+	 *
+	 * @param layoutPageTemplateEntryKey the layout page template entry key of this layout page template entry
+	 */
+	public void setLayoutPageTemplateEntryKey(
+		String layoutPageTemplateEntryKey);
+
+	/**
 	 * Returns the fully qualified class name of this layout page template entry.
 	 *
 	 * @return the fully qualified class name of this layout page template entry
@@ -339,6 +392,20 @@ public interface LayoutPageTemplateEntryModel
 	public void setLayoutPrototypeId(long layoutPrototypeId);
 
 	/**
+	 * Returns the plid of this layout page template entry.
+	 *
+	 * @return the plid of this layout page template entry
+	 */
+	public long getPlid();
+
+	/**
+	 * Sets the plid of this layout page template entry.
+	 *
+	 * @param plid the plid of this layout page template entry
+	 */
+	public void setPlid(long plid);
+
+	/**
 	 * Returns the last publish date of this layout page template entry.
 	 *
 	 * @return the last publish date of this layout page template entry
@@ -353,20 +420,6 @@ public interface LayoutPageTemplateEntryModel
 	 */
 	@Override
 	public void setLastPublishDate(Date lastPublishDate);
-
-	/**
-	 * Returns the plid of this layout page template entry.
-	 *
-	 * @return the plid of this layout page template entry
-	 */
-	public long getPlid();
-
-	/**
-	 * Sets the plid of this layout page template entry.
-	 *
-	 * @param plid the plid of this layout page template entry
-	 */
-	public void setPlid(long plid);
 
 	/**
 	 * Returns the status of this layout page template entry.

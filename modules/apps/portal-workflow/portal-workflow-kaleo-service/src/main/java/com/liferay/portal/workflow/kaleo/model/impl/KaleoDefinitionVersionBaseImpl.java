@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalServ
  * @see KaleoDefinitionVersion
  * @generated
  */
-@ProviderType
 public abstract class KaleoDefinitionVersionBaseImpl
 	extends KaleoDefinitionVersionModelImpl implements KaleoDefinitionVersion {
 

@@ -18,6 +18,7 @@ import com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layouts.admin.kernel.util.Sitemap;
 import com.liferay.layouts.admin.kernel.util.SitemapURLProvider;
 import com.liferay.layouts.admin.kernel.util.SitemapURLProviderRegistryUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
@@ -30,7 +31,6 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -48,16 +48,19 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * @author Jorge Ferrer
- * @author Vilmos Papp
+ * @author     Jorge Ferrer
+ * @author     Vilmos Papp
+ * @deprecated As of Mueller (7.2.x), replaced by {@link
+ *             com.liferay.layout.internal.util.SitemapImpl}
  */
+@Deprecated
 public class SitemapImpl implements Sitemap {
 
 	@Override
 	public void addURLElement(
-		Element element, String url, UnicodeProperties typeSettingsProperties,
-		Date modifiedDate, String canonicalURL,
-		Map<Locale, String> alternateURLs) {
+		Element element, String url,
+		UnicodeProperties typeSettingsUnicodeProperties, Date modifiedDate,
+		String canonicalURL, Map<Locale, String> alternateURLs) {
 
 		Element urlElement = element.addElement("url");
 
@@ -73,7 +76,7 @@ public class SitemapImpl implements Sitemap {
 			modifiedDateElement.addText(iso8601DateFormat.format(modifiedDate));
 		}
 
-		if (typeSettingsProperties == null) {
+		if (typeSettingsUnicodeProperties == null) {
 			if (Validator.isNotNull(
 					PropsValues.SITES_SITEMAP_DEFAULT_CHANGE_FREQUENCY)) {
 
@@ -93,7 +96,7 @@ public class SitemapImpl implements Sitemap {
 			}
 		}
 		else {
-			String changefreq = typeSettingsProperties.getProperty(
+			String changefreq = typeSettingsUnicodeProperties.getProperty(
 				"sitemap-changefreq");
 
 			if (Validator.isNotNull(changefreq)) {
@@ -110,7 +113,7 @@ public class SitemapImpl implements Sitemap {
 					PropsValues.SITES_SITEMAP_DEFAULT_CHANGE_FREQUENCY);
 			}
 
-			String priority = typeSettingsProperties.getProperty(
+			String priority = typeSettingsUnicodeProperties.getProperty(
 				"sitemap-priority");
 
 			if (Validator.isNotNull(priority)) {
@@ -265,11 +268,11 @@ public class SitemapImpl implements Sitemap {
 				entry.getKey());
 
 			for (Layout layout : layouts) {
-				UnicodeProperties typeSettingsProperties =
+				UnicodeProperties typeSettingsUnicodeProperties =
 					layout.getTypeSettingsProperties();
 
 				boolean sitemapInclude = GetterUtil.getBoolean(
-					typeSettingsProperties.getProperty(
+					typeSettingsUnicodeProperties.getProperty(
 						LayoutTypePortletConstants.SITEMAP_INCLUDE),
 					true);
 

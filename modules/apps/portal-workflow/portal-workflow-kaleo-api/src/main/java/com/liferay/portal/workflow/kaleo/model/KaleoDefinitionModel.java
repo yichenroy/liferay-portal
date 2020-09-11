@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -27,6 +25,8 @@ import com.liferay.portal.kernel.model.ShardedModel;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the KaleoDefinition service. Represents a row in the &quot;KaleoDefinition&quot; database table, with each column mapped to a property of this class.
@@ -350,6 +350,21 @@ public interface KaleoDefinitionModel
 	 * @param content the content of this kaleo definition
 	 */
 	public void setContent(String content);
+
+	/**
+	 * Returns the scope of this kaleo definition.
+	 *
+	 * @return the scope of this kaleo definition
+	 */
+	@AutoEscape
+	public String getScope();
+
+	/**
+	 * Sets the scope of this kaleo definition.
+	 *
+	 * @param scope the scope of this kaleo definition
+	 */
+	public void setScope(String scope);
 
 	/**
 	 * Returns the version of this kaleo definition.

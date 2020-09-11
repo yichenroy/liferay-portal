@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.validator;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.exception.StorageException;
 
 /**
  * @author Marcellus Tavares
  */
-@ProviderType
 public class DDMFormValuesValidationException extends StorageException {
 
 	public DDMFormValuesValidationException() {
@@ -31,12 +28,12 @@ public class DDMFormValuesValidationException extends StorageException {
 		super(msg);
 	}
 
-	public DDMFormValuesValidationException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DDMFormValuesValidationException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public DDMFormValuesValidationException(Throwable cause) {
-		super(cause);
+	public DDMFormValuesValidationException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public static class MustNotSetValue
@@ -128,10 +125,10 @@ public class DDMFormValuesValidationException extends StorageException {
 			_fieldName = fieldName;
 		}
 
-		public MustSetValidValue(String fieldName, Throwable cause) {
+		public MustSetValidValue(String fieldName, Throwable throwable) {
 			super(
 				String.format("Invalid value set for field name %s", fieldName),
-				cause);
+				throwable);
 
 			_fieldName = fieldName;
 		}

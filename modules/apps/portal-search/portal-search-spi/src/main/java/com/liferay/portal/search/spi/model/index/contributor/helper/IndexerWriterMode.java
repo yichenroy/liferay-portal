@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.spi.model.index.contributor.helper;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum IndexerWriterMode {
 
 	DELETE, PARTIAL_UPDATE, SKIP, UPDATE

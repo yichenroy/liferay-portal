@@ -14,10 +14,11 @@
 
 package com.liferay.exportimport.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Jorge Díaz
@@ -34,6 +35,19 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 )
 @ProviderType
 public interface ExportImportServiceConfiguration {
+
+	@Meta.AD(
+		deflt = "false",
+		description = "replicate-individual-deletions-by-default-help",
+		name = "replicate-individual-deletions-by-default", required = false
+	)
+	public boolean replicateIndividualDeletionsByDefault();
+
+	@Meta.AD(
+		deflt = "false", description = "publish-permissions-by-default-help",
+		name = "publish-permissions-by-default", required = false
+	)
+	public boolean publishPermissionsByDefault();
 
 	@Meta.AD(
 		deflt = "true", description = "validate-file-entry-references-help",
@@ -54,6 +68,12 @@ public interface ExportImportServiceConfiguration {
 	public boolean validateLayoutReferences();
 
 	@Meta.AD(
+		deflt = "true", description = "validate-missing-references-help",
+		name = "validate-missing-references", required = false
+	)
+	public boolean validateMissingReferences();
+
+	@Meta.AD(
 		deflt = "true", description = "staging-delete-temp-lar-on-failure-help",
 		name = "staging-delete-temp-lar-on-failure", required = false
 	)
@@ -64,5 +84,12 @@ public interface ExportImportServiceConfiguration {
 		name = "staging-delete-temp-lar-on-success", required = false
 	)
 	public boolean stagingDeleteTempLarOnSuccess();
+
+	@Meta.AD(
+		deflt = "false",
+		description = "staging-use-virtual-host-of-the-remote-site-help",
+		name = "staging-use-virtual-host-of-the-remote-site", required = false
+	)
+	public boolean stagingUseVirtualHostForRemoteSite();
 
 }

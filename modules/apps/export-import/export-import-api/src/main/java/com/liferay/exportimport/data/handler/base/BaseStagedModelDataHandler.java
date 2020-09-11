@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.data.handler.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.changeset.model.ChangesetCollection;
 import com.liferay.changeset.model.ChangesetEntry;
 import com.liferay.changeset.service.ChangesetCollectionLocalServiceUtil;
@@ -27,7 +25,7 @@ import com.liferay.exportimport.kernel.lar.ExportImportClassedModelUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
-import com.liferay.exportimport.kernel.staging.StagingConstants;
+import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.StagedModel;
@@ -36,6 +34,8 @@ import com.liferay.portal.kernel.xml.Element;
 
 import java.util.Collections;
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Daniel Kocsis
@@ -79,47 +79,47 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 
 		super.exportStagedModel(portletDataContext, stagedModel);
 
-		if (ExportImportThreadLocal.isStagingInProcess()) {
-			Element importDataRootElement =
-				portletDataContext.getImportDataRootElement();
+		if (!ExportImportThreadLocal.isStagingInProcess()) {
+			return;
+		}
 
-			Element importDataElement = null;
+		Element importDataRootElement =
+			portletDataContext.getImportDataRootElement();
 
-			try {
-				portletDataContext.setImportDataRootElement(
-					portletDataContext.getExportDataRootElement());
+		Element importDataElement = null;
 
-				importDataElement = portletDataContext.getImportDataElement(
-					stagedModel);
-			}
-			finally {
-				portletDataContext.setImportDataRootElement(
-					importDataRootElement);
-			}
+		try {
+			portletDataContext.setImportDataRootElement(
+				portletDataContext.getExportDataRootElement());
 
-			if (importDataElement == null) {
-				return;
-			}
+			importDataElement = portletDataContext.getImportDataElement(
+				stagedModel);
+		}
+		finally {
+			portletDataContext.setImportDataRootElement(importDataRootElement);
+		}
 
-			ChangesetCollection changesetCollection =
-				ChangesetCollectionLocalServiceUtil.fetchChangesetCollection(
-					portletDataContext.getScopeGroupId(),
-					StagingConstants.
-						RANGE_FROM_LAST_PUBLISH_DATE_CHANGESET_NAME);
+		if (importDataElement == null) {
+			return;
+		}
 
-			if (changesetCollection != null) {
-				long classNameId = ClassNameLocalServiceUtil.getClassNameId(
-					ExportImportClassedModelUtil.getClassName(stagedModel));
+		ChangesetCollection changesetCollection =
+			ChangesetCollectionLocalServiceUtil.fetchChangesetCollection(
+				portletDataContext.getScopeGroupId(),
+				StagingConstants.RANGE_FROM_LAST_PUBLISH_DATE_CHANGESET_NAME);
 
-				ChangesetEntry changesetEntry =
-					ChangesetEntryLocalServiceUtil.fetchChangesetEntry(
-						changesetCollection.getChangesetCollectionId(),
-						classNameId, (long)stagedModel.getPrimaryKeyObj());
+		if (changesetCollection != null) {
+			long classNameId = ClassNameLocalServiceUtil.getClassNameId(
+				ExportImportClassedModelUtil.getClassName(stagedModel));
 
-				if (changesetEntry != null) {
-					ChangesetThreadLocal.addExportedChangesetEntryId(
-						changesetEntry.getChangesetEntryId());
-				}
+			ChangesetEntry changesetEntry =
+				ChangesetEntryLocalServiceUtil.fetchChangesetEntry(
+					changesetCollection.getChangesetCollectionId(), classNameId,
+					(long)stagedModel.getPrimaryKeyObj());
+
+			if (changesetEntry != null) {
+				ChangesetThreadLocal.addExportedChangesetEntryId(
+					changesetEntry.getChangesetEntryId());
 			}
 		}
 	}
@@ -182,14 +182,11 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 			portletDataContext, stagedModel);
 	}
 
-	protected ExportImportContentProcessor getExportImportContentProcessor(
-		Class<T> clazz) {
+	protected ExportImportContentProcessor<String>
+		getExportImportContentProcessor(Class<T> clazz) {
 
-		ExportImportContentProcessor exportImportContentProcessor =
-			ExportImportContentProcessorRegistryUtil.
-				getExportImportContentProcessor(clazz.getName());
-
-		return exportImportContentProcessor;
+		return ExportImportContentProcessorRegistryUtil.
+			getExportImportContentProcessor(clazz.getName());
 	}
 
 	protected StagedModelRepository<T> getStagedModelRepository() {

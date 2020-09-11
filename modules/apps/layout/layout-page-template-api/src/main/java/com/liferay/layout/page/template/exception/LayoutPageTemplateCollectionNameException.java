@@ -14,14 +14,11 @@
 
 package com.liferay.layout.page.template.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class LayoutPageTemplateCollectionNameException extends PortalException {
 
 	public LayoutPageTemplateCollectionNameException() {
@@ -32,13 +29,13 @@ public class LayoutPageTemplateCollectionNameException extends PortalException {
 	}
 
 	public LayoutPageTemplateCollectionNameException(
-		String msg, Throwable cause) {
+		String msg, Throwable throwable) {
 
-		super(msg, cause);
+		super(msg, throwable);
 	}
 
-	public LayoutPageTemplateCollectionNameException(Throwable cause) {
-		super(cause);
+	public LayoutPageTemplateCollectionNameException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

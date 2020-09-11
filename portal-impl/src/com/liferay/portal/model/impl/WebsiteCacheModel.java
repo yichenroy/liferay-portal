@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -35,21 +33,20 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class WebsiteCacheModel
 	implements CacheModel<Website>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof WebsiteCacheModel)) {
+		if (!(object instanceof WebsiteCacheModel)) {
 			return false;
 		}
 
-		WebsiteCacheModel websiteCacheModel = (WebsiteCacheModel)obj;
+		WebsiteCacheModel websiteCacheModel = (WebsiteCacheModel)object;
 
 		if ((websiteId == websiteCacheModel.websiteId) &&
 			(mvccVersion == websiteCacheModel.mvccVersion)) {

@@ -14,12 +14,12 @@
 
 package com.liferay.portal.jsonwebservice;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceActionMapping;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MethodParameter;
 import com.liferay.portal.kernel.util.MethodParametersResolverUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.lang.reflect.Method;
@@ -61,8 +61,8 @@ public class JSONWebServiceActionConfig
 				newActionMethod = actionObjectClass.getMethod(
 					actionMethod.getName(), actionMethod.getParameterTypes());
 			}
-			catch (NoSuchMethodException nsme) {
-				throw new IllegalArgumentException(nsme);
+			catch (NoSuchMethodException noSuchMethodException) {
+				throw new IllegalArgumentException(noSuchMethodException);
 			}
 		}
 
@@ -98,14 +98,14 @@ public class JSONWebServiceActionConfig
 			realActionMethod = _actionClass.getDeclaredMethod(
 				actionMethod.getName(), actionMethod.getParameterTypes());
 		}
-		catch (NoSuchMethodException nsme) {
+		catch (NoSuchMethodException noSuchMethodException) {
 		}
 
 		_realActionMethod = realActionMethod;
 
 		Class<?>[] parameterTypes = _actionMethod.getParameterTypes();
 
-		StringBundler sb = new StringBundler(parameterTypes.length * 2 + 3);
+		StringBundler sb = new StringBundler((parameterTypes.length * 2) + 3);
 
 		sb.append(_path);
 		sb.append(StringPool.MINUS);

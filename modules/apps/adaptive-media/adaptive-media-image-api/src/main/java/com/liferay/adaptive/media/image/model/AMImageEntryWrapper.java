@@ -14,8 +14,6 @@
 
 package com.liferay.adaptive.media.image.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see AMImageEntry
  * @generated
  */
-@ProviderType
 public class AMImageEntryWrapper
 	extends BaseModelWrapper<AMImageEntry>
 	implements AMImageEntry, ModelWrapper<AMImageEntry> {

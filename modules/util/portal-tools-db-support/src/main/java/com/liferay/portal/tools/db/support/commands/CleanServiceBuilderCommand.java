@@ -29,10 +29,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -127,7 +127,7 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 		_deleteServiceComponentRows(connection, namespace);
 	}
 
-	private void _deleteReleaseRows(Connection connection) throws SQLException {
+	private void _deleteReleaseRows(Connection connection) throws Exception {
 		String sql = "delete from Release_ where servletContextName = ?";
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
@@ -141,7 +141,7 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 
 	private void _deleteServiceComponentRows(
 			Connection connection, String namespace)
-		throws SQLException {
+		throws Exception {
 
 		String sql = "delete from ServiceComponent where buildNamespace = ?";
 
@@ -155,7 +155,7 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 	}
 
 	private void _dropTable(Connection connection, String tableName)
-		throws SQLException {
+		throws Exception {
 
 		DatabaseMetaData databaseMetaData = connection.getMetaData();
 
@@ -187,7 +187,7 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 
 			String localized = columnElement.getAttribute("localized");
 
-			if ("extra-table".equals(localized)) {
+			if (Objects.equals(localized, "extra-table")) {
 				return true;
 			}
 		}
@@ -213,8 +213,8 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 					add(line);
 				}
 			}
-			catch (IOException ioe) {
-				throw new ExceptionInInitializerError(ioe);
+			catch (IOException ioException) {
+				throw new ExceptionInInitializerError(ioException);
 			}
 		}
 	};

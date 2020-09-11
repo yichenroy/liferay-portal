@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,10 +28,9 @@ import java.util.Map;
  * @see PluginSetting
  * @generated
  */
-@ProviderType
 public class PluginSettingWrapper
 	extends BaseModelWrapper<PluginSetting>
-	implements PluginSetting, ModelWrapper<PluginSetting> {
+	implements ModelWrapper<PluginSetting>, PluginSetting {
 
 	public PluginSettingWrapper(PluginSetting pluginSetting) {
 		super(pluginSetting);

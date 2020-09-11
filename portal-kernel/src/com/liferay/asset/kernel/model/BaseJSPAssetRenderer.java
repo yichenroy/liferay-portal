@@ -40,22 +40,22 @@ public abstract class BaseJSPAssetRenderer<T>
 	extends BaseAssetRenderer<T> implements AssetRenderer<T> {
 
 	public abstract String getJspPath(
-		HttpServletRequest request, String template);
+		HttpServletRequest httpServletRequest, String template);
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		String jspPath = getJspPath(request, template);
+		String jspPath = getJspPath(httpServletRequest, template);
 
 		if (Validator.isNull(jspPath)) {
 			return false;
 		}
 
 		ResourceBundleLoader resourceBundleLoader =
-			(ResourceBundleLoader)request.getAttribute(
+			(ResourceBundleLoader)httpServletRequest.getAttribute(
 				WebKeys.RESOURCE_BUNDLE_LOADER);
 
 		ServletContext servletContext = getServletContext();
@@ -64,20 +64,21 @@ public abstract class BaseJSPAssetRenderer<T>
 			servletContext.getRequestDispatcher(jspPath);
 
 		try {
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				WebKeys.RESOURCE_BUNDLE_LOADER, getResourceBundleLoader());
 
-			requestDispatcher.include(request, response);
+			requestDispatcher.include(httpServletRequest, httpServletResponse);
 
 			return true;
 		}
-		catch (ServletException se) {
-			_log.error("Unable to include JSP " + jspPath, se);
+		catch (ServletException servletException) {
+			_log.error("Unable to include JSP " + jspPath, servletException);
 
-			throw new IOException("Unable to include " + jspPath, se);
+			throw new IOException(
+				"Unable to include " + jspPath, servletException);
 		}
 		finally {
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				WebKeys.RESOURCE_BUNDLE_LOADER, resourceBundleLoader);
 		}
 	}

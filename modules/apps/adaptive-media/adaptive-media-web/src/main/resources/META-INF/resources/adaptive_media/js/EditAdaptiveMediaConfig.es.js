@@ -1,8 +1,40 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
+import {PortletBase, normalizeFriendlyURL} from 'frontend-js-web';
 import core from 'metal';
 import dom from 'metal-dom';
-import {EventHandler} from 'metal-events';
 
-import PortletBase from 'frontend-js-web/liferay/PortletBase.es';
+const VALID_INPUT_KEYS = new Set([
+	'0',
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6',
+	'7',
+	'8',
+	'9',
+	'ArrowDown',
+	'ArrowUp',
+	'Backspace',
+	'Down',
+	'Enter',
+	'Tab',
+	'Up',
+]);
 
 /**
  * EditAdaptiveMediaConfig
@@ -16,80 +48,57 @@ class EditAdaptiveMediaConfig extends PortletBase {
 	/**
 	 * @inheritDoc
 	 */
-	created() {
-		this.eventHandler_ = new EventHandler();
-		this.validInputKeyCodes_ = [8, 9, 13, 38, 40, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
-	}
-
-	/**
-	 * @inheritDoc
-	 */
 	attached() {
-		let idOptions = this.one('#idOptions');
+		const idOptions = this.one('#idOptions');
 
 		if (idOptions) {
-			this.eventHandler_.add(
-				dom.delegate(
-					idOptions,
-					'change',
-					'input[type="radio"]',
-					(event) => this.onChangeUuidOptions_(event.delegateTarget)
-				)
+			dom.delegate(idOptions, 'change', 'input[type="radio"]', (event) =>
+				this.onChangeUuidOptions_(event.delegateTarget)
 			);
 		}
 
-		let nameInput = this.one('#name');
+		const nameInput = this.one('#name');
 
 		if (nameInput) {
-			this.eventHandler_.add(nameInput.addEventListener('input', (event) => {
-				this.updateUuid();
-			}));
+			nameInput.addEventListener('input', () => this.updateUuid());
 		}
 
 		this.nameInput = nameInput;
 
-		let maxWidthInput = this.one('#maxWidth');
-		let maxHeightInput = this.one('#maxHeight');
+		const maxHeightInput = this.one('#maxHeight');
+		const maxWidthInput = this.one('#maxWidth');
 
 		if (maxWidthInput) {
-			this.eventHandler_.add(maxWidthInput.addEventListener('keydown', (event) => {
+			maxWidthInput.addEventListener('keydown', (event) => {
 				this.handleKeyDown_(event);
-			}));
+			});
 
-			this.eventHandler_.add(maxWidthInput.addEventListener('input', (event) => {
-				this.validateDimensions_(true);
-			}));
+			maxWidthInput.addEventListener('input', () =>
+				this.validateDimensions_()
+			);
 		}
 
 		if (maxHeightInput) {
-			this.eventHandler_.add(maxHeightInput.addEventListener('keydown', (event) => {
-				this.handleKeyDown_(event);
-			}));
+			maxHeightInput.addEventListener('keydown', (event) =>
+				this.handleKeyDown_(event)
+			);
 
-			this.eventHandler_.add(maxHeightInput.addEventListener('input', (event) => {
-				this.validateDimensions_(true);
-			}));
+			maxHeightInput.addEventListener('input', () =>
+				this.validateDimensions_()
+			);
 		}
 
+		this.maxHeightInput = maxHeightInput;
 		this.maxWidthInput = maxWidthInput;
 
-		this.maxHeightInput = maxHeightInput;
-
 		this.newUuidInput = this.one('#newUuid');
+		this.newUuidLabel = this.one('label', this.newUuidInput.parentNode);
 
-		let saveButton = this.one('button[type=submit]');
+		const saveButton = this.one('button[type=submit]');
 
-		this.eventHandler_.add(saveButton.addEventListener('click', (event) => {
-			this.onSubmitForm_(event);
-		}));
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	detached() {
-		super.detached();
-		this.eventHandler_.removeAllListeners();
+		saveButton.addEventListener('click', (event) =>
+			this.onSubmitForm_(event)
+		);
 	}
 
 	/**
@@ -97,12 +106,15 @@ class EditAdaptiveMediaConfig extends PortletBase {
 	 * if the "Automatic" option is selected
 	 */
 	updateUuid() {
-		let newUuidInput = this.newUuidInput;
+		const newUuidInput = this.newUuidInput;
 
-		let uuidEmpty = !newUuidInput.value;
+		const uuidEmpty = !newUuidInput.value;
 
-		if (this.isAutomaticUuid_() && (uuidEmpty || this._originalUuidChanged)) {
-			newUuidInput.value = Liferay.Util.normalizeFriendlyURL(this.nameInput.value);
+		if (
+			this.isAutomaticUuid_() &&
+			(uuidEmpty || this._originalUuidChanged)
+		) {
+			newUuidInput.value = normalizeFriendlyURL(this.nameInput.value);
 		}
 
 		this._originalUuidChanged = true;
@@ -114,9 +126,7 @@ class EditAdaptiveMediaConfig extends PortletBase {
 	 * @param {KeyboardEvent} event The keyboard event.
 	 */
 	handleKeyDown_(event) {
-		let code = event.keyCode || event.charCode;
-
-		if (this.validInputKeyCodes_.indexOf(code) == -1) {
+		if (!VALID_INPUT_KEYS.has(event.key)) {
 			event.preventDefault();
 		}
 	}
@@ -136,7 +146,8 @@ class EditAdaptiveMediaConfig extends PortletBase {
 	 * @protected
 	 */
 	onChangeUuidOptions_() {
-		let newUuidInput = this.newUuidInput;
+		const newUuidInput = this.newUuidInput;
+		const newUuidLabel = this.newUuidLabel;
 
 		if (this.isAutomaticUuid_()) {
 			this._lastCustomUuuid = newUuidInput.value;
@@ -144,11 +155,13 @@ class EditAdaptiveMediaConfig extends PortletBase {
 			this.updateUuid(this.nameInput.value);
 
 			newUuidInput.setAttribute('disabled', true);
+			newUuidLabel.classList.add('disabled');
 		}
 		else {
 			newUuidInput.value = this._lastCustomUuuid || newUuidInput.value;
 
 			newUuidInput.removeAttribute('disabled');
+			newUuidLabel.classList.remove('disabled');
 		}
 	}
 
@@ -161,9 +174,9 @@ class EditAdaptiveMediaConfig extends PortletBase {
 	 * @protected
 	 */
 	onSubmitForm_(event) {
-		this.validateDimensions_(false);
+		this.validateDimensions_();
 
-		let form = Liferay.Form.get(this.ns('fm'));
+		const form = Liferay.Form.get(this.ns('fm'));
 
 		form.formValidator.validate();
 
@@ -178,19 +191,18 @@ class EditAdaptiveMediaConfig extends PortletBase {
 	/**
 	 * Checks if max-widht or max-height has a value.
 	 *
-	 * @param  {Boolean} validateFields whether the dimensions values
-	 * have to be validated or not.
-	 *
 	 * @protected
 	 */
-	validateDimensions_(validateFields) {
-		let form = Liferay.Form.get(this.ns('fm'));
+	validateDimensions_() {
+		const form = Liferay.Form.get(this.ns('fm'));
 
-		let nsMaxWidth = this.ns('maxWidth');
-		let nsMaxHeight = this.ns('maxHeight');
+		const nsMaxHeight = this.ns('maxHeight');
+		const nsMaxWidth = this.ns('maxWidth');
 
-		let inputErrorMessage = Liferay.Language.get('at-least-one-value-is-required');
-		let STR_BLANK = ' ';
+		const inputErrorMessage = Liferay.Language.get(
+			'at-least-one-value-is-required'
+		);
+		const STR_BLANK = ' ';
 
 		if (this.maxWidthInput.value || this.maxHeightInput.value) {
 			form.removeRule(nsMaxWidth, 'required');
@@ -200,10 +212,8 @@ class EditAdaptiveMediaConfig extends PortletBase {
 			form.addRule(nsMaxWidth, 'required', inputErrorMessage);
 			form.addRule(nsMaxHeight, 'required', STR_BLANK);
 
-			if (validateFields) {
-				form.formValidator.validateField(nsMaxWidth);
-				form.formValidator.validateField(nsMaxHeight);
-			}
+			form.formValidator.validateField(nsMaxWidth);
+			form.formValidator.validateField(nsMaxHeight);
 		}
 	}
 }
@@ -224,8 +234,8 @@ EditAdaptiveMediaConfig.STATE = {
 	 */
 	errorNode: {
 		validator: core.isString,
-		value: '.error-wrapper'
-	}
+		value: '.error-wrapper',
+	},
 };
 
 export default EditAdaptiveMediaConfig;

@@ -14,10 +14,10 @@
 
 package com.liferay.portal.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
@@ -29,21 +29,24 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserTable;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
 import com.liferay.portal.kernel.service.persistence.GroupPersistence;
 import com.liferay.portal.kernel.service.persistence.OrganizationPersistence;
 import com.liferay.portal.kernel.service.persistence.RolePersistence;
 import com.liferay.portal.kernel.service.persistence.TeamPersistence;
 import com.liferay.portal.kernel.service.persistence.UserGroupPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapperFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
@@ -53,6 +56,9 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.model.impl.UserImpl;
 import com.liferay.portal.model.impl.UserModelImpl;
+import com.liferay.registry.Registry;
+import com.liferay.registry.RegistryUtil;
+import com.liferay.registry.ServiceRegistration;
 
 import java.io.Serializable;
 
@@ -60,14 +66,18 @@ import java.lang.reflect.InvocationHandler;
 
 import java.sql.Timestamp;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The persistence implementation for the user service.
@@ -79,7 +89,6 @@ import java.util.Set;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class UserPersistenceImpl
 	extends BasePersistenceImpl<User> implements UserPersistence {
 
@@ -119,7 +128,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -136,7 +145,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -157,42 +166,45 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByUuid(
 		String uuid, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUuid;
-			finderArgs = new Object[] {uuid};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByUuid;
+				finderArgs = new Object[] {uuid};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByUuid;
 			finderArgs = new Object[] {uuid, start, end, orderByComparator};
 		}
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -208,73 +220,63 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_UUID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -303,16 +305,16 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -354,16 +356,16 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -427,8 +429,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -439,28 +441,28 @@ public class UserPersistenceImpl
 		Session session, User user, String uuid,
 		OrderByComparator<User> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_UUID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -468,83 +470,83 @@ public class UserPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -578,52 +580,62 @@ public class UserPersistenceImpl
 	public int countByUuid(String uuid) {
 		uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = _finderPathCountByUuid;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {uuid};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUuid;
+
+			finderArgs = new Object[] {uuid};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_UUID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -659,7 +671,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -679,7 +691,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -702,7 +714,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -710,28 +722,31 @@ public class UserPersistenceImpl
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByUuid_C(
 		String uuid, long companyId, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
 		uuid = Objects.toString(uuid, "");
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByUuid_C;
-			finderArgs = new Object[] {uuid, companyId};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByUuid_C;
+				finderArgs = new Object[] {uuid, companyId};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByUuid_C;
 			finderArgs = new Object[] {
 				uuid, companyId, start, end, orderByComparator
@@ -740,7 +755,7 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -758,77 +773,67 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -859,19 +864,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -918,19 +923,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -999,8 +1004,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1011,116 +1016,116 @@ public class UserPersistenceImpl
 		Session session, User user, String uuid, long companyId,
 		OrderByComparator<User> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
 		boolean bindUuid = false;
 
 		if (uuid.isEmpty()) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1158,56 +1163,66 @@ public class UserPersistenceImpl
 	public int countByUuid_C(String uuid, long companyId) {
 		uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = _finderPathCountByUuid_C;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {uuid, companyId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUuid_C;
+
+			finderArgs = new Object[] {uuid, companyId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
 			boolean bindUuid = false;
 
 			if (uuid.isEmpty()) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1246,7 +1261,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1263,7 +1278,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1284,33 +1299,36 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByCompanyId(
 		long companyId, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByCompanyId;
-			finderArgs = new Object[] {companyId};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByCompanyId;
+				finderArgs = new Object[] {companyId};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByCompanyId;
 			finderArgs = new Object[] {
 				companyId, start, end, orderByComparator
@@ -1319,13 +1337,13 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (User user : list) {
-					if ((companyId != user.getCompanyId())) {
+					if (companyId != user.getCompanyId()) {
 						list = null;
 
 						break;
@@ -1335,62 +1353,52 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1419,16 +1427,16 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -1470,16 +1478,16 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -1543,8 +1551,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1555,101 +1563,101 @@ public class UserPersistenceImpl
 		Session session, User user, long companyId,
 		OrderByComparator<User> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
-		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1682,41 +1690,51 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = _finderPathCountByCompanyId;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByCompanyId;
+
+			finderArgs = new Object[] {companyId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1744,20 +1762,20 @@ public class UserPersistenceImpl
 		User user = fetchByContactId(contactId);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("contactId=");
-			msg.append(contactId);
+			sb.append("contactId=");
+			sb.append(contactId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -1778,16 +1796,23 @@ public class UserPersistenceImpl
 	 * Returns the user where contactId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param contactId the contact ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
-	public User fetchByContactId(long contactId, boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] {contactId};
+	public User fetchByContactId(long contactId, boolean useFinderCache) {
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {contactId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByContactId, finderArgs, this);
 		}
@@ -1795,36 +1820,38 @@ public class UserPersistenceImpl
 		if (result instanceof User) {
 			User user = (User)result;
 
-			if ((contactId != user.getContactId())) {
+			if (contactId != user.getContactId()) {
 				result = null;
 			}
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_CONTACTID_CONTACTID_2);
+			sb.append(_FINDER_COLUMN_CONTACTID_CONTACTID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(contactId);
+				queryPos.add(contactId);
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByContactId, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByContactId, finderArgs, list);
+					}
 				}
 				else {
 					User user = list.get(0);
@@ -1834,11 +1861,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByContactId, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1874,41 +1898,51 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByContactId(long contactId) {
-		FinderPath finderPath = _finderPathCountByContactId;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {contactId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByContactId;
+
+			finderArgs = new Object[] {contactId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_CONTACTID_CONTACTID_2);
+			sb.append(_FINDER_COLUMN_CONTACTID_CONTACTID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(contactId);
+				queryPos.add(contactId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1941,7 +1975,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where emailAddress = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param emailAddress the email address
@@ -1960,7 +1994,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where emailAddress = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param emailAddress the email address
@@ -1982,35 +2016,38 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where emailAddress = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param emailAddress the email address
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByEmailAddress(
 		String emailAddress, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
 		emailAddress = Objects.toString(emailAddress, "");
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByEmailAddress;
-			finderArgs = new Object[] {emailAddress};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByEmailAddress;
+				finderArgs = new Object[] {emailAddress};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByEmailAddress;
 			finderArgs = new Object[] {
 				emailAddress, start, end, orderByComparator
@@ -2019,7 +2056,7 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -2035,73 +2072,63 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
 			boolean bindEmailAddress = false;
 
 			if (emailAddress.isEmpty()) {
-				query.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3);
+				sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3);
 			}
 			else {
 				bindEmailAddress = true;
 
-				query.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2);
+				sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindEmailAddress) {
-					qPos.add(emailAddress);
+					queryPos.add(emailAddress);
 				}
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2130,16 +2157,16 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("emailAddress=");
-		msg.append(emailAddress);
+		sb.append("emailAddress=");
+		sb.append(emailAddress);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -2182,16 +2209,16 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("emailAddress=");
-		msg.append(emailAddress);
+		sb.append("emailAddress=");
+		sb.append(emailAddress);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -2257,8 +2284,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2269,28 +2296,28 @@ public class UserPersistenceImpl
 		Session session, User user, String emailAddress,
 		OrderByComparator<User> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
 		boolean bindEmailAddress = false;
 
 		if (emailAddress.isEmpty()) {
-			query.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3);
+			sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3);
 		}
 		else {
 			bindEmailAddress = true;
 
-			query.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2);
+			sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2);
 		}
 
 		if (orderByComparator != null) {
@@ -2298,83 +2325,83 @@ public class UserPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindEmailAddress) {
-			qPos.add(emailAddress);
+			queryPos.add(emailAddress);
 		}
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2409,52 +2436,62 @@ public class UserPersistenceImpl
 	public int countByEmailAddress(String emailAddress) {
 		emailAddress = Objects.toString(emailAddress, "");
 
-		FinderPath finderPath = _finderPathCountByEmailAddress;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {emailAddress};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByEmailAddress;
+
+			finderArgs = new Object[] {emailAddress};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
 			boolean bindEmailAddress = false;
 
 			if (emailAddress.isEmpty()) {
-				query.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3);
+				sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_3);
 			}
 			else {
 				bindEmailAddress = true;
 
-				query.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2);
+				sb.append(_FINDER_COLUMN_EMAILADDRESS_EMAILADDRESS_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindEmailAddress) {
-					qPos.add(emailAddress);
+					queryPos.add(emailAddress);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2485,20 +2522,20 @@ public class UserPersistenceImpl
 		User user = fetchByPortraitId(portraitId);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("portraitId=");
-			msg.append(portraitId);
+			sb.append("portraitId=");
+			sb.append(portraitId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -2519,16 +2556,23 @@ public class UserPersistenceImpl
 	 * Returns the user where portraitId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param portraitId the portrait ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
-	public User fetchByPortraitId(long portraitId, boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] {portraitId};
+	public User fetchByPortraitId(long portraitId, boolean useFinderCache) {
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {portraitId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByPortraitId, finderArgs, this);
 		}
@@ -2536,42 +2580,48 @@ public class UserPersistenceImpl
 		if (result instanceof User) {
 			User user = (User)result;
 
-			if ((portraitId != user.getPortraitId())) {
+			if (portraitId != user.getPortraitId()) {
 				result = null;
 			}
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_PORTRAITID_PORTRAITID_2);
+			sb.append(_FINDER_COLUMN_PORTRAITID_PORTRAITID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(portraitId);
+				queryPos.add(portraitId);
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByPortraitId, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByPortraitId, finderArgs, list);
+					}
 				}
 				else {
 					if (list.size() > 1) {
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
+							if (!productionMode || !useFinderCache) {
+								finderArgs = new Object[] {portraitId};
+							}
+
 							_log.warn(
 								"UserPersistenceImpl.fetchByPortraitId(long, boolean) with parameters (" +
 									StringUtil.merge(finderArgs) +
@@ -2586,11 +2636,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByPortraitId, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2626,41 +2673,51 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByPortraitId(long portraitId) {
-		FinderPath finderPath = _finderPathCountByPortraitId;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {portraitId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByPortraitId;
+
+			finderArgs = new Object[] {portraitId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_PORTRAITID_PORTRAITID_2);
+			sb.append(_FINDER_COLUMN_PORTRAITID_PORTRAITID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(portraitId);
+				queryPos.add(portraitId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2693,7 +2750,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where userId &gt; &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -2713,7 +2770,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where userId &gt; &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -2736,7 +2793,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where userId &gt; &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -2744,15 +2801,17 @@ public class UserPersistenceImpl
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByU_C(
 		long userId, long companyId, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
@@ -2763,7 +2822,7 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -2781,66 +2840,56 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_U_C_USERID_2);
+			sb.append(_FINDER_COLUMN_U_C_USERID_2);
 
-			query.append(_FINDER_COLUMN_U_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_U_C_COMPANYID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(userId);
+				queryPos.add(userId);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2871,19 +2920,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("userId=");
-		msg.append(userId);
+		sb.append("userId>");
+		sb.append(userId);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -2929,19 +2978,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("userId=");
-		msg.append(userId);
+		sb.append("userId>");
+		sb.append(userId);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -2999,45 +3048,55 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByU_C(long userId, long companyId) {
-		FinderPath finderPath = _finderPathWithPaginationCountByU_C;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {userId, companyId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByU_C;
+
+			finderArgs = new Object[] {userId, companyId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_U_C_USERID_2);
+			sb.append(_FINDER_COLUMN_U_C_USERID_2);
 
-			query.append(_FINDER_COLUMN_U_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_U_C_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(userId);
+				queryPos.add(userId);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3071,23 +3130,23 @@ public class UserPersistenceImpl
 		User user = fetchByC_U(companyId, userId);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", userId=");
-			msg.append(userId);
+			sb.append(", userId=");
+			sb.append(userId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -3110,18 +3169,25 @@ public class UserPersistenceImpl
 	 *
 	 * @param companyId the company ID
 	 * @param userId the user ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
 	public User fetchByC_U(
-		long companyId, long userId, boolean retrieveFromCache) {
+		long companyId, long userId, boolean useFinderCache) {
 
-		Object[] finderArgs = new Object[] {companyId, userId};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, userId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_U, finderArgs, this);
 		}
@@ -3137,34 +3203,36 @@ public class UserPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_U_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_U_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_U_USERID_2);
+			sb.append(_FINDER_COLUMN_C_U_USERID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(userId);
+				queryPos.add(userId);
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByC_U, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_U, finderArgs, list);
+					}
 				}
 				else {
 					User user = list.get(0);
@@ -3174,10 +3242,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(_finderPathFetchByC_U, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3217,45 +3283,55 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_U(long companyId, long userId) {
-		FinderPath finderPath = _finderPathCountByC_U;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, userId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_U;
+
+			finderArgs = new Object[] {companyId, userId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_U_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_U_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_U_USERID_2);
+			sb.append(_FINDER_COLUMN_C_U_USERID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(userId);
+				queryPos.add(userId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3291,7 +3367,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where companyId = &#63; and createDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3311,7 +3387,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and createDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3334,7 +3410,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and createDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3342,26 +3418,29 @@ public class UserPersistenceImpl
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByC_CD(
 		long companyId, Date createDate, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByC_CD;
-			finderArgs = new Object[] {companyId, _getTime(createDate)};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByC_CD;
+				finderArgs = new Object[] {companyId, _getTime(createDate)};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByC_CD;
 			finderArgs = new Object[] {
 				companyId, _getTime(createDate), start, end, orderByComparator
@@ -3370,7 +3449,7 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -3388,77 +3467,67 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_CD_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_CD_COMPANYID_2);
 
 			boolean bindCreateDate = false;
 
 			if (createDate == null) {
-				query.append(_FINDER_COLUMN_C_CD_CREATEDATE_1);
+				sb.append(_FINDER_COLUMN_C_CD_CREATEDATE_1);
 			}
 			else {
 				bindCreateDate = true;
 
-				query.append(_FINDER_COLUMN_C_CD_CREATEDATE_2);
+				sb.append(_FINDER_COLUMN_C_CD_CREATEDATE_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindCreateDate) {
-					qPos.add(new Timestamp(createDate.getTime()));
+					queryPos.add(new Timestamp(createDate.getTime()));
 				}
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3489,19 +3558,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", createDate=");
-		msg.append(createDate);
+		sb.append(", createDate=");
+		sb.append(createDate);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -3548,19 +3617,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", createDate=");
-		msg.append(createDate);
+		sb.append(", createDate=");
+		sb.append(createDate);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -3627,8 +3696,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -3639,30 +3708,30 @@ public class UserPersistenceImpl
 		Session session, User user, long companyId, Date createDate,
 		OrderByComparator<User> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
-		query.append(_FINDER_COLUMN_C_CD_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_CD_COMPANYID_2);
 
 		boolean bindCreateDate = false;
 
 		if (createDate == null) {
-			query.append(_FINDER_COLUMN_C_CD_CREATEDATE_1);
+			sb.append(_FINDER_COLUMN_C_CD_CREATEDATE_1);
 		}
 		else {
 			bindCreateDate = true;
 
-			query.append(_FINDER_COLUMN_C_CD_CREATEDATE_2);
+			sb.append(_FINDER_COLUMN_C_CD_CREATEDATE_2);
 		}
 
 		if (orderByComparator != null) {
@@ -3670,85 +3739,85 @@ public class UserPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (bindCreateDate) {
-			qPos.add(new Timestamp(createDate.getTime()));
+			queryPos.add(new Timestamp(createDate.getTime()));
 		}
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -3784,56 +3853,66 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_CD(long companyId, Date createDate) {
-		FinderPath finderPath = _finderPathCountByC_CD;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, _getTime(createDate)};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_CD;
+
+			finderArgs = new Object[] {companyId, _getTime(createDate)};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_CD_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_CD_COMPANYID_2);
 
 			boolean bindCreateDate = false;
 
 			if (createDate == null) {
-				query.append(_FINDER_COLUMN_C_CD_CREATEDATE_1);
+				sb.append(_FINDER_COLUMN_C_CD_CREATEDATE_1);
 			}
 			else {
 				bindCreateDate = true;
 
-				query.append(_FINDER_COLUMN_C_CD_CREATEDATE_2);
+				sb.append(_FINDER_COLUMN_C_CD_CREATEDATE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindCreateDate) {
-					qPos.add(new Timestamp(createDate.getTime()));
+					queryPos.add(new Timestamp(createDate.getTime()));
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3874,7 +3953,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where companyId = &#63; and modifiedDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3894,7 +3973,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and modifiedDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3917,7 +3996,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and modifiedDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3925,26 +4004,29 @@ public class UserPersistenceImpl
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByC_MD(
 		long companyId, Date modifiedDate, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByC_MD;
-			finderArgs = new Object[] {companyId, _getTime(modifiedDate)};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByC_MD;
+				finderArgs = new Object[] {companyId, _getTime(modifiedDate)};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByC_MD;
 			finderArgs = new Object[] {
 				companyId, _getTime(modifiedDate), start, end, orderByComparator
@@ -3953,7 +4035,7 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -3971,77 +4053,67 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_MD_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_MD_COMPANYID_2);
 
 			boolean bindModifiedDate = false;
 
 			if (modifiedDate == null) {
-				query.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_1);
+				sb.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_1);
 			}
 			else {
 				bindModifiedDate = true;
 
-				query.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_2);
+				sb.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindModifiedDate) {
-					qPos.add(new Timestamp(modifiedDate.getTime()));
+					queryPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4073,19 +4145,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", modifiedDate=");
-		msg.append(modifiedDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -4133,19 +4205,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", modifiedDate=");
-		msg.append(modifiedDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -4214,8 +4286,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -4226,30 +4298,30 @@ public class UserPersistenceImpl
 		Session session, User user, long companyId, Date modifiedDate,
 		OrderByComparator<User> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
-		query.append(_FINDER_COLUMN_C_MD_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_MD_COMPANYID_2);
 
 		boolean bindModifiedDate = false;
 
 		if (modifiedDate == null) {
-			query.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_1);
+			sb.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_1);
 		}
 		else {
 			bindModifiedDate = true;
 
-			query.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_2);
+			sb.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_2);
 		}
 
 		if (orderByComparator != null) {
@@ -4257,85 +4329,85 @@ public class UserPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (bindModifiedDate) {
-			qPos.add(new Timestamp(modifiedDate.getTime()));
+			queryPos.add(new Timestamp(modifiedDate.getTime()));
 		}
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -4371,56 +4443,66 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_MD(long companyId, Date modifiedDate) {
-		FinderPath finderPath = _finderPathCountByC_MD;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, _getTime(modifiedDate)};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_MD;
+
+			finderArgs = new Object[] {companyId, _getTime(modifiedDate)};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_MD_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_MD_COMPANYID_2);
 
 			boolean bindModifiedDate = false;
 
 			if (modifiedDate == null) {
-				query.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_1);
+				sb.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_1);
 			}
 			else {
 				bindModifiedDate = true;
 
-				query.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_2);
+				sb.append(_FINDER_COLUMN_C_MD_MODIFIEDDATE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindModifiedDate) {
-					qPos.add(new Timestamp(modifiedDate.getTime()));
+					queryPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4457,23 +4539,23 @@ public class UserPersistenceImpl
 		User user = fetchByC_DU(companyId, defaultUser);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", defaultUser=");
-			msg.append(defaultUser);
+			sb.append(", defaultUser=");
+			sb.append(defaultUser);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -4496,18 +4578,25 @@ public class UserPersistenceImpl
 	 *
 	 * @param companyId the company ID
 	 * @param defaultUser the default user
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
 	public User fetchByC_DU(
-		long companyId, boolean defaultUser, boolean retrieveFromCache) {
+		long companyId, boolean defaultUser, boolean useFinderCache) {
 
-		Object[] finderArgs = new Object[] {companyId, defaultUser};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, defaultUser};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_DU, finderArgs, this);
 		}
@@ -4523,40 +4612,48 @@ public class UserPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_DU_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_DU_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_DU_DEFAULTUSER_2);
+			sb.append(_FINDER_COLUMN_C_DU_DEFAULTUSER_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(defaultUser);
+				queryPos.add(defaultUser);
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByC_DU, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_DU, finderArgs, list);
+					}
 				}
 				else {
 					if (list.size() > 1) {
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
+							if (!productionMode || !useFinderCache) {
+								finderArgs = new Object[] {
+									companyId, defaultUser
+								};
+							}
+
 							_log.warn(
 								"UserPersistenceImpl.fetchByC_DU(long, boolean, boolean) with parameters (" +
 									StringUtil.merge(finderArgs) +
@@ -4571,11 +4668,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByC_DU, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4615,45 +4709,55 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_DU(long companyId, boolean defaultUser) {
-		FinderPath finderPath = _finderPathCountByC_DU;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, defaultUser};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_DU;
+
+			finderArgs = new Object[] {companyId, defaultUser};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_DU_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_DU_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_DU_DEFAULTUSER_2);
+			sb.append(_FINDER_COLUMN_C_DU_DEFAULTUSER_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(defaultUser);
+				queryPos.add(defaultUser);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4687,23 +4791,23 @@ public class UserPersistenceImpl
 		User user = fetchByC_SN(companyId, screenName);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", screenName=");
-			msg.append(screenName);
+			sb.append(", screenName=");
+			sb.append(screenName);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -4726,20 +4830,27 @@ public class UserPersistenceImpl
 	 *
 	 * @param companyId the company ID
 	 * @param screenName the screen name
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
 	public User fetchByC_SN(
-		long companyId, String screenName, boolean retrieveFromCache) {
+		long companyId, String screenName, boolean useFinderCache) {
 
 		screenName = Objects.toString(screenName, "");
 
-		Object[] finderArgs = new Object[] {companyId, screenName};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, screenName};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_SN, finderArgs, this);
 		}
@@ -4755,45 +4866,47 @@ public class UserPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_SN_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_SN_COMPANYID_2);
 
 			boolean bindScreenName = false;
 
 			if (screenName.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_SN_SCREENNAME_3);
+				sb.append(_FINDER_COLUMN_C_SN_SCREENNAME_3);
 			}
 			else {
 				bindScreenName = true;
 
-				query.append(_FINDER_COLUMN_C_SN_SCREENNAME_2);
+				sb.append(_FINDER_COLUMN_C_SN_SCREENNAME_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindScreenName) {
-					qPos.add(screenName);
+					queryPos.add(screenName);
 				}
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByC_SN, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_SN, finderArgs, list);
+					}
 				}
 				else {
 					User user = list.get(0);
@@ -4803,11 +4916,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByC_SN, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4849,56 +4959,66 @@ public class UserPersistenceImpl
 	public int countByC_SN(long companyId, String screenName) {
 		screenName = Objects.toString(screenName, "");
 
-		FinderPath finderPath = _finderPathCountByC_SN;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, screenName};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_SN;
+
+			finderArgs = new Object[] {companyId, screenName};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_SN_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_SN_COMPANYID_2);
 
 			boolean bindScreenName = false;
 
 			if (screenName.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_SN_SCREENNAME_3);
+				sb.append(_FINDER_COLUMN_C_SN_SCREENNAME_3);
 			}
 			else {
 				bindScreenName = true;
 
-				query.append(_FINDER_COLUMN_C_SN_SCREENNAME_2);
+				sb.append(_FINDER_COLUMN_C_SN_SCREENNAME_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindScreenName) {
-					qPos.add(screenName);
+					queryPos.add(screenName);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4935,23 +5055,23 @@ public class UserPersistenceImpl
 		User user = fetchByC_EA(companyId, emailAddress);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", emailAddress=");
-			msg.append(emailAddress);
+			sb.append(", emailAddress=");
+			sb.append(emailAddress);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -4974,20 +5094,27 @@ public class UserPersistenceImpl
 	 *
 	 * @param companyId the company ID
 	 * @param emailAddress the email address
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
 	public User fetchByC_EA(
-		long companyId, String emailAddress, boolean retrieveFromCache) {
+		long companyId, String emailAddress, boolean useFinderCache) {
 
 		emailAddress = Objects.toString(emailAddress, "");
 
-		Object[] finderArgs = new Object[] {companyId, emailAddress};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, emailAddress};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_EA, finderArgs, this);
 		}
@@ -5003,45 +5130,47 @@ public class UserPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_EA_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_EA_COMPANYID_2);
 
 			boolean bindEmailAddress = false;
 
 			if (emailAddress.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_3);
+				sb.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_3);
 			}
 			else {
 				bindEmailAddress = true;
 
-				query.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_2);
+				sb.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindEmailAddress) {
-					qPos.add(emailAddress);
+					queryPos.add(emailAddress);
 				}
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByC_EA, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_EA, finderArgs, list);
+					}
 				}
 				else {
 					User user = list.get(0);
@@ -5051,11 +5180,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByC_EA, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5097,56 +5223,66 @@ public class UserPersistenceImpl
 	public int countByC_EA(long companyId, String emailAddress) {
 		emailAddress = Objects.toString(emailAddress, "");
 
-		FinderPath finderPath = _finderPathCountByC_EA;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, emailAddress};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_EA;
+
+			finderArgs = new Object[] {companyId, emailAddress};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_EA_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_EA_COMPANYID_2);
 
 			boolean bindEmailAddress = false;
 
 			if (emailAddress.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_3);
+				sb.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_3);
 			}
 			else {
 				bindEmailAddress = true;
 
-				query.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_2);
+				sb.append(_FINDER_COLUMN_C_EA_EMAILADDRESS_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindEmailAddress) {
-					qPos.add(emailAddress);
+					queryPos.add(emailAddress);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5183,23 +5319,23 @@ public class UserPersistenceImpl
 		User user = fetchByC_FID(companyId, facebookId);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", facebookId=");
-			msg.append(facebookId);
+			sb.append(", facebookId=");
+			sb.append(facebookId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -5222,18 +5358,25 @@ public class UserPersistenceImpl
 	 *
 	 * @param companyId the company ID
 	 * @param facebookId the facebook ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
 	public User fetchByC_FID(
-		long companyId, long facebookId, boolean retrieveFromCache) {
+		long companyId, long facebookId, boolean useFinderCache) {
 
-		Object[] finderArgs = new Object[] {companyId, facebookId};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, facebookId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_FID, finderArgs, this);
 		}
@@ -5249,40 +5392,48 @@ public class UserPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_FID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_FID_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_FID_FACEBOOKID_2);
+			sb.append(_FINDER_COLUMN_C_FID_FACEBOOKID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(facebookId);
+				queryPos.add(facebookId);
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByC_FID, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_FID, finderArgs, list);
+					}
 				}
 				else {
 					if (list.size() > 1) {
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
+							if (!productionMode || !useFinderCache) {
+								finderArgs = new Object[] {
+									companyId, facebookId
+								};
+							}
+
 							_log.warn(
 								"UserPersistenceImpl.fetchByC_FID(long, long, boolean) with parameters (" +
 									StringUtil.merge(finderArgs) +
@@ -5297,11 +5448,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByC_FID, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5341,45 +5489,55 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_FID(long companyId, long facebookId) {
-		FinderPath finderPath = _finderPathCountByC_FID;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, facebookId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_FID;
+
+			finderArgs = new Object[] {companyId, facebookId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_FID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_FID_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_FID_FACEBOOKID_2);
+			sb.append(_FINDER_COLUMN_C_FID_FACEBOOKID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(facebookId);
+				queryPos.add(facebookId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5413,23 +5571,23 @@ public class UserPersistenceImpl
 		User user = fetchByC_GUID(companyId, googleUserId);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", googleUserId=");
-			msg.append(googleUserId);
+			sb.append(", googleUserId=");
+			sb.append(googleUserId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -5452,20 +5610,27 @@ public class UserPersistenceImpl
 	 *
 	 * @param companyId the company ID
 	 * @param googleUserId the google user ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
 	public User fetchByC_GUID(
-		long companyId, String googleUserId, boolean retrieveFromCache) {
+		long companyId, String googleUserId, boolean useFinderCache) {
 
 		googleUserId = Objects.toString(googleUserId, "");
 
-		Object[] finderArgs = new Object[] {companyId, googleUserId};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, googleUserId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_GUID, finderArgs, this);
 		}
@@ -5481,51 +5646,59 @@ public class UserPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_GUID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_GUID_COMPANYID_2);
 
 			boolean bindGoogleUserId = false;
 
 			if (googleUserId.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_GUID_GOOGLEUSERID_3);
+				sb.append(_FINDER_COLUMN_C_GUID_GOOGLEUSERID_3);
 			}
 			else {
 				bindGoogleUserId = true;
 
-				query.append(_FINDER_COLUMN_C_GUID_GOOGLEUSERID_2);
+				sb.append(_FINDER_COLUMN_C_GUID_GOOGLEUSERID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindGoogleUserId) {
-					qPos.add(googleUserId);
+					queryPos.add(googleUserId);
 				}
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByC_GUID, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_GUID, finderArgs, list);
+					}
 				}
 				else {
 					if (list.size() > 1) {
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
+							if (!productionMode || !useFinderCache) {
+								finderArgs = new Object[] {
+									companyId, googleUserId
+								};
+							}
+
 							_log.warn(
 								"UserPersistenceImpl.fetchByC_GUID(long, String, boolean) with parameters (" +
 									StringUtil.merge(finderArgs) +
@@ -5540,11 +5713,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByC_GUID, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5586,56 +5756,66 @@ public class UserPersistenceImpl
 	public int countByC_GUID(long companyId, String googleUserId) {
 		googleUserId = Objects.toString(googleUserId, "");
 
-		FinderPath finderPath = _finderPathCountByC_GUID;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, googleUserId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_GUID;
+
+			finderArgs = new Object[] {companyId, googleUserId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_GUID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_GUID_COMPANYID_2);
 
 			boolean bindGoogleUserId = false;
 
 			if (googleUserId.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_GUID_GOOGLEUSERID_3);
+				sb.append(_FINDER_COLUMN_C_GUID_GOOGLEUSERID_3);
 			}
 			else {
 				bindGoogleUserId = true;
 
-				query.append(_FINDER_COLUMN_C_GUID_GOOGLEUSERID_2);
+				sb.append(_FINDER_COLUMN_C_GUID_GOOGLEUSERID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindGoogleUserId) {
-					qPos.add(googleUserId);
+					queryPos.add(googleUserId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5672,23 +5852,23 @@ public class UserPersistenceImpl
 		User user = fetchByC_O(companyId, openId);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", openId=");
-			msg.append(openId);
+			sb.append(", openId=");
+			sb.append(openId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -5711,20 +5891,27 @@ public class UserPersistenceImpl
 	 *
 	 * @param companyId the company ID
 	 * @param openId the open ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
 	public User fetchByC_O(
-		long companyId, String openId, boolean retrieveFromCache) {
+		long companyId, String openId, boolean useFinderCache) {
 
 		openId = Objects.toString(openId, "");
 
-		Object[] finderArgs = new Object[] {companyId, openId};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, openId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_O, finderArgs, this);
 		}
@@ -5740,51 +5927,57 @@ public class UserPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_O_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_O_COMPANYID_2);
 
 			boolean bindOpenId = false;
 
 			if (openId.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_OPENID_3);
+				sb.append(_FINDER_COLUMN_C_O_OPENID_3);
 			}
 			else {
 				bindOpenId = true;
 
-				query.append(_FINDER_COLUMN_C_O_OPENID_2);
+				sb.append(_FINDER_COLUMN_C_O_OPENID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindOpenId) {
-					qPos.add(openId);
+					queryPos.add(openId);
 				}
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByC_O, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_O, finderArgs, list);
+					}
 				}
 				else {
 					if (list.size() > 1) {
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
+							if (!productionMode || !useFinderCache) {
+								finderArgs = new Object[] {companyId, openId};
+							}
+
 							_log.warn(
 								"UserPersistenceImpl.fetchByC_O(long, String, boolean) with parameters (" +
 									StringUtil.merge(finderArgs) +
@@ -5799,10 +5992,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(_finderPathFetchByC_O, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5844,56 +6035,66 @@ public class UserPersistenceImpl
 	public int countByC_O(long companyId, String openId) {
 		openId = Objects.toString(openId, "");
 
-		FinderPath finderPath = _finderPathCountByC_O;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, openId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_O;
+
+			finderArgs = new Object[] {companyId, openId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_O_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_O_COMPANYID_2);
 
 			boolean bindOpenId = false;
 
 			if (openId.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_OPENID_3);
+				sb.append(_FINDER_COLUMN_C_O_OPENID_3);
 			}
 			else {
 				bindOpenId = true;
 
-				query.append(_FINDER_COLUMN_C_O_OPENID_2);
+				sb.append(_FINDER_COLUMN_C_O_OPENID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindOpenId) {
-					qPos.add(openId);
+					queryPos.add(openId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5932,7 +6133,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where companyId = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -5952,7 +6153,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -5975,7 +6176,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -5983,26 +6184,29 @@ public class UserPersistenceImpl
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByC_S(
 		long companyId, int status, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByC_S;
-			finderArgs = new Object[] {companyId, status};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByC_S;
+				finderArgs = new Object[] {companyId, status};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByC_S;
 			finderArgs = new Object[] {
 				companyId, status, start, end, orderByComparator
@@ -6011,7 +6215,7 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -6029,66 +6233,56 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_S_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_S_STATUS_2);
+			sb.append(_FINDER_COLUMN_C_S_STATUS_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(status);
+				queryPos.add(status);
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -6119,19 +6313,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", status=");
-		msg.append(status);
+		sb.append(", status=");
+		sb.append(status);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -6176,19 +6370,19 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", status=");
-		msg.append(status);
+		sb.append(", status=");
+		sb.append(status);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -6254,8 +6448,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -6266,105 +6460,105 @@ public class UserPersistenceImpl
 		Session session, User user, long companyId, int status,
 		OrderByComparator<User> orderByComparator, boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
-		query.append(_FINDER_COLUMN_C_S_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_S_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_S_STATUS_2);
+		sb.append(_FINDER_COLUMN_C_S_STATUS_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
-		qPos.add(status);
+		queryPos.add(status);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -6400,45 +6594,55 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_S(long companyId, int status) {
-		FinderPath finderPath = _finderPathCountByC_S;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, status};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_S;
+
+			finderArgs = new Object[] {companyId, status};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_S_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_S_STATUS_2);
+			sb.append(_FINDER_COLUMN_C_S_STATUS_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(status);
+				queryPos.add(status);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -6479,7 +6683,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where companyId = &#63; and createDate = &#63; and modifiedDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -6502,7 +6706,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and createDate = &#63; and modifiedDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -6527,7 +6731,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and createDate = &#63; and modifiedDate = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -6536,28 +6740,31 @@ public class UserPersistenceImpl
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByC_CD_MD(
 		long companyId, Date createDate, Date modifiedDate, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByC_CD_MD;
-			finderArgs = new Object[] {
-				companyId, _getTime(createDate), _getTime(modifiedDate)
-			};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByC_CD_MD;
+				finderArgs = new Object[] {
+					companyId, _getTime(createDate), _getTime(modifiedDate)
+				};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByC_CD_MD;
 			finderArgs = new Object[] {
 				companyId, _getTime(createDate), _getTime(modifiedDate), start,
@@ -6567,7 +6774,7 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -6586,92 +6793,82 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_CD_MD_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_CD_MD_COMPANYID_2);
 
 			boolean bindCreateDate = false;
 
 			if (createDate == null) {
-				query.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_1);
+				sb.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_1);
 			}
 			else {
 				bindCreateDate = true;
 
-				query.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_2);
+				sb.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_2);
 			}
 
 			boolean bindModifiedDate = false;
 
 			if (modifiedDate == null) {
-				query.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_1);
+				sb.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_1);
 			}
 			else {
 				bindModifiedDate = true;
 
-				query.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_2);
+				sb.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindCreateDate) {
-					qPos.add(new Timestamp(createDate.getTime()));
+					queryPos.add(new Timestamp(createDate.getTime()));
 				}
 
 				if (bindModifiedDate) {
-					qPos.add(new Timestamp(modifiedDate.getTime()));
+					queryPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -6704,22 +6901,22 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", createDate=");
-		msg.append(createDate);
+		sb.append(", createDate=");
+		sb.append(createDate);
 
-		msg.append(", modifiedDate=");
-		msg.append(modifiedDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -6769,22 +6966,22 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", createDate=");
-		msg.append(createDate);
+		sb.append(", createDate=");
+		sb.append(createDate);
 
-		msg.append(", modifiedDate=");
-		msg.append(modifiedDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -6856,8 +7053,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -6869,41 +7066,41 @@ public class UserPersistenceImpl
 		Date modifiedDate, OrderByComparator<User> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
-		query.append(_FINDER_COLUMN_C_CD_MD_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_CD_MD_COMPANYID_2);
 
 		boolean bindCreateDate = false;
 
 		if (createDate == null) {
-			query.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_1);
+			sb.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_1);
 		}
 		else {
 			bindCreateDate = true;
 
-			query.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_2);
+			sb.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_2);
 		}
 
 		boolean bindModifiedDate = false;
 
 		if (modifiedDate == null) {
-			query.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_1);
+			sb.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_1);
 		}
 		else {
 			bindModifiedDate = true;
 
-			query.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_2);
+			sb.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_2);
 		}
 
 		if (orderByComparator != null) {
@@ -6911,89 +7108,89 @@ public class UserPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (bindCreateDate) {
-			qPos.add(new Timestamp(createDate.getTime()));
+			queryPos.add(new Timestamp(createDate.getTime()));
 		}
 
 		if (bindModifiedDate) {
-			qPos.add(new Timestamp(modifiedDate.getTime()));
+			queryPos.add(new Timestamp(modifiedDate.getTime()));
 		}
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -7035,73 +7232,83 @@ public class UserPersistenceImpl
 	public int countByC_CD_MD(
 		long companyId, Date createDate, Date modifiedDate) {
 
-		FinderPath finderPath = _finderPathCountByC_CD_MD;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {
-			companyId, _getTime(createDate), _getTime(modifiedDate)
-		};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_CD_MD;
+
+			finderArgs = new Object[] {
+				companyId, _getTime(createDate), _getTime(modifiedDate)
+			};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_CD_MD_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_CD_MD_COMPANYID_2);
 
 			boolean bindCreateDate = false;
 
 			if (createDate == null) {
-				query.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_1);
+				sb.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_1);
 			}
 			else {
 				bindCreateDate = true;
 
-				query.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_2);
+				sb.append(_FINDER_COLUMN_C_CD_MD_CREATEDATE_2);
 			}
 
 			boolean bindModifiedDate = false;
 
 			if (modifiedDate == null) {
-				query.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_1);
+				sb.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_1);
 			}
 			else {
 				bindModifiedDate = true;
 
-				query.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_2);
+				sb.append(_FINDER_COLUMN_C_CD_MD_MODIFIEDDATE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindCreateDate) {
-					qPos.add(new Timestamp(createDate.getTime()));
+					queryPos.add(new Timestamp(createDate.getTime()));
 				}
 
 				if (bindModifiedDate) {
-					qPos.add(new Timestamp(modifiedDate.getTime()));
+					queryPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7151,7 +7358,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users where companyId = &#63; and defaultUser = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -7172,7 +7379,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and defaultUser = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -7197,7 +7404,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users where companyId = &#63; and defaultUser = &#63; and status = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -7206,26 +7413,29 @@ public class UserPersistenceImpl
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching users
 	 */
 	@Override
 	public List<User> findByC_DU_S(
 		long companyId, boolean defaultUser, int status, int start, int end,
-		OrderByComparator<User> orderByComparator, boolean retrieveFromCache) {
+		OrderByComparator<User> orderByComparator, boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindByC_DU_S;
-			finderArgs = new Object[] {companyId, defaultUser, status};
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByC_DU_S;
+				finderArgs = new Object[] {companyId, defaultUser, status};
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByC_DU_S;
 			finderArgs = new Object[] {
 				companyId, defaultUser, status, start, end, orderByComparator
@@ -7234,7 +7444,7 @@ public class UserPersistenceImpl
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 
@@ -7253,70 +7463,60 @@ public class UserPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_DU_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_DU_S_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_DU_S_DEFAULTUSER_2);
+			sb.append(_FINDER_COLUMN_C_DU_S_DEFAULTUSER_2);
 
-			query.append(_FINDER_COLUMN_C_DU_S_STATUS_2);
+			sb.append(_FINDER_COLUMN_C_DU_S_STATUS_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else if (pagination) {
-				query.append(UserModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(UserModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(defaultUser);
+				queryPos.add(defaultUser);
 
-				qPos.add(status);
+				queryPos.add(status);
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7349,22 +7549,22 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", defaultUser=");
-		msg.append(defaultUser);
+		sb.append(", defaultUser=");
+		sb.append(defaultUser);
 
-		msg.append(", status=");
-		msg.append(status);
+		sb.append(", status=");
+		sb.append(status);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -7414,22 +7614,22 @@ public class UserPersistenceImpl
 			return user;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", defaultUser=");
-		msg.append(defaultUser);
+		sb.append(", defaultUser=");
+		sb.append(defaultUser);
 
-		msg.append(", status=");
-		msg.append(status);
+		sb.append(", status=");
+		sb.append(status);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchUserException(msg.toString());
+		throw new NoSuchUserException(sb.toString());
 	}
 
 	/**
@@ -7501,8 +7701,8 @@ public class UserPersistenceImpl
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -7514,109 +7714,109 @@ public class UserPersistenceImpl
 		int status, OrderByComparator<User> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_USER_WHERE);
+		sb.append(_SQL_SELECT_USER_WHERE);
 
-		query.append(_FINDER_COLUMN_C_DU_S_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_DU_S_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_DU_S_DEFAULTUSER_2);
+		sb.append(_FINDER_COLUMN_C_DU_S_DEFAULTUSER_2);
 
-		query.append(_FINDER_COLUMN_C_DU_S_STATUS_2);
+		sb.append(_FINDER_COLUMN_C_DU_S_STATUS_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(UserModelImpl.ORDER_BY_JPQL);
+			sb.append(UserModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
-		qPos.add(defaultUser);
+		queryPos.add(defaultUser);
 
-		qPos.add(status);
+		queryPos.add(status);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(user)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<User> list = q.list();
+		List<User> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -7656,49 +7856,59 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countByC_DU_S(long companyId, boolean defaultUser, int status) {
-		FinderPath finderPath = _finderPathCountByC_DU_S;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, defaultUser, status};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_DU_S;
+
+			finderArgs = new Object[] {companyId, defaultUser, status};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_DU_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_DU_S_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_DU_S_DEFAULTUSER_2);
+			sb.append(_FINDER_COLUMN_C_DU_S_DEFAULTUSER_2);
 
-			query.append(_FINDER_COLUMN_C_DU_S_STATUS_2);
+			sb.append(_FINDER_COLUMN_C_DU_S_STATUS_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(defaultUser);
+				queryPos.add(defaultUser);
 
-				qPos.add(status);
+				queryPos.add(status);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7735,23 +7945,23 @@ public class UserPersistenceImpl
 		User user = fetchByC_ERC(companyId, externalReferenceCode);
 
 		if (user == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", externalReferenceCode=");
-			msg.append(externalReferenceCode);
+			sb.append(", externalReferenceCode=");
+			sb.append(externalReferenceCode);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchUserException(msg.toString());
+			throw new NoSuchUserException(sb.toString());
 		}
 
 		return user;
@@ -7774,21 +7984,27 @@ public class UserPersistenceImpl
 	 *
 	 * @param companyId the company ID
 	 * @param externalReferenceCode the external reference code
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching user, or <code>null</code> if a matching user could not be found
 	 */
 	@Override
 	public User fetchByC_ERC(
-		long companyId, String externalReferenceCode,
-		boolean retrieveFromCache) {
+		long companyId, String externalReferenceCode, boolean useFinderCache) {
 
 		externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
-		Object[] finderArgs = new Object[] {companyId, externalReferenceCode};
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, externalReferenceCode};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
 				_finderPathFetchByC_ERC, finderArgs, this);
 		}
@@ -7805,51 +8021,59 @@ public class UserPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_USER_WHERE);
+			sb.append(_SQL_SELECT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_ERC_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_ERC_COMPANYID_2);
 
 			boolean bindExternalReferenceCode = false;
 
 			if (externalReferenceCode.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3);
+				sb.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3);
 			}
 			else {
 				bindExternalReferenceCode = true;
 
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2);
+				sb.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindExternalReferenceCode) {
-					qPos.add(externalReferenceCode);
+					queryPos.add(externalReferenceCode);
 				}
 
-				List<User> list = q.list();
+				List<User> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(
-						_finderPathFetchByC_ERC, finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_ERC, finderArgs, list);
+					}
 				}
 				else {
 					if (list.size() > 1) {
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
+							if (!productionMode || !useFinderCache) {
+								finderArgs = new Object[] {
+									companyId, externalReferenceCode
+								};
+							}
+
 							_log.warn(
 								"UserPersistenceImpl.fetchByC_ERC(long, String, boolean) with parameters (" +
 									StringUtil.merge(finderArgs) +
@@ -7864,11 +8088,8 @@ public class UserPersistenceImpl
 					cacheResult(user);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathFetchByC_ERC, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7910,56 +8131,66 @@ public class UserPersistenceImpl
 	public int countByC_ERC(long companyId, String externalReferenceCode) {
 		externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
-		FinderPath finderPath = _finderPathCountByC_ERC;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
 
-		Object[] finderArgs = new Object[] {companyId, externalReferenceCode};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_ERC;
+
+			finderArgs = new Object[] {companyId, externalReferenceCode};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_USER_WHERE);
+			sb.append(_SQL_COUNT_USER_WHERE);
 
-			query.append(_FINDER_COLUMN_C_ERC_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_ERC_COMPANYID_2);
 
 			boolean bindExternalReferenceCode = false;
 
 			if (externalReferenceCode.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3);
+				sb.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3);
 			}
 			else {
 				bindExternalReferenceCode = true;
 
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2);
+				sb.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindExternalReferenceCode) {
-					qPos.add(externalReferenceCode);
+					queryPos.add(externalReferenceCode);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7979,12 +8210,6 @@ public class UserPersistenceImpl
 		"(user.externalReferenceCode IS NULL OR user.externalReferenceCode = '')";
 
 	public UserPersistenceImpl() {
-		setModelClass(User.class);
-
-		setModelImplClass(UserImpl.class);
-		setModelPKClass(long.class);
-		setEntityCacheEnabled(UserModelImpl.ENTITY_CACHE_ENABLED);
-
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
 		dbColumnNames.put("uuid", "uuid_");
@@ -7992,6 +8217,13 @@ public class UserPersistenceImpl
 		dbColumnNames.put("groups", "groups_");
 
 		setDBColumnNames(dbColumnNames);
+
+		setModelClass(User.class);
+
+		setModelImplClass(UserImpl.class);
+		setModelPKClass(long.class);
+
+		setTable(UserTable.INSTANCE);
 	}
 
 	/**
@@ -8001,9 +8233,11 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(User user) {
-		EntityCacheUtil.putResult(
-			UserModelImpl.ENTITY_CACHE_ENABLED, UserImpl.class,
-			user.getPrimaryKey(), user);
+		if (user.getCtCollectionId() != 0) {
+			return;
+		}
+
+		EntityCacheUtil.putResult(UserImpl.class, user.getPrimaryKey(), user);
 
 		FinderCacheUtil.putResult(
 			_finderPathFetchByContactId, new Object[] {user.getContactId()},
@@ -8045,8 +8279,6 @@ public class UserPersistenceImpl
 			_finderPathFetchByC_ERC,
 			new Object[] {user.getCompanyId(), user.getExternalReferenceCode()},
 			user);
-
-		user.resetOriginalValues();
 	}
 
 	/**
@@ -8057,14 +8289,14 @@ public class UserPersistenceImpl
 	@Override
 	public void cacheResult(List<User> users) {
 		for (User user : users) {
+			if (user.getCtCollectionId() != 0) {
+				continue;
+			}
+
 			if (EntityCacheUtil.getResult(
-					UserModelImpl.ENTITY_CACHE_ENABLED, UserImpl.class,
-					user.getPrimaryKey()) == null) {
+					UserImpl.class, user.getPrimaryKey()) == null) {
 
 				cacheResult(user);
-			}
-			else {
-				user.resetOriginalValues();
 			}
 		}
 	}
@@ -8094,27 +8326,24 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public void clearCache(User user) {
-		EntityCacheUtil.removeResult(
-			UserModelImpl.ENTITY_CACHE_ENABLED, UserImpl.class,
-			user.getPrimaryKey());
-
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache((UserModelImpl)user, true);
+		EntityCacheUtil.removeResult(UserImpl.class, user);
 	}
 
 	@Override
 	public void clearCache(List<User> users) {
+		for (User user : users) {
+			EntityCacheUtil.removeResult(UserImpl.class, user);
+		}
+	}
+
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
-		for (User user : users) {
-			EntityCacheUtil.removeResult(
-				UserModelImpl.ENTITY_CACHE_ENABLED, UserImpl.class,
-				user.getPrimaryKey());
-
-			clearUniqueFindersCache((UserModelImpl)user, true);
+		for (Serializable primaryKey : primaryKeys) {
+			EntityCacheUtil.removeResult(UserImpl.class, primaryKey);
 		}
 	}
 
@@ -8207,213 +8436,6 @@ public class UserPersistenceImpl
 			_finderPathFetchByC_ERC, args, userModelImpl, false);
 	}
 
-	protected void clearUniqueFindersCache(
-		UserModelImpl userModelImpl, boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {userModelImpl.getContactId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByContactId, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByContactId, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByContactId.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {userModelImpl.getOriginalContactId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByContactId, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByContactId, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {userModelImpl.getPortraitId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByPortraitId, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByPortraitId, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByPortraitId.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalPortraitId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByPortraitId, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByPortraitId, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getUserId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_U, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_U, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByC_U.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalCompanyId(),
-				userModelImpl.getOriginalUserId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_U, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_U, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.isDefaultUser()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_DU, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_DU, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByC_DU.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalCompanyId(),
-				userModelImpl.getOriginalDefaultUser()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_DU, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_DU, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getScreenName()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_SN, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_SN, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByC_SN.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalCompanyId(),
-				userModelImpl.getOriginalScreenName()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_SN, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_SN, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getEmailAddress()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_EA, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_EA, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByC_EA.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalCompanyId(),
-				userModelImpl.getOriginalEmailAddress()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_EA, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_EA, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getFacebookId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_FID, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_FID, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByC_FID.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalCompanyId(),
-				userModelImpl.getOriginalFacebookId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_FID, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_FID, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getGoogleUserId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_GUID, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_GUID, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByC_GUID.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalCompanyId(),
-				userModelImpl.getOriginalGoogleUserId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_GUID, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_GUID, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getOpenId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_O, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_O, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByC_O.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalCompanyId(),
-				userModelImpl.getOriginalOpenId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_O, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_O, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				userModelImpl.getCompanyId(),
-				userModelImpl.getExternalReferenceCode()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_ERC, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_ERC, args);
-		}
-
-		if ((userModelImpl.getColumnBitmask() &
-			 _finderPathFetchByC_ERC.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				userModelImpl.getOriginalCompanyId(),
-				userModelImpl.getOriginalExternalReferenceCode()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_ERC, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByC_ERC, args);
-		}
-	}
-
 	/**
 	 * Creates a new user with the primary key. Does not add the user to the database.
 	 *
@@ -8431,7 +8453,7 @@ public class UserPersistenceImpl
 
 		user.setUuid(uuid);
 
-		user.setCompanyId(companyProvider.getCompanyId());
+		user.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return user;
 	}
@@ -8475,11 +8497,11 @@ public class UserPersistenceImpl
 
 			return remove(user);
 		}
-		catch (NoSuchUserException nsee) {
-			throw nsee;
+		catch (NoSuchUserException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -8513,12 +8535,12 @@ public class UserPersistenceImpl
 					UserImpl.class, user.getPrimaryKeyObj());
 			}
 
-			if (user != null) {
+			if ((user != null) && CTPersistenceHelperUtil.isRemove(user)) {
 				session.delete(user);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -8587,304 +8609,41 @@ public class UserPersistenceImpl
 		try {
 			session = openSession();
 
-			if (user.isNew()) {
-				session.save(user);
+			if (CTPersistenceHelperUtil.isInsert(user)) {
+				if (!isNew) {
+					session.evict(UserImpl.class, user.getPrimaryKeyObj());
+				}
 
-				user.setNew(false);
+				session.save(user);
 			}
 			else {
 				user = (User)session.merge(user);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!UserModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {userModelImpl.getUuid()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUuid, args);
-
-			args = new Object[] {
-				userModelImpl.getUuid(), userModelImpl.getCompanyId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C, args);
-
-			args = new Object[] {userModelImpl.getCompanyId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByCompanyId, args);
-
-			args = new Object[] {userModelImpl.getEmailAddress()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByEmailAddress, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByEmailAddress, args);
-
-			args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getCreateDate()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_CD, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_CD, args);
-
-			args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getModifiedDate()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_MD, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_MD, args);
-
-			args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getStatus()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_S, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_S, args);
-
-			args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.getCreateDate(),
-				userModelImpl.getModifiedDate()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_CD_MD, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_CD_MD, args);
-
-			args = new Object[] {
-				userModelImpl.getCompanyId(), userModelImpl.isDefaultUser(),
-				userModelImpl.getStatus()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_DU_S, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_DU_S, args);
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {userModelImpl.getOriginalUuid()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-
-				args = new Object[] {userModelImpl.getUuid()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
+		if (user.getCtCollectionId() != 0) {
+			if (isNew) {
+				user.setNew(false);
 			}
 
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
-					 0) {
+			user.resetOriginalValues();
 
-				Object[] args = new Object[] {
-					userModelImpl.getOriginalUuid(),
-					userModelImpl.getOriginalCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-
-				args = new Object[] {
-					userModelImpl.getUuid(), userModelImpl.getCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-			}
-
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCompanyId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					userModelImpl.getOriginalCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-
-				args = new Object[] {userModelImpl.getCompanyId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-			}
-
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByEmailAddress.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					userModelImpl.getOriginalEmailAddress()
-				};
-
-				FinderCacheUtil.removeResult(
-					_finderPathCountByEmailAddress, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByEmailAddress, args);
-
-				args = new Object[] {userModelImpl.getEmailAddress()};
-
-				FinderCacheUtil.removeResult(
-					_finderPathCountByEmailAddress, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByEmailAddress, args);
-			}
-
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_CD.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					userModelImpl.getOriginalCompanyId(),
-					userModelImpl.getOriginalCreateDate()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_CD, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_CD, args);
-
-				args = new Object[] {
-					userModelImpl.getCompanyId(), userModelImpl.getCreateDate()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_CD, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_CD, args);
-			}
-
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_MD.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					userModelImpl.getOriginalCompanyId(),
-					userModelImpl.getOriginalModifiedDate()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_MD, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_MD, args);
-
-				args = new Object[] {
-					userModelImpl.getCompanyId(),
-					userModelImpl.getModifiedDate()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_MD, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_MD, args);
-			}
-
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_S.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					userModelImpl.getOriginalCompanyId(),
-					userModelImpl.getOriginalStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_S, args);
-
-				args = new Object[] {
-					userModelImpl.getCompanyId(), userModelImpl.getStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_S, args);
-			}
-
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_CD_MD.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					userModelImpl.getOriginalCompanyId(),
-					userModelImpl.getOriginalCreateDate(),
-					userModelImpl.getOriginalModifiedDate()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_CD_MD, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_CD_MD, args);
-
-				args = new Object[] {
-					userModelImpl.getCompanyId(), userModelImpl.getCreateDate(),
-					userModelImpl.getModifiedDate()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_CD_MD, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_CD_MD, args);
-			}
-
-			if ((userModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_DU_S.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					userModelImpl.getOriginalCompanyId(),
-					userModelImpl.getOriginalDefaultUser(),
-					userModelImpl.getOriginalStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_DU_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_DU_S, args);
-
-				args = new Object[] {
-					userModelImpl.getCompanyId(), userModelImpl.isDefaultUser(),
-					userModelImpl.getStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_DU_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_DU_S, args);
-			}
+			return user;
 		}
 
-		EntityCacheUtil.putResult(
-			UserModelImpl.ENTITY_CACHE_ENABLED, UserImpl.class,
-			user.getPrimaryKey(), user, false);
+		EntityCacheUtil.putResult(UserImpl.class, userModelImpl, false, true);
 
-		clearUniqueFindersCache(userModelImpl, false);
 		cacheUniqueFindersCache(userModelImpl);
+
+		if (isNew) {
+			user.setNew(false);
+		}
 
 		user.resetOriginalValues();
 
@@ -8931,12 +8690,117 @@ public class UserPersistenceImpl
 	/**
 	 * Returns the user with the primary key or returns <code>null</code> if it could not be found.
 	 *
+	 * @param primaryKey the primary key of the user
+	 * @return the user, or <code>null</code> if a user with the primary key could not be found
+	 */
+	@Override
+	public User fetchByPrimaryKey(Serializable primaryKey) {
+		if (CTPersistenceHelperUtil.isProductionMode(User.class)) {
+			return super.fetchByPrimaryKey(primaryKey);
+		}
+
+		User user = null;
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			user = (User)session.get(UserImpl.class, primaryKey);
+
+			if (user != null) {
+				cacheResult(user);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return user;
+	}
+
+	/**
+	 * Returns the user with the primary key or returns <code>null</code> if it could not be found.
+	 *
 	 * @param userId the primary key of the user
 	 * @return the user, or <code>null</code> if a user with the primary key could not be found
 	 */
 	@Override
 	public User fetchByPrimaryKey(long userId) {
 		return fetchByPrimaryKey((Serializable)userId);
+	}
+
+	@Override
+	public Map<Serializable, User> fetchByPrimaryKeys(
+		Set<Serializable> primaryKeys) {
+
+		if (CTPersistenceHelperUtil.isProductionMode(User.class)) {
+			return super.fetchByPrimaryKeys(primaryKeys);
+		}
+
+		if (primaryKeys.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		Map<Serializable, User> map = new HashMap<Serializable, User>();
+
+		if (primaryKeys.size() == 1) {
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			Serializable primaryKey = iterator.next();
+
+			User user = fetchByPrimaryKey(primaryKey);
+
+			if (user != null) {
+				map.put(primaryKey, user);
+			}
+
+			return map;
+		}
+
+		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
+
+		sb.append(getSelectSQL());
+		sb.append(" WHERE ");
+		sb.append(getPKDBName());
+		sb.append(" IN (");
+
+		for (Serializable primaryKey : primaryKeys) {
+			sb.append((long)primaryKey);
+
+			sb.append(",");
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		sb.append(")");
+
+		String sql = sb.toString();
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Query query = session.createQuery(sql);
+
+			for (User user : (List<User>)query.list()) {
+				map.put(user.getPrimaryKeyObj(), user);
+
+				cacheResult(user);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return map;
 	}
 
 	/**
@@ -8953,7 +8817,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the users.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of users
@@ -8969,7 +8833,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of users
@@ -8988,64 +8852,65 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the users.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of users
 	 * @param end the upper bound of the range of users (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of users
 	 */
 	@Override
 	public List<User> findAll(
 		int start, int end, OrderByComparator<User> orderByComparator,
-		boolean retrieveFromCache) {
+		boolean useFinderCache) {
 
-		boolean pagination = true;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			pagination = false;
-			finderPath = _finderPathWithoutPaginationFindAll;
-			finderArgs = FINDER_ARGS_EMPTY;
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<User> list = null;
 
-		if (retrieveFromCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<User>)FinderCacheUtil.getResult(
 				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_USER);
+				sb.append(_SQL_SELECT_USER);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_USER;
 
-				if (pagination) {
-					sql = sql.concat(UserModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(UserModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -9053,29 +8918,19 @@ public class UserPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<User>)QueryUtil.list(
-						q, getDialect(), start, end);
-				}
+				list = (List<User>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -9103,8 +8958,15 @@ public class UserPersistenceImpl
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)FinderCacheUtil.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			User.class);
+
+		Long count = null;
+
+		if (productionMode) {
+			count = (Long)FinderCacheUtil.getResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		}
 
 		if (count == null) {
 			Session session = null;
@@ -9112,18 +8974,17 @@ public class UserPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_USER);
+				Query query = session.createQuery(_SQL_COUNT_USER);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(
+						_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
-				throw processException(e);
+			catch (Exception exception) {
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -9161,7 +9022,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the groups associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -9180,7 +9041,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the groups associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -9252,7 +9113,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToGroupTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, groupPK);
+				CompanyThreadLocal.getCompanyId(), pk, groupPK);
 		}
 		else {
 			userToGroupTableMapper.addTableMapping(
@@ -9272,7 +9133,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToGroupTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, group.getPrimaryKey());
+				CompanyThreadLocal.getCompanyId(), pk, group.getPrimaryKey());
 		}
 		else {
 			userToGroupTableMapper.addTableMapping(
@@ -9293,7 +9154,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -9407,7 +9268,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -9438,8 +9299,8 @@ public class UserPersistenceImpl
 
 			setGroups(pk, groupPKs);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 	}
 
@@ -9473,7 +9334,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the organizations associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -9492,7 +9353,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the organizations associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -9565,7 +9426,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToOrganizationTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, organizationPK);
+				CompanyThreadLocal.getCompanyId(), pk, organizationPK);
 		}
 		else {
 			userToOrganizationTableMapper.addTableMapping(
@@ -9587,7 +9448,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToOrganizationTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk,
+				CompanyThreadLocal.getCompanyId(), pk,
 				organization.getPrimaryKey());
 		}
 		else {
@@ -9609,7 +9470,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -9730,7 +9591,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -9763,8 +9624,8 @@ public class UserPersistenceImpl
 
 			setOrganizations(pk, organizationPKs);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 	}
 
@@ -9796,7 +9657,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the roles associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -9815,7 +9676,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the roles associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -9887,7 +9748,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToRoleTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, rolePK);
+				CompanyThreadLocal.getCompanyId(), pk, rolePK);
 		}
 		else {
 			userToRoleTableMapper.addTableMapping(
@@ -9907,7 +9768,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToRoleTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, role.getPrimaryKey());
+				CompanyThreadLocal.getCompanyId(), pk, role.getPrimaryKey());
 		}
 		else {
 			userToRoleTableMapper.addTableMapping(
@@ -9928,7 +9789,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -10038,7 +9899,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -10069,8 +9930,8 @@ public class UserPersistenceImpl
 
 			setRoles(pk, rolePKs);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 	}
 
@@ -10102,7 +9963,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the teams associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -10121,7 +9982,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the teams associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -10193,7 +10054,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToTeamTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, teamPK);
+				CompanyThreadLocal.getCompanyId(), pk, teamPK);
 		}
 		else {
 			userToTeamTableMapper.addTableMapping(
@@ -10213,7 +10074,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToTeamTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, team.getPrimaryKey());
+				CompanyThreadLocal.getCompanyId(), pk, team.getPrimaryKey());
 		}
 		else {
 			userToTeamTableMapper.addTableMapping(
@@ -10234,7 +10095,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -10344,7 +10205,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -10375,8 +10236,8 @@ public class UserPersistenceImpl
 
 			setTeams(pk, teamPKs);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 	}
 
@@ -10410,7 +10271,7 @@ public class UserPersistenceImpl
 	 * Returns a range of all the user groups associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -10429,7 +10290,7 @@ public class UserPersistenceImpl
 	 * Returns an ordered range of all the user groups associated with the user.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>UserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>UserModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the user
@@ -10501,7 +10362,7 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToUserGroupTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, userGroupPK);
+				CompanyThreadLocal.getCompanyId(), pk, userGroupPK);
 		}
 		else {
 			userToUserGroupTableMapper.addTableMapping(
@@ -10523,7 +10384,8 @@ public class UserPersistenceImpl
 
 		if (user == null) {
 			userToUserGroupTableMapper.addTableMapping(
-				companyProvider.getCompanyId(), pk, userGroup.getPrimaryKey());
+				CompanyThreadLocal.getCompanyId(), pk,
+				userGroup.getPrimaryKey());
 		}
 		else {
 			userToUserGroupTableMapper.addTableMapping(
@@ -10544,7 +10406,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -10662,7 +10524,7 @@ public class UserPersistenceImpl
 		User user = fetchByPrimaryKey(pk);
 
 		if (user == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = user.getCompanyId();
@@ -10694,8 +10556,8 @@ public class UserPersistenceImpl
 
 			setUserGroups(pk, userGroupPKs);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 	}
 
@@ -10720,14 +10582,132 @@ public class UserPersistenceImpl
 	}
 
 	@Override
-	protected Map<String, Integer> getTableColumnsMap() {
+	public Set<String> getCTColumnNames(
+		CTColumnResolutionType ctColumnResolutionType) {
+
+		return _ctColumnNamesMap.get(ctColumnResolutionType);
+	}
+
+	@Override
+	public List<String> getMappingTableNames() {
+		return _mappingTableNames;
+	}
+
+	@Override
+	public Map<String, Integer> getTableColumnsMap() {
 		return UserModelImpl.TABLE_COLUMNS_MAP;
+	}
+
+	@Override
+	public String getTableName() {
+		return "User_";
+	}
+
+	@Override
+	public List<String[]> getUniqueIndexColumnNames() {
+		return _uniqueIndexColumnNames;
+	}
+
+	private static final Map<CTColumnResolutionType, Set<String>>
+		_ctColumnNamesMap = new EnumMap<CTColumnResolutionType, Set<String>>(
+			CTColumnResolutionType.class);
+	private static final List<String> _mappingTableNames =
+		new ArrayList<String>();
+	private static final List<String[]> _uniqueIndexColumnNames =
+		new ArrayList<String[]>();
+
+	static {
+		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
+		Set<String> ctStrictColumnNames = new HashSet<String>();
+
+		ctControlColumnNames.add("mvccVersion");
+		ctControlColumnNames.add("ctCollectionId");
+		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
+		ctStrictColumnNames.add("companyId");
+		ctStrictColumnNames.add("createDate");
+		ctIgnoreColumnNames.add("modifiedDate");
+		ctStrictColumnNames.add("defaultUser");
+		ctStrictColumnNames.add("contactId");
+		ctStrictColumnNames.add("password_");
+		ctStrictColumnNames.add("passwordEncrypted");
+		ctStrictColumnNames.add("passwordReset");
+		ctStrictColumnNames.add("passwordModifiedDate");
+		ctStrictColumnNames.add("digest");
+		ctStrictColumnNames.add("reminderQueryQuestion");
+		ctStrictColumnNames.add("reminderQueryAnswer");
+		ctStrictColumnNames.add("graceLoginCount");
+		ctStrictColumnNames.add("screenName");
+		ctStrictColumnNames.add("emailAddress");
+		ctStrictColumnNames.add("facebookId");
+		ctStrictColumnNames.add("googleUserId");
+		ctStrictColumnNames.add("ldapServerId");
+		ctStrictColumnNames.add("openId");
+		ctStrictColumnNames.add("portraitId");
+		ctStrictColumnNames.add("languageId");
+		ctStrictColumnNames.add("timeZoneId");
+		ctStrictColumnNames.add("greeting");
+		ctStrictColumnNames.add("comments");
+		ctStrictColumnNames.add("firstName");
+		ctStrictColumnNames.add("middleName");
+		ctStrictColumnNames.add("lastName");
+		ctStrictColumnNames.add("jobTitle");
+		ctStrictColumnNames.add("loginDate");
+		ctStrictColumnNames.add("loginIP");
+		ctStrictColumnNames.add("lastLoginDate");
+		ctStrictColumnNames.add("lastLoginIP");
+		ctStrictColumnNames.add("lastFailedLoginDate");
+		ctStrictColumnNames.add("failedLoginAttempts");
+		ctStrictColumnNames.add("lockout");
+		ctStrictColumnNames.add("lockoutDate");
+		ctStrictColumnNames.add("agreedToTermsOfUse");
+		ctStrictColumnNames.add("emailAddressVerified");
+		ctStrictColumnNames.add("status");
+		ctStrictColumnNames.add("groups_");
+		ctStrictColumnNames.add("orgs");
+		ctStrictColumnNames.add("roles");
+		ctStrictColumnNames.add("teams");
+		ctStrictColumnNames.add("userGroups");
+
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.PK, Collections.singleton("userId"));
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.STRICT, ctStrictColumnNames);
+
+		_mappingTableNames.add("Users_Groups");
+		_mappingTableNames.add("Users_Orgs");
+		_mappingTableNames.add("Users_Roles");
+		_mappingTableNames.add("Users_Teams");
+		_mappingTableNames.add("Users_UserGroups");
+
+		_uniqueIndexColumnNames.add(new String[] {"contactId"});
+
+		_uniqueIndexColumnNames.add(new String[] {"companyId", "userId"});
+
+		_uniqueIndexColumnNames.add(new String[] {"companyId", "screenName"});
+
+		_uniqueIndexColumnNames.add(new String[] {"companyId", "emailAddress"});
 	}
 
 	/**
 	 * Initializes the user persistence.
 	 */
 	public void afterPropertiesSet() {
+		Registry registry = RegistryUtil.getRegistry();
+
+		_argumentsResolverServiceRegistration = registry.registerService(
+			ArgumentsResolver.class, new UserModelArgumentsResolver(),
+			HashMapBuilder.<String, Object>put(
+				"model.class.name", User.class.getName()
+			).build());
+
 		userToGroupTableMapper = TableMapperFactory.getTableMapper(
 			"Users_Groups", "companyId", "userId", "groupId", this,
 			groupPersistence);
@@ -10748,405 +10728,321 @@ public class UserPersistenceImpl
 			"Users_UserGroups", "companyId", "userId", "userGroupId", this,
 			userGroupPersistence);
 
-		_finderPathWithPaginationFindAll = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+		_finderPathWithPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+		_finderPathWithoutPaginationFindAll = _createFinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
-		_finderPathCountAll = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountAll = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByUuid = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByUuid = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] {String.class.getName()},
-			UserModelImpl.UUID_COLUMN_BITMASK);
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			true);
 
-		_finderPathCountByUuid = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUuid = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			false);
 
-		_finderPathWithPaginationFindByUuid_C = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			UserModelImpl.UUID_COLUMN_BITMASK |
-			UserModelImpl.COMPANYID_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByUuid_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindByCompanyId = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByCompanyId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId"}, true);
 
-		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByCompanyId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] {Long.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
 
-		_finderPathCountByCompanyId = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByCompanyId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
 
-		_finderPathFetchByContactId = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByContactId = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByContactId",
-			new String[] {Long.class.getName()},
-			UserModelImpl.CONTACTID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"contactId"},
+			true);
 
-		_finderPathCountByContactId = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByContactId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByContactId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"contactId"},
+			false);
 
-		_finderPathWithPaginationFindByEmailAddress = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByEmailAddress = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByEmailAddress",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"emailAddress"}, true);
 
-		_finderPathWithoutPaginationFindByEmailAddress = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByEmailAddress = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByEmailAddress",
 			new String[] {String.class.getName()},
-			UserModelImpl.EMAILADDRESS_COLUMN_BITMASK);
+			new String[] {"emailAddress"}, true);
 
-		_finderPathCountByEmailAddress = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByEmailAddress = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByEmailAddress",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()},
+			new String[] {"emailAddress"}, false);
 
-		_finderPathFetchByPortraitId = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByPortraitId = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByPortraitId",
-			new String[] {Long.class.getName()},
-			UserModelImpl.PORTRAITID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"portraitId"},
+			true);
 
-		_finderPathCountByPortraitId = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByPortraitId = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByPortraitId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"portraitId"},
+			false);
 
-		_finderPathWithPaginationFindByU_C = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByU_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"userId", "companyId"}, true);
 
-		_finderPathWithPaginationCountByU_C = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathWithPaginationCountByU_C = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByU_C",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"userId", "companyId"}, false);
 
-		_finderPathFetchByC_U = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByC_U = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_U",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.USERID_COLUMN_BITMASK);
+			new String[] {"companyId", "userId"}, true);
 
-		_finderPathCountByC_U = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_U = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_U",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"companyId", "userId"}, false);
 
-		_finderPathWithPaginationFindByC_CD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByC_CD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_CD",
 			new String[] {
 				Long.class.getName(), Date.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "createDate"}, true);
 
-		_finderPathWithoutPaginationFindByC_CD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByC_CD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_CD",
 			new String[] {Long.class.getName(), Date.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {"companyId", "createDate"}, true);
 
-		_finderPathCountByC_CD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_CD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_CD",
-			new String[] {Long.class.getName(), Date.class.getName()});
+			new String[] {Long.class.getName(), Date.class.getName()},
+			new String[] {"companyId", "createDate"}, false);
 
-		_finderPathWithPaginationFindByC_MD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByC_MD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_MD",
 			new String[] {
 				Long.class.getName(), Date.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "modifiedDate"}, true);
 
-		_finderPathWithoutPaginationFindByC_MD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByC_MD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_MD",
 			new String[] {Long.class.getName(), Date.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.MODIFIEDDATE_COLUMN_BITMASK);
+			new String[] {"companyId", "modifiedDate"}, true);
 
-		_finderPathCountByC_MD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_MD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_MD",
-			new String[] {Long.class.getName(), Date.class.getName()});
+			new String[] {Long.class.getName(), Date.class.getName()},
+			new String[] {"companyId", "modifiedDate"}, false);
 
-		_finderPathFetchByC_DU = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByC_DU = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_DU",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.DEFAULTUSER_COLUMN_BITMASK);
+			new String[] {"companyId", "defaultUser"}, true);
 
-		_finderPathCountByC_DU = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_DU = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_DU",
-			new String[] {Long.class.getName(), Boolean.class.getName()});
+			new String[] {Long.class.getName(), Boolean.class.getName()},
+			new String[] {"companyId", "defaultUser"}, false);
 
-		_finderPathFetchByC_SN = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByC_SN = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_SN",
 			new String[] {Long.class.getName(), String.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.SCREENNAME_COLUMN_BITMASK);
+			new String[] {"companyId", "screenName"}, true);
 
-		_finderPathCountByC_SN = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_SN = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_SN",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"companyId", "screenName"}, false);
 
-		_finderPathFetchByC_EA = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByC_EA = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_EA",
 			new String[] {Long.class.getName(), String.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.EMAILADDRESS_COLUMN_BITMASK);
+			new String[] {"companyId", "emailAddress"}, true);
 
-		_finderPathCountByC_EA = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_EA = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_EA",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"companyId", "emailAddress"}, false);
 
-		_finderPathFetchByC_FID = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByC_FID = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_FID",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.FACEBOOKID_COLUMN_BITMASK);
+			new String[] {"companyId", "facebookId"}, true);
 
-		_finderPathCountByC_FID = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_FID = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_FID",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"companyId", "facebookId"}, false);
 
-		_finderPathFetchByC_GUID = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByC_GUID = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_GUID",
 			new String[] {Long.class.getName(), String.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.GOOGLEUSERID_COLUMN_BITMASK);
+			new String[] {"companyId", "googleUserId"}, true);
 
-		_finderPathCountByC_GUID = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_GUID = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_GUID",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"companyId", "googleUserId"}, false);
 
-		_finderPathFetchByC_O = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByC_O = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_O",
 			new String[] {Long.class.getName(), String.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.OPENID_COLUMN_BITMASK);
+			new String[] {"companyId", "openId"}, true);
 
-		_finderPathCountByC_O = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_O = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_O",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"companyId", "openId"}, false);
 
-		_finderPathWithPaginationFindByC_S = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByC_S = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByC_S = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByC_S = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.STATUS_COLUMN_BITMASK);
+			new String[] {"companyId", "status"}, true);
 
-		_finderPathCountByC_S = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_S = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_S",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"companyId", "status"}, false);
 
-		_finderPathWithPaginationFindByC_CD_MD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByC_CD_MD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_CD_MD",
 			new String[] {
 				Long.class.getName(), Date.class.getName(),
 				Date.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "createDate", "modifiedDate"}, true);
 
-		_finderPathWithoutPaginationFindByC_CD_MD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByC_CD_MD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_CD_MD",
 			new String[] {
 				Long.class.getName(), Date.class.getName(), Date.class.getName()
 			},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.CREATEDATE_COLUMN_BITMASK |
-			UserModelImpl.MODIFIEDDATE_COLUMN_BITMASK);
+			new String[] {"companyId", "createDate", "modifiedDate"}, true);
 
-		_finderPathCountByC_CD_MD = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_CD_MD = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_CD_MD",
 			new String[] {
 				Long.class.getName(), Date.class.getName(), Date.class.getName()
-			});
+			},
+			new String[] {"companyId", "createDate", "modifiedDate"}, false);
 
-		_finderPathWithPaginationFindByC_DU_S = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithPaginationFindByC_DU_S = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_DU_S",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "defaultUser", "status"}, true);
 
-		_finderPathWithoutPaginationFindByC_DU_S = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathWithoutPaginationFindByC_DU_S = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_DU_S",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
 				Integer.class.getName()
 			},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.DEFAULTUSER_COLUMN_BITMASK |
-			UserModelImpl.STATUS_COLUMN_BITMASK);
+			new String[] {"companyId", "defaultUser", "status"}, true);
 
-		_finderPathCountByC_DU_S = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_DU_S = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_DU_S",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"companyId", "defaultUser", "status"}, false);
 
-		_finderPathFetchByC_ERC = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, UserImpl.class,
+		_finderPathFetchByC_ERC = _createFinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_ERC",
 			new String[] {Long.class.getName(), String.class.getName()},
-			UserModelImpl.COMPANYID_COLUMN_BITMASK |
-			UserModelImpl.EXTERNALREFERENCECODE_COLUMN_BITMASK);
+			new String[] {"companyId", "externalReferenceCode"}, true);
 
-		_finderPathCountByC_ERC = new FinderPath(
-			UserModelImpl.ENTITY_CACHE_ENABLED,
-			UserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+		_finderPathCountByC_ERC = _createFinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_ERC",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"companyId", "externalReferenceCode"}, false);
 	}
 
 	public void destroy() {
 		EntityCacheUtil.removeCache(UserImpl.class.getName());
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		_argumentsResolverServiceRegistration.unregister();
+
+		for (ServiceRegistration<FinderPath> serviceRegistration :
+				_serviceRegistrations) {
+
+			serviceRegistration.unregister();
+		}
 
 		TableMapperFactory.removeTableMapper("Users_Groups");
 		TableMapperFactory.removeTableMapper("Users_Orgs");
@@ -11154,9 +11050,6 @@ public class UserPersistenceImpl
 		TableMapperFactory.removeTableMapper("Users_Teams");
 		TableMapperFactory.removeTableMapper("Users_UserGroups");
 	}
-
-	@BeanReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
 
 	@BeanReference(type = GroupPersistence.class)
 	protected GroupPersistence groupPersistence;
@@ -11188,7 +11081,7 @@ public class UserPersistenceImpl
 	protected TableMapper<User, com.liferay.portal.kernel.model.UserGroup>
 		userToUserGroupTableMapper;
 
-	private Long _getTime(Date date) {
+	private static Long _getTime(Date date) {
 		if (date == null) {
 			return null;
 		}
@@ -11220,5 +11113,105 @@ public class UserPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid", "password", "groups"});
+
+	private FinderPath _createFinderPath(
+		String cacheName, String methodName, String[] params,
+		String[] columnNames, boolean baseModelResult) {
+
+		FinderPath finderPath = new FinderPath(
+			cacheName, methodName, params, columnNames, baseModelResult);
+
+		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+			Registry registry = RegistryUtil.getRegistry();
+
+			_serviceRegistrations.add(
+				registry.registerService(
+					FinderPath.class, finderPath,
+					HashMapBuilder.<String, Object>put(
+						"cache.name", cacheName
+					).build()));
+		}
+
+		return finderPath;
+	}
+
+	private ServiceRegistration<ArgumentsResolver>
+		_argumentsResolverServiceRegistration;
+	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
+		new HashSet<>();
+
+	private static class UserModelArgumentsResolver
+		implements ArgumentsResolver {
+
+		@Override
+		public Object[] getArguments(
+			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
+			boolean original) {
+
+			String[] columnNames = finderPath.getColumnNames();
+
+			if ((columnNames == null) || (columnNames.length == 0)) {
+				if (baseModel.isNew()) {
+					return FINDER_ARGS_EMPTY;
+				}
+
+				return null;
+			}
+
+			UserModelImpl userModelImpl = (UserModelImpl)baseModel;
+
+			long columnBitmask = userModelImpl.getColumnBitmask();
+
+			if (!checkColumn || (columnBitmask == 0)) {
+				return _getValue(userModelImpl, columnNames, original);
+			}
+
+			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
+				finderPath);
+
+			if (finderPathColumnBitmask == null) {
+				finderPathColumnBitmask = 0L;
+
+				for (String columnName : columnNames) {
+					finderPathColumnBitmask |= userModelImpl.getColumnBitmask(
+						columnName);
+				}
+
+				_finderPathColumnBitmasksCache.put(
+					finderPath, finderPathColumnBitmask);
+			}
+
+			if ((columnBitmask & finderPathColumnBitmask) != 0) {
+				return _getValue(userModelImpl, columnNames, original);
+			}
+
+			return null;
+		}
+
+		private Object[] _getValue(
+			UserModelImpl userModelImpl, String[] columnNames,
+			boolean original) {
+
+			Object[] arguments = new Object[columnNames.length];
+
+			for (int i = 0; i < arguments.length; i++) {
+				String columnName = columnNames[i];
+
+				if (original) {
+					arguments[i] = userModelImpl.getColumnOriginalValue(
+						columnName);
+				}
+				else {
+					arguments[i] = userModelImpl.getColumnValue(columnName);
+				}
+			}
+
+			return arguments;
+		}
+
+		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
+			new ConcurrentHashMap<>();
+
+	}
 
 }

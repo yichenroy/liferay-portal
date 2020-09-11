@@ -4,11 +4,13 @@
 
 <#include "class_names.ftl">
 
+<#include "commerce_product.ftl">
+
 <#include "company.ftl">
 
-<#include "default_dl_file_type.ftl">
+<#include "ddm.ftl">
 
-<#include "default_user.ftl">
+<#include "default_dl_file_type.ftl">
 
 <#include "groups.ftl">
 

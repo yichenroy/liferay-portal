@@ -14,8 +14,6 @@
 
 package com.liferay.sync.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,9 +23,8 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see SyncDLObjectService
  * @generated
  */
-@ProviderType
 public class SyncDLObjectServiceWrapper
-	implements SyncDLObjectService, ServiceWrapper<SyncDLObjectService> {
+	implements ServiceWrapper<SyncDLObjectService>, SyncDLObjectService {
 
 	public SyncDLObjectServiceWrapper(SyncDLObjectService syncDLObjectService) {
 		_syncDLObjectService = syncDLObjectService;

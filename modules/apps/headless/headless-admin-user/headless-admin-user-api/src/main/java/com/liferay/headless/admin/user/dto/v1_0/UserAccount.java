@@ -20,9 +20,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
-
-import graphql.annotations.annotationTypes.GraphQLField;
-import graphql.annotations.annotationTypes.GraphQLName;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
+import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -30,9 +30,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Generated;
+
+import javax.validation.Valid;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -46,7 +51,41 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "UserAccount")
 public class UserAccount {
 
-	@Schema(description = "An additional name, can be used for a middle name.")
+	public static UserAccount toDTO(String json) {
+		return ObjectMapperUtil.readValue(UserAccount.class, json);
+	}
+
+	@Schema
+	@Valid
+	public Map<String, Map<String, String>> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+	}
+
+	@JsonIgnore
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		try {
+			actions = actionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, Map<String, String>> actions;
+
+	@Schema(description = "The user's additional name (e.g., middle name).")
 	public String getAdditionalName() {
 		return additionalName;
 	}
@@ -70,11 +109,13 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(
+		description = "The user's additional name (e.g., middle name)."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String additionalName;
 
-	@Schema(description = "An alias or screen name for the UserAcount.")
+	@Schema(description = "The user's alias or screen name.")
 	public String getAlternateName() {
 		return alternateName;
 	}
@@ -98,11 +139,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The user's alias or screen name.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String alternateName;
 
-	@Schema(description = "The date of birth, in ISO 8601 format.")
+	@Schema(description = "The user's date of birth, in ISO 8601 format.")
 	public Date getBirthDate() {
 		return birthDate;
 	}
@@ -126,26 +167,26 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The user's date of birth, in ISO 8601 format.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date birthDate;
 
-	@Schema(description = "https://www.schema.org/ContactInformation")
-	public ContactInformation getContactInformation() {
-		return contactInformation;
+	@Schema
+	@Valid
+	public CustomField[] getCustomFields() {
+		return customFields;
 	}
 
-	public void setContactInformation(ContactInformation contactInformation) {
-		this.contactInformation = contactInformation;
+	public void setCustomFields(CustomField[] customFields) {
+		this.customFields = customFields;
 	}
 
 	@JsonIgnore
-	public void setContactInformation(
-		UnsafeSupplier<ContactInformation, Exception>
-			contactInformationUnsafeSupplier) {
+	public void setCustomFields(
+		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
 
 		try {
-			contactInformation = contactInformationUnsafeSupplier.get();
+			customFields = customFieldsUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -157,9 +198,9 @@ public class UserAccount {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected ContactInformation contactInformation;
+	protected CustomField[] customFields;
 
-	@Schema(description = "A relative URL to the dashboard of the UserAccount.")
+	@Schema(description = "A relative URL to the user's dashboard.")
 	public String getDashboardURL() {
 		return dashboardURL;
 	}
@@ -183,11 +224,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A relative URL to the user's dashboard.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String dashboardURL;
 
-	@Schema(description = "The creation date of the UserAccount.")
+	@Schema(description = "The creation date of the user's account.")
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -211,11 +252,13 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The creation date of the user's account.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
-	@Schema(description = "The last time a field of the UserAccount changed.")
+	@Schema(
+		description = "The last time any field of the user's account was changed."
+	)
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -239,11 +282,13 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The last time any field of the user's account was changed."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
-	@Schema(description = "The main email address of the UserAccount.")
+	@Schema(description = "The user's main email address.")
 	public String getEmailAddress() {
 		return emailAddress;
 	}
@@ -267,11 +312,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The user's main email address.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String emailAddress;
 
-	@Schema(description = "In the US, the surname of the UserAccount.")
+	@Schema(description = "The user's surname (last name).")
 	public String getFamilyName() {
 		return familyName;
 	}
@@ -295,11 +340,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The user's surname (last name).")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String familyName;
 
-	@Schema(description = "In the US, the first name of the UserAccount.")
+	@Schema(description = "The user's first name.")
 	public String getGivenName() {
 		return givenName;
 	}
@@ -323,11 +368,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The user's first name.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String givenName;
 
-	@Schema(description = "The UserAccount title (dr, mr, mrs, ms...)")
+	@Schema(description = "The user's title (e.g., Dr., Mr., Mrs, Ms., etc.).")
 	public String getHonorificPrefix() {
 		return honorificPrefix;
 	}
@@ -351,11 +396,13 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(
+		description = "The user's title (e.g., Dr., Mr., Mrs, Ms., etc.)."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String honorificPrefix;
 
-	@Schema(description = "The UserAccount honorific suffix (ii, jr, phd...)")
+	@Schema(description = "The user's suffix (e.g., II, Jr., PhD, etc.).")
 	public String getHonorificSuffix() {
 		return honorificSuffix;
 	}
@@ -379,11 +426,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The user's suffix (e.g., II, Jr., PhD, etc.).")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String honorificSuffix;
 
-	@Schema(description = "The identifier of the resource.")
+	@Schema(description = "The user's ID.")
 	public Long getId() {
 		return id;
 	}
@@ -405,11 +452,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The user's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema(description = "A relative URL to profile image.")
+	@Schema(description = "A relative URL to the user's profile image.")
 	public String getImage() {
 		return image;
 	}
@@ -433,11 +480,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A relative URL to the user's profile image.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String image;
 
-	@Schema(description = "The UserAccount job title.")
+	@Schema(description = "The user's job title.")
 	public String getJobTitle() {
 		return jobTitle;
 	}
@@ -461,11 +508,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@GraphQLField(description = "The user's job title.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String jobTitle;
 
-	@Schema(description = "A list of keywords describing the UserAccount.")
+	@Schema(description = "A list of keywords describing the user.")
 	public String[] getKeywords() {
 		return keywords;
 	}
@@ -489,11 +536,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of keywords describing the user.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String[] keywords;
 
-	@Schema(description = "The full name of the UserAccount.")
+	@Schema(description = "The user's full name.")
 	public String getName() {
 		return name;
 	}
@@ -515,11 +562,12 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The user's full name.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String name;
 
-	@Schema(description = "A list of Organizations the UserAccount belongs to.")
+	@Schema(description = "A list of the user's organizations.")
+	@Valid
 	public OrganizationBrief[] getOrganizationBriefs() {
 		return organizationBriefs;
 	}
@@ -544,11 +592,11 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of the user's organizations.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected OrganizationBrief[] organizationBriefs;
 
-	@Schema(description = "A relative URL to the profile of the UserAccount.")
+	@Schema(description = "A relative URL to the user's profile.")
 	public String getProfileURL() {
 		return profileURL;
 	}
@@ -572,11 +620,12 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A relative URL to the user's profile.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String profileURL;
 
-	@Schema(description = "A list of Roles the UserAccount has.")
+	@Schema(description = "A list of the user's roles.")
+	@Valid
 	public RoleBrief[] getRoleBriefs() {
 		return roleBriefs;
 	}
@@ -600,11 +649,12 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of the user's roles.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected RoleBrief[] roleBriefs;
 
-	@Schema(description = "A list of sites the UserAccount belongs to.")
+	@Schema(description = "A list of the user's sites.")
+	@Valid
 	public SiteBrief[] getSiteBriefs() {
 		return siteBriefs;
 	}
@@ -628,9 +678,42 @@ public class UserAccount {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of the user's sites.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected SiteBrief[] siteBriefs;
+
+	@Schema(description = "The user's contact information.")
+	@Valid
+	public UserAccountContactInformation getUserAccountContactInformation() {
+		return userAccountContactInformation;
+	}
+
+	public void setUserAccountContactInformation(
+		UserAccountContactInformation userAccountContactInformation) {
+
+		this.userAccountContactInformation = userAccountContactInformation;
+	}
+
+	@JsonIgnore
+	public void setUserAccountContactInformation(
+		UnsafeSupplier<UserAccountContactInformation, Exception>
+			userAccountContactInformationUnsafeSupplier) {
+
+		try {
+			userAccountContactInformation =
+				userAccountContactInformationUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The user's contact information.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected UserAccountContactInformation userAccountContactInformation;
 
 	@Override
 	public boolean equals(Object object) {
@@ -662,12 +745,22 @@ public class UserAccount {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (actions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(actions));
+		}
+
 		if (additionalName != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"additionalName\":");
+			sb.append("\"additionalName\": ");
 
 			sb.append("\"");
 
@@ -681,7 +774,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"alternateName\":");
+			sb.append("\"alternateName\": ");
 
 			sb.append("\"");
 
@@ -695,7 +788,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"birthDate\":");
+			sb.append("\"birthDate\": ");
 
 			sb.append("\"");
 
@@ -704,14 +797,24 @@ public class UserAccount {
 			sb.append("\"");
 		}
 
-		if (contactInformation != null) {
+		if (customFields != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"contactInformation\":");
+			sb.append("\"customFields\": ");
 
-			sb.append(String.valueOf(contactInformation));
+			sb.append("[");
+
+			for (int i = 0; i < customFields.length; i++) {
+				sb.append(String.valueOf(customFields[i]));
+
+				if ((i + 1) < customFields.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (dashboardURL != null) {
@@ -719,7 +822,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"dashboardURL\":");
+			sb.append("\"dashboardURL\": ");
 
 			sb.append("\"");
 
@@ -733,7 +836,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateCreated\":");
+			sb.append("\"dateCreated\": ");
 
 			sb.append("\"");
 
@@ -747,7 +850,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"dateModified\":");
+			sb.append("\"dateModified\": ");
 
 			sb.append("\"");
 
@@ -761,7 +864,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"emailAddress\":");
+			sb.append("\"emailAddress\": ");
 
 			sb.append("\"");
 
@@ -775,7 +878,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"familyName\":");
+			sb.append("\"familyName\": ");
 
 			sb.append("\"");
 
@@ -789,7 +892,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"givenName\":");
+			sb.append("\"givenName\": ");
 
 			sb.append("\"");
 
@@ -803,7 +906,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"honorificPrefix\":");
+			sb.append("\"honorificPrefix\": ");
 
 			sb.append("\"");
 
@@ -817,7 +920,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"honorificSuffix\":");
+			sb.append("\"honorificSuffix\": ");
 
 			sb.append("\"");
 
@@ -831,7 +934,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\":");
+			sb.append("\"id\": ");
 
 			sb.append(id);
 		}
@@ -841,7 +944,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"image\":");
+			sb.append("\"image\": ");
 
 			sb.append("\"");
 
@@ -855,7 +958,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"jobTitle\":");
+			sb.append("\"jobTitle\": ");
 
 			sb.append("\"");
 
@@ -869,7 +972,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"keywords\":");
+			sb.append("\"keywords\": ");
 
 			sb.append("[");
 
@@ -893,7 +996,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"name\":");
+			sb.append("\"name\": ");
 
 			sb.append("\"");
 
@@ -907,7 +1010,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"organizationBriefs\":");
+			sb.append("\"organizationBriefs\": ");
 
 			sb.append("[");
 
@@ -927,7 +1030,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"profileURL\":");
+			sb.append("\"profileURL\": ");
 
 			sb.append("\"");
 
@@ -941,7 +1044,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"roleBriefs\":");
+			sb.append("\"roleBriefs\": ");
 
 			sb.append("[");
 
@@ -961,7 +1064,7 @@ public class UserAccount {
 				sb.append(", ");
 			}
 
-			sb.append("\"siteBriefs\":");
+			sb.append("\"siteBriefs\": ");
 
 			sb.append("[");
 
@@ -976,15 +1079,103 @@ public class UserAccount {
 			sb.append("]");
 		}
 
+		if (userAccountContactInformation != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"userAccountContactInformation\": ");
+
+			sb.append(String.valueOf(userAccountContactInformation));
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
+	@Schema(
+		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.UserAccount",
+		name = "x-class-name"
+	)
+	public String xClassName;
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			if (_isArray(value)) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

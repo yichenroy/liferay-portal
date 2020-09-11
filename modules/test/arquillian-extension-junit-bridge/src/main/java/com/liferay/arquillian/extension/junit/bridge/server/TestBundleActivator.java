@@ -15,27 +15,18 @@
 package com.liferay.arquillian.extension.junit.bridge.server;
 
 import com.liferay.arquillian.extension.junit.bridge.constants.Headers;
-import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringUtil;
+import com.liferay.arquillian.extension.junit.bridge.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.lang.annotation.Annotation;
-
 import java.net.URL;
 
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runners.model.FrameworkField;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.TestClass;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -57,9 +48,9 @@ public class TestBundleActivator implements BundleActivator {
 		try (InputStream inputStream = url.openStream()) {
 			manifest.read(inputStream);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new IllegalArgumentException(
-				"Unable to read test manifest", ioe);
+				"Unable to read test manifest", ioException);
 		}
 
 		Attributes attributes = manifest.getMainAttributes();
@@ -69,43 +60,21 @@ public class TestBundleActivator implements BundleActivator {
 		int reportServerPort = Integer.parseInt(
 			attributes.getValue(Headers.TEST_BRIDGE_REPORT_SERVER_PORT));
 
-		List<String> filterMethodNames = StringUtil.split(
-			attributes.getValue(Headers.TEST_BRIDGE_FILTERED_METHOD_NAMES),
-			CharPool.COMMA);
+		Map<String, List<String>> filteredMethodNamesMap = new HashMap<>();
 
-		TestClass testClass = new TestClass(
-			testBundle.loadClass(
-				attributes.getValue(Headers.TEST_BRIDGE_CLASS_NAME))) {
+		for (String filteredMethodNamesEntry :
+				StringUtil.split(
+					attributes.getValue(
+						Headers.TEST_BRIDGE_FILTERED_METHOD_NAMES),
+					';')) {
 
-			@Override
-			protected void scanAnnotatedMembers(
-				Map<Class<? extends Annotation>, List<FrameworkMethod>>
-					frameworkMethodsMap,
-				Map<Class<? extends Annotation>, List<FrameworkField>>
-					frameworkFieldsMap) {
+			int index = filteredMethodNamesEntry.indexOf(':');
 
-				super.scanAnnotatedMembers(
-					frameworkMethodsMap, frameworkFieldsMap);
-
-				List<FrameworkMethod> testFrameworkMethods =
-					frameworkMethodsMap.get(Test.class);
-
-				List<FrameworkMethod> ignoreFrameworkMethods =
-					frameworkMethodsMap.get(Ignore.class);
-
-				if (ignoreFrameworkMethods != null) {
-					testFrameworkMethods.removeAll(ignoreFrameworkMethods);
-				}
-
-				testFrameworkMethods.removeIf(
-					frameworkMethod -> filterMethodNames.contains(
-						frameworkMethod.getName()));
-
-				testFrameworkMethods.sort(
-					Comparator.comparing(FrameworkMethod::getName));
-			}
-
-		};
+			filteredMethodNamesMap.put(
+				filteredMethodNamesEntry.substring(0, index),
+				StringUtil.split(
+					filteredMethodNamesEntry.substring(index + 1), ','));
+		}
 
 		long passCode = Long.parseLong(
 			attributes.getValue(Headers.TEST_BRIDGE_PASS_CODE));
@@ -116,7 +85,7 @@ public class TestBundleActivator implements BundleActivator {
 
 		systemBundleContext.addBundleListener(
 			new TestBundleListener(
-				systemBundleContext, testBundle, testClass,
+				systemBundleContext, testBundle, filteredMethodNamesMap,
 				reportServerHostName, reportServerPort, passCode));
 	}
 

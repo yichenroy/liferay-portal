@@ -14,8 +14,6 @@
 
 package com.liferay.calendar.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -33,7 +31,6 @@ import java.util.Map;
  * @see CalendarNotificationTemplate
  * @generated
  */
-@ProviderType
 public class CalendarNotificationTemplateWrapper
 	extends BaseModelWrapper<CalendarNotificationTemplate>
 	implements CalendarNotificationTemplate,
@@ -49,6 +46,7 @@ public class CalendarNotificationTemplateWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("uuid", getUuid());
 		attributes.put(
 			"calendarNotificationTemplateId",
@@ -74,6 +72,12 @@ public class CalendarNotificationTemplateWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -246,6 +250,16 @@ public class CalendarNotificationTemplateWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this calendar notification template.
+	 *
+	 * @return the mvcc version of this calendar notification template
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -433,6 +447,16 @@ public class CalendarNotificationTemplateWrapper
 	}
 
 	/**
+	 * Sets the mvcc version of this calendar notification template.
+	 *
+	 * @param mvccVersion the mvcc version of this calendar notification template
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
+	}
+
+	/**
 	 * Sets the notification template type of this calendar notification template.
 	 *
 	 * @param notificationTemplateType the notification template type of this calendar notification template
@@ -485,9 +509,10 @@ public class CalendarNotificationTemplateWrapper
 	@Override
 	public void setTypeSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties
-			notificationTypeSettingsProperties) {
+			notificationTypeSettingsUnicodeProperties) {
 
-		model.setTypeSettingsProperties(notificationTypeSettingsProperties);
+		model.setTypeSettingsProperties(
+			notificationTypeSettingsUnicodeProperties);
 	}
 
 	/**

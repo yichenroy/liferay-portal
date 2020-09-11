@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
@@ -77,13 +78,15 @@ public class SocialActivityInterpreterLocalServiceImpl
 
 		Registry registry = RegistryUtil.getRegistry();
 
-		Map<String, Object> properties = new HashMap<>();
+		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+			"javax.portlet.name",
+			() -> {
+				SocialActivityInterpreterImpl socialActivityInterpreterImpl =
+					(SocialActivityInterpreterImpl)activityInterpreter;
 
-		SocialActivityInterpreterImpl activityInterpreterImpl =
-			(SocialActivityInterpreterImpl)activityInterpreter;
-
-		properties.put(
-			"javax.portlet.name", activityInterpreterImpl.getPortletId());
+				return socialActivityInterpreterImpl.getPortletId();
+			}
+		).build();
 
 		ServiceRegistration<SocialActivityInterpreter> serviceRegistration =
 			registry.registerService(
@@ -162,22 +165,23 @@ public class SocialActivityInterpreterLocalServiceImpl
 		String selector, SocialActivity activity,
 		ServiceContext serviceContext) {
 
-		HttpServletRequest request = serviceContext.getRequest();
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
 
-		if (request == null) {
+		if (httpServletRequest == null) {
 			return null;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		try {
 			if (activity.getUserId() == themeDisplay.getDefaultUserId()) {
 				return null;
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		if (activity.getMirrorActivityId() > 0) {
@@ -187,7 +191,7 @@ public class SocialActivityInterpreterLocalServiceImpl
 				mirrorActivity = socialActivityLocalService.getActivity(
 					activity.getMirrorActivityId());
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 
 			if (mirrorActivity != null) {
@@ -207,16 +211,17 @@ public class SocialActivityInterpreterLocalServiceImpl
 		for (SocialActivityInterpreter activityInterpreter :
 				activityInterpreters) {
 
-			SocialActivityInterpreterImpl activityInterpreterImpl =
+			SocialActivityInterpreterImpl socialActivityInterpreterImpl =
 				(SocialActivityInterpreterImpl)activityInterpreter;
 
-			if (activityInterpreterImpl.hasClassName(className)) {
+			if (socialActivityInterpreterImpl.hasClassName(className)) {
 				SocialActivityFeedEntry activityFeedEntry =
-					activityInterpreterImpl.interpret(activity, serviceContext);
+					socialActivityInterpreterImpl.interpret(
+						activity, serviceContext);
 
 				if (activityFeedEntry != null) {
 					activityFeedEntry.setPortletId(
-						activityInterpreterImpl.getPortletId());
+						socialActivityInterpreterImpl.getPortletId());
 
 					return activityFeedEntry;
 				}
@@ -231,22 +236,23 @@ public class SocialActivityInterpreterLocalServiceImpl
 		String selector, SocialActivitySet activitySet,
 		ServiceContext serviceContext) {
 
-		HttpServletRequest request = serviceContext.getRequest();
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
 
-		if (request == null) {
+		if (httpServletRequest == null) {
 			return null;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		try {
 			if (activitySet.getUserId() == themeDisplay.getDefaultUserId()) {
 				return null;
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		List<SocialActivityInterpreter> activityInterpreters =
@@ -262,17 +268,17 @@ public class SocialActivityInterpreterLocalServiceImpl
 		for (SocialActivityInterpreter activityInterpreter :
 				activityInterpreters) {
 
-			SocialActivityInterpreterImpl activityInterpreterImpl =
+			SocialActivityInterpreterImpl socialActivityInterpreterImpl =
 				(SocialActivityInterpreterImpl)activityInterpreter;
 
-			if (activityInterpreterImpl.hasClassName(className)) {
+			if (socialActivityInterpreterImpl.hasClassName(className)) {
 				SocialActivityFeedEntry activityFeedEntry =
-					activityInterpreterImpl.interpret(
+					socialActivityInterpreterImpl.interpret(
 						activitySet, serviceContext);
 
 				if (activityFeedEntry != null) {
 					activityFeedEntry.setPortletId(
-						activityInterpreterImpl.getPortletId());
+						socialActivityInterpreterImpl.getPortletId());
 
 					return activityFeedEntry;
 				}
@@ -304,11 +310,11 @@ public class SocialActivityInterpreterLocalServiceImpl
 			for (SocialActivityInterpreter activityInterpreter :
 					activityInterpreters) {
 
-				SocialActivityInterpreterImpl activityInterpreterImpl =
+				SocialActivityInterpreterImpl socialActivityInterpreterImpl =
 					(SocialActivityInterpreterImpl)activityInterpreter;
 
-				if (activityInterpreterImpl.hasClassName(className)) {
-					activityInterpreterImpl.updateActivitySet(activityId);
+				if (socialActivityInterpreterImpl.hasClassName(className)) {
+					socialActivityInterpreterImpl.updateActivitySet(activityId);
 
 					return;
 				}

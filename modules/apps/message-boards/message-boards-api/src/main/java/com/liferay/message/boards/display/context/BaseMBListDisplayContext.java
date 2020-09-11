@@ -31,9 +31,12 @@ public class BaseMBListDisplayContext
 
 	public BaseMBListDisplayContext(
 		UUID uuid, MBListDisplayContext parentDisplayContext,
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		super(uuid, parentDisplayContext, request, response);
+		super(
+			uuid, parentDisplayContext, httpServletRequest,
+			httpServletResponse);
 	}
 
 	@Override
@@ -67,17 +70,6 @@ public class BaseMBListDisplayContext
 		throws PortalException {
 
 		parentDisplayContext.populateCategoriesResultsAndTotal(searchContainer);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void populateResultsAndTotal(SearchContainer searchContainer)
-		throws PortalException {
-
-		parentDisplayContext.populateResultsAndTotal(searchContainer);
 	}
 
 	@Override

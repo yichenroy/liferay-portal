@@ -14,8 +14,6 @@
 
 package com.liferay.asset.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
@@ -24,7 +22,6 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
  * @generated
  */
 @Deprecated
-@ProviderType
 public class AssetCategoryPropertyFinderUtil {
 
 	public static int countByG_K(long groupId, String key) {

@@ -5,7 +5,38 @@ import java.util.regex.Matcher
 import org.gradle.util.GUtil
 
 buildscript {
-	apply from: file("../modules/build-buildscript.gradle"), to: buildscript
+	dependencies {
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.defaults", version: "6.1.371"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.maven.plugin.builder", version: "1.2.3"
+		classpath group: "de.undercouch", name: "gradle-download-task", version: "3.3.0"
+		classpath group: "gradle.plugin.org.ysb33r.gradle", name: "gradletest", version: "1.1"
+		classpath group: "xalan", name: "xalan", version: "2.7.2"
+	}
+
+	repositories {
+		if (!Boolean.getBoolean("maven.local.ignore")) {
+			mavenLocal()
+
+			File tmpMavenRepositoryDir = null
+
+			if (hasProperty("tmp.maven.repository.dir")) {
+				tmpMavenRepositoryDir = file(properties["tmp.maven.repository.dir"])
+			}
+			else {
+				tmpMavenRepositoryDir = file("../.m2-tmp")
+			}
+
+			if (tmpMavenRepositoryDir.exists()) {
+				maven {
+					url tmpMavenRepositoryDir
+				}
+			}
+		}
+
+		maven {
+			url System.properties["repository.url"] ?: "https://repository-cdn.liferay.com/nexus/content/groups/public"
+		}
+	}
 }
 
 apply plugin: "com.liferay.poshi.runner"
@@ -17,7 +48,6 @@ poshiRunner {
 	}
 
 	openCVVersion = "2.4.10-0.10"
-	version = "1.0.222"
 }
 
 task updateGradleCache
@@ -33,22 +63,31 @@ dependencies {
 		String testBaseDirName = poshiRunnerProperties.getProperty("test.base.dir.name")
 
 		if (testBaseDirName) {
-			Matcher matcher = testBaseDirName =~ /.*\/(?<portalVersion>\d+(\.\d+)*).*/
+			Matcher matcher = testBaseDirName =~ /.*liferay-qa-portal-legacy-ee.*\/(?<portalVersion>\d+(\.\d+)*).*/
 
 			if (matcher.find()) {
 				String portalVersion = matcher.group("portalVersion")
 
 				if (portalVersion.startsWith("6.1")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-ee-6.1.x", version: "20190325111923-20a286f"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-ee-6.1.x", version: "20200824-057caac"
 				}
 				else if (portalVersion.startsWith("6.2")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-ee-6.2.x", version: "20190325111857-3731418"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-ee-6.2.x", version: "20200824-6aa56070"
 				}
 				else if (portalVersion.startsWith("7.0")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.0.x", version: "20190325-004214c"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.0.x", version: "20200824-b1b39de"
 				}
 				else if (portalVersion.startsWith("7.1")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.1.x", version: "20190325-f1ecc02"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.1.x", version: "20200824-16a6140"
+				}
+				else if (portalVersion.startsWith("7.2")) {
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.2.x", version: "20200824-e6abd1a"
+				}
+				else if (portalVersion.startsWith("7.3")) {
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-master", version: "20200824-fae5c40"
+				}
+				else if (portalVersion.startsWith("7.4")) {
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-master", version: "20200824-fae5c40"
 				}
 			}
 		}
@@ -63,7 +102,19 @@ dependencies {
 }
 
 poshiRunnerResources {
-	baseNameDir "portal", "test/functional/com/liferay/portalweb"
+	baseName "portal"
+
+	dirs = ["test/functional/com/liferay/portalweb"]
+
+	Properties testProperties = GUtil.loadProperties(file("../test.properties"))
+
+	String testSubrepoDirs = testProperties.getProperty("test.subrepo.dirs")
+
+	if ((testSubrepoDirs != null) && !testSubrepoDirs.isEmpty()) {
+		testSubrepoDirs = testSubrepoDirs.replace("\${project.dir}", "..");
+
+		dirs.addAll(testSubrepoDirs.split(","))
+	}
 }
 
 repositories {

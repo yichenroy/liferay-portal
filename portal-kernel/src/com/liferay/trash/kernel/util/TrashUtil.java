@@ -14,8 +14,6 @@
 
 package com.liferay.trash.kernel.util;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.TrashedModel;
@@ -39,28 +37,27 @@ import javax.servlet.http.HttpServletRequest;
  * @deprecated As of Judson (7.1.x)
  */
 @Deprecated
-@ProviderType
 public class TrashUtil {
 
 	public static void addBaseModelBreadcrumbEntries(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			LiferayPortletResponse liferayPortletResponse, String className,
 			long classPK, PortletURL containerModelURL)
 		throws PortalException, PortletException {
 
 		getTrash().addBaseModelBreadcrumbEntries(
-			request, liferayPortletResponse, className, classPK,
+			httpServletRequest, liferayPortletResponse, className, classPK,
 			containerModelURL);
 	}
 
 	public static void addContainerModelBreadcrumbEntries(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			LiferayPortletResponse liferayPortletResponse, String className,
 			long classPK, PortletURL containerModelURL)
 		throws PortalException, PortletException {
 
 		getTrash().addContainerModelBreadcrumbEntries(
-			request, liferayPortletResponse, className, classPK,
+			httpServletRequest, liferayPortletResponse, className, classPK,
 			containerModelURL);
 	}
 
@@ -150,23 +147,25 @@ public class TrashUtil {
 	}
 
 	public static PortletURL getViewContentURL(
-			HttpServletRequest request, long trashEntryId)
+			HttpServletRequest httpServletRequest, long trashEntryId)
 		throws PortalException {
 
-		return getTrash().getViewContentURL(request, trashEntryId);
+		return getTrash().getViewContentURL(httpServletRequest, trashEntryId);
 	}
 
 	public static PortletURL getViewContentURL(
-			HttpServletRequest request, String className, long classPK)
+			HttpServletRequest httpServletRequest, String className,
+			long classPK)
 		throws PortalException {
 
-		return getTrash().getViewContentURL(request, className, classPK);
+		return getTrash().getViewContentURL(
+			httpServletRequest, className, classPK);
 	}
 
-	public static PortletURL getViewURL(HttpServletRequest request)
+	public static PortletURL getViewURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		return getTrash().getViewURL(request);
+		return getTrash().getViewURL(httpServletRequest);
 	}
 
 	public static boolean isInTrash(String className, long classPK)

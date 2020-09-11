@@ -14,8 +14,6 @@
 
 package com.liferay.digital.signature.internal.model.field.builder;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.digital.signature.internal.model.field.DSListItemImpl;
 import com.liferay.digital.signature.internal.model.field.ListDSFieldImpl;
 import com.liferay.digital.signature.model.field.DSField;
@@ -29,7 +27,6 @@ import java.util.List;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class ListDSFieldBuilderImpl
 	extends UserEntryDSFieldBuilderImpl<ListDSField>
 	implements ListDSFieldBuilder {

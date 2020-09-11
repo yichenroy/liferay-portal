@@ -18,14 +18,22 @@
 
 <%
 JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new JournalEditDDMTemplateDisplayContext(request);
+
+JournalDDMTemplateHelper journalDDMTemplateHelper = (JournalDDMTemplateHelper)request.getAttribute(JournalDDMTemplateHelper.class.getName());
 %>
 
 <aui:input name="scriptContent" type="hidden" value="<%= journalEditDDMTemplateDisplayContext.getScript() %>" />
 
 <div id="templateScriptContainer">
-	<div class="form-group lfr-template-editor-container row">
+	<clay:row
+		cssClass="form-group lfr-template-editor-container"
+	>
 		<c:if test="<%= journalEditDDMTemplateDisplayContext.isAutocompleteEnabled() %>">
-			<div class="col-md-3 lfr-template-palette-container" id="<portlet:namespace />templatePaletteContainer">
+			<clay:col
+				cssClass="lfr-template-palette-container"
+				id='<%= liferayPortletResponse.getNamespace() + "templatePaletteContainer" %>'
+				md="3"
+			>
 				<div class="search" id="<portlet:namespace />paletteSearchContainer">
 					<input class="form-control mb-3" id="<portlet:namespace />paletteSearch" placeholder="<liferay-ui:message key="search" />" type="text" />
 				</div>
@@ -54,7 +62,7 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 										%>
 
 											<li class="palette-item-container">
-												<span class="palette-item" data-content="<%= HtmlUtil.escapeAttribute(_getDataContent(templateVariableDefinition, journalEditDDMTemplateDisplayContext.getLanguage())) %>" data-title="<%= HtmlUtil.escapeAttribute(_getPaletteItemTitle(request, journalEditDDMTemplateDisplayContext.getTemplateHandlerResourceBundle(), templateVariableDefinition)) %>">
+												<span class="palette-item" data-content="<%= HtmlUtil.escapeAttribute(journalDDMTemplateHelper.getDataContent(templateVariableDefinition, journalEditDDMTemplateDisplayContext.getLanguage())) %>" data-title="<%= HtmlUtil.escapeAttribute(journalDDMTemplateHelper.getPaletteItemTitle(request, journalEditDDMTemplateDisplayContext.getTemplateHandlerResourceBundle(), templateVariableDefinition)) %>">
 													<%= HtmlUtil.escape(LanguageUtil.get(request, journalEditDDMTemplateDisplayContext.getTemplateHandlerResourceBundle(), templateVariableDefinition.getLabel())) %>
 
 													<c:if test="<%= templateVariableDefinition.isCollection() || templateVariableDefinition.isRepeatable() %>">*</c:if>
@@ -75,7 +83,7 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 						</liferay-frontend:fieldset-group>
 					</div>
 				</div>
-			</div>
+			</clay:col>
 		</c:if>
 
 		<%
@@ -87,19 +95,38 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 		%>
 
 		<div class="lfr-editor-container <%= editorContainerClass %>" id="<portlet:namespace />editorContainer">
+
+			<%
+			DDMTemplate ddmTemplate = journalEditDDMTemplateDisplayContext.getDDMTemplate();
+			String[] templateLanguageTypes = journalEditDDMTemplateDisplayContext.getTemplateLanguageTypes();
+			%>
+
+			<clay:alert
+				cssClass='<%= ((ddmTemplate == null) && (templateLanguageTypes.length > 1)) || ((ddmTemplate != null) && !Objects.equals(ddmTemplate.getLanguage(), journalEditDDMTemplateDisplayContext.getLanguage())) ? "mb-3" : "hide mb-3" %>'
+				dismissible="<%= true %>"
+				displayType="warning"
+				id="languageMessageContainer"
+				message="changing-the-language-does-not-automatically-translate-the-existing-template-script"
+			/>
+
+			<clay:alert
+				cssClass='<%= journalEditDDMTemplateDisplayContext.isCacheable() ? "mb-3" : "hide mb-3" %>'
+				dismissible="<%= true %>"
+				displayType="warning"
+				id="cacheableMessageContainer"
+				message="this-template-is-marked-as-cacheable.-avoid-using-code-that-uses-request-handling,-the-cms-query-api,-taglibs,-or-other-dynamic-features.-uncheck-the-cacheable-property-if-dynamic-behavior-is-needed"
+			/>
+
 			<div class="lfr-rich-editor" id="<portlet:namespace />richEditor"></div>
 
 			<aui:input label="script-file" name="script" type="file" wrapperCssClass="mt-4" />
 		</div>
-	</div>
+	</clay:row>
 </div>
 
 <aui:script use="aui-ace-autocomplete-freemarker,aui-ace-autocomplete-plugin,aui-ace-autocomplete-velocity,aui-toggler,aui-tooltip,autocomplete-base,autocomplete-filters,event-mouseenter,event-outside,liferay-util-window,resize,transition">
 	var ACPlugin = A.Plugin.AceAutoComplete;
-	var AObject = A.Object;
 	var Util = Liferay.Util;
-
-	var STR_EMPTY = '';
 
 	var STR_HEIGHT = 'height';
 
@@ -122,49 +149,49 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 	var richEditor;
 
 	<c:if test="<%= journalEditDDMTemplateDisplayContext.isAutocompleteEnabled() %>">
-		var paletteContainer = panelScriptContainer.one('#<portlet:namespace />templatePaletteContainer');
-		var paletteDataContainer = panelScriptContainer.one('#<portlet:namespace />paletteDataContainer');
+		var paletteContainer = panelScriptContainer.one(
+			'#<portlet:namespace />templatePaletteContainer'
+		);
+		var paletteDataContainer = panelScriptContainer.one(
+			'#<portlet:namespace />paletteDataContainer'
+		);
 
 		function createLiveSearch() {
-			var PaletteSearch = A.Component.create(
-				{
-					AUGMENTS: [A.AutoCompleteBase],
+			var PaletteSearch = A.Component.create({
+				AUGMENTS: [A.AutoCompleteBase],
 
-					EXTENDS: A.Base,
+				EXTENDS: A.Base,
 
-					NAME: 'searchpalette',
+				NAME: 'searchpalette',
 
-					prototype: {
-						initializer: function() {
-							var instance = this;
+				prototype: {
+					initializer: function () {
+						var instance = this;
 
-							instance._bindUIACBase();
-							instance._syncUIACBase();
-						}
-					}
-				}
-			);
+						instance._bindUIACBase();
+						instance._syncUIACBase();
+					},
+				},
+			});
 
-			var getItems = function() {
+			var getItems = function () {
 				var results = [];
 
-				paletteItems.each(
-					function(item, index) {
-						results.push(
-							{
-								data: item.text().trim(),
-								node: item.ancestor()
-							}
-						);
-					}
-				);
+				paletteItems.each(function (item, index) {
+					results.push({
+						data: item.text().trim(),
+						node: item.ancestor(),
+					});
+				});
 
 				return results;
 			};
 
-			var getNoResultsNode = function() {
+			var getNoResultsNode = function () {
 				if (!noResultsNode) {
-					noResultsNode = A.Node.create('<div class="alert"><%= UnicodeLanguageUtil.get(request, "there-are-no-results") %></div>');
+					noResultsNode = A.Node.create(
+						'<div class="alert"><%= UnicodeLanguageUtil.get(request, "there-are-no-results") %></div>'
+					);
 				}
 
 				return noResultsNode;
@@ -175,56 +202,45 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 
 			var noResultsNode;
 
-			var paletteSearch = new PaletteSearch(
-				{
-					inputNode: '#<portlet:namespace />paletteSearch',
-					minQueryLength: 0,
-					nodes: '.palette-item-container',
-					resultFilters: 'phraseMatch',
-					resultTextLocator: 'data',
-					source: getItems()
-				}
-			);
+			var paletteSearch = new PaletteSearch({
+				inputNode: '#<portlet:namespace />paletteSearch',
+				minQueryLength: 0,
+				nodes: '.palette-item-container',
+				resultFilters: 'phraseMatch',
+				resultTextLocator: 'data',
+				source: getItems(),
+			});
 
-			paletteSearch.on(
-				'results',
-				function(event) {
-					paletteItems.each(
-						function(item, index) {
-							item.ancestor().addClass('hide');
-						}
-					);
+			paletteSearch.on('results', function (event) {
+				paletteItems.each(function (item, index) {
+					item.ancestor().addClass('hide');
+				});
 
-					event.results.forEach(
-						function(item, index) {
-							item.raw.node.removeClass('hide');
-						}
-					);
+				event.results.forEach(function (item, index) {
+					item.raw.node.removeClass('hide');
+				});
 
-					var foundVisibleSection;
+				var foundVisibleSection;
 
-					paletteSectionsNode.each(
-						function(item, index) {
-							var visibleItem = item.one('.palette-item-container:not(.hide)');
+				paletteSectionsNode.each(function (item, index) {
+					var visibleItem = item.one('.palette-item-container:not(.hide)');
 
-							if (visibleItem) {
-								foundVisibleSection = true;
-							}
-
-							item.toggleClass('hide', !visibleItem);
-						}
-					);
-
-					var noResultsNode = getNoResultsNode();
-
-					if (foundVisibleSection) {
-						noResultsNode.remove();
+					if (visibleItem) {
+						foundVisibleSection = true;
 					}
-					else {
-						paletteDataContainer.appendChild(noResultsNode);
-					}
+
+					item.toggleClass('hide', !visibleItem);
+				});
+
+				var noResultsNode = getNoResultsNode();
+
+				if (foundVisibleSection) {
+					noResultsNode.remove();
 				}
-			);
+				else {
+					paletteDataContainer.appendChild(noResultsNode);
+				}
+			});
 		}
 
 		function onPaletteItemChosen(event) {
@@ -243,18 +259,15 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 			var cursorPos;
 			var processed;
 
-			AObject.each(
-				fragments,
-				function(item, index) {
-					if (processed) {
-						cursorPos = editor.getCursorPosition();
-					}
-
-					processed = true;
-
-					editor.insert(item);
+			A.Object.each(fragments, function (item, index) {
+				if (processed) {
+					cursorPos = editor.getCursorPosition();
 				}
-			);
+
+				processed = true;
+
+				editor.insert(item);
+			});
 
 			if (cursorPos) {
 				editor.moveCursorToPosition(cursorPos);
@@ -272,7 +285,9 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 		return content;
 	}
 
-	var paletteSearchContainer = panelScriptContainer.one('#<portlet:namespace />paletteSearchContainer');
+	var paletteSearchContainer = panelScriptContainer.one(
+		'#<portlet:namespace />paletteSearchContainer'
+	);
 
 	function resizeEditor(event) {
 		var info = event.info;
@@ -281,7 +296,10 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 		richEditor.set('width', info.offsetWidth);
 
 		if (!Util.isPhone()) {
-			paletteDataContainer.setStyle(STR_HEIGHT, info.offsetHeight - paletteSearchContainer.height());
+			paletteDataContainer.setStyle(
+				STR_HEIGHT,
+				info.offsetHeight - paletteSearchContainer.height()
+			);
 		}
 	}
 
@@ -302,24 +320,19 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 		</c:choose>
 
 		if (AutoComplete) {
-			var processor = new AutoComplete(
-				{
-					variables: <%= journalEditDDMTemplateDisplayContext.getAutocompleteJSON() %>
-				}
-			);
+			var processor = new AutoComplete({
+				variables: <%= journalEditDDMTemplateDisplayContext.getAutocompleteJSON() %>,
+			});
 
 			if (processor) {
 				richEditor.unplug(ACPlugin);
 
-				richEditor.plug(
-					ACPlugin,
-					{
-						processor: processor,
-						render: true,
-						visible: false,
-						zIndex: 10000
-					}
-				);
+				richEditor.plug(ACPlugin, {
+					processor: processor,
+					render: true,
+					visible: false,
+					zIndex: 10000,
+				});
 			}
 			else {
 				richEditor.unplug(ACPlugin);
@@ -327,81 +340,68 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 		}
 	}
 
-	<%
-	String langType = ParamUtil.getString(request, "langType");
-	%>
-
 	var editorContentElement = A.one('#<portlet:namespace />scriptContent');
 
 	var editorNode = A.one('#<portlet:namespace />richEditor');
 
 	A.on(
 		'domready',
-		function(event) {
-			richEditor = new A.AceEditor(
-				{
-					boundingBox: editorNode,
-					height: 400,
-					mode: '<%= EditorModeUtil.getEditorMode(langType) %>',
-					width: '100%'
-				}
-			).render();
+		function (event) {
+			richEditor = new A.AceEditor({
+				boundingBox: editorNode,
+				height: 400,
+				mode: '<%= journalEditDDMTemplateDisplayContext.getEditorMode() %>',
+				width: '100%',
+			}).render();
 
-			new A.Resize(
-				{
-					handles: ['br'],
-					node: editorNode,
-					on: {
-						resize: resizeEditor
-					}
-				}
-			);
+			new A.Resize({
+				handles: ['br'],
+				node: editorNode,
+				on: {
+					resize: resizeEditor,
+				},
+			});
 
 			if (editorContentElement) {
 				setEditorContent(editorContentElement.val());
 			}
 
-			Liferay.on(
-				'<portlet:namespace />saveTemplate',
-				function(event) {
-					editorContentElement.val(getEditorContent());
-				}
-			);
+			Liferay.on('<portlet:namespace />saveTemplate', function (event) {
+				editorContentElement.val(getEditorContent());
+			});
 
-			selectLanguageNode.on(
-				'change',
-				function(event) {
-					Liferay.fire('<portlet:namespace />refreshEditor');
-				}
-			);
+			selectLanguageNode.on('change', function (event) {
+				Liferay.fire('<portlet:namespace />refreshEditor');
+			});
 
 			setEditorPlugins();
 
 			<c:if test="<%= journalEditDDMTemplateDisplayContext.isAutocompleteEnabled() %>">
-				paletteContainer.delegate('click', onPaletteItemChosen, '.palette-item');
-
-				new A.TogglerDelegate(
-					{
-						animated: true,
-						container: paletteDataContainer,
-						content: '.palette-item-content',
-						header: '.palette-item-header'
-					}
+				paletteContainer.delegate(
+					'click',
+					onPaletteItemChosen,
+					'.palette-item'
 				);
 
-				new A.TooltipDelegate(
-					{
-						align: {
-							points: [A.WidgetPositionAlign.LC, A.WidgetPositionAlign.RC]
-						},
-						duration: 0.5,
-						html: true,
-						position: 'right',
-						trigger: '#<portlet:namespace />templatePaletteContainer .palette-item',
-						visible: false,
-						zIndex: 6
-					}
-				);
+				new A.TogglerDelegate({
+					animated: true,
+					container: paletteDataContainer,
+					content: '.palette-item-content',
+					header: '.palette-item-header',
+				});
+
+				new A.TooltipDelegate({
+					align: {
+						points: [A.WidgetPositionAlign.LC, A.WidgetPositionAlign.RC],
+					},
+					duration: 0.5,
+					html: true,
+					position: 'right',
+					trigger:
+						'#<portlet:namespace />templatePaletteContainer .palette-item',
+					visible: false,
+					zIndex: 6,
+				});
 
 				createLiveSearch();
 			</c:if>
@@ -409,242 +409,29 @@ JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new 
 		'#<portlet:namespace />richEditor'
 	);
 
-	Liferay.on(
-		'<portlet:namespace />refreshEditor',
-		function(event) {
-			var form = A.one('#<portlet:namespace />fm');
+	Liferay.on('<portlet:namespace />refreshEditor', function (event) {
+		var form = A.one('#<portlet:namespace />fm');
 
-			<portlet:renderURL var="refreshDDMTemplateURL">
-				<portlet:param name="mvcPath" value="/edit_ddm_template.jsp" />
-			</portlet:renderURL>
+		<portlet:renderURL var="refreshDDMTemplateURL">
+			<portlet:param name="mvcPath" value="/edit_ddm_template.jsp" />
+		</portlet:renderURL>
 
-			form.attr('action', '<%= refreshDDMTemplateURL %>');
+		form.attr('action', '<%= refreshDDMTemplateURL %>');
 
-			if (richEditor.getEditor().getSession().getUndoManager().hasUndo()) {
-				Liferay.fire('<portlet:namespace />saveTemplate');
-			}
-			<c:if test="<%= journalEditDDMTemplateDisplayContext.getDDMTemplate() == null %>">
-				else {
-					editorContentElement.val(STR_EMPTY);
-				}
-			</c:if>
-
-			submitForm(form, null, null, false);
+		if (richEditor.getEditor().getSession().getUndoManager().hasUndo()) {
+			Liferay.fire('<portlet:namespace />saveTemplate');
 		}
+		<c:if test="<%= journalEditDDMTemplateDisplayContext.getDDMTemplate() == null %>">
+			else {
+				editorContentElement.val('');
+			}
+		</c:if>
+
+		submitForm(form, null, null, false);
+	});
+
+	Liferay.Util.toggleBoxes(
+		'<portlet:namespace />cacheable',
+		'cacheableMessageContainer'
 	);
 </aui:script>
-
-<%!
-private String _getAccessor(String accessor, String language) {
-	if (StringUtil.equalsIgnoreCase(language, "vm")) {
-		if (!accessor.contains(StringPool.OPEN_PARENTHESIS)) {
-			return accessor;
-		}
-
-		StringTokenizer st = new StringTokenizer(accessor, "(,");
-
-		StringBundler sb = new StringBundler(st.countTokens() * 2);
-
-		sb.append(st.nextToken());
-		sb.append(StringPool.OPEN_PARENTHESIS);
-
-		while (st.hasMoreTokens()) {
-			sb.append(StringPool.DOLLAR);
-			sb.append(st.nextToken());
-		}
-
-		accessor = sb.toString();
-	}
-
-	return accessor;
-}
-
-private String _getDataContent(TemplateVariableDefinition templateVariableDefinition, String language) {
-	String dataContent = StringPool.BLANK;
-
-	String dataType = templateVariableDefinition.getDataType();
-
-	if (templateVariableDefinition.isCollection()) {
-		TemplateVariableDefinition itemTemplateVariableDefinition = templateVariableDefinition.getItemTemplateVariableDefinition();
-
-		dataContent = _getListCode(templateVariableDefinition.getName(), itemTemplateVariableDefinition.getName(), itemTemplateVariableDefinition.getAccessor(), language);
-	}
-	else if (Validator.isNull(dataType)) {
-		dataContent = _getVariableReferenceCode(templateVariableDefinition.getName(), templateVariableDefinition.getAccessor(), language);
-	}
-	else if (dataType.equals("service-locator")) {
-		Class<?> templateVariableDefinitionClass = templateVariableDefinition.getClazz();
-
-		String variableName = templateVariableDefinitionClass.getSimpleName();
-
-		StringBundler sb = new StringBundler(3);
-
-		sb.append(_getVariableAssignmentCode(variableName, "serviceLocator.findService(\"" + templateVariableDefinition.getName() + "\")", language));
-		sb.append("[$CURSOR$]");
-		sb.append(_getVariableReferenceCode(variableName, null, language));
-
-		dataContent = sb.toString();
-	}
-	else {
-		try {
-			String[] generateCode = templateVariableDefinition.generateCode(language);
-
-			dataContent = generateCode[0];
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-		}
-	}
-
-	return dataContent;
-}
-
-private String _getListCode(String variableName, String itemName, String accessor, String language) {
-	if (StringUtil.equalsIgnoreCase(language, "ftl")) {
-		StringBundler sb = new StringBundler(10);
-
-		sb.append("<#if ");
-		sb.append(variableName);
-		sb.append("?has_content>\n\t<#list ");
-		sb.append(variableName);
-		sb.append(" as ");
-		sb.append(itemName);
-		sb.append(">\n\t\t");
-		sb.append(_getVariableReferenceCode(itemName, accessor, language));
-		sb.append("[$CURSOR$]");
-		sb.append("\n\t</#list>\n</#if>");
-
-		return sb.toString();
-	}
-	else if (StringUtil.equalsIgnoreCase(language, "vm")) {
-		StringBundler sb = new StringBundler(10);
-
-		sb.append("#if (!$");
-		sb.append(variableName);
-		sb.append(".isEmpty())\n\t#foreach ($");
-		sb.append(itemName);
-		sb.append(" in $");
-		sb.append(variableName);
-		sb.append(")\n\t\t");
-		sb.append(_getVariableReferenceCode(itemName, accessor, language));
-		sb.append("[$CURSOR$]");
-		sb.append("#end\n#end");
-
-		return sb.toString();
-	}
-
-	return StringPool.BLANK;
-}
-
-private String _getPaletteItemTitle(HttpServletRequest request, String label, Class<?> clazz) {
-	StringBundler sb = new StringBundler(10);
-
-	if (clazz == null) {
-		return StringPool.BLANK;
-	}
-
-	String className = clazz.getName();
-
-	sb.append("<br />");
-	sb.append(LanguageUtil.get(request, label));
-	sb.append(StringPool.COLON);
-	sb.append("&nbsp;");
-
-	String javadocURL = null;
-
-	if (className.startsWith("com.liferay.portal.kernel")) {
-		javadocURL = "http://docs.liferay.com/portal/7.0/javadocs/portal-kernel/";
-	}
-
-	if (Validator.isNotNull(javadocURL)) {
-		sb.append("<a href=\"");
-		sb.append(javadocURL);
-		sb.append(StringUtil.replace(className, CharPool.PERIOD, CharPool.SLASH));
-		sb.append(".html\" target=\"_blank\">");
-	}
-
-	sb.append(clazz.getSimpleName());
-
-	if (Validator.isNull(javadocURL)) {
-		sb.append("</a>");
-	}
-
-	return sb.toString();
-}
-
-private String _getPaletteItemTitle(HttpServletRequest request, ResourceBundle resourceBundle, TemplateVariableDefinition templateVariableDefinition) {
-	StringBundler sb = new StringBundler(12);
-
-	String help = templateVariableDefinition.getHelp();
-
-	if (Validator.isNotNull(help)) {
-		sb.append("<p>");
-		sb.append(HtmlUtil.escape(LanguageUtil.get(request, resourceBundle, help)));
-		sb.append("</p>");
-	}
-
-	if (templateVariableDefinition.isCollection()) {
-		sb.append("<p><i>*");
-		sb.append(LanguageUtil.get(request, "this-is-a-collection-of-fields"));
-		sb.append("</i></p>");
-	}
-	else if (templateVariableDefinition.isRepeatable()) {
-		sb.append("<p><i>*");
-		sb.append(LanguageUtil.get(request, "this-is-a-repeatable-field"));
-		sb.append("</i></p>");
-	}
-
-	if (!Objects.equals(templateVariableDefinition.getDataType(), "service-locator")) {
-		sb.append(LanguageUtil.get(request, "variable"));
-		sb.append(StringPool.COLON);
-		sb.append("&nbsp;");
-		sb.append(HtmlUtil.escape(templateVariableDefinition.getName()));
-	}
-
-	sb.append(_getPaletteItemTitle(request, "class", templateVariableDefinition.getClazz()));
-
-	if (templateVariableDefinition.isCollection()) {
-		TemplateVariableDefinition itemTemplateVariableDefinition = templateVariableDefinition.getItemTemplateVariableDefinition();
-
-		sb.append(_getPaletteItemTitle(request, "items-class", itemTemplateVariableDefinition.getClazz()));
-	}
-
-	return sb.toString();
-}
-
-private String _getVariableAssignmentCode(String variableName, String variableValue, String language) {
-	if (StringUtil.equalsIgnoreCase(language, "ftl")) {
-		return "<#assign " + variableName + " = " + variableValue + ">";
-	}
-	else if (StringUtil.equalsIgnoreCase(language, "vm")) {
-		if (!variableValue.startsWith(StringPool.DOUBLE_QUOTE) && !variableValue.startsWith(StringPool.OPEN_BRACKET) && !variableValue.startsWith(StringPool.OPEN_CURLY_BRACE) && !variableValue.startsWith(StringPool.QUOTE) && !Validator.isNumber(variableValue)) {
-			variableValue = StringPool.DOLLAR + variableValue;
-		}
-
-		return "#set ($" + variableName + " = " + variableValue + ")";
-	}
-
-	return variableName;
-}
-
-private String _getVariableReferenceCode(String variableName, String accessor, String language) {
-	String methodInvocation = StringPool.BLANK;
-
-	if (Validator.isNotNull(accessor)) {
-		methodInvocation = StringPool.PERIOD + _getAccessor(accessor, language);
-	}
-
-	if (StringUtil.equalsIgnoreCase(language, "ftl")) {
-		return "${" + variableName + methodInvocation + "}";
-	}
-	else if (StringUtil.equalsIgnoreCase(language, "vm")) {
-		return "$" + variableName + methodInvocation;
-	}
-
-	return variableName;
-}
-%>
-
-<%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_journal_web.edit_ddm_template_display_jspf");
-%>

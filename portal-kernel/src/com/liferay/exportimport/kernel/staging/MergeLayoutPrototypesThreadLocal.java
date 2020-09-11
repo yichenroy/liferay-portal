@@ -14,12 +14,8 @@
 
 package com.liferay.exportimport.kernel.staging;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.lang.HashUtil;
-
-import java.lang.reflect.Method;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -30,7 +26,6 @@ import java.util.Set;
  * @author Raymond Augé
  * @author Shuyang Zhou
  */
-@ProviderType
 public class MergeLayoutPrototypesThreadLocal {
 
 	public static void clearMergeComplete() {
@@ -39,15 +34,6 @@ public class MergeLayoutPrototypesThreadLocal {
 
 	public static boolean isInProgress() {
 		return _inProgress.get();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #isMergeComplete(String, Object...)}
-	 */
-	@Deprecated
-	public static boolean isMergeComplete(Method method, Object[] arguments) {
-		return isMergeComplete(method.getName(), arguments);
 	}
 
 	public static boolean isMergeComplete(
@@ -60,15 +46,6 @@ public class MergeLayoutPrototypesThreadLocal {
 
 	public static void setInProgress(boolean inProgress) {
 		_inProgress.set(inProgress);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #setMergeComplete(String, Object...)}
-	 */
-	@Deprecated
-	public static void setMergeComplete(Method method, Object[] arguments) {
-		setMergeComplete(method.getName(), arguments);
 	}
 
 	public static void setMergeComplete(
@@ -98,8 +75,8 @@ public class MergeLayoutPrototypesThreadLocal {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			MethodKey methodKey = (MethodKey)obj;
+		public boolean equals(Object object) {
+			MethodKey methodKey = (MethodKey)object;
 
 			if (Objects.equals(_methodName, methodKey._methodName) &&
 				Arrays.equals(_arguments, methodKey._arguments)) {
@@ -115,12 +92,12 @@ public class MergeLayoutPrototypesThreadLocal {
 			int hashCode = _methodName.hashCode();
 
 			if (_arguments != null) {
-				for (Object obj : _arguments) {
-					if (obj == null) {
+				for (Object object : _arguments) {
+					if (object == null) {
 						hashCode = HashUtil.hash(hashCode, 0);
 					}
 					else {
-						hashCode = HashUtil.hash(hashCode, obj.hashCode());
+						hashCode = HashUtil.hash(hashCode, object.hashCode());
 					}
 				}
 			}

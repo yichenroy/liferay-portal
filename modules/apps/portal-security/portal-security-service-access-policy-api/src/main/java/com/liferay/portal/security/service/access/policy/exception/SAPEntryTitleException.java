@@ -14,14 +14,11 @@
 
 package com.liferay.portal.security.service.access.policy.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class SAPEntryTitleException extends PortalException {
 
 	public SAPEntryTitleException() {
@@ -31,12 +28,12 @@ public class SAPEntryTitleException extends PortalException {
 		super(msg);
 	}
 
-	public SAPEntryTitleException(String msg, Throwable cause) {
-		super(msg, cause);
+	public SAPEntryTitleException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public SAPEntryTitleException(Throwable cause) {
-		super(cause);
+	public SAPEntryTitleException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

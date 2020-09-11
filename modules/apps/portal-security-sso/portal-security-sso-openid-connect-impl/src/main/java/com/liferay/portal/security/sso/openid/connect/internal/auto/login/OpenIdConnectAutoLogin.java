@@ -39,16 +39,17 @@ public class OpenIdConnectAutoLogin extends BaseAutoLogin {
 
 	@Override
 	protected String[] doLogin(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		long companyId = _portal.getCompanyId(request);
+		if (!_openIdConnect.isEnabled(
+				_portal.getCompanyId(httpServletRequest))) {
 
-		if (!_openIdConnect.isEnabled(companyId)) {
 			return null;
 		}
 
-		HttpSession httpSession = request.getSession(false);
+		HttpSession httpSession = httpServletRequest.getSession(false);
 
 		if (httpSession == null) {
 			return null;
@@ -62,11 +63,8 @@ public class OpenIdConnectAutoLogin extends BaseAutoLogin {
 			return null;
 		}
 
-		OpenIdConnectFlowState openIdConnectFlowState =
-			openIdConnectSession.getOpenIdConnectFlowState();
-
 		if (OpenIdConnectFlowState.AUTH_COMPLETE.equals(
-				openIdConnectFlowState)) {
+				openIdConnectSession.getOpenIdConnectFlowState())) {
 
 			long userId = openIdConnectSession.getLoginUserId();
 

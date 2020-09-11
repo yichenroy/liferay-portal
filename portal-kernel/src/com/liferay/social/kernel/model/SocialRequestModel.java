@@ -14,12 +14,14 @@
 
 package com.liferay.social.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the SocialRequest service. Represents a row in the &quot;SocialRequest&quot; database table, with each column mapped to a property of this class.
@@ -34,7 +36,8 @@ import com.liferay.portal.kernel.model.ShardedModel;
  */
 @ProviderType
 public interface SocialRequestModel
-	extends AttachedModel, BaseModel<SocialRequest>, ShardedModel {
+	extends AttachedModel, BaseModel<SocialRequest>, CTModel<SocialRequest>,
+			MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -47,6 +50,7 @@ public interface SocialRequestModel
 	 *
 	 * @return the primary key of this social request
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -54,7 +58,40 @@ public interface SocialRequestModel
 	 *
 	 * @param primaryKey the primary key of this social request
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this social request.
+	 *
+	 * @return the mvcc version of this social request
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this social request.
+	 *
+	 * @param mvccVersion the mvcc version of this social request
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this social request.
+	 *
+	 * @return the ct collection ID of this social request
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this social request.
+	 *
+	 * @param ctCollectionId the ct collection ID of this social request
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this social request.

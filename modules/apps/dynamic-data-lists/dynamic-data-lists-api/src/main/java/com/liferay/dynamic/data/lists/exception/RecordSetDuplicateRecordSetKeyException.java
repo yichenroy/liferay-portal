@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
@@ -24,7 +22,6 @@ import com.liferay.portal.kernel.exception.PortalException;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class RecordSetDuplicateRecordSetKeyException extends PortalException {
 
 	public RecordSetDuplicateRecordSetKeyException() {
@@ -35,13 +32,13 @@ public class RecordSetDuplicateRecordSetKeyException extends PortalException {
 	}
 
 	public RecordSetDuplicateRecordSetKeyException(
-		String msg, Throwable cause) {
+		String msg, Throwable throwable) {
 
-		super(msg, cause);
+		super(msg, throwable);
 	}
 
-	public RecordSetDuplicateRecordSetKeyException(Throwable cause) {
-		super(cause);
+	public RecordSetDuplicateRecordSetKeyException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public String getRecordSetKey() {

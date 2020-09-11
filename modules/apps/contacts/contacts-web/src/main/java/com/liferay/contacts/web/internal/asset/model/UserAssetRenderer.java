@@ -72,7 +72,9 @@ public class UserAssetRenderer extends BaseJSPAssetRenderer<User> {
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
 		if (template.equals(TEMPLATE_ABSTRACT) ||
 			template.equals(TEMPLATE_FULL_CONTENT)) {
 
@@ -112,9 +114,9 @@ public class UserAssetRenderer extends BaseJSPAssetRenderer<User> {
 			getControlPanelPlid(liferayPortletRequest), portletId,
 			PortletRequest.RENDER_PHASE);
 
+		portletURL.setParameter("p_u_i_d", String.valueOf(_user.getUserId()));
 		portletURL.setParameter(
 			"mvcRenderCommandName", "/users_admin/edit_user");
-		portletURL.setParameter("p_u_i_d", String.valueOf(_user.getUserId()));
 
 		return portletURL;
 	}
@@ -137,7 +139,7 @@ public class UserAssetRenderer extends BaseJSPAssetRenderer<User> {
 		try {
 			return _user.getDisplayURL(themeDisplay);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return noSuchEntryRedirect;
@@ -172,13 +174,13 @@ public class UserAssetRenderer extends BaseJSPAssetRenderer<User> {
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(ContactsWebKeys.CONTACTS_USER, _user);
+		httpServletRequest.setAttribute(ContactsWebKeys.CONTACTS_USER, _user);
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	@Override

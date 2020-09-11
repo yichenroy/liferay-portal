@@ -72,10 +72,10 @@ public class SiteAssetRenderer extends BaseAssetRenderer<Group> {
 			return _siteGroup.getDescriptiveName(
 				PortalUtil.getLocale(portletRequest));
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			_log.error(
 				"Unable to get summary for group " + _siteGroup.getGroupId(),
-				pe);
+				portalException);
 		}
 
 		return null;
@@ -86,11 +86,11 @@ public class SiteAssetRenderer extends BaseAssetRenderer<Group> {
 		try {
 			return _siteGroup.getDescriptiveName(locale);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			_log.error(
 				"Unable to get descriptive name for group " +
 					_siteGroup.getGroupId(),
-				pe);
+				portalException);
 		}
 
 		return null;
@@ -113,8 +113,8 @@ public class SiteAssetRenderer extends BaseAssetRenderer<Group> {
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
 		return false;

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.background.task.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.background.task.model.BackgroundTask;
@@ -37,22 +35,21 @@ import java.util.Map;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class BackgroundTaskCacheModel
 	implements CacheModel<BackgroundTask>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof BackgroundTaskCacheModel)) {
+		if (!(object instanceof BackgroundTaskCacheModel)) {
 			return false;
 		}
 
 		BackgroundTaskCacheModel backgroundTaskCacheModel =
-			(BackgroundTaskCacheModel)obj;
+			(BackgroundTaskCacheModel)object;
 
 		if ((backgroundTaskId == backgroundTaskCacheModel.backgroundTaskId) &&
 			(mvccVersion == backgroundTaskCacheModel.mvccVersion)) {
@@ -222,7 +219,7 @@ public class BackgroundTaskCacheModel
 		completionDate = objectInput.readLong();
 
 		status = objectInput.readInt();
-		statusMessage = objectInput.readUTF();
+		statusMessage = (String)objectInput.readObject();
 	}
 
 	@Override
@@ -276,10 +273,10 @@ public class BackgroundTaskCacheModel
 		objectOutput.writeInt(status);
 
 		if (statusMessage == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(statusMessage);
+			objectOutput.writeObject(statusMessage);
 		}
 	}
 

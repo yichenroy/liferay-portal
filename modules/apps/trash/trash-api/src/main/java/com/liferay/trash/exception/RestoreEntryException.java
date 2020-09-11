@@ -14,14 +14,11 @@
 
 package com.liferay.trash.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class RestoreEntryException extends PortalException {
 
 	public static final int DUPLICATE = 1;
@@ -39,8 +36,8 @@ public class RestoreEntryException extends PortalException {
 		_type = type;
 	}
 
-	public RestoreEntryException(int type, Throwable cause) {
-		super(cause);
+	public RestoreEntryException(int type, Throwable throwable) {
+		super(throwable);
 
 		_type = type;
 	}
@@ -49,12 +46,12 @@ public class RestoreEntryException extends PortalException {
 		super(msg);
 	}
 
-	public RestoreEntryException(String msg, Throwable cause) {
-		super(msg, cause);
+	public RestoreEntryException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public RestoreEntryException(Throwable cause) {
-		super(cause);
+	public RestoreEntryException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public long getDuplicateEntryId() {

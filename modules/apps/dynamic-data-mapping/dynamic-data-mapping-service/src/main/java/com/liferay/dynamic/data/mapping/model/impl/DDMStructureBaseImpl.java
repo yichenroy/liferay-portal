@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
  * @see DDMStructure
  * @generated
  */
-@ProviderType
 public abstract class DDMStructureBaseImpl
 	extends DDMStructureModelImpl implements DDMStructure {
 

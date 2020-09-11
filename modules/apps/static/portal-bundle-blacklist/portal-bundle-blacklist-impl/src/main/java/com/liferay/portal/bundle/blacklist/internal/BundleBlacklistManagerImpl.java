@@ -62,8 +62,7 @@ public class BundleBlacklistManagerImpl implements BundleBlacklistManager {
 				Collections.addAll(
 					blacklistBundleSymbolicNamesSet, bundleSymbolicNames);
 
-				return blacklistBundleSymbolicNamesSet.toArray(
-					new String[blacklistBundleSymbolicNamesSet.size()]);
+				return blacklistBundleSymbolicNamesSet.toArray(new String[0]);
 			});
 	}
 
@@ -89,8 +88,7 @@ public class BundleBlacklistManagerImpl implements BundleBlacklistManager {
 					blacklistBundleSymbolicNamesSet.remove(bundleSymbolicName);
 				}
 
-				return blacklistBundleSymbolicNamesSet.toArray(
-					new String[blacklistBundleSymbolicNamesSet.size()]);
+				return blacklistBundleSymbolicNamesSet.toArray(new String[0]);
 			});
 	}
 
@@ -133,7 +131,7 @@ public class BundleBlacklistManagerImpl implements BundleBlacklistManager {
 
 			countDownLatch.await();
 		}
-		catch (InterruptedException ie) {
+		catch (InterruptedException interruptedException) {
 		}
 		finally {
 			bundleContext.removeServiceListener(serviceListener);
@@ -154,10 +152,18 @@ public class BundleBlacklistManagerImpl implements BundleBlacklistManager {
 			properties = new HashMapDictionary<>();
 		}
 		else {
-			String value = (String)properties.get(
-				"blacklistBundleSymbolicNames");
 
-			blacklistBundleSymbolicNames = StringUtil.split(value);
+			// LPS-114840
+
+			Object value = properties.get("blacklistBundleSymbolicNames");
+
+			if (value instanceof String) {
+				blacklistBundleSymbolicNames = StringUtil.split((String)value);
+			}
+			else {
+				blacklistBundleSymbolicNames = (String[])properties.get(
+					"blacklistBundleSymbolicNames");
+			}
 		}
 
 		blacklistBundleSymbolicNames = updateFunction.apply(
@@ -172,8 +178,7 @@ public class BundleBlacklistManagerImpl implements BundleBlacklistManager {
 		}
 		else {
 			properties.put(
-				"blacklistBundleSymbolicNames",
-				StringUtil.merge(blacklistBundleSymbolicNames));
+				"blacklistBundleSymbolicNames", blacklistBundleSymbolicNames);
 		}
 
 		_updateConfiguration(configuration, properties);

@@ -21,6 +21,8 @@ import com.liferay.taglib.include.PageInclude;
 import com.liferay.taglib.portlet.RenderURLTag;
 import com.liferay.taglib.ui.IconTag;
 
+import java.util.Objects;
+
 import javax.portlet.WindowState;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,22 +45,23 @@ public class ForgetPasswordNavigationPostPageInclude implements PageInclude {
 
 	@Override
 	public void include(PageContext pageContext) throws JspException {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		String mvcRenderCommandName = request.getParameter(
+		String mvcRenderCommandName = httpServletRequest.getParameter(
 			"mvcRenderCommandName");
 
-		if ("/login/forgot_password".equals(mvcRenderCommandName)) {
+		if (Objects.equals(mvcRenderCommandName, "/login/forgot_password")) {
 			return;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Company company = themeDisplay.getCompany();
 
-		if (!company.isSendPassword() && !company.isSendPasswordResetLink()) {
+		if (!company.isSendPasswordResetLink()) {
 			return;
 		}
 
@@ -66,6 +69,7 @@ public class ForgetPasswordNavigationPostPageInclude implements PageInclude {
 
 		renderURLTag.setPageContext(pageContext);
 
+		renderURLTag.addParam("saveLastPath", Boolean.FALSE.toString());
 		renderURLTag.addParam("mvcRenderCommandName", "/login/forgot_password");
 		renderURLTag.setVar("forgotPasswordURL");
 		renderURLTag.setWindowState(WindowState.MAXIMIZED.toString());
@@ -77,7 +81,6 @@ public class ForgetPasswordNavigationPostPageInclude implements PageInclude {
 
 		IconTag iconTag = new IconTag();
 
-		iconTag.setIconCssClass("icon-question-sign");
 		iconTag.setMessage("forgot-password");
 		iconTag.setUrl(forgetPasswordURL);
 

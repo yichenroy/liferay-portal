@@ -14,18 +14,19 @@
 
 package com.liferay.mobile.device.rules.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the MDRRule service. Represents a row in the &quot;MDRRule&quot; database table, with each column mapped to a property of this class.
@@ -40,7 +41,7 @@ import java.util.Map;
  */
 @ProviderType
 public interface MDRRuleModel
-	extends BaseModel<MDRRule>, LocalizedModel, ShardedModel,
+	extends BaseModel<MDRRule>, LocalizedModel, MVCCModel, ShardedModel,
 			StagedGroupedModel {
 
 	/*
@@ -62,6 +63,22 @@ public interface MDRRuleModel
 	 * @param primaryKey the primary key of this mdr rule
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this mdr rule.
+	 *
+	 * @return the mvcc version of this mdr rule
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this mdr rule.
+	 *
+	 * @param mvccVersion the mvcc version of this mdr rule
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this mdr rule.

@@ -26,11 +26,12 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -57,9 +58,9 @@ public class AssetVocabularyUtilTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		Map<Locale, String> titleMap = new HashMap<>();
-
-		titleMap.put(_LOCALE, _TITLE);
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			_LOCALE, _TITLE
+		).build();
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
@@ -110,13 +111,10 @@ public class AssetVocabularyUtilTest {
 	public void testGetUnambiguousVocabularyTitleWithoutAmbiguity()
 		throws Exception {
 
-		List<AssetVocabulary> vocabularies = new ArrayList<>();
-
-		vocabularies.add(_companyVocabulary);
-
 		String unambiguousCompanyVocabularyTitle =
 			_companyVocabulary.getUnambiguousTitle(
-				vocabularies, _group.getGroupId(), _LOCALE);
+				ListUtil.fromArray(_companyVocabulary), _group.getGroupId(),
+				_LOCALE);
 
 		Assert.assertEquals(_TITLE, unambiguousCompanyVocabularyTitle);
 	}

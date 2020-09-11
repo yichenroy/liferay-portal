@@ -14,8 +14,8 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 
 /**
  * @author Juan González
@@ -31,16 +31,16 @@ public class Range {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Range)) {
+		if (!(object instanceof Range)) {
 			return false;
 		}
 
-		Range range = (Range)obj;
+		Range range = (Range)object;
 
 		if ((_end == range._end) && (_length == range._length) &&
 			(_start == range._start) && (_total == range._total)) {
@@ -84,10 +84,10 @@ public class Range {
 	public int hashCode() {
 		int result = 1;
 
-		result = _PRIME * result + (int)(_end ^ (_end >>> 32));
-		result = _PRIME * result + (int)(_length ^ (_length >>> 32));
-		result = _PRIME * result + (int)(_start ^ (_start >>> 32));
-		result = _PRIME * result + (int)(_total ^ (_total >>> 32));
+		result = (_PRIME * result) + (int)(_end ^ (_end >>> 32));
+		result = (_PRIME * result) + (int)(_length ^ (_length >>> 32));
+		result = (_PRIME * result) + (int)(_start ^ (_start >>> 32));
+		result = (_PRIME * result) + (int)(_total ^ (_total >>> 32));
 
 		return result;
 	}

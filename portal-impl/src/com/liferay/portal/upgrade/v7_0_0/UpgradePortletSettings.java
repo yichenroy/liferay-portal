@@ -14,6 +14,7 @@
 
 package com.liferay.portal.upgrade.v7_0_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
@@ -23,7 +24,6 @@ import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.upgrade.v7_0_0.util.PortletPreferencesRow;
 
 import java.sql.PreparedStatement;
@@ -68,12 +68,12 @@ public abstract class UpgradePortletSettings extends UpgradeProcess {
 
 			ps.executeUpdate();
 		}
-		catch (SQLException sqle) {
+		catch (SQLException sqlException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Unable to add portlet preferences " +
 						portletPreferencesRow.getPortletPreferencesId(),
-					sqle);
+					sqlException);
 			}
 		}
 	}
@@ -179,10 +179,11 @@ public abstract class UpgradePortletSettings extends UpgradeProcess {
 					PortletPreferencesFactoryUtil.fromDefaultXML(
 						portletPreferencesRow.getPreferences());
 
-				Enumeration<String> names = jxPortletPreferences.getNames();
+				Enumeration<String> enumeration =
+					jxPortletPreferences.getNames();
 
-				while (names.hasMoreElements()) {
-					String name = names.nextElement();
+				while (enumeration.hasMoreElements()) {
+					String name = enumeration.nextElement();
 
 					for (String key : settingsDescriptor.getAllKeys()) {
 						if (name.startsWith(key)) {

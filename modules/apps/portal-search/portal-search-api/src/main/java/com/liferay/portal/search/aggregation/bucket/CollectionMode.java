@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.aggregation.bucket;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public enum CollectionMode {
 
 	BREADTH_FIRST, DEPTH_FIRST

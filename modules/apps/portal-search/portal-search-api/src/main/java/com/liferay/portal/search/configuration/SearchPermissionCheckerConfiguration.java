@@ -14,10 +14,11 @@
 
 package com.liferay.portal.search.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -30,16 +31,6 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 )
 @ProviderType
 public interface SearchPermissionCheckerConfiguration {
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Meta.AD(
-		deflt = "true", description = "include-inherited-permissions-help",
-		name = "include-inherited-permissions", required = false
-	)
-	public boolean includeInheritedPermissions();
 
 	@Meta.AD(
 		deflt = "250", description = "permission-terms-limit-help",

@@ -14,8 +14,6 @@
 
 package com.liferay.asset.list.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
@@ -23,6 +21,8 @@ import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -33,7 +33,6 @@ import java.util.Map;
  * @see AssetListEntryAssetEntryRel
  * @generated
  */
-@ProviderType
 public class AssetListEntryAssetEntryRelWrapper
 	extends BaseModelWrapper<AssetListEntryAssetEntryRel>
 	implements AssetListEntryAssetEntryRel,
@@ -49,6 +48,8 @@ public class AssetListEntryAssetEntryRelWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
 		attributes.put(
 			"assetListEntryAssetEntryRelId",
@@ -70,6 +71,18 @@ public class AssetListEntryAssetEntryRelWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
+		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
+
+		if (ctCollectionId != null) {
+			setCtCollectionId(ctCollectionId);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -206,6 +219,16 @@ public class AssetListEntryAssetEntryRelWrapper
 	}
 
 	/**
+	 * Returns the ct collection ID of this asset list entry asset entry rel.
+	 *
+	 * @return the ct collection ID of this asset list entry asset entry rel
+	 */
+	@Override
+	public long getCtCollectionId() {
+		return model.getCtCollectionId();
+	}
+
+	/**
 	 * Returns the group ID of this asset list entry asset entry rel.
 	 *
 	 * @return the group ID of this asset list entry asset entry rel
@@ -233,6 +256,16 @@ public class AssetListEntryAssetEntryRelWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this asset list entry asset entry rel.
+	 *
+	 * @return the mvcc version of this asset list entry asset entry rel
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -320,6 +353,11 @@ public class AssetListEntryAssetEntryRelWrapper
 		model.setAssetEntryId(assetEntryId);
 	}
 
+	@Override
+	public void setAssetEntryUuid(String assetEntryUuid) {
+		model.setAssetEntryUuid(assetEntryUuid);
+	}
+
 	/**
 	 * Sets the asset list entry asset entry rel ID of this asset list entry asset entry rel.
 	 *
@@ -363,6 +401,16 @@ public class AssetListEntryAssetEntryRelWrapper
 	}
 
 	/**
+	 * Sets the ct collection ID of this asset list entry asset entry rel.
+	 *
+	 * @param ctCollectionId the ct collection ID of this asset list entry asset entry rel
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
 	 * Sets the group ID of this asset list entry asset entry rel.
 	 *
 	 * @param groupId the group ID of this asset list entry asset entry rel
@@ -390,6 +438,16 @@ public class AssetListEntryAssetEntryRelWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the mvcc version of this asset list entry asset entry rel.
+	 *
+	 * @param mvccVersion the mvcc version of this asset list entry asset entry rel
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**
@@ -460,6 +518,20 @@ public class AssetListEntryAssetEntryRelWrapper
 	@Override
 	public void setUuid(String uuid) {
 		model.setUuid(uuid);
+	}
+
+	@Override
+	public Map<String, Function<AssetListEntryAssetEntryRel, Object>>
+		getAttributeGetterFunctions() {
+
+		return model.getAttributeGetterFunctions();
+	}
+
+	@Override
+	public Map<String, BiConsumer<AssetListEntryAssetEntryRel, Object>>
+		getAttributeSetterBiConsumers() {
+
+		return model.getAttributeSetterBiConsumers();
 	}
 
 	@Override

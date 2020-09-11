@@ -44,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"product.navigation.control.menu.category.key=" + ProductNavigationControlMenuCategoryKeys.USER,
-		"product.navigation.control.menu.entry.order:Integer=400"
+		"product.navigation.control.menu.entry.order:Integer=700"
 	},
 	service = ProductNavigationControlMenuEntry.class
 )
@@ -59,32 +59,38 @@ public class PersonalMenuProductNavigationControlMenuEntry
 
 	@Override
 	public boolean includeIcon(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		User user = themeDisplay.getUser();
 
 		if (!user.isDefaultUser() &&
 			(_userNotificationEventLocalService != null)) {
 
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				PersonalMenuWebKeys.NOTIFICATIONS_COUNT,
 				_userNotificationEventLocalService.
-					getArchivedUserNotificationEventsCount(
+					getUserNotificationEventsCount(
 						themeDisplay.getUserId(),
-						UserNotificationDeliveryConstants.TYPE_WEBSITE, false));
+						UserNotificationDeliveryConstants.TYPE_WEBSITE, true,
+						false));
 		}
 
-		return super.includeIcon(request, response);
+		return super.includeIcon(httpServletRequest, httpServletResponse);
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest request) throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public boolean isShow(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PersonalMenuConfiguration personalMenuConfiguration =
 			_personalMenuConfigurationTracker.
@@ -103,7 +109,7 @@ public class PersonalMenuProductNavigationControlMenuEntry
 			return false;
 		}
 
-		return super.isShow(request);
+		return super.isShow(httpServletRequest);
 	}
 
 	@Override

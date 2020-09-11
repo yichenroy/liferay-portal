@@ -15,7 +15,7 @@
 package com.liferay.product.navigation.site.administration.internal.menu;
 
 import com.liferay.item.selector.ItemSelector;
-import com.liferay.item.selector.ItemSelectorReturnType;
+import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -33,7 +33,6 @@ import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
 import com.liferay.site.util.RecentGroupManager;
 import com.liferay.taglib.aui.AUIUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -69,41 +68,36 @@ public class MySitesPersonalMenuEntry implements PersonalMenuEntry {
 	}
 
 	@Override
-	public String getPortletURL(HttpServletRequest request)
+	public String getPortletURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		String namespace = AUIUtil.getNamespace(request);
+		String namespace = AUIUtil.getNamespace(httpServletRequest);
 
 		String eventName = namespace + "selectSite";
 
-		SiteItemSelectorCriterion siteItemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new SiteItemSelectorCriterion();
 
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		desiredItemSelectorReturnTypes.add(new URLItemSelectorReturnType());
-
-		siteItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new URLItemSelectorReturnType());
 
 		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
-			RequestBackedPortletURLFactoryUtil.create(request), eventName,
-			siteItemSelectorCriterion);
+			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+			eventName, itemSelectorCriterion);
 
 		StringBuilder sb = new StringBuilder(11);
 
-		sb.append("javascript:Liferay.Util.selectEntity({dialog: ");
-		sb.append("{constrain: true, destroyOnHide: true, modal: true}, ");
-		sb.append("eventName: '");
-		sb.append(eventName);
-		sb.append("', id:'");
+		sb.append("javascript:Liferay.Util.openSelectionModal({id: '");
 		sb.append(namespace);
-		sb.append("selectSite', title: '");
-		sb.append(LanguageUtil.get(request, "select-site"));
-		sb.append("', uri:'");
+		sb.append("selectSite', onSelect: function(selectedItem) ");
+		sb.append("{Liferay.Util.navigate(selectedItem.url);}");
+		sb.append(", selectEventName: '");
+		sb.append(eventName);
+		sb.append("', title: '");
+		sb.append(LanguageUtil.get(httpServletRequest, "select-site"));
+		sb.append("', url:'");
 		sb.append(HtmlUtil.escapeJS(itemSelectorURL.toString()));
-		sb.append("'}, function(event) {location.href = event.url;});");
+		sb.append("'});");
 
 		return sb.toString();
 	}

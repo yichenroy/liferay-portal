@@ -53,7 +53,7 @@ for (ResultRowSplitterEntry resultRowSplitterEntry : resultRowSplitterEntries) {
 		boolean allRowsIsChecked = true;
 
 		for (int i = 0; i < curResultRows.size(); i++) {
-			com.liferay.portal.kernel.dao.search.ResultRow row = (com.liferay.portal.kernel.dao.search.ResultRow)curResultRows.get(i);
+			com.liferay.portal.kernel.dao.search.ResultRow row = curResultRows.get(i);
 
 			primaryKeysJSONArray.put(row.getPrimaryKey());
 
@@ -101,7 +101,7 @@ for (ResultRowSplitterEntry resultRowSplitterEntry : resultRowSplitterEntries) {
 					<div class="autofit-col">
 						<div class="checkbox">
 							<label>
-								<%= rowChecker.getRowCheckBox(request, rowIsChecked, rowChecker.isDisabled(row.getObject()), row.getPrimaryKey()) %>
+								<%= rowChecker.getRowCheckBox(request, row) %>
 							</label>
 						</div>
 					</div>

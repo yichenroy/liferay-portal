@@ -14,8 +14,6 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -33,21 +31,20 @@ import java.io.ObjectOutput;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class RegionCacheModel
 	implements CacheModel<Region>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof RegionCacheModel)) {
+		if (!(object instanceof RegionCacheModel)) {
 			return false;
 		}
 
-		RegionCacheModel regionCacheModel = (RegionCacheModel)obj;
+		RegionCacheModel regionCacheModel = (RegionCacheModel)object;
 
 		if ((regionId == regionCacheModel.regionId) &&
 			(mvccVersion == regionCacheModel.mvccVersion)) {

@@ -14,7 +14,6 @@
 
 package com.liferay.site.admin.web.internal.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
@@ -27,7 +26,6 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 	id = "com.liferay.site.admin.web.internal.configuration.SiteAdminConfiguration",
 	localization = "content/Language", name = "site-admin-configuration-name"
 )
-@ProviderType
 public interface SiteAdminConfiguration {
 
 	@Meta.AD(

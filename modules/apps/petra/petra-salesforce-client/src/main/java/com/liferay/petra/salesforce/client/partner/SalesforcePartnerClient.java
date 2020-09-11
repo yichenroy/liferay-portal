@@ -14,8 +14,6 @@
 
 package com.liferay.petra.salesforce.client.partner;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.salesforce.client.SalesforceClient;
 
 import com.sforce.soap.partner.DeleteResult;
@@ -38,7 +36,6 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @author Peter Shin
  */
-@ProviderType
 public interface SalesforcePartnerClient extends SalesforceClient {
 
 	public List<SaveResult> create(SObject[] sObjects)
@@ -66,7 +63,7 @@ public interface SalesforcePartnerClient extends SalesforceClient {
 
 	public GetUserInfoResult getUserInfo() throws ConnectionException;
 
-	public LoginResult login(String username, String password, int retryCount)
+	public LoginResult login(String userName, String password, int retryCount)
 		throws ConnectionException;
 
 	public QueryResult query(String queryString, int retryCount)

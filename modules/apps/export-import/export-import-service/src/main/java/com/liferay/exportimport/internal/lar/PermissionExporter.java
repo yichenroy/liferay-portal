@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.internal.util.ExportImportPermissionUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -52,11 +50,10 @@ import java.util.Set;
  * @author Zsigmond Rab
  * @author Douglas Wong
  */
-@ProviderType
 public class PermissionExporter {
 
 	public static PermissionExporter getInstance() {
-		return _instance;
+		return _permissionExporter;
 	}
 
 	public void exportPortletDataPermissions(
@@ -155,12 +152,12 @@ public class PermissionExporter {
 					roleName = ExportImportPermissionUtil.getTeamRoleName(
 						role.getDescriptiveName());
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 
 					// LPS-52675
 
 					if (_log.isDebugEnabled()) {
-						_log.debug(pe, pe);
+						_log.debug(portalException, portalException);
 					}
 				}
 			}
@@ -190,7 +187,7 @@ public class PermissionExporter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		PermissionExporter.class);
 
-	private static final PermissionExporter _instance =
+	private static final PermissionExporter _permissionExporter =
 		new PermissionExporter();
 
 }

@@ -16,16 +16,21 @@ package com.liferay.asset.list.internal.exportimport.data.handler;
 
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.model.AssetListEntrySegmentsEntryRel;
+import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.xml.Element;
-import com.liferay.segments.constants.SegmentsConstants;
+import com.liferay.segments.constants.SegmentsEntryConstants;
+import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 
@@ -33,6 +38,8 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Eduardo García
@@ -77,8 +84,13 @@ public class AssetListEntrySegmentsEntryRelStagedModelDataHandler
 		Element entryElement = portletDataContext.getExportDataElement(
 			assetListEntrySegmentsEntryRel);
 
-		if (assetListEntrySegmentsEntryRel.getSegmentsEntryId() !=
-				SegmentsConstants.SEGMENTS_ENTRY_ID_DEFAULT) {
+		Group group = _groupLocalService.getGroup(
+			assetListEntrySegmentsEntryRel.getGroupId());
+
+		if (ExportImportThreadLocal.isStagingInProcess() &&
+			group.isStagedPortlet(SegmentsPortletKeys.SEGMENTS) &&
+			(assetListEntrySegmentsEntryRel.getSegmentsEntryId() !=
+				SegmentsEntryConstants.ID_DEFAULT)) {
 
 			SegmentsEntry segmentsEntry =
 				_segmentsEntryLocalService.fetchSegmentsEntry(
@@ -88,6 +100,15 @@ public class AssetListEntrySegmentsEntryRelStagedModelDataHandler
 				portletDataContext, assetListEntrySegmentsEntryRel,
 				segmentsEntry, PortletDataContext.REFERENCE_TYPE_STRONG);
 		}
+
+		String typeSettings =
+			_assetListEntryExportImportContentProcessor.
+				replaceExportContentReferences(
+					portletDataContext, assetListEntrySegmentsEntryRel,
+					assetListEntrySegmentsEntryRel.getTypeSettings(), false,
+					false);
+
+		assetListEntrySegmentsEntryRel.setTypeSettings(typeSettings);
 
 		portletDataContext.addClassedModel(
 			entryElement,
@@ -158,6 +179,14 @@ public class AssetListEntrySegmentsEntryRelStagedModelDataHandler
 				assetListEntrySegmentsEntryRel.getUuid(),
 				portletDataContext.getScopeGroupId());
 
+		String typeSettings =
+			_assetListEntryExportImportContentProcessor.
+				replaceImportContentReferences(
+					portletDataContext, importedAssetListEntrySegmentsEntryRel,
+					importedAssetListEntrySegmentsEntryRel.getTypeSettings());
+
+		importedAssetListEntrySegmentsEntryRel.setTypeSettings(typeSettings);
+
 		if ((existingAssetListEntrySegmentsEntryRel == null) ||
 			!portletDataContext.isDataStrategyMirror()) {
 
@@ -185,6 +214,17 @@ public class AssetListEntrySegmentsEntryRelStagedModelDataHandler
 
 		return _stagedModelRepository;
 	}
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(model.class.name=com.liferay.asset.list.model.AssetListEntry)"
+	)
+	private volatile ExportImportContentProcessor<String>
+		_assetListEntryExportImportContentProcessor;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private SegmentsEntryLocalService _segmentsEntryLocalService;

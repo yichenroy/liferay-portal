@@ -15,19 +15,18 @@
 package com.liferay.headless.delivery.internal.jaxrs.exception.mapper;
 
 import com.liferay.knowledge.base.exception.DuplicateKBFolderNameException;
+import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
+import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * Converts any {@code DuplicateKBFolderNameException} to a {@code 422}
- * error.
+ * Converts any {@code DuplicateKBFolderNameException} to a {@code 422} error.
  *
  * @author Alejandro Hernández
- * @review
  */
 @Component(
 	property = {
@@ -38,17 +37,15 @@ import org.osgi.service.component.annotations.Component;
 	service = ExceptionMapper.class
 )
 public class DuplicateKnowledgeBaseFolderNameExceptionMapper
-	implements ExceptionMapper<DuplicateKBFolderNameException> {
+	extends BaseExceptionMapper<DuplicateKBFolderNameException> {
 
 	@Override
-	public Response toResponse(DuplicateKBFolderNameException dkbfne) {
-		return Response.status(
-			409
-		).type(
-			MediaType.TEXT_PLAIN
-		).entity(
-			dkbfne.getMessage()
-		).build();
+	protected Problem getProblem(
+		DuplicateKBFolderNameException duplicateKBFolderNameException) {
+
+		return new Problem(
+			Response.Status.CONFLICT,
+			duplicateKBFolderNameException.getMessage());
 	}
 
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.definition.link.update.handler;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 
@@ -32,14 +30,13 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 /**
  * @author Máté Thurzó
  */
-@ProviderType
 public class WorkflowDefinitionLinkUpdateHandlerRegistryUtil {
 
 	public static WorkflowDefinitionLinkUpdateHandler
 		getWorkflowDefinitionLinkUpdateHandler(String modelClassName) {
 
-		return _instance._getWorkflowDefinitionLinkUpdateHandler(
-			modelClassName);
+		return _workflowDefinitionLinkUpdateHandlerRegistryUtil.
+			_getWorkflowDefinitionLinkUpdateHandler(modelClassName);
 	}
 
 	private WorkflowDefinitionLinkUpdateHandlerRegistryUtil() {
@@ -60,7 +57,8 @@ public class WorkflowDefinitionLinkUpdateHandlerRegistryUtil {
 	}
 
 	private static final WorkflowDefinitionLinkUpdateHandlerRegistryUtil
-		_instance = new WorkflowDefinitionLinkUpdateHandlerRegistryUtil();
+		_workflowDefinitionLinkUpdateHandlerRegistryUtil =
+			new WorkflowDefinitionLinkUpdateHandlerRegistryUtil();
 
 	private final BundleContext _bundleContext;
 	private final ServiceTracker

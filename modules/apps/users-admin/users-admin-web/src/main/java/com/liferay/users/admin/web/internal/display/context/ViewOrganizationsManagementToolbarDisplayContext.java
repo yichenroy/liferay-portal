@@ -16,7 +16,7 @@ package com.liferay.users.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.petra.string.StringBundler;
@@ -63,10 +63,10 @@ import javax.servlet.http.HttpServletRequest;
 public class ViewOrganizationsManagementToolbarDisplayContext {
 
 	public ViewOrganizationsManagementToolbarDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse, String displayStyle) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_displayStyle = displayStyle;
@@ -76,21 +76,18 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							StringBundler.concat(
-								"javascript:", _renderResponse.getNamespace(),
-								"deleteOrganizations();"));
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					StringBundler.concat(
+						"javascript:", _renderResponse.getNamespace(),
+						"deleteOrganizations();"));
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	public String getClearResultsURL() {
@@ -115,7 +112,8 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 								"/users_admin/edit_organization", "redirect",
 								_getViewUsersURL(), "type", organizationType);
 							dropdownItem.setLabel(
-								LanguageUtil.get(_request, organizationType));
+								LanguageUtil.get(
+									_httpServletRequest, organizationType));
 						});
 				}
 			}
@@ -123,25 +121,21 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public String getOrderByCol() {
@@ -162,9 +156,9 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 
 			return portletURL;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 
 			return _renderResponse.createRenderURL();
@@ -177,7 +171,7 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 		return searchActionURL.toString();
 	}
 
-	public SearchContainer getSearchContainer(
+	public SearchContainer<Organization> getSearchContainer(
 			LinkedHashMap<String, Object> organizationParams,
 			boolean filterManageableOrganizations)
 		throws Exception {
@@ -186,7 +180,7 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 			return _organizationSearch;
 		}
 
-		PortletURL portletURL = (PortletURL)_request.getAttribute(
+		PortletURL portletURL = (PortletURL)_httpServletRequest.getAttribute(
 			"view.jsp-portletURL");
 
 		OrganizationSearch organizationSearch = new OrganizationSearch(
@@ -198,8 +192,9 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 
 		organizationSearch.setRowChecker(rowChecker);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		long parentOrganizationId =
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID;
@@ -215,7 +210,7 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 		}
 		else {
 			parentOrganizationId = ParamUtil.getLong(
-				_request, "parentOrganizationId",
+				_httpServletRequest, "parentOrganizationId",
 				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID);
 		}
 
@@ -288,57 +283,47 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 	}
 
 	public boolean showCreationMenu() throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return PortalPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), ActionKeys.ADD_ORGANIZATION);
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(StringPool.BLANK);
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(true);
+				dropdownItem.setHref(StringPool.BLANK);
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-		};
+		).build();
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "type"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "type");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "type"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(Objects.equals(getOrderByCol(), "name"));
+				dropdownItem.setHref(getPortletURL(), "orderByCol", "name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "name"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(Objects.equals(getOrderByCol(), "type"));
+				dropdownItem.setHref(getPortletURL(), "orderByCol", "type");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "type"));
+			}
+		).build();
 	}
 
 	private String _getViewUsersURL() {
 		String toolbarItem = ParamUtil.getString(
-			_request, "toolbarItem", "view-all-organizations");
-		String usersListView = (String)_request.getAttribute(
+			_httpServletRequest, "toolbarItem", "view-all-organizations");
+		String usersListView = (String)_httpServletRequest.getAttribute(
 			"view.jsp-usersListView");
 
 		PortletURL viewUsersURL = _renderResponse.createRenderURL();
@@ -354,9 +339,9 @@ public class ViewOrganizationsManagementToolbarDisplayContext {
 
 	private final PortletURL _currentURL;
 	private final String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private OrganizationSearch _organizationSearch;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

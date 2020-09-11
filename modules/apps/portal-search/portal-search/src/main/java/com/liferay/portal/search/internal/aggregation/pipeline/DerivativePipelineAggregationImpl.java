@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.aggregation.pipeline;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.pipeline.DerivativePipelineAggregation;
 import com.liferay.portal.search.aggregation.pipeline.GapPolicy;
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregationVisitor;
@@ -23,7 +21,6 @@ import com.liferay.portal.search.aggregation.pipeline.PipelineAggregationVisitor
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class DerivativePipelineAggregationImpl
 	extends BasePipelineAggregation implements DerivativePipelineAggregation {
 

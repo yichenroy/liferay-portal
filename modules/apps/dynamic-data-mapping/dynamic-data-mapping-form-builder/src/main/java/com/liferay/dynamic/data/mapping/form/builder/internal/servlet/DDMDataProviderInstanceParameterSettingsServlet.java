@@ -22,7 +22,6 @@ import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderTracker;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerTracker;
 import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceService;
@@ -87,50 +86,48 @@ public class DDMDataProviderInstanceParameterSettingsServlet
 		parametersJSONObject.put(
 			"inputs",
 			getInputParametersJSONArray(
-				ddmDataProviderParameterSetting.inputParameters()));
-		parametersJSONObject.put(
+				ddmDataProviderParameterSetting.inputParameters())
+		).put(
 			"outputs",
 			getOutputParametersJSONArray(
-				ddmDataProviderParameterSetting.outputParameters()));
+				ddmDataProviderParameterSetting.outputParameters())
+		);
 
 		return parametersJSONObject;
 	}
 
 	protected DDMFormValues deserialize(String content, DDMForm ddmForm) {
-		DDMFormValuesDeserializer ddmFormValuesDeserializer =
-			_ddmFormValuesDeserializerTracker.getDDMFormValuesDeserializer(
-				"json");
-
 		DDMFormValuesDeserializerDeserializeRequest.Builder builder =
 			DDMFormValuesDeserializerDeserializeRequest.Builder.newBuilder(
 				content, ddmForm);
 
 		DDMFormValuesDeserializerDeserializeResponse
 			ddmFormValuesDeserializerDeserializeResponse =
-				ddmFormValuesDeserializer.deserialize(builder.build());
+				_jsonDDMFormValuesDeserializer.deserialize(builder.build());
 
 		return ddmFormValuesDeserializerDeserializeResponse.getDDMFormValues();
 	}
 
 	@Override
 	protected void doGet(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		JSONObject parametersJSONObject = getParameterSettingsJSONObject(
-			request);
+			httpServletRequest);
 
 		if (parametersJSONObject == null) {
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST);
 
 			return;
 		}
 
-		response.setContentType(ContentTypes.APPLICATION_JSON);
-		response.setStatus(HttpServletResponse.SC_OK);
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
+		httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
 		ServletResponseUtil.write(
-			response, parametersJSONObject.toJSONString());
+			httpServletResponse, parametersJSONObject.toJSONString());
 	}
 
 	protected DDMFormValues getDataProviderFormValues(
@@ -143,11 +140,11 @@ public class DDMDataProviderInstanceParameterSettingsServlet
 	}
 
 	protected DDMDataProviderInstance getDDMDataProviderInstance(
-			HttpServletRequest request)
+			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
 		long ddmDataProviderInstanceId = ParamUtil.getLong(
-			request, "ddmDataProviderInstanceId");
+			httpServletRequest, "ddmDataProviderInstanceId");
 
 		return _ddmDataProviderInstanceService.getDataProviderInstance(
 			ddmDataProviderInstanceId);
@@ -185,11 +182,14 @@ public class DDMDataProviderInstanceParameterSettingsServlet
 				inputJSONObject.put("label", name);
 			}
 
-			inputJSONObject.put("name", name);
 			inputJSONObject.put(
+				"name", name
+			).put(
 				"required",
-				ddmDataProviderInputParameterSetting.inputParameterRequired());
-			inputJSONObject.put("type", type);
+				ddmDataProviderInputParameterSetting.inputParameterRequired()
+			).put(
+				"type", type
+			);
 
 			inputsJSONArray.put(inputJSONObject);
 		}
@@ -229,7 +229,11 @@ public class DDMDataProviderInstanceParameterSettingsServlet
 				outputJSONObject.put("name", path);
 			}
 
-			outputJSONObject.put("type", type);
+			outputJSONObject.put(
+				"id", ddmDataProviderOutputParameterSetting.outputParameterId()
+			).put(
+				"type", type
+			);
 
 			outputsJSONArray.put(outputJSONObject);
 		}
@@ -238,11 +242,11 @@ public class DDMDataProviderInstanceParameterSettingsServlet
 	}
 
 	protected JSONObject getParameterSettingsJSONObject(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
 		try {
 			DDMDataProviderInstance ddmDataProviderInstance =
-				getDDMDataProviderInstance(request);
+				getDDMDataProviderInstance(httpServletRequest);
 
 			DDMDataProvider ddmDataProvider =
 				_ddmDataProviderTracker.getDDMDataProvider(
@@ -251,14 +255,11 @@ public class DDMDataProviderInstanceParameterSettingsServlet
 			DDMFormValues ddmFormValues = getDataProviderFormValues(
 				ddmDataProvider, ddmDataProviderInstance);
 
-			JSONObject parametersJSONObject = createParametersJSONObject(
-				ddmDataProvider, ddmFormValues);
-
-			return parametersJSONObject;
+			return createParametersJSONObject(ddmDataProvider, ddmFormValues);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
+				_log.debug(exception, exception);
 			}
 		}
 
@@ -271,9 +272,9 @@ public class DDMDataProviderInstanceParameterSettingsServlet
 
 			return typeJSONArray.getString(0);
 		}
-		catch (JSONException jsone) {
+		catch (JSONException jsonException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(jsone, jsone);
+				_log.debug(jsonException, jsonException);
 			}
 
 			return type;
@@ -291,8 +292,8 @@ public class DDMDataProviderInstanceParameterSettingsServlet
 	@Reference
 	private DDMDataProviderTracker _ddmDataProviderTracker;
 
-	@Reference
-	private DDMFormValuesDeserializerTracker _ddmFormValuesDeserializerTracker;
+	@Reference(target = "(ddm.form.values.deserializer.type=json)")
+	private DDMFormValuesDeserializer _jsonDDMFormValuesDeserializer;
 
 	@Reference
 	private JSONFactory _jsonFactory;

@@ -14,8 +14,6 @@
 
 package com.liferay.oauth2.provider.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.oauth2.provider.model.OAuth2ScopeGrant;
 import com.liferay.oauth2.provider.service.OAuth2ScopeGrantLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.oauth2.provider.service.OAuth2ScopeGrantLocalServiceUtil;
  * @see OAuth2ScopeGrant
  * @generated
  */
-@ProviderType
 public abstract class OAuth2ScopeGrantBaseImpl
 	extends OAuth2ScopeGrantModelImpl implements OAuth2ScopeGrant {
 

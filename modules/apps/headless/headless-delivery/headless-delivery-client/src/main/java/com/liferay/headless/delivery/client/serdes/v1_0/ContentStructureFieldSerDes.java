@@ -18,9 +18,11 @@ import com.liferay.headless.delivery.client.dto.v1_0.ContentStructureField;
 import com.liferay.headless.delivery.client.dto.v1_0.Option;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import javax.annotation.Generated;
@@ -60,7 +62,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"dataType\":");
+			sb.append("\"dataType\": ");
 
 			sb.append("\"");
 
@@ -74,7 +76,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"inputControl\":");
+			sb.append("\"inputControl\": ");
 
 			sb.append("\"");
 
@@ -88,7 +90,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"label\":");
+			sb.append("\"label\": ");
 
 			sb.append("\"");
 
@@ -97,12 +99,22 @@ public class ContentStructureFieldSerDes {
 			sb.append("\"");
 		}
 
+		if (contentStructureField.getLabel_i18n() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"label_i18n\": ");
+
+			sb.append(_toJSON(contentStructureField.getLabel_i18n()));
+		}
+
 		if (contentStructureField.getLocalizable() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"localizable\":");
+			sb.append("\"localizable\": ");
 
 			sb.append(contentStructureField.getLocalizable());
 		}
@@ -112,7 +124,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"multiple\":");
+			sb.append("\"multiple\": ");
 
 			sb.append(contentStructureField.getMultiple());
 		}
@@ -122,7 +134,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"name\":");
+			sb.append("\"name\": ");
 
 			sb.append("\"");
 
@@ -136,7 +148,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"nestedContentStructureFields\":");
+			sb.append("\"nestedContentStructureFields\": ");
 
 			sb.append("[");
 
@@ -165,7 +177,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"options\":");
+			sb.append("\"options\": ");
 
 			sb.append("[");
 
@@ -188,7 +200,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"predefinedValue\":");
+			sb.append("\"predefinedValue\": ");
 
 			sb.append("\"");
 
@@ -197,12 +209,22 @@ public class ContentStructureFieldSerDes {
 			sb.append("\"");
 		}
 
+		if (contentStructureField.getPredefinedValue_i18n() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"predefinedValue_i18n\": ");
+
+			sb.append(_toJSON(contentStructureField.getPredefinedValue_i18n()));
+		}
+
 		if (contentStructureField.getRepeatable() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"repeatable\":");
+			sb.append("\"repeatable\": ");
 
 			sb.append(contentStructureField.getRepeatable());
 		}
@@ -212,7 +234,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"required\":");
+			sb.append("\"required\": ");
 
 			sb.append(contentStructureField.getRequired());
 		}
@@ -222,7 +244,7 @@ public class ContentStructureFieldSerDes {
 				sb.append(", ");
 			}
 
-			sb.append("\"showLabel\":");
+			sb.append("\"showLabel\": ");
 
 			sb.append(contentStructureField.getShowLabel());
 		}
@@ -232,6 +254,13 @@ public class ContentStructureFieldSerDes {
 		return sb.toString();
 	}
 
+	public static Map<String, Object> toMap(String json) {
+		ContentStructureFieldJSONParser contentStructureFieldJSONParser =
+			new ContentStructureFieldJSONParser();
+
+		return contentStructureFieldJSONParser.parseToMap(json);
+	}
+
 	public static Map<String, String> toMap(
 		ContentStructureField contentStructureField) {
 
@@ -239,7 +268,7 @@ public class ContentStructureFieldSerDes {
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
+		Map<String, String> map = new TreeMap<>();
 
 		if (contentStructureField.getDataType() == null) {
 			map.put("dataType", null);
@@ -264,6 +293,15 @@ public class ContentStructureFieldSerDes {
 		}
 		else {
 			map.put("label", String.valueOf(contentStructureField.getLabel()));
+		}
+
+		if (contentStructureField.getLabel_i18n() == null) {
+			map.put("label_i18n", null);
+		}
+		else {
+			map.put(
+				"label_i18n",
+				String.valueOf(contentStructureField.getLabel_i18n()));
 		}
 
 		if (contentStructureField.getLocalizable() == null) {
@@ -318,6 +356,16 @@ public class ContentStructureFieldSerDes {
 				String.valueOf(contentStructureField.getPredefinedValue()));
 		}
 
+		if (contentStructureField.getPredefinedValue_i18n() == null) {
+			map.put("predefinedValue_i18n", null);
+		}
+		else {
+			map.put(
+				"predefinedValue_i18n",
+				String.valueOf(
+					contentStructureField.getPredefinedValue_i18n()));
+		}
+
 		if (contentStructureField.getRepeatable() == null) {
 			map.put("repeatable", null);
 		}
@@ -348,13 +396,7 @@ public class ContentStructureFieldSerDes {
 		return map;
 	}
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
-	}
-
-	private static class ContentStructureFieldJSONParser
+	public static class ContentStructureFieldJSONParser
 		extends BaseJSONParser<ContentStructureField> {
 
 		@Override
@@ -388,6 +430,13 @@ public class ContentStructureFieldSerDes {
 				if (jsonParserFieldValue != null) {
 					contentStructureField.setLabel(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "label_i18n")) {
+				if (jsonParserFieldValue != null) {
+					contentStructureField.setLabel_i18n(
+						(Map)ContentStructureFieldSerDes.toMap(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "localizable")) {
@@ -440,6 +489,15 @@ public class ContentStructureFieldSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "predefinedValue_i18n")) {
+
+				if (jsonParserFieldValue != null) {
+					contentStructureField.setPredefinedValue_i18n(
+						(Map)ContentStructureFieldSerDes.toMap(
+							(String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "repeatable")) {
 				if (jsonParserFieldValue != null) {
 					contentStructureField.setRepeatable(
@@ -458,12 +516,80 @@ public class ContentStructureFieldSerDes {
 						(Boolean)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 
+	}
+
+	private static String _escape(Object object) {
+		String string = String.valueOf(object);
+
+		for (String[] strings : BaseJSONParser.JSON_ESCAPE_STRINGS) {
+			string = string.replace(strings[0], strings[1]);
+		}
+
+		return string;
+	}
+
+	private static String _toJSON(Map<String, ?> map) {
+		StringBuilder sb = new StringBuilder("{");
+
+		@SuppressWarnings("unchecked")
+		Set set = map.entrySet();
+
+		@SuppressWarnings("unchecked")
+		Iterator<Map.Entry<String, ?>> iterator = set.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, ?> entry = iterator.next();
+
+			sb.append("\"");
+			sb.append(entry.getKey());
+			sb.append("\":");
+
+			Object value = entry.getValue();
+
+			Class<?> valueClass = value.getClass();
+
+			if (value instanceof Map) {
+				sb.append(_toJSON((Map)value));
+			}
+			else if (valueClass.isArray()) {
+				Object[] values = (Object[])value;
+
+				sb.append("[");
+
+				for (int i = 0; i < values.length; i++) {
+					sb.append("\"");
+					sb.append(_escape(values[i]));
+					sb.append("\"");
+
+					if ((i + 1) < values.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape(entry.getValue()));
+				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
+			}
+
+			if (iterator.hasNext()) {
+				sb.append(",");
+			}
+		}
+
+		sb.append("}");
+
+		return sb.toString();
 	}
 
 }

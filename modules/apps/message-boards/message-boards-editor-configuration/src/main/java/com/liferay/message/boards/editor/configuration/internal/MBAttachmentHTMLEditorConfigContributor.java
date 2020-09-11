@@ -16,7 +16,6 @@ package com.liferay.message.boards.editor.configuration.internal;
 
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
-import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
@@ -24,13 +23,13 @@ import com.liferay.item.selector.criteria.url.criterion.URLItemSelectorCriterion
 import com.liferay.message.boards.constants.MBPortletKeys;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.portlet.PortletURL;
@@ -43,8 +42,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"editor.name=alloyeditor", "editor.name=alloyeditor_bbcode",
 		"editor.name=ckeditor", "editor.name=ckeditor_bbcode",
+		"editor.name=ckeditor_classic",
 		"javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS,
 		"javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS_ADMIN
 	},
@@ -70,45 +69,67 @@ public class MBAttachmentHTMLEditorConfigContributor
 			getImageItemSelectorCriterion(), getURLItemSelectorCriterion());
 
 		jsonObject.put(
-			"filebrowserImageBrowseLinkUrl", itemSelectorURL.toString());
-		jsonObject.put("filebrowserImageBrowseUrl", itemSelectorURL.toString());
+			"filebrowserImageBrowseLinkUrl", itemSelectorURL.toString()
+		).put(
+			"filebrowserImageBrowseUrl", itemSelectorURL.toString()
+		).put(
+			"toolbar", "mb"
+		).put(
+			"toolbar_mb", getToolbarMBJSONArray(inputEditorTaglibAttributes)
+		);
 	}
 
 	protected ItemSelectorCriterion getImageItemSelectorCriterion() {
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
-
-		desiredItemSelectorReturnTypes.add(
-			new FileEntryItemSelectorReturnType());
-		desiredItemSelectorReturnTypes.add(new URLItemSelectorReturnType());
-
-		ItemSelectorCriterion imageItemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new ImageItemSelectorCriterion();
 
-		imageItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new FileEntryItemSelectorReturnType(),
+			new URLItemSelectorReturnType());
 
-		return imageItemSelectorCriterion;
+		return itemSelectorCriterion;
+	}
+
+	protected JSONArray getToolbarMBJSONArray(
+		Map<String, Object> inputEditorTaglibAttributes) {
+
+		JSONArray jsonArray = JSONUtil.putAll(
+			super.toJSONArray("['Bold', 'Italic', 'Underline']"),
+			super.toJSONArray("['NumberedList', 'BulletedList']"),
+			super.toJSONArray("['Styles']"),
+			super.toJSONArray("['Link', 'Unlink']"),
+			super.toJSONArray("['Blockquote', 'ImageSelector']"));
+
+		if (_isShowSource(inputEditorTaglibAttributes)) {
+			jsonArray.put(toJSONArray("['Source']"));
+		}
+
+		jsonArray.put(toJSONArray("['A11YBtn']"));
+
+		return jsonArray;
 	}
 
 	protected ItemSelectorCriterion getURLItemSelectorCriterion() {
-		ItemSelectorCriterion urlItemSelectorCriterion =
+		ItemSelectorCriterion itemSelectorCriterion =
 			new URLItemSelectorCriterion();
 
-		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes =
-			new ArrayList<>();
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new URLItemSelectorReturnType());
 
-		desiredItemSelectorReturnTypes.add(new URLItemSelectorReturnType());
-
-		urlItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			desiredItemSelectorReturnTypes);
-
-		return urlItemSelectorCriterion;
+		return itemSelectorCriterion;
 	}
 
 	@Reference(unbind = "-")
 	protected void setItemSelector(ItemSelector itemSelector) {
 		_itemSelector = itemSelector;
+	}
+
+	private boolean _isShowSource(
+		Map<String, Object> inputEditorTaglibAttributes) {
+
+		return GetterUtil.getBoolean(
+			inputEditorTaglibAttributes.get(
+				"liferay-ui:input-editor:showSource"));
 	}
 
 	private ItemSelector _itemSelector;

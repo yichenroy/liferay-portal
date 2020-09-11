@@ -30,6 +30,7 @@ import java.util.List;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -49,6 +50,18 @@ public class UserGroupUADExporterTest
 		_userGroupUADTestHelper.cleanUpDependencies(_userGroups);
 	}
 
+	@Test
+	public void testExportModelWithCDATASyntax() throws Exception {
+		UserGroup userGroup = _userGroupUADTestHelper.addUserGroup(
+			user.getUserId());
+
+		userGroup.setUserName("UserGroup]]>UserName");
+
+		_userGroups.add(userGroup);
+
+		_uadExporter.export(userGroup);
+	}
+
 	@Override
 	protected UserGroup addBaseModel(long userId) throws Exception {
 		UserGroup userGroup = _userGroupUADTestHelper.addUserGroup(userId);
@@ -64,12 +77,12 @@ public class UserGroupUADExporterTest
 	}
 
 	@Override
-	protected UADExporter getUADExporter() {
+	protected UADExporter<UserGroup> getUADExporter() {
 		return _uadExporter;
 	}
 
 	@Inject(filter = "component.name=*.UserGroupUADExporter")
-	private UADExporter _uadExporter;
+	private UADExporter<UserGroup> _uadExporter;
 
 	@DeleteAfterTestRun
 	private final List<UserGroup> _userGroups = new ArrayList<>();

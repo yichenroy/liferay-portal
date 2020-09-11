@@ -42,21 +42,21 @@ public class ServletAuthorizingFilter extends BasePortalFilter {
 
 	@Override
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		HttpSession session = request.getSession();
+		HttpSession session = httpServletRequest.getSession();
 
 		// Company id
 
-		PortalInstances.getCompanyId(request);
+		PortalInstances.getCompanyId(httpServletRequest);
 
 		// Authorize
 
-		long userId = PortalUtil.getUserId(request);
+		long userId = PortalUtil.getUserId(httpServletRequest);
 
-		String remoteUser = request.getRemoteUser();
+		String remoteUser = httpServletRequest.getRemoteUser();
 
 		if (!PropsValues.PORTAL_JAAS_ENABLE) {
 			String jRemoteUser = (String)session.getAttribute("j_remoteuser");
@@ -79,7 +79,8 @@ public class ServletAuthorizingFilter extends BasePortalFilter {
 		// similar behavior across all servers.
 
 		if (remoteUser != null) {
-			request = new ProtectedServletRequest(request, remoteUser);
+			httpServletRequest = new ProtectedServletRequest(
+				httpServletRequest, remoteUser);
 		}
 
 		if ((userId > 0) || (remoteUser != null)) {
@@ -119,14 +120,14 @@ public class ServletAuthorizingFilter extends BasePortalFilter {
 
 				session.setAttribute(WebKeys.LOCALE, user.getLocale());
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
 		processFilter(
-			ServletAuthorizingFilter.class.getName(), request, response,
-			filterChain);
+			ServletAuthorizingFilter.class.getName(), httpServletRequest,
+			httpServletResponse, filterChain);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

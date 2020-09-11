@@ -21,8 +21,6 @@ Folder folder = (Folder)request.getAttribute(WebKeys.DOCUMENT_LIBRARY_FOLDER);
 
 long folderId = BeanParamUtil.getLong(folder, request, "folderId", DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
-String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectFolder");
-
 long repositoryId = scopeGroupId;
 String folderName = LanguageUtil.get(request, "home");
 
@@ -36,7 +34,7 @@ if (folder != null) {
 DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlRequestHelper);
 %>
 
-<div class="container-fluid-1280">
+<clay:container-fluid>
 	<aui:form method="post" name="selectFolderFm">
 		<liferay-ui:breadcrumb
 			showCurrentGroup="<%= false %>"
@@ -59,15 +57,18 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 			</c:if>
 
 			<%
-			Map<String, Object> data = new HashMap<String, Object>();
-
-			data.put("folderid", folderId);
-			data.put("folderissupportsmetadata", ((folder != null) ? folder.isSupportsMetadata() : Boolean.TRUE.toString()));
-			data.put("folderissupportssocial", ((folder != null) ? folder.isSupportsSocial() : Boolean.TRUE.toString()));
-			data.put("foldername", folderName);
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"folderid", folderId
+			).put(
+				"folderissupportsmetadata", (folder != null) ? folder.isSupportsMetadata() : Boolean.TRUE.toString()
+			).put(
+				"folderissupportssocial", (folder != null) ? folder.isSupportsSocial() : Boolean.TRUE.toString()
+			).put(
+				"foldername", folderName
+			).build();
 			%>
 
-			<aui:button cssClass="selector-button" data="<%= data %>" value="choose-this-folder" />
+			<aui:button cssClass="selector-button" data="<%= data %>" value="select-this-folder" />
 		</aui:button-row>
 
 		<%
@@ -121,6 +122,7 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 				%>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand table-cell-minw-200 table-title"
 					name="folder"
 				>
 					<liferay-ui:icon
@@ -134,14 +136,16 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand-smallest table-column-text-end"
 					href="<%= rowURL %>"
-					name="num-of-folders"
+					name="folders"
 					value="<%= String.valueOf(foldersCount) %>"
 				/>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand-smallest table-column-text-end"
 					href="<%= rowURL %>"
-					name="num-of-documents"
+					name="documents"
 					value="<%= String.valueOf(fileEntriesCount) %>"
 				/>
 
@@ -149,15 +153,18 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 					<c:if test="<%= rowURL != null %>">
 
 						<%
-						Map<String, Object> data = new HashMap<String, Object>();
-
-						data.put("folderid", curFolder.getFolderId());
-						data.put("folderissupportsmetadata", curFolder.isSupportsMetadata());
-						data.put("folderissupportssocial", curFolder.isSupportsSocial());
-						data.put("foldername", curFolder.getName());
+						Map<String, Object> data = HashMapBuilder.<String, Object>put(
+							"folderid", curFolder.getFolderId()
+						).put(
+							"folderissupportsmetadata", curFolder.isSupportsMetadata()
+						).put(
+							"folderissupportssocial", curFolder.isSupportsSocial()
+						).put(
+							"foldername", curFolder.getName()
+						).build();
 						%>
 
-						<aui:button cssClass="selector-button" data="<%= data %>" value="choose" />
+						<aui:button cssClass="selector-button" data="<%= data %>" value="select" />
 					</c:if>
 				</liferay-ui:search-container-column-text>
 			</liferay-ui:search-container-row>
@@ -167,8 +174,4 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</div>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectFolderFm', '<%= HtmlUtil.escapeJS(eventName) %>');
-</aui:script>
+</clay:container-fluid>

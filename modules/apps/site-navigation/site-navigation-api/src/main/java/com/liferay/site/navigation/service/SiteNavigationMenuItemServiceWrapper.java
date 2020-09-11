@@ -14,8 +14,6 @@
 
 package com.liferay.site.navigation.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,10 +23,9 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see SiteNavigationMenuItemService
  * @generated
  */
-@ProviderType
 public class SiteNavigationMenuItemServiceWrapper
-	implements SiteNavigationMenuItemService,
-			   ServiceWrapper<SiteNavigationMenuItemService> {
+	implements ServiceWrapper<SiteNavigationMenuItemService>,
+			   SiteNavigationMenuItemService {
 
 	public SiteNavigationMenuItemServiceWrapper(
 		SiteNavigationMenuItemService siteNavigationMenuItemService) {
@@ -84,6 +81,18 @@ public class SiteNavigationMenuItemServiceWrapper
 
 		return _siteNavigationMenuItemService.getSiteNavigationMenuItems(
 			siteNavigationMenuId);
+	}
+
+	@Override
+	public java.util.List
+		<com.liferay.site.navigation.model.SiteNavigationMenuItem>
+				getSiteNavigationMenuItems(
+					long siteNavigationMenuId,
+					long parentSiteNavigationMenuItemId)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _siteNavigationMenuItemService.getSiteNavigationMenuItems(
+			siteNavigationMenuId, parentSiteNavigationMenuItemId);
 	}
 
 	@Override

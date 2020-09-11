@@ -46,23 +46,24 @@ import jodd.util.NameValue;
 public class JSONWebServiceActionParameters {
 
 	public void collectAll(
-		HttpServletRequest request, String parameterPath,
+		HttpServletRequest httpServletRequest, String parameterPath,
 		JSONRPCRequest jsonRPCRequest, Map<String, Object> parameterMap) {
 
 		_jsonRPCRequest = jsonRPCRequest;
 
 		try {
-			_serviceContext = ServiceContextFactory.getInstance(request);
+			_serviceContext = ServiceContextFactory.getInstance(
+				httpServletRequest);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		_addDefaultParameters();
 
-		_collectDefaultsFromRequestAttributes(request);
+		_collectDefaultsFromRequestAttributes(httpServletRequest);
 
 		_collectFromPath(parameterPath);
-		_collectFromRequestParameters(request);
+		_collectFromRequestParameters(httpServletRequest);
 		_collectFromJSONRPCRequest(jsonRPCRequest);
 		_collectFromMap(parameterMap);
 	}
@@ -110,14 +111,15 @@ public class JSONWebServiceActionParameters {
 	}
 
 	private void _collectDefaultsFromRequestAttributes(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
-		Enumeration<String> enu = request.getAttributeNames();
+		Enumeration<String> enumeration =
+			httpServletRequest.getAttributeNames();
 
-		while (enu.hasMoreElements()) {
-			String attributeName = enu.nextElement();
+		while (enumeration.hasMoreElements()) {
+			String attributeName = enumeration.nextElement();
 
-			Object value = request.getAttribute(attributeName);
+			Object value = httpServletRequest.getAttribute(attributeName);
 
 			_jsonWebServiceActionParameters.putDefaultParameter(
 				attributeName, value);
@@ -148,9 +150,8 @@ public class JSONWebServiceActionParameters {
 		for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
 			String parameterName = entry.getKey();
 
-			Object value = entry.getValue();
-
-			_jsonWebServiceActionParameters.put(parameterName, value);
+			_jsonWebServiceActionParameters.put(
+				parameterName, entry.getValue());
 		}
 	}
 
@@ -201,15 +202,17 @@ public class JSONWebServiceActionParameters {
 		}
 	}
 
-	private void _collectFromRequestParameters(HttpServletRequest request) {
+	private void _collectFromRequestParameters(
+		HttpServletRequest httpServletRequest) {
+
 		Map<String, FileItem[]> multipartParameterMap = null;
 
 		Set<String> parameterNames = new HashSet<>(
-			Collections.list(request.getParameterNames()));
+			Collections.list(httpServletRequest.getParameterNames()));
 
-		if (request instanceof UploadServletRequest) {
+		if (httpServletRequest instanceof UploadServletRequest) {
 			UploadServletRequest uploadServletRequest =
-				(UploadServletRequest)request;
+				(UploadServletRequest)httpServletRequest;
 
 			multipartParameterMap =
 				uploadServletRequest.getMultipartParameterMap();
@@ -236,12 +239,12 @@ public class JSONWebServiceActionParameters {
 						try {
 							FileUtil.write(file, fileItem.getInputStream());
 						}
-						catch (IOException ioe) {
+						catch (IOException ioException) {
 							if (_log.isWarnEnabled()) {
 								_log.warn(
 									"Unable to write temporary file " +
 										file.getAbsolutePath(),
-									ioe);
+									ioException);
 							}
 						}
 					}
@@ -257,8 +260,8 @@ public class JSONWebServiceActionParameters {
 				}
 			}
 			else {
-				String[] parameterValues = request.getParameterValues(
-					parameterName);
+				String[] parameterValues =
+					httpServletRequest.getParameterValues(parameterName);
 
 				if (parameterValues.length == 1) {
 					value = parameterValues[0];

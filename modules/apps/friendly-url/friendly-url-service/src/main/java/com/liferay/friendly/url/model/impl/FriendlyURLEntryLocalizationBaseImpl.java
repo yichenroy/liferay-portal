@@ -14,8 +14,6 @@
 
 package com.liferay.friendly.url.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 
 /**
@@ -30,7 +28,6 @@ import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
  * @see FriendlyURLEntryLocalization
  * @generated
  */
-@ProviderType
 public abstract class FriendlyURLEntryLocalizationBaseImpl
 	extends FriendlyURLEntryLocalizationModelImpl
 	implements FriendlyURLEntryLocalization {

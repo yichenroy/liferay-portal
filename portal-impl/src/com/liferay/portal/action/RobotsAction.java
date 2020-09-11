@@ -45,12 +45,13 @@ public class RobotsAction implements Action {
 
 	@Override
 	public ActionForward execute(
-			ActionMapping actionMapping, HttpServletRequest request,
-			HttpServletResponse response)
+			ActionMapping actionMapping, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		try {
-			String host = GetterUtil.getString(PortalUtil.getHost(request));
+			String host = GetterUtil.getString(
+				PortalUtil.getHost(httpServletRequest));
 
 			LayoutSet layoutSet = null;
 
@@ -61,7 +62,7 @@ public class RobotsAction implements Action {
 				layoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(host);
 			}
 			else {
-				Company company = PortalUtil.getCompany(request);
+				Company company = PortalUtil.getCompany(httpServletRequest);
 
 				if (host.equals(company.getVirtualHostname()) &&
 					Validator.isNotNull(
@@ -75,20 +76,21 @@ public class RobotsAction implements Action {
 				}
 			}
 
-			String robots = RobotsUtil.getRobots(layoutSet, request.isSecure());
+			String robots = RobotsUtil.getRobots(
+				layoutSet, httpServletRequest.isSecure());
 
 			ServletResponseUtil.sendFile(
-				request, response, null, robots.getBytes(StringPool.UTF8),
-				ContentTypes.TEXT_PLAIN_UTF8);
+				httpServletRequest, httpServletResponse, null,
+				robots.getBytes(StringPool.UTF8), ContentTypes.TEXT_PLAIN_UTF8);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 
 			PortalUtil.sendError(
-				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e, request,
-				response);
+				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, exception,
+				httpServletRequest, httpServletResponse);
 		}
 
 		return null;

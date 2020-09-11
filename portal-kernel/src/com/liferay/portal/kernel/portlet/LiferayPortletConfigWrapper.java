@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.Portlet;
 
 import javax.portlet.filter.PortletConfigWrapper;
@@ -23,7 +21,6 @@ import javax.portlet.filter.PortletConfigWrapper;
 /**
  * @author Neil Griffin
  */
-@ProviderType
 public class LiferayPortletConfigWrapper
 	extends PortletConfigWrapper implements LiferayPortletConfig {
 

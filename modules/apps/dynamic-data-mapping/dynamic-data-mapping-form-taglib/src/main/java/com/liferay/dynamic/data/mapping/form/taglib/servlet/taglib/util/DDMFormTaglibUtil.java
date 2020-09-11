@@ -29,7 +29,6 @@ import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory
 import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializerSerializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializerTracker;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
@@ -75,9 +74,9 @@ import org.osgi.service.component.annotations.Reference;
 public class DDMFormTaglibUtil {
 
 	public static DDMFormValues createDDMFormValues(
-		HttpServletRequest request, DDMForm ddmForm) {
+		HttpServletRequest httpServletRequest, DDMForm ddmForm) {
 
-		return _ddmFormValuesFactory.create(request, ddmForm);
+		return _ddmFormValuesFactory.create(httpServletRequest, ddmForm);
 	}
 
 	public static DDMForm getDDMForm(
@@ -121,17 +120,13 @@ public class DDMFormTaglibUtil {
 		List<DDMFormFieldType> formFieldTypes =
 			_ddmFormFieldTypeServicesTracker.getDDMFormFieldTypes();
 
-		DDMFormFieldTypesSerializer ddmFormFieldTypesSerializer =
-			_ddmFormFieldTypesSerializerTracker.getDDMFormFieldTypesSerializer(
-				"json");
-
 		DDMFormFieldTypesSerializerSerializeRequest.Builder builder =
 			DDMFormFieldTypesSerializerSerializeRequest.Builder.newBuilder(
 				formFieldTypes);
 
 		DDMFormFieldTypesSerializerSerializeResponse
 			ddmFormFieldTypesSerializerSerializeResponse =
-				ddmFormFieldTypesSerializer.serialize(builder.build());
+				_ddmFormFieldTypesSerializer.serialize(builder.build());
 
 		String serializedFormFieldTypes =
 			ddmFormFieldTypesSerializerSerializeResponse.getContent();
@@ -167,17 +162,18 @@ public class DDMFormTaglibUtil {
 
 	public static String getFormBuilderContext(
 		long ddmStructureId, long ddmStructureVersionId,
-		HttpServletRequest request) {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		HttpServletRequest httpServletRequest) {
 
 		String serializedFormBuilderContext = ParamUtil.getString(
-			request, "serializedFormBuilderContext");
+			httpServletRequest, "serializedFormBuilderContext");
 
 		if (Validator.isNotNull(serializedFormBuilderContext)) {
 			return serializedFormBuilderContext;
 		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		JSONSerializer jsonSerializer = _jsonFactory.createJSONSerializer();
 
@@ -282,12 +278,13 @@ public class DDMFormTaglibUtil {
 		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMFormFieldTypesSerializerTracker(
-		DDMFormFieldTypesSerializerTracker ddmFormFieldTypesSerializerTracker) {
+	@Reference(
+		target = "(ddm.form.field.types.serializer.type=json)", unbind = "-"
+	)
+	protected void setDDMFormFieldTypesSerializer(
+		DDMFormFieldTypesSerializer ddmFormFieldTypesSerializer) {
 
-		_ddmFormFieldTypesSerializerTracker =
-			ddmFormFieldTypesSerializerTracker;
+		_ddmFormFieldTypesSerializer = ddmFormFieldTypesSerializer;
 	}
 
 	@Reference(unbind = "-")
@@ -382,8 +379,7 @@ public class DDMFormTaglibUtil {
 		_ddmFormBuilderSettingsRetriever;
 	private static DDMFormFieldTypeServicesTracker
 		_ddmFormFieldTypeServicesTracker;
-	private static DDMFormFieldTypesSerializerTracker
-		_ddmFormFieldTypesSerializerTracker;
+	private static DDMFormFieldTypesSerializer _ddmFormFieldTypesSerializer;
 	private static DDMFormInstanceLocalService _ddmFormInstanceLocalService;
 	private static DDMFormInstanceRecordLocalService
 		_ddmFormInstanceRecordLocalService;

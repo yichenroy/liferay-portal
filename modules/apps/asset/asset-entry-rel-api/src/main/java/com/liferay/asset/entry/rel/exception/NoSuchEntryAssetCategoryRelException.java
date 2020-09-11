@@ -14,14 +14,11 @@
 
 package com.liferay.asset.entry.rel.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchEntryAssetCategoryRelException extends NoSuchModelException {
 
 	public NoSuchEntryAssetCategoryRelException() {
@@ -31,12 +28,14 @@ public class NoSuchEntryAssetCategoryRelException extends NoSuchModelException {
 		super(msg);
 	}
 
-	public NoSuchEntryAssetCategoryRelException(String msg, Throwable cause) {
-		super(msg, cause);
+	public NoSuchEntryAssetCategoryRelException(
+		String msg, Throwable throwable) {
+
+		super(msg, throwable);
 	}
 
-	public NoSuchEntryAssetCategoryRelException(Throwable cause) {
-		super(cause);
+	public NoSuchEntryAssetCategoryRelException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

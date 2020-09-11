@@ -1,5 +1,6 @@
 @component-name = "portal-web-forms-and-data-lists"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Dynamic Data Lists";
@@ -13,9 +14,7 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+			portlet = "Pages");
 
 		SitePages.addPublicPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -54,14 +53,12 @@ definition {
 		DynamicDataMapping.addField(
 			field = "Boolean",
 			fieldFieldLabel = "Boolean",
-			fieldName = "Boolean"
-		);
+			fieldName = "Boolean");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.saveViaDDLDisplayPG();
 
@@ -71,9 +68,7 @@ definition {
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
-		DDLTemplate.addFormTemplateViaDDLDisplayPG(
-			ddlFormTemplateName = "Form Template"
-		);
+		DDLTemplate.addFormTemplateViaDDLDisplayPG(ddlFormTemplateName = "Form Template");
 
 		DynamicDataMapping.viewCannotAddField(field = "Boolean");
 
@@ -93,9 +88,7 @@ definition {
 
 		DDLList.selectViaDDLDisplayPG();
 
-		DDLTemplate.selectFormTemplateViaDDLDisplayPG(
-			ddlFormTemplateName = "Form Template"
-		);
+		DDLTemplate.selectFormTemplateViaDDLDisplayPG(ddlFormTemplateName = "Form Template");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -105,14 +98,12 @@ definition {
 
 		DDLRecord.viewFieldFormTemplateSpecific(
 			field = "Paragraph",
-			fieldText = "Paragraph"
-		);
+			fieldText = "Paragraph");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 	}
@@ -123,17 +114,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -141,9 +129,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -167,17 +153,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -185,9 +168,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -195,14 +176,12 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -210,8 +189,7 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "Text",
 			field = "Text",
-			fieldFieldLabel = "Text"
-		);
+			fieldFieldLabel = "Text");
 	}
 
 	@description = "This is a use case for LPS-58893."
@@ -221,17 +199,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition");
 
 		DynamicDataMapping.addField(
 			field = "Documents and Media",
 			fieldFieldLabel = "Documents and Media",
-			fieldName = "DocumentsAndMedia"
-		);
+			fieldName = "DocumentsAndMedia");
 
 		DDLDataDefinition.save();
 
@@ -239,9 +214,7 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(ddlListName = "DDL List");
 
@@ -257,14 +230,12 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "DDL List"
-		);
+			ddlListName = "DDL List");
 
 		DDLRecord.populateFieldDocumentsAndMediaChooseFromDocumentLibrary(
 			document = "Document_1.png",
 			fieldFieldLabel = "Documents and Media",
-			fieldName = "DocumentsAndMedia"
-		);
+			fieldName = "DocumentsAndMedia");
 
 		PortletEntry.publish();
 
@@ -272,8 +243,7 @@ definition {
 			ddlListName = "DDL List",
 			ddlRecordFieldData = "Document_1.png",
 			field = "Documents and Media",
-			fieldFieldLabel = "Documents and Media"
-		);
+			fieldFieldLabel = "Documents and Media");
 	}
 
 	@description = "This is a use case for LPS-59565."
@@ -283,23 +253,19 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "DDL Nested Definition");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DynamicDataMapping.addFieldNested(
 			field = "Integer",
 			fieldFieldLabel = "Integer",
-			fieldName = "Integer"
-		);
+			fieldName = "Integer");
 
 		DDLDataDefinition.save();
 
@@ -307,9 +273,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "DDL List");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "DDL Nested Definition"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "DDL Nested Definition");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -317,20 +281,19 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "DDL Nested Definition",
-			ddlListName = "DDL List"
-		);
+			ddlListName = "DDL List");
 
 		DDLRecord.viewNestedFields(
 			nestedChildFieldFieldName = "Integer",
-			nestedParentFieldFieldName = "Text"
-		);
+			nestedParentFieldFieldName = "Text");
 
-		DDLRecord.populateFieldText(ddlRecordFieldData = "Text", fieldName = "Text");
+		DDLRecord.populateFieldText(
+			ddlRecordFieldData = "Text",
+			fieldName = "Text");
 
 		DDLRecord.populateFieldInteger(
 			ddlRecordFieldData = "123",
-			fieldName = "Integer"
-		);
+			fieldName = "Integer");
 
 		PortletEntry.publish();
 
@@ -341,8 +304,7 @@ definition {
 			ddlRecordFieldData = "Text",
 			ddlRecordNestedFieldData = "123",
 			fieldFieldLabel = "Text",
-			nestedFieldFieldLabel = "Integer"
-		);
+			nestedFieldFieldLabel = "Integer");
 	}
 
 	@priority = "3"
@@ -370,8 +332,7 @@ definition {
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		DDLDataDefinition.saveViaDDLDisplayPG();
 
@@ -388,8 +349,7 @@ definition {
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Name1",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		PortletEntry.publish();
 
@@ -398,23 +358,19 @@ definition {
 		DDLTemplate.addDisplayTemplateTemplateViaDDLDisplayPG(
 			ddlDisplayTemplateLanguage = "Velocity (.vm)",
 			ddlDisplayTemplateName = "Velocity Template",
-			ddlDisplayTemplateScript = "${ddlDisplayTemplateScript}"
-		);
+			ddlDisplayTemplateScript = "${ddlDisplayTemplateScript}");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLList.selectViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLTemplate.selectDisplayTemplateViaDDLDisplayPG(
-			ddlDisplayTemplateName = "Velocity Template"
-		);
+		DDLTemplate.selectDisplayTemplateViaDDLDisplayPG(ddlDisplayTemplateName = "Velocity Template");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		AssertTextPresent(
 			locator1 = "//div[@class='portlet-body']/form",
-			value1 = "Name1"
-		);
+			value1 = "Name1");
 	}
 
 	@priority = "4"
@@ -423,17 +379,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -441,9 +394,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -452,8 +403,7 @@ definition {
 		DDLDisplayPortlet.configureListViewPG(
 			configureCheckBoxName = "TEMPLATES_EDITABLE_CHECKBOX",
 			configureChecked = "false",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -468,17 +418,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -486,9 +433,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -497,8 +442,7 @@ definition {
 		DDLDisplayPortlet.configureListViewPG(
 			configureCheckBoxName = "TEMPLATES_SPREADSHEET_VIEW_CHECKBOX",
 			configureChecked = "true",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -511,17 +455,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -529,9 +470,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -539,14 +478,12 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -560,17 +497,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -578,28 +512,22 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLTemplate.addFormTemplateCP(
 			ddlDataDefinitionName = "Data Definition",
-			ddlFormTemplateName = "DDL Form Template"
-		);
+			ddlFormTemplateName = "DDL Form Template");
 
 		DynamicDataMapping.editFieldLabel(
 			field = "Text",
 			fieldFieldLabel = "Text Label Edit",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(ddlListName = "DDL List");
 
@@ -611,9 +539,7 @@ definition {
 
 		DDLList.selectViaDDLDisplayPG(ddlListName = "DDL List");
 
-		DDLTemplate.selectFormTemplateViaDDLDisplayPG(
-			ddlFormTemplateName = "DDL Form Template"
-		);
+		DDLTemplate.selectFormTemplateViaDDLDisplayPG(ddlFormTemplateName = "DDL Form Template");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -622,8 +548,7 @@ definition {
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text",
 			fieldFieldLabel = "Text Label Edit",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -632,8 +557,7 @@ definition {
 		DDLRecord.viewViaDDLDisplayPG(
 			ddlListName = "DDL List",
 			ddlRecordFieldData = "Text",
-			fieldFieldLabel = "Text Label Edit"
-		);
+			fieldFieldLabel = "Text Label Edit");
 	}
 
 	@priority = "4"
@@ -642,17 +566,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -660,12 +581,9 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(
 			ddlListDescription = "List Description",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -674,8 +592,7 @@ definition {
 		DDLList.editViaDDLDisplayPG(
 			ddlListDescriptionEdit = "List Description Edit",
 			ddlListName = "List Name",
-			ddlListNameEdit = "List Name Edit"
-		);
+			ddlListNameEdit = "List Name Edit");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -688,17 +605,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -706,9 +620,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -716,14 +628,12 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -734,8 +644,7 @@ definition {
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text Edit",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -743,27 +652,25 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "Text Edit",
 			field = "Text",
-			fieldFieldLabel = "Text"
-		);
+			fieldFieldLabel = "Text");
 	}
 
 	@priority = "4"
 	test EditListRecordViaRecordView {
+		property portal.upstream = "quarantine";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -771,9 +678,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -781,14 +686,12 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -799,8 +702,7 @@ definition {
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text Edit",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -808,8 +710,7 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "Text Edit",
 			field = "Text",
-			fieldFieldLabel = "Text"
-		);
+			fieldFieldLabel = "Text");
 	}
 
 	@priority = "4"
@@ -818,23 +719,19 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DynamicDataMapping.addField(
 			field = "Number",
 			fieldFieldLabel = "Number",
-			fieldName = "Number"
-		);
+			fieldName = "Number");
 
 		DDLDataDefinition.save();
 
@@ -842,14 +739,11 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(
 			ddlListDescription = "DDL List Description",
-			ddlListName = "DDL List Name"
-		);
+			ddlListName = "DDL List Name");
 
 		DDLDataDefinition.selectCP(ddlDataDefinitionName = "Data Definition Name");
 
@@ -857,15 +751,15 @@ definition {
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition Name",
-			ddlListName = "DDL List Name"
-		);
+			ddlListName = "DDL List Name");
 
-		DDLRecord.populateFieldNumber(ddlRecordFieldData = "123", fieldName = "Number");
+		DDLRecord.populateFieldNumber(
+			ddlRecordFieldData = "123",
+			fieldName = "Number");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Record Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -878,100 +772,82 @@ definition {
 		SearchPortlets.searchEmbedded(searchTerm = "Record Text");
 
 		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "New Data Definition Name for List: DDL List Name",
-			searchAssetType = "Dynamic Data Lists Record"
-		);
+			searchAssetTitle = "Record for Dynamic Data List:",
+			searchAssetType = "Dynamic Data Lists Record");
 
-		SearchPortlets.gotoResultDetails(
-			searchAssetTitle = "New Data Definition Name for List: DDL List Name"
-		);
+		SearchPortlets.gotoResultDetails(searchAssetTitle = "Record for Dynamic Data List: DDL List Name");
 
 		DDLRecord.viewFirstRecordSearchResult(
 			ddlListName = "DDL List Name",
 			ddlRecordFieldData = "Record Text",
-			field = "Text"
-		);
+			field = "Text");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		SearchPortlets.searchEmbedded(searchTerm = "123");
 
 		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "New Data Definition Name for List: DDL List Name",
-			searchAssetType = "Dynamic Data Lists Record"
-		);
+			searchAssetTitle = "Record for Dynamic Data List:",
+			searchAssetType = "Dynamic Data Lists Record");
 
-		SearchPortlets.gotoResultDetails(
-			searchAssetTitle = "New Data Definition Name for List: DDL List Name"
-		);
+		SearchPortlets.gotoResultDetails(searchAssetTitle = "Record for Dynamic Data List: DDL List Name");
 
 		DDLRecord.viewSecondRecordSearchResult(
 			ddlListName = "DDL List Name",
 			ddlRecordFieldData = "123",
-			field = "Number"
-		);
+			field = "Number");
 	}
 
 	@priority = "4"
 	test SearchDynamicDataListsRecordsAsUserWithNoPermissions {
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
-			portlet = "Roles"
-		);
+			portlet = "Roles");
 
 		Role.add(roleTitle = "No Permissions Role");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+			portlet = "Users and Organizations");
 
 		User.addCP(
 			userEmailAddress = "user@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+			portlet = "Users and Organizations");
 
 		User.editPasswordCP(
 			userEmailAddress = "user@liferay.com",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+			portlet = "Users and Organizations");
 
 		User.assignRegularRoleCP(
 			roleTitle = "No Permissions Role",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -979,14 +855,11 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(
 			ddlListDescription = "DDL List Description",
-			ddlListName = "DDL List Name"
-		);
+			ddlListName = "DDL List Name");
 
 		DDLDataDefinition.selectCP(ddlDataDefinitionName = "Data Definition Name");
 
@@ -994,34 +867,27 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.editPermissions(ddlListName = "DDL List Name");
 
 		Role.removePermissionPG(
 			permissionDefinitionKey = "CONTENT_PERMISSIONS_VIEW_CHECKBOX",
-			roleTitle = "Guest"
-		);
+			roleTitle = "Guest");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition Name",
-			ddlListName = "DDL List Name"
-		);
+			ddlListName = "DDL List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Record Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -1034,28 +900,23 @@ definition {
 		SearchPortlets.searchEmbedded(searchTerm = "Record Text");
 
 		SearchResultPortlet.viewSearchResults(
-			searchAssetTitle = "New Data Definition Name for List: DDL List Name",
-			searchAssetType = "Dynamic Data Lists Record"
-		);
+			searchAssetTitle = "Record for Dynamic Data List:",
+			searchAssetType = "Dynamic Data Lists Record");
 
-		SearchPortlets.gotoResultDetails(
-			searchAssetTitle = "New Data Definition Name for List: DDL List Name"
-		);
+		SearchPortlets.gotoResultDetails(searchAssetTitle = "Record for Dynamic Data List: DDL List Name");
 
 		DDLRecord.viewFirstRecordSearchResult(
 			ddlListName = "DDL List Name",
 			ddlRecordFieldData = "Record Text",
-			field = "Text"
-		);
+			field = "Text");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "user@liferay.com",
-			userLoginFullName = "userfn userln"
-		);
+			userLoginFullName = "userfn userln");
 
 		SearchPortlets.searchEmbedded(searchTerm = "Record Text");
 
-		SearchPortlets.viewSearchResultWithNoPermissions(searchTerm = "Record Text");
+		SearchResultPortlet.viewNoSearchResults(searchTerm = "Record Text");
 	}
 
 	@priority = "4"
@@ -1064,17 +925,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -1082,9 +940,7 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(ddlListName = "List Name");
 
@@ -1113,9 +969,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List 2 Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Meeting Minutes"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Meeting Minutes");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -1134,26 +988,20 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
-		DDLDataDefinition.addCP(
-			ddlDataDefinitionName = "Boolean Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.addCP(ddlDataDefinitionName = "Boolean Predefined Value Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Boolean",
 			fieldFieldLabel = "Boolean",
-			fieldName = "Boolean"
-		);
+			fieldName = "Boolean");
 
 		DynamicDataMapping.editFieldPredefinedValue(
 			field = "Boolean",
 			fieldFieldLabel = "Boolean",
 			fieldName = "Boolean",
-			fieldPredefinedValue = "Yes"
-		);
+			fieldPredefinedValue = "Yes");
 
 		DDLDataDefinition.save();
 
@@ -1161,9 +1009,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Boolean Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Boolean Predefined Value Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -1171,15 +1017,13 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Boolean Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Boolean",
 			fieldFieldLabel = "Boolean",
 			fieldName = "Boolean",
-			fieldPredefinedValue = "Yes"
-		);
+			fieldPredefinedValue = "Yes");
 
 		PortletEntry.publish();
 
@@ -1187,28 +1031,24 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "Yes",
 			field = "Boolean",
-			fieldFieldLabel = "Boolean"
-		);
+			fieldFieldLabel = "Boolean");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Boolean Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Boolean",
 			fieldFieldLabel = "Boolean",
 			fieldName = "Boolean",
-			fieldPredefinedValue = "Yes"
-		);
+			fieldPredefinedValue = "Yes");
 
 		DDLRecord.populateFieldBoolean(
 			ddlRecordFieldData = "No",
 			fieldFieldLabel = "Boolean",
-			fieldName = "Boolean"
-		);
+			fieldName = "Boolean");
 
 		PortletEntry.publish();
 
@@ -1216,39 +1056,35 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "No",
 			field = "Boolean",
-			fieldFieldLabel = "Boolean"
-		);
+			fieldFieldLabel = "Boolean");
 	}
 
 	@priority = "3"
 	test ViewDateFieldPredefinedValue {
+		property portal.upstream = "quarantine";
+		property custom.properties = "default.layout.template.id=1_column";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
-		DDLDataDefinition.addCP(
-			ddlDataDefinitionName = "Date Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.addCP(ddlDataDefinitionName = "Date Predefined Value Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Date",
 			fieldFieldLabel = "Date",
-			fieldName = "Date"
-		);
+			fieldName = "Date");
 
 		DynamicDataMapping.editFieldPredefinedValue(
 			field = "Date",
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
-			fieldPredefinedValue = "09/01/2018",
+			fieldPredefinedValue = "09/01/2019",
 			fieldPredefinedValueDay = "1",
 			fieldPredefinedValueMonth = "September",
-			fieldPredefinedValueYear = "2018"
-		);
+			fieldPredefinedValueYear = "2019");
 
 		DDLDataDefinition.save();
 
@@ -1256,9 +1092,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Date Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Date Predefined Value Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -1266,53 +1100,48 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Date Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Date",
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
-			fieldPredefinedValue = "09/01/2018"
-		);
+			fieldPredefinedValue = "09/01/2019");
 
 		PortletEntry.publish();
 
 		DDLRecord.viewViaDDLDisplayPG(
 			ddlListName = "List Name",
-			ddlRecordFieldData = "9/1/18",
+			ddlRecordFieldData = "9/1/2019",
+			ddlRecordFieldData_1 = "9/1/19",
 			field = "Date",
-			fieldFieldLabel = "Date"
-		);
+			fieldFieldLabel = "Date");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Date Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Date",
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
-			fieldPredefinedValue = "09/01/2018"
-		);
+			fieldPredefinedValue = "09/01/2019");
 
 		DDLRecord.populateFieldDate(
-			ddlRecordFieldData = "05/13/2017",
+			ddlRecordFieldData = "05/13/2019",
 			fieldFieldLabel = "Date",
-			fieldName = "Date"
-		);
+			fieldName = "Date");
 
 		PortletEntry.publish();
 
 		DDLRecord.viewViaDDLDisplayPG(
 			ddlListName = "List Name",
-			ddlRecordFieldData = "5/13/17",
+			ddlRecordFieldData = "5/13/2019",
+			ddlRecordFieldData_1 = "5/13/19",
 			field = "Date",
-			fieldFieldLabel = "Date"
-		);
+			fieldFieldLabel = "Date");
 	}
 
 	@priority = "3"
@@ -1321,26 +1150,20 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
-		DDLDataDefinition.addCP(
-			ddlDataDefinitionName = "Decimal Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.addCP(ddlDataDefinitionName = "Decimal Predefined Value Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Decimal",
 			fieldFieldLabel = "Decimal",
-			fieldName = "Decimal"
-		);
+			fieldName = "Decimal");
 
 		DynamicDataMapping.editFieldPredefinedValue(
 			field = "Decimal",
 			fieldFieldLabel = "Decimal",
 			fieldName = "Decimal",
-			fieldPredefinedValue = "30.09"
-		);
+			fieldPredefinedValue = "30.09");
 
 		DDLDataDefinition.save();
 
@@ -1348,9 +1171,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Decimal Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Decimal Predefined Value Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -1358,15 +1179,13 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Decimal Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Decimal",
 			fieldFieldLabel = "Decimal",
 			fieldName = "Decimal",
-			fieldPredefinedValue = "30.09"
-		);
+			fieldPredefinedValue = "30.09");
 
 		PortletEntry.publish();
 
@@ -1374,28 +1193,24 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "30.09",
 			field = "Decimal",
-			fieldFieldLabel = "Decimal"
-		);
+			fieldFieldLabel = "Decimal");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Decimal Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Decimal",
 			fieldFieldLabel = "Decimal",
 			fieldName = "Decimal",
-			fieldPredefinedValue = "30.09"
-		);
+			fieldPredefinedValue = "30.09");
 
 		DDLRecord.populateFieldDecimal(
 			ddlRecordFieldData = "11.18",
 			fieldFieldLabel = "Decimal",
-			fieldName = "Decimal"
-		);
+			fieldName = "Decimal");
 
 		PortletEntry.publish();
 
@@ -1403,8 +1218,7 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "11.18",
 			field = "Decimal",
-			fieldFieldLabel = "Decimal"
-		);
+			fieldFieldLabel = "Decimal");
 	}
 
 	@priority = "4"
@@ -1413,20 +1227,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(
 			ddlDataDefinitionDescription = "Data Definition Description",
-			ddlDataDefinitionName = "Data Definition"
-		);
+			ddlDataDefinitionName = "Data Definition");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -1434,29 +1244,21 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
-		DDLNavigator.gotoDataDefinitionPermissions(
-			ddlDataDefinitionName = "Data Definition"
-		);
+		DDLNavigator.gotoDataDefinitionPermissions(ddlDataDefinitionName = "Data Definition");
 
 		DDLDataDefinition.editPermissionsCP(
 			addOrRemoveViewPermission = "Add",
-			roleList = "Guest"
-		);
+			roleList = "Guest");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLList.addViaDDLDisplayPG(
 			ddlListDescription = "List Description",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -1464,14 +1266,12 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -1485,8 +1285,7 @@ definition {
 			ddlRecordFieldDataTableDisplay = "Text",
 			field = "Text",
 			fieldFieldLabel = "Text",
-			userRole = "Guest"
-		);
+			userRole = "Guest");
 	}
 
 	@priority = "3"
@@ -1495,26 +1294,20 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
-		DDLDataDefinition.addCP(
-			ddlDataDefinitionName = "Integer Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.addCP(ddlDataDefinitionName = "Integer Predefined Value Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Integer",
 			fieldFieldLabel = "Integer",
-			fieldName = "Integer"
-		);
+			fieldName = "Integer");
 
 		DynamicDataMapping.editFieldPredefinedValue(
 			field = "Integer",
 			fieldFieldLabel = "Integer",
 			fieldName = "Integer",
-			fieldPredefinedValue = "5678"
-		);
+			fieldPredefinedValue = "5678");
 
 		DDLDataDefinition.save();
 
@@ -1522,9 +1315,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Integer Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Integer Predefined Value Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -1532,15 +1323,13 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Integer Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Integer",
 			fieldFieldLabel = "Integer",
 			fieldName = "Integer",
-			fieldPredefinedValue = "5678"
-		);
+			fieldPredefinedValue = "5678");
 
 		PortletEntry.publish();
 
@@ -1549,28 +1338,24 @@ definition {
 			ddlRecordFieldData = "5678",
 			ddlRecordFieldDataTableDisplay = "5,678",
 			field = "Integer",
-			fieldFieldLabel = "Integer"
-		);
+			fieldFieldLabel = "Integer");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Integer Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Integer",
 			fieldFieldLabel = "Integer",
 			fieldName = "Integer",
-			fieldPredefinedValue = "5678"
-		);
+			fieldPredefinedValue = "5678");
 
 		DDLRecord.populateFieldInteger(
 			ddlRecordFieldData = "4421",
 			fieldFieldLabel = "Integer",
-			fieldName = "Integer"
-		);
+			fieldName = "Integer");
 
 		PortletEntry.publish();
 
@@ -1579,8 +1364,7 @@ definition {
 			ddlRecordFieldData = "4421",
 			ddlRecordFieldDataTableDisplay = "4,421",
 			field = "Integer",
-			fieldFieldLabel = "Integer"
-		);
+			fieldFieldLabel = "Integer");
 	}
 
 	@priority = "3"
@@ -1589,17 +1373,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DDLDataDefinition.save();
 
@@ -1607,9 +1388,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -1617,21 +1396,18 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
 		DDLRecord.viewViaAnchorLink(
 			ddlRecordFieldData = "Text",
-			fieldFieldLabel = "Text"
-		);
+			fieldFieldLabel = "Text");
 	}
 
 	@priority = "5"
@@ -1644,17 +1420,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		DDLDataDefinition.save();
 
@@ -1662,24 +1435,19 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLTemplate.addDisplayTemplateCP(
 			ddlDataDefinitionName = "Data Definition",
 			ddlDisplayTemplateLanguage = "FreeMarker (.ftl)",
 			ddlDisplayTemplateName = "Data Definition FreeMarker Display Template Name",
-			ddlDisplayTemplateScriptFile = "ddl_template_freemarker_1.ftl"
-		);
+			ddlDisplayTemplateScriptFile = "ddl_template_freemarker_1.ftl");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(ddlListName = "List Name");
 
@@ -1691,20 +1459,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Name1",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		PortletEntry.publish();
 
@@ -1712,20 +1476,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Name2",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		PortletEntry.publish();
 
@@ -1733,9 +1493,7 @@ definition {
 
 		DDLList.selectViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLTemplate.selectDisplayTemplateViaDDLDisplayPG(
-			ddlDisplayTemplateName = "Data Definition FreeMarker Display Template Name"
-		);
+		DDLTemplate.selectDisplayTemplateViaDDLDisplayPG(ddlDisplayTemplateName = "Data Definition FreeMarker Display Template Name");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -1752,17 +1510,14 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		DDLDataDefinition.save();
 
@@ -1770,24 +1525,19 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLTemplate.addDisplayTemplateCP(
 			ddlDataDefinitionName = "Data Definition",
 			ddlDisplayTemplateLanguage = "Velocity (.vm)",
 			ddlDisplayTemplateName = "Data Definition Velocity Display Template Name",
-			ddlDisplayTemplateScriptFile = "ddl_template_velocity_1.vm"
-		);
+			ddlDisplayTemplateScriptFile = "ddl_template_velocity_1.vm");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(ddlListName = "List Name");
 
@@ -1799,20 +1549,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Name1",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		PortletEntry.publish();
 
@@ -1820,20 +1566,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Name2",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		PortletEntry.publish();
 
@@ -1841,21 +1583,17 @@ definition {
 
 		DDLList.selectViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLTemplate.selectDisplayTemplateViaDDLDisplayPG(
-			ddlDisplayTemplateName = "Data Definition Velocity Display Template Name"
-		);
+		DDLTemplate.selectDisplayTemplateViaDDLDisplayPG(ddlDisplayTemplateName = "Data Definition Velocity Display Template Name");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		AssertTextEquals(
 			locator1 = "xPath=(//div[@class='ddl-record'])[1]",
-			value1 = "Name1"
-		);
+			value1 = "Name1");
 
 		AssertTextEquals(
 			locator1 = "xPath=(//div[@class='ddl-record'])[2]",
-			value1 = "Name2"
-		);
+			value1 = "Name2");
 	}
 
 	@priority = "4"
@@ -1878,20 +1616,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(
 			ddlDataDefinitionDescription = "Data Definition Description",
-			ddlDataDefinitionName = "Data Definition"
-		);
+			ddlDataDefinitionName = "Data Definition");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		DDLDataDefinition.save();
 
@@ -1899,30 +1633,24 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLTemplate.addDisplayTemplateCP(
 			ddlDataDefinitionDescription = "Data Definition Description",
 			ddlDataDefinitionName = "Data Definition",
 			ddlDisplayTemplateLanguage = "Velocity (.vm)",
 			ddlDisplayTemplateName = "Data Definition Velocity Display Template Name",
-			ddlDisplayTemplateScript = "${ddlDisplayTemplateScript}"
-		);
+			ddlDisplayTemplateScript = "${ddlDisplayTemplateScript}");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(
 			ddlListDescription = "List Description",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLDataDefinition.selectCP(ddlDataDefinitionName = "Data Definition");
 
@@ -1932,20 +1660,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Name1",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		PortletEntry.publish();
 
@@ -1953,20 +1677,16 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
 		DDLRecord.addCP(
 			ddlDataDefinitionName = "Data Definition",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "Name2",
 			fieldFieldLabel = "Name",
-			fieldName = "Name"
-		);
+			fieldName = "Name");
 
 		PortletEntry.publish();
 
@@ -1974,21 +1694,17 @@ definition {
 
 		DDLList.selectViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLTemplate.selectDisplayTemplateViaDDLDisplayPG(
-			ddlDisplayTemplateName = "Data Definition Velocity Display Template Name"
-		);
+		DDLTemplate.selectDisplayTemplateViaDDLDisplayPG(ddlDisplayTemplateName = "Data Definition Velocity Display Template Name");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		AssertTextPresent(
 			locator1 = "//div[@class='portlet-body']/form",
-			value1 = "Name1"
-		);
+			value1 = "Name1");
 
 		AssertTextPresent(
 			locator1 = "//div[@class='portlet-body']/form",
-			value1 = "Name2"
-		);
+			value1 = "Name2");
 	}
 
 	@priority = "3"
@@ -1997,26 +1713,20 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
-		DDLDataDefinition.addCP(
-			ddlDataDefinitionName = "Number Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.addCP(ddlDataDefinitionName = "Number Predefined Value Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Number",
 			fieldFieldLabel = "Number",
-			fieldName = "Number"
-		);
+			fieldName = "Number");
 
 		DynamicDataMapping.editFieldPredefinedValue(
 			field = "Number",
 			fieldFieldLabel = "Number",
 			fieldName = "Number",
-			fieldPredefinedValue = "9011"
-		);
+			fieldPredefinedValue = "9011");
 
 		DDLDataDefinition.save();
 
@@ -2024,9 +1734,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Number Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Number Predefined Value Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -2034,15 +1742,13 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Number Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Number",
 			fieldFieldLabel = "Number",
 			fieldName = "Number",
-			fieldPredefinedValue = "9011"
-		);
+			fieldPredefinedValue = "9011");
 
 		PortletEntry.publish();
 
@@ -2051,28 +1757,24 @@ definition {
 			ddlRecordFieldData = "9011",
 			ddlRecordFieldDataTableDisplay = "9,011",
 			field = "Number",
-			fieldFieldLabel = "Number"
-		);
+			fieldFieldLabel = "Number");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Number Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Number",
 			fieldFieldLabel = "Number",
 			fieldName = "Number",
-			fieldPredefinedValue = "9011"
-		);
+			fieldPredefinedValue = "9011");
 
 		DDLRecord.populateFieldNumber(
 			ddlRecordFieldData = "5553",
 			fieldFieldLabel = "Number",
-			fieldName = "Number"
-		);
+			fieldName = "Number");
 
 		PortletEntry.publish();
 
@@ -2081,8 +1783,7 @@ definition {
 			ddlRecordFieldData = "5553",
 			ddlRecordFieldDataTableDisplay = "5,553",
 			field = "Number",
-			fieldFieldLabel = "Number"
-		);
+			fieldFieldLabel = "Number");
 	}
 
 	@description = "This is a use case for LPS-59146."
@@ -2101,8 +1802,7 @@ definition {
 		DDLDisplayPortlet.configureListViewPG(
 			configureCheckBoxName = "TEMPLATES_SPREADSHEET_VIEW_CHECKBOX",
 			configureChecked = "true",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -2111,8 +1811,7 @@ definition {
 		DDLDisplayPortlet.configureListViewPG(
 			configureCheckBoxName = "TEMPLATES_SPREADSHEET_VIEW_CHECKBOX",
 			configureChecked = "false",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
@@ -2125,26 +1824,20 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
-		DDLDataDefinition.addCP(
-			ddlDataDefinitionName = "Text Box Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.addCP(ddlDataDefinitionName = "Text Box Predefined Value Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text Box",
 			fieldFieldLabel = "Text Box",
-			fieldName = "TextBox"
-		);
+			fieldName = "TextBox");
 
 		DynamicDataMapping.editFieldPredefinedValue(
 			field = "Text Box",
 			fieldFieldLabel = "Text Box",
 			fieldName = "TextBox",
-			fieldPredefinedValue = "Test 1"
-		);
+			fieldPredefinedValue = "Test 1");
 
 		DDLDataDefinition.save();
 
@@ -2152,9 +1845,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Text Box Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Text Box Predefined Value Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -2162,15 +1853,13 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Text Box Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Text Box",
 			fieldFieldLabel = "Text Box",
 			fieldName = "TextBox",
-			fieldPredefinedValue = "Test 1"
-		);
+			fieldPredefinedValue = "Test 1");
 
 		PortletEntry.publish();
 
@@ -2178,28 +1867,24 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "Test 1",
 			field = "Text Box",
-			fieldFieldLabel = "Text Box"
-		);
+			fieldFieldLabel = "Text Box");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Text Box Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Text Box",
 			fieldFieldLabel = "Text Box",
 			fieldName = "TextBox",
-			fieldPredefinedValue = "Test 1"
-		);
+			fieldPredefinedValue = "Test 1");
 
 		DDLRecord.populateFieldTextBox(
 			ddlRecordFieldData = "Test 2",
 			fieldFieldLabel = "Text Box",
-			fieldName = "TextBox"
-		);
+			fieldName = "TextBox");
 
 		PortletEntry.publish();
 
@@ -2207,8 +1892,7 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "Test 2",
 			field = "Text Box",
-			fieldFieldLabel = "Text Box"
-		);
+			fieldFieldLabel = "Text Box");
 	}
 
 	@priority = "4"
@@ -2217,26 +1901,20 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Dynamic Data Lists"
-		);
+			portlet = "Dynamic Data Lists");
 
-		DDLDataDefinition.addCP(
-			ddlDataDefinitionName = "Text Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.addCP(ddlDataDefinitionName = "Text Predefined Value Data Definition Name");
 
 		DynamicDataMapping.addField(
 			field = "Text",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		DynamicDataMapping.editFieldPredefinedValue(
 			field = "Text",
 			fieldFieldLabel = "Text",
 			fieldName = "Text",
-			fieldPredefinedValue = "(Enter Text Here)"
-		);
+			fieldPredefinedValue = "(Enter Text Here)");
 
 		DDLDataDefinition.save();
 
@@ -2244,9 +1922,7 @@ definition {
 
 		DDLList.addViaDDLDisplayPG(ddlListName = "List Name");
 
-		DDLDataDefinition.selectViaDDLDisplayPG(
-			ddlDataDefinitionName = "Text Predefined Value Data Definition Name"
-		);
+		DDLDataDefinition.selectViaDDLDisplayPG(ddlDataDefinitionName = "Text Predefined Value Data Definition Name");
 
 		DDLList.saveViaDDLDisplayPG();
 
@@ -2254,15 +1930,13 @@ definition {
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Text Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Text",
 			fieldFieldLabel = "Text",
 			fieldName = "Text",
-			fieldPredefinedValue = "(Enter Text Here)"
-		);
+			fieldPredefinedValue = "(Enter Text Here)");
 
 		PortletEntry.publish();
 
@@ -2270,28 +1944,24 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "(Enter Text Here)",
 			field = "Text",
-			fieldFieldLabel = "Text"
-		);
+			fieldFieldLabel = "Text");
 
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLRecord.addViaDDLDisplayPG(
 			ddlDataDefinitionName = "Text Predefined Value Data Definition Name",
-			ddlListName = "List Name"
-		);
+			ddlListName = "List Name");
 
 		DDLRecord.viewFieldPredefinedValue(
 			field = "Text",
 			fieldFieldLabel = "Text",
 			fieldName = "Text",
-			fieldPredefinedValue = "(Enter Text Here)"
-		);
+			fieldPredefinedValue = "(Enter Text Here)");
 
 		DDLRecord.populateFieldText(
 			ddlRecordFieldData = "QA Department",
 			fieldFieldLabel = "Text",
-			fieldName = "Text"
-		);
+			fieldName = "Text");
 
 		PortletEntry.publish();
 
@@ -2299,7 +1969,7 @@ definition {
 			ddlListName = "List Name",
 			ddlRecordFieldData = "QA Department",
 			field = "Text",
-			fieldFieldLabel = "Text"
-		);
+			fieldFieldLabel = "Text");
 	}
+
 }

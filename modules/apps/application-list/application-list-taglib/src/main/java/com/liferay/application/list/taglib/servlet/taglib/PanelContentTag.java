@@ -46,8 +46,8 @@ public class PanelContentTag extends BasePanelTag {
 				return EVAL_PAGE;
 			}
 		}
-		catch (IOException ioe) {
-			_log.error("Unable to include panel category", ioe);
+		catch (IOException ioException) {
+			_log.error("Unable to include panel category", ioException);
 		}
 
 		return super.doEndTag();
@@ -79,8 +79,8 @@ public class PanelContentTag extends BasePanelTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-application-list:panel-content:panelCategory",
 			_panelCategory);
 	}

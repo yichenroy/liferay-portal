@@ -42,12 +42,12 @@ public class FolderFacetSearchContributorImpl
 
 		Facet facet = searchRequestBuilder.withSearchContextGet(
 			searchContext -> {
-				FolderFacetBuilderImpl folderBuilderImplImpl =
+				FolderFacetBuilderImpl folderFacetBuilderImpl =
 					new FolderFacetBuilderImpl(searchContext);
 
-				folderFacetBuilderConsumer.accept(folderBuilderImplImpl);
+				folderFacetBuilderConsumer.accept(folderFacetBuilderImpl);
 
-				return folderBuilderImplImpl.build();
+				return folderFacetBuilderImpl.build();
 			});
 
 		searchRequestBuilder.withFacetContext(
@@ -121,8 +121,11 @@ public class FolderFacetSearchContributorImpl
 
 			JSONObject jsonObject = facetConfiguration.getData();
 
-			jsonObject.put("frequencyThreshold", _frequencyThreshold);
-			jsonObject.put("maxTerms", _maxTerms);
+			jsonObject.put(
+				"frequencyThreshold", _frequencyThreshold
+			).put(
+				"maxTerms", _maxTerms
+			);
 
 			return facetConfiguration;
 		}

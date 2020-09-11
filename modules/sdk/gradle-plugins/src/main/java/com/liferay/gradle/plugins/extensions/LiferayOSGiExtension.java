@@ -18,8 +18,11 @@ import aQute.bnd.osgi.Constants;
 
 import aQute.lib.spring.SpringComponent;
 
+import com.liferay.ant.bnd.enterprise.EnterpriseAnalyzerPlugin;
 import com.liferay.ant.bnd.jsp.JspAnalyzerPlugin;
+import com.liferay.ant.bnd.metatype.MetatypePlugin;
 import com.liferay.ant.bnd.npm.NpmAnalyzerPlugin;
+import com.liferay.ant.bnd.resource.AddResourceVerifierPlugin;
 import com.liferay.ant.bnd.resource.bundle.ResourceBundleLoaderAnalyzerPlugin;
 import com.liferay.ant.bnd.sass.SassAnalyzerPlugin;
 import com.liferay.ant.bnd.service.ServiceAnalyzerPlugin;
@@ -61,14 +64,22 @@ public class LiferayOSGiExtension {
 
 		_bundleDefaultInstructions.put(
 			Constants.BUNDLE_SYMBOLICNAME, project.getName());
+		_bundleDefaultInstructions.put(Constants.CDIANNOTATIONS, "");
 		_bundleDefaultInstructions.put(
 			Constants.DONOTCOPY, "(" + DONOTCOPY_DEFAULT + ")");
 		_bundleDefaultInstructions.put(
+			Constants.FIXUPMESSAGES + ".classpath.empty", "Classpath is empty");
+		_bundleDefaultInstructions.put(
 			Constants.FIXUPMESSAGES + ".deprecated",
 			"annotations are deprecated");
-		_bundleDefaultInstructions.put(Constants.METATYPE, "*");
 		_bundleDefaultInstructions.put(
-			Constants.PLUGIN, StringUtil.merge(_BND_PLUGIN_CLASS_NAMES, ","));
+			Constants.FIXUPMESSAGES + ".unicode.string",
+			"Invalid unicode string");
+		_bundleDefaultInstructions.put(Constants.METATYPE, "*");
+		_bundleDefaultInstructions.put(Constants.NOCLASSFORNAME, Boolean.TRUE);
+		_bundleDefaultInstructions.put(
+			Constants.PLUGIN + ".liferay",
+			StringUtil.merge(_BND_PLUGIN_CLASS_NAMES, ","));
 
 		_bundleDefaultInstructions.put(
 			"Javac-Debug",
@@ -118,7 +129,7 @@ public class LiferayOSGiExtension {
 		_bundleDefaultInstructions.put(
 			BUNDLE_DEFAULT_INSTRUCTION_LIFERAY_SERVICE_XML,
 			"service.xml,*/service.xml");
-		_bundleDefaultInstructions.put("-contract", "JavaPortlet,JavaServlet");
+		_bundleDefaultInstructions.put("-contract", "*");
 		_bundleDefaultInstructions.put("-jsp", "*.jsp,*.jspf");
 		_bundleDefaultInstructions.put("-sass", "*");
 	}
@@ -131,8 +142,8 @@ public class LiferayOSGiExtension {
 		return this;
 	}
 
-	public Map<String, String> getBundleDefaultInstructions() {
-		return GradleUtil.toStringMap(_bundleDefaultInstructions);
+	public Map<String, Object> getBundleDefaultInstructions() {
+		return _bundleDefaultInstructions;
 	}
 
 	public boolean isAutoUpdateXml() {
@@ -175,12 +186,15 @@ public class LiferayOSGiExtension {
 	}
 
 	private static final String[] _BND_PLUGIN_CLASS_NAMES = {
-		JspAnalyzerPlugin.class.getName(), NpmAnalyzerPlugin.class.getName(),
+		AddResourceVerifierPlugin.class.getName(),
+		JspAnalyzerPlugin.class.getName(), MetatypePlugin.class.getName(),
+		NpmAnalyzerPlugin.class.getName(),
 		ResourceBundleLoaderAnalyzerPlugin.class.getName(),
 		SassAnalyzerPlugin.class.getName(),
 		ServiceAnalyzerPlugin.class.getName(),
 		SocialAnalyzerPlugin.class.getName(), SpringComponent.class.getName(),
-		SpringDependencyAnalyzerPlugin.class.getName()
+		SpringDependencyAnalyzerPlugin.class.getName(),
+		EnterpriseAnalyzerPlugin.class.getName()
 	};
 
 	private boolean _autoUpdateXml = true;

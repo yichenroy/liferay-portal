@@ -14,8 +14,6 @@
 
 package com.liferay.portal.search.internal.aggregation.bucket;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.AggregationVisitor;
 import com.liferay.portal.search.aggregation.bucket.CollectionMode;
 import com.liferay.portal.search.aggregation.bucket.IncludeExcludeClause;
@@ -30,7 +28,6 @@ import java.util.List;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class TermsAggregationImpl
 	extends BaseFieldAggregation implements TermsAggregation {
 

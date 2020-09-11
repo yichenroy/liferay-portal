@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.checks.util.GradleSourceUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,13 +30,8 @@ import java.util.regex.Pattern;
 public class GradleTestDependencyVersionCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
-	}
-
-	public void setAllowedDependencyNames(String allowedDependencyNames) {
-		Collections.addAll(
-			_allowedDependencyNames, StringUtil.split(allowedDependencyNames));
 	}
 
 	@Override
@@ -45,20 +39,23 @@ public class GradleTestDependencyVersionCheck extends BaseFileCheck {
 		String fileName, String absolutePath, String content) {
 
 		if (!absolutePath.contains("/modules/apps/") &&
+			!absolutePath.contains("/modules/dxp/apps/") &&
 			!absolutePath.contains("/modules/private/apps/")) {
 
 			return content;
 		}
 
 		for (String dependencies : _getDependenciesBlocks(content)) {
-			content = _formatDependencies(fileName, content, dependencies);
+			content = _formatDependencies(
+				fileName, absolutePath, content, dependencies);
 		}
 
 		return content;
 	}
 
 	private String _formatDependencies(
-		String fileName, String content, String dependencies) {
+		String fileName, String absolutePath, String content,
+		String dependencies) {
 
 		int x = dependencies.indexOf("\n");
 		int y = dependencies.lastIndexOf("\n");
@@ -66,6 +63,9 @@ public class GradleTestDependencyVersionCheck extends BaseFileCheck {
 		if (x == y) {
 			return content;
 		}
+
+		List<String> allowedDependencyNames = getAttributeValues(
+			_ALLOWED_DEPENDENCY_NAMES_KEY, absolutePath);
 
 		dependencies = dependencies.substring(x, y + 1);
 
@@ -111,15 +111,14 @@ public class GradleTestDependencyVersionCheck extends BaseFileCheck {
 			}
 
 			if (dependencyName.startsWith("com.liferay.") &&
+				!dependencyName.startsWith("com.liferay.portletmvc4spring") &&
 				!line.contains("project(\"") &&
-				!_allowedDependencyNames.contains(dependencyName)) {
-
-				int lineNumber = getLineNumber(content, content.indexOf(line));
+				!allowedDependencyNames.contains(dependencyName)) {
 
 				addMessage(
 					fileName,
 					"Use a project dependency instead of a module dependency",
-					lineNumber);
+					getLineNumber(content, content.indexOf(line)));
 			}
 
 			sb.append(line);
@@ -184,13 +183,14 @@ public class GradleTestDependencyVersionCheck extends BaseFileCheck {
 		return matcher.group(1);
 	}
 
+	private static final String _ALLOWED_DEPENDENCY_NAMES_KEY =
+		"allowedDependencyNames";
+
 	private static final Pattern _dependenciesPattern = Pattern.compile(
 		"(\n|\\A)(\t*)dependencies \\{\n");
 	private static final Pattern _dependencyNamePattern = Pattern.compile(
 		".*, name: \"([^\"]*)\".*");
 	private static final Pattern _dependencyVersionPattern = Pattern.compile(
 		".*, version: \"([^\"]*)\".*");
-
-	private final List<String> _allowedDependencyNames = new ArrayList<>();
 
 }

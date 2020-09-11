@@ -47,10 +47,12 @@ public class MicroblogsEntryAssetRenderer
 
 	public MicroblogsEntryAssetRenderer(
 		MicroblogsEntry entry,
-		ModelResourcePermission<MicroblogsEntry> modelResourcePermission) {
+		ModelResourcePermission<MicroblogsEntry>
+			microblogsEntryModelResourcePermission) {
 
 		_entry = entry;
-		_microblogsEntryModelResourcePermission = modelResourcePermission;
+		_microblogsEntryModelResourcePermission =
+			microblogsEntryModelResourcePermission;
 	}
 
 	@Override
@@ -76,14 +78,16 @@ public class MicroblogsEntryAssetRenderer
 
 			return group.getGroupId();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return 0;
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
 		if (template.equals(TEMPLATE_ABSTRACT) ||
 			template.equals(TEMPLATE_FULL_CONTENT)) {
 
@@ -134,7 +138,7 @@ public class MicroblogsEntryAssetRenderer
 
 			return portletURL.toString();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return null;
@@ -161,7 +165,7 @@ public class MicroblogsEntryAssetRenderer
 			return _microblogsEntryModelResourcePermission.contains(
 				permissionChecker, _entry, ActionKeys.VIEW);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return false;
@@ -169,13 +173,13 @@ public class MicroblogsEntryAssetRenderer
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(WebKeys.MICROBLOGS_ENTRY, _entry);
+		httpServletRequest.setAttribute(WebKeys.MICROBLOGS_ENTRY, _entry);
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	private final MicroblogsEntry _entry;

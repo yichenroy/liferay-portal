@@ -14,11 +14,8 @@
 
 package com.liferay.portal.search.engine.adapter.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class CountSearchResponse extends BaseSearchResponse {
 }

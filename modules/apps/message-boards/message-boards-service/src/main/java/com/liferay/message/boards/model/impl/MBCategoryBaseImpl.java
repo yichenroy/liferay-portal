@@ -14,8 +14,6 @@
 
 package com.liferay.message.boards.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.service.MBCategoryLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.message.boards.service.MBCategoryLocalServiceUtil;
  * @see MBCategory
  * @generated
  */
-@ProviderType
 public abstract class MBCategoryBaseImpl
 	extends MBCategoryModelImpl implements MBCategory {
 

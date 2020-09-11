@@ -14,12 +14,9 @@
 
 package com.liferay.asset.entry.rel.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Eudaldo Alonso
  */
-@ProviderType
 public class AssetEntryAssetCategoryRelImpl
 	extends AssetEntryAssetCategoryRelBaseImpl {
 }

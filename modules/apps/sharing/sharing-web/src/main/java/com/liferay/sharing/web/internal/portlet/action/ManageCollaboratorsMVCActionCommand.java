@@ -15,8 +15,8 @@
 package com.liferay.sharing.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
@@ -97,23 +96,21 @@ public class ManageCollaboratorsMVCActionCommand extends BaseMVCActionCommand {
 					return null;
 				});
 		}
-		catch (Throwable t) {
-			HttpServletResponse response = _portal.getHttpServletResponse(
-				actionResponse);
+		catch (Throwable throwable) {
+			HttpServletResponse httpServletResponse =
+				_portal.getHttpServletResponse(actionResponse);
 
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+			httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 
 			String errorMessage =
 				"an-unexpected-error-occurred-while-updating-permissions";
 
-			if (t instanceof PrincipalException) {
+			if (throwable instanceof PrincipalException) {
 				errorMessage =
 					"you-do-not-have-permission-to-update-these-permissions";
 			}
 
-			jsonObject.put(
+			JSONObject jsonObject = JSONUtil.put(
 				"errorMessage", LanguageUtil.get(resourceBundle, errorMessage));
 
 			JSONPortletResponseUtil.writeJSON(
@@ -270,9 +267,9 @@ public class ManageCollaboratorsMVCActionCommand extends BaseMVCActionCommand {
 				sharingEntryId, serviceContext);
 		}
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+		hideDefaultSuccessMessage(actionRequest);
 
-		jsonObject.put(
+		JSONObject jsonObject = JSONUtil.put(
 			"successMessage",
 			LanguageUtil.get(resourceBundle, "permissions-changed"));
 
@@ -295,8 +292,5 @@ public class ManageCollaboratorsMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private SharingEntryService _sharingEntryService;
-
-	@Reference
-	private UserLocalService _userLocalService;
 
 }

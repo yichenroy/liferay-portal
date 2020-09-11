@@ -16,13 +16,14 @@ package com.liferay.wiki.web.internal.upload;
 
 import com.liferay.item.selector.ItemSelectorUploadResponseHandler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.ServletResponseConstants;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.upload.UploadResponseHandler;
 import com.liferay.wiki.exception.WikiAttachmentMimeTypeException;
+import com.liferay.wiki.exception.WikiAttachmentSizeException;
 
 import javax.portlet.PortletRequest;
 
@@ -38,21 +39,25 @@ public class PageAttachmentWikiUploadResponseHandler
 
 	@Override
 	public JSONObject onFailure(
-			PortletRequest portletRequest, PortalException pe)
+			PortletRequest portletRequest, PortalException portalException)
 		throws PortalException {
 
 		JSONObject jsonObject = _itemSelectorUploadResponseHandler.onFailure(
-			portletRequest, pe);
+			portletRequest, portalException);
 
-		if (pe instanceof WikiAttachmentMimeTypeException) {
-			JSONObject errorJSONObject = JSONFactoryUtil.createJSONObject();
+		JSONObject errorJSONObject = null;
 
-			errorJSONObject.put(
+		if (portalException instanceof WikiAttachmentMimeTypeException) {
+			errorJSONObject = JSONUtil.put(
 				"errorType",
 				ServletResponseConstants.SC_FILE_EXTENSION_EXCEPTION);
-
-			jsonObject.put("error", errorJSONObject);
 		}
+		else if (portalException instanceof WikiAttachmentSizeException) {
+			errorJSONObject = JSONUtil.put(
+				"errorType", ServletResponseConstants.SC_FILE_SIZE_EXCEPTION);
+		}
+
+		jsonObject.put("error", errorJSONObject);
 
 		return jsonObject;
 	}

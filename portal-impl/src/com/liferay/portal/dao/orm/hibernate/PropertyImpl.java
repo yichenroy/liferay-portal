@@ -14,13 +14,13 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Order;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.util.Collection;
 
@@ -194,7 +194,7 @@ public class PropertyImpl extends ProjectionImpl implements Property {
 
 	@Override
 	public Criterion in(char[] values) {
-		return in(ListUtil.toList(values));
+		return in(ListUtil.fromArray(values));
 	}
 
 	@Override
@@ -204,7 +204,7 @@ public class PropertyImpl extends ProjectionImpl implements Property {
 
 	@Override
 	public Criterion in(double[] values) {
-		return in(ListUtil.toList(values));
+		return in(ListUtil.fromArray(values));
 	}
 
 	@Override
@@ -217,17 +217,17 @@ public class PropertyImpl extends ProjectionImpl implements Property {
 
 	@Override
 	public Criterion in(float[] values) {
-		return in(ListUtil.toList(values));
+		return in(ListUtil.fromArray(values));
 	}
 
 	@Override
 	public Criterion in(int[] values) {
-		return in(ListUtil.toList(values));
+		return in(ListUtil.fromArray(values));
 	}
 
 	@Override
 	public Criterion in(long[] values) {
-		return in(ListUtil.toList(values));
+		return in(ListUtil.fromArray(values));
 	}
 
 	@Override
@@ -237,7 +237,7 @@ public class PropertyImpl extends ProjectionImpl implements Property {
 
 	@Override
 	public Criterion in(short[] values) {
-		return in(ListUtil.toList(values));
+		return in(ListUtil.fromArray(values));
 	}
 
 	@Override
@@ -402,14 +402,6 @@ public class PropertyImpl extends ProjectionImpl implements Property {
 		sb.append("}");
 
 		return sb.toString();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected DynamicQueryImpl getDynamicQueryImpl(DynamicQuery subselect) {
-		return (DynamicQueryImpl)subselect;
 	}
 
 	private final org.hibernate.criterion.Property _property;

@@ -15,9 +15,15 @@
 package com.liferay.portal.vulcan.yaml.openapi;
 
 /**
- * @author Peter Shin
+ * @author     Peter Shin
+ * @deprecated As of Athanasius (7.3.x)
  */
+@Deprecated
 public class Parameter {
+
+	public String getExample() {
+		return _example;
+	}
 
 	public String getIn() {
 		return _in;
@@ -37,6 +43,10 @@ public class Parameter {
 
 	public boolean isRequired() {
 		return _required;
+	}
+
+	public void setExample(String example) {
+		_example = example;
 	}
 
 	public void setIn(String in) {
@@ -59,6 +69,7 @@ public class Parameter {
 		_schema = schema;
 	}
 
+	private String _example;
 	private String _in;
 	private String _name;
 	private String _reference;

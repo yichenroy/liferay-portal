@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.query;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author André de Oliveira
@@ -88,5 +88,7 @@ public interface QueryVisitor<T> {
 	public T visit(TermsSetQuery termsQuery);
 
 	public T visit(WildcardQuery wildcardQuery);
+
+	public T visit(WrapperQuery wrapperQuery);
 
 }

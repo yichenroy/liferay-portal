@@ -17,6 +17,8 @@ package com.liferay.layout.set.prototype.exportimport.data.handler.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -40,7 +42,6 @@ import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.LayoutTestUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -107,9 +108,10 @@ public class LayoutSetPrototypeStagedModelDataHandlerTest
 
 		layouts.add(layout);
 
-		UnicodeProperties typeSettings = layout.getTypeSettingsProperties();
+		UnicodeProperties typeSettingsUnicodeProperties =
+			layout.getTypeSettingsProperties();
 
-		typeSettings.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			LayoutSetPrototypeStagedModelDataHandlerTest.class.getName(),
 			Boolean.TRUE.toString());
 
@@ -254,15 +256,11 @@ public class LayoutSetPrototypeStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return LayoutSetPrototypeLocalServiceUtil.
-				fetchLayoutSetPrototypeByUuidAndCompanyId(
-					uuid, group.getCompanyId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return LayoutSetPrototypeLocalServiceUtil.
+			getLayoutSetPrototypeByUuidAndCompanyId(uuid, group.getCompanyId());
 	}
 
 	@Override

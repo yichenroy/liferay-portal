@@ -19,9 +19,6 @@ package com.liferay.sharing.web.internal.constants;
  */
 public class SharingWebKeys {
 
-	public static final String COMPANY_SHARING_CONFIGURATION =
-		"COMPANY_SHARING_CONFIGURATION";
-
 	public static final String GROUP_SHARING_CONFIGURATION =
 		"GROUP_SHARING_CONFIGURATION";
 
@@ -29,5 +26,7 @@ public class SharingWebKeys {
 		"manageCollaboratorsDialog";
 
 	public static final String SHARING_DIALOG_ID = "sharingDialog";
+
+	public static final String SHARING_REACT_DATA = "sharingReactData";
 
 }

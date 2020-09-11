@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.zip;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +21,6 @@ import java.io.InputStream;
 /**
  * @author Raymond Augé
  */
-@ProviderType
 public class ZipReaderFactoryUtil {
 
 	public static ZipReader getZipReader(File file) {

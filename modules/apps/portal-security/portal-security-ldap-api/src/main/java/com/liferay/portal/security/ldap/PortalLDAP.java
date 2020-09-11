@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.ldap;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.List;
 
 import javax.naming.Binding;
@@ -24,9 +22,13 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.LdapContext;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * @author Edward C. Han
+ * @author     Edward C. Han
+ * @deprecated As of Mueller (7.2.x), replaced by {@link SafePortalLDAP}
  */
+@Deprecated
 @ProviderType
 public interface PortalLDAP {
 
@@ -86,14 +88,6 @@ public interface PortalLDAP {
 	public Attribute getMultivaluedAttribute(
 			long companyId, LdapContext ldapContext, String baseDN,
 			String filter, Attribute attribute)
-		throws Exception;
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	public String getNameInNamespace(
-			long ldapServerId, long companyId, Binding binding)
 		throws Exception;
 
 	public Binding getUser(

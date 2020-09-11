@@ -61,18 +61,17 @@ public class TimerMessageListener extends BaseMessageListener {
 			_workflowEngine.executeTimerWorkflowInstance(
 				kaleoTimerInstanceTokenId, serviceContext, workflowContext);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Unable to execute scheduled job. Unregistering job " +
 						message,
-					e);
+					exception);
 			}
 
-			String groupName = SchedulerUtil.getGroupName(
-				kaleoTimerInstanceTokenId);
-
-			SchedulerEngineHelperUtil.delete(groupName, StorageType.PERSISTED);
+			SchedulerEngineHelperUtil.delete(
+				SchedulerUtil.getGroupName(kaleoTimerInstanceTokenId),
+				StorageType.PERSISTED);
 		}
 	}
 
@@ -83,11 +82,8 @@ public class TimerMessageListener extends BaseMessageListener {
 		long kaleoTimerInstanceTokenId = message.getLong(
 			"kaleoTimerInstanceTokenId");
 
-		KaleoTimerInstanceToken kaleoTimerInstanceToken =
-			_kaleoTimerInstanceTokenLocalService.getKaleoTimerInstanceToken(
-				kaleoTimerInstanceTokenId);
-
-		return kaleoTimerInstanceToken;
+		return _kaleoTimerInstanceTokenLocalService.getKaleoTimerInstanceToken(
+			kaleoTimerInstanceTokenId);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

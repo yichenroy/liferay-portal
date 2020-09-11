@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.engine.adapter.cluster;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
 public class StateClusterResponse implements ClusterResponse {
 
 	public StateClusterResponse(String stateMessage) {

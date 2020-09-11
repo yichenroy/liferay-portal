@@ -80,13 +80,13 @@ public abstract class BaseDateRangeTermQueryTestCase
 
 				Assert.assertEquals("Total hits", 4, searchHits.getTotalHits());
 
-				List<SearchHit> searchHitList = searchHits.getSearchHits();
+				List<SearchHit> searchHitsList = searchHits.getSearchHits();
 
-				Assert.assertEquals("Retrieved hits", 4, searchHitList.size());
+				Assert.assertEquals("Retrieved hits", 4, searchHitsList.size());
 
 				DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
-				searchHitList.forEach(
+				searchHitsList.forEach(
 					searchHit -> {
 						Document document = searchHit.getDocument();
 
@@ -104,8 +104,9 @@ public abstract class BaseDateRangeTermQueryTestCase
 								expirationDate.before(
 									getDate("2018-12-31T23:59:59")));
 						}
-						catch (ParseException pe) {
-							Assert.fail(StackTraceUtil.getStackTrace(pe));
+						catch (ParseException parseException) {
+							Assert.fail(
+								StackTraceUtil.getStackTrace(parseException));
 						}
 					});
 			});

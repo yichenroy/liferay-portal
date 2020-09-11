@@ -37,8 +37,8 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
- * @author     Zsolt Berentey
- * @author     Shuyang Zhou
+ * @author Zsolt Berentey
+ * @author Shuyang Zhou
  */
 public class BufferedIncrementAdvice extends ChainableMethodAdvice {
 
@@ -107,9 +107,9 @@ public class BufferedIncrementAdvice extends ChainableMethodAdvice {
 					return null;
 				});
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to increment", e);
+				_log.warn("Unable to increment", exception);
 			}
 		}
 

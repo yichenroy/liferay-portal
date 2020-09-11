@@ -14,8 +14,6 @@
 
 package com.liferay.journal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.journal.model.JournalArticleLocalization;
 
 /**
@@ -30,7 +28,6 @@ import com.liferay.journal.model.JournalArticleLocalization;
  * @see JournalArticleLocalization
  * @generated
  */
-@ProviderType
 public abstract class JournalArticleLocalizationBaseImpl
 	extends JournalArticleLocalizationModelImpl
 	implements JournalArticleLocalization {

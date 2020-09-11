@@ -9,8 +9,8 @@
 </thead>
 <tbody>
 <tr>
-	<td>PANEL_TOGGLE</td>
-	<td>//div[contains(.,'Comments')]//div[@class='panel-heading']</td>
+	<td>PANEL_HEADING</td>
+	<td>//fieldset[contains(@class,'add-comment')]//strong[contains(.,'Comments')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -39,13 +39,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>COMMENT_FIELD_LAST</td>
+	<td>xpath=(//div[contains(@class,'alloy-editor') and contains(@role,'textbox')])[last()]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COMMENT_INFO</td>
+	<td>//fieldset[contains(@class,'add-comment')]//div[contains(@class,'alert-info')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>EDIT_COMMENT_FIELD</td>
 	<td>//div[contains(@name,'editReplyBody')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ENTRY_COUNT_PANEL</td>
-	<td>//h2[contains(.,'Comment')]</td>
+	<td>//div[contains(@class,'autofit-row')]/span[contains(.,'Comment')]</td>
 	<td></td>
 </tr>
 <tr>

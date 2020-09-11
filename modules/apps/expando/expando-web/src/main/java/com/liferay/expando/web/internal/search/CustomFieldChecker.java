@@ -19,7 +19,6 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
 import com.liferay.expando.kernel.service.permission.ExpandoColumnPermissionUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -50,34 +49,32 @@ public class CustomFieldChecker extends EmptyOnClickRowChecker {
 
 	@Override
 	public String getRowCheckBox(
-		HttpServletRequest request, boolean checked, boolean disabled,
-		String primaryKey) {
+		HttpServletRequest httpServletRequest, boolean checked,
+		boolean disabled, String primaryKey) {
 
 		ExpandoColumn expandoColumn =
 			ExpandoColumnLocalServiceUtil.getDefaultTableColumn(
 				_companyId, _modelResource, primaryKey);
 
 		return super.getRowCheckBox(
-			request, checked, disabled,
+			httpServletRequest, checked, disabled,
 			String.valueOf(expandoColumn.getColumnId()));
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
+	public boolean isDisabled(Object object) {
 		ExpandoColumn expandoColumn =
 			ExpandoColumnLocalServiceUtil.getDefaultTableColumn(
-				_companyId, _modelResource, (String)obj);
-
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
+				_companyId, _modelResource, (String)object);
 
 		if (!ExpandoColumnPermissionUtil.contains(
-				permissionChecker, expandoColumn, ActionKeys.DELETE)) {
+				PermissionThreadLocal.getPermissionChecker(), expandoColumn,
+				ActionKeys.DELETE)) {
 
 			return true;
 		}
 
-		return super.isDisabled(obj);
+		return super.isDisabled(object);
 	}
 
 	private final long _companyId;

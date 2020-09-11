@@ -2,8 +2,16 @@ apply plugin: "com.liferay.target.platform.ide"
 
 task runGradleTest
 
+allprojects {
+	repositories {
+		maven {
+			url "https://repository-cdn.liferay.com/nexus/content/groups/public"
+		}
+	}
+}
+
 dependencies {
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.bom", version: "7.0.4"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom.compile.only", version: "7.2.1"
 }
 
 runGradleTest {
@@ -14,9 +22,9 @@ runGradleTest {
 
 		List eclipseDependencies = eclipse.classpath.resolveDependencies()
 
-		assert eclipseDependencies.size() == 655
-		assert eclipseDependencies[3].path.contains("com.liferay.push.notifications.sender.firebase")
-		assert eclipseDependencies[4].path.contains("com.liferay.dynamic.data.mapping.type.password")
+		assert eclipseDependencies.size() == 14
+		assert eclipseDependencies[3].path.contains("org.osgi.service.component.annotations")
+		assert eclipseDependencies[4].path.contains("portlet-api")
 
 		assert eclipse.project.natures[0] == "org.eclipse.jdt.core.javanature"
 	}
@@ -26,9 +34,4 @@ targetPlatform {
 	onlyIf {
 		it.name != "subproject1"
 	}
-}
-
-targetPlatformIDE {
-	includeGroups "com.liferay"
-	includeGroups "com.liferay.portal"
 }

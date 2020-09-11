@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.engine.adapter.search;
 
-import aQute.bnd.annotation.ProviderType;
+import com.liferay.portal.search.engine.adapter.ccr.CrossClusterRequest;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,9 +23,13 @@ import java.util.List;
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
 public class MultisearchSearchRequest
+	extends CrossClusterRequest
 	implements SearchRequest<MultisearchSearchResponse> {
+
+	public MultisearchSearchRequest() {
+		setPreferLocalCluster(true);
+	}
 
 	@Override
 	public MultisearchSearchResponse accept(

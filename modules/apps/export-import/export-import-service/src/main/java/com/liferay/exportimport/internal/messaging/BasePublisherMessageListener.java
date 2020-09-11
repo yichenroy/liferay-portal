@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.internal.messaging;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.messaging.BaseMessageStatusMessageListener;
@@ -47,7 +45,6 @@ import org.osgi.service.component.ComponentContext;
 /**
  * @author Levente Hudák
  */
-@ProviderType
 public abstract class BasePublisherMessageListener
 	extends BaseMessageStatusMessageListener {
 
@@ -83,11 +80,11 @@ public abstract class BasePublisherMessageListener
 		try {
 			permissionChecker = PermissionCheckerFactoryUtil.create(user);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new SystemException(
 				"Unable to initialize thread locals because an error occured " +
 					"when creating a permission checker for user " + userId,
-				e);
+				exception);
 		}
 
 		PermissionThreadLocal.setPermissionChecker(permissionChecker);

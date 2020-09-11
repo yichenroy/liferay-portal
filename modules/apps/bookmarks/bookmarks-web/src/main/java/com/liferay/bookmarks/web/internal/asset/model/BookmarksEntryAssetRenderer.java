@@ -19,6 +19,9 @@ import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.bookmarks.constants.BookmarksPortletKeys;
 import com.liferay.bookmarks.constants.BookmarksWebKeys;
 import com.liferay.bookmarks.model.BookmarksEntry;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -31,7 +34,6 @@ import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Date;
 import java.util.Locale;
 
 import javax.portlet.PortletRequest;
@@ -52,10 +54,12 @@ public class BookmarksEntryAssetRenderer
 
 	public BookmarksEntryAssetRenderer(
 		BookmarksEntry entry,
-		ModelResourcePermission<BookmarksEntry> modelResourcePermission) {
+		ModelResourcePermission<BookmarksEntry>
+			bookmarksEntryModelResourcePermission) {
 
 		_entry = entry;
-		_bookmarksEntryModelResourcePermission = modelResourcePermission;
+		_bookmarksEntryModelResourcePermission =
+			bookmarksEntryModelResourcePermission;
 	}
 
 	@Override
@@ -73,22 +77,15 @@ public class BookmarksEntryAssetRenderer
 		return _entry.getEntryId();
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public Date getDisplayDate() {
-		return _entry.getModifiedDate();
-	}
-
 	@Override
 	public long getGroupId() {
 		return _entry.getGroupId();
 	}
 
 	@Override
-	public String getJspPath(HttpServletRequest request, String template) {
+	public String getJspPath(
+		HttpServletRequest httpServletRequest, String template) {
+
 		if (template.equals(TEMPLATE_FULL_CONTENT)) {
 			return "/bookmarks/asset/" + template + ".jsp";
 		}
@@ -128,9 +125,8 @@ public class BookmarksEntryAssetRenderer
 
 	@Override
 	public PortletURL getURLEdit(
-			LiferayPortletRequest liferayPortletRequest,
-			LiferayPortletResponse liferayPortletResponse)
-		throws Exception {
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
 		Group group = GroupLocalServiceUtil.fetchGroup(_entry.getGroupId());
 
@@ -158,9 +154,8 @@ public class BookmarksEntryAssetRenderer
 
 	@Override
 	public String getURLView(
-			LiferayPortletResponse liferayPortletResponse,
-			WindowState windowState)
-		throws Exception {
+		LiferayPortletResponse liferayPortletResponse,
+		WindowState windowState) {
 
 		return PortalUtil.getPathMain() + "/bookmarks/open_entry?entryId=" +
 			_entry.getEntryId();
@@ -198,10 +193,13 @@ public class BookmarksEntryAssetRenderer
 			return _bookmarksEntryModelResourcePermission.contains(
 				permissionChecker, _entry, ActionKeys.UPDATE);
 		}
-		catch (Exception e) {
-		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException, portalException);
+			}
 
-		return false;
+			return false;
+		}
 	}
 
 	@Override
@@ -210,27 +208,34 @@ public class BookmarksEntryAssetRenderer
 			return _bookmarksEntryModelResourcePermission.contains(
 				permissionChecker, _entry, ActionKeys.VIEW);
 		}
-		catch (Exception e) {
-		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException, portalException);
+			}
 
-		return true;
+			return false;
+		}
 	}
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
-		request.setAttribute(BookmarksWebKeys.BOOKMARKS_ENTRY, _entry);
+		httpServletRequest.setAttribute(
+			BookmarksWebKeys.BOOKMARKS_ENTRY, _entry);
 
-		return super.include(request, response, template);
+		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
 	@Override
 	public boolean isPrintable() {
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BookmarksEntryAssetRenderer.class);
 
 	private final ModelResourcePermission<BookmarksEntry>
 		_bookmarksEntryModelResourcePermission;

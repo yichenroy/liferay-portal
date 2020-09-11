@@ -1,105 +1,102 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
+import {
+	DefaultEventHandler,
+	addParams,
+	getPortletId,
+	openSelectionModal,
+} from 'frontend-js-web';
 import dom from 'metal-dom';
-import DefaultEventHandler from 'frontend-js-web/liferay/DefaultEventHandler.es';
 
 class UsersManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 	deleteSelectedUsers() {
-		if (confirm(Liferay.Language.get('are-you-sure-you-want-to-delete-this'))) {
+		if (
+			confirm(
+				Liferay.Language.get('are-you-sure-you-want-to-delete-this')
+			)
+		) {
 			submitForm(this.one('#fm'));
 		}
 	}
 
-	removeUserSiteRole(itemData) {
+	removeUserRole(itemData) {
 		if (confirm(itemData.message)) {
-			submitForm(this.one('#fm'), itemData.removeUserSiteRoleURL);
+			submitForm(this.one('#fm'), itemData.removeUserRoleURL);
 		}
 	}
 
 	selectRoles(itemData) {
-		Liferay.Util.selectEntity(
-			{
-				dialog: {
-					constrain: true,
-					destroyOnHide: true,
-					modal: true
-				},
-				eventName: this.ns('selectSiteRole'),
-				title: Liferay.Language.get('select-site-role'),
-				uri: itemData.selectRolesURL
+		openSelectionModal({
+			onSelect: (event) => {
+				location.href = addParams(
+					`${this.ns('roleId')}=${event.id}`,
+					itemData.viewRoleURL
+				);
 			},
-			function(event) {
-				location.href = Liferay.Util.addParams(`${this.ns('roleId')}=${event.id}`, itemData.viewRoleURL);
-			}.bind(this)
-		);
+			selectEventName: this.ns('selectRole'),
+			title: Liferay.Language.get('select-role'),
+			url: itemData.selectRolesURL,
+		});
 	}
 
-	selectSiteRole(itemData) {
-		AUI().use(
-			'liferay-item-selector-dialog',
-			A => {
-				const itemSelectorDialog = new A.LiferayItemSelectorDialog(
-					{
-						eventName: this.ns('selectSiteRole'),
-						on: {
-							selectedItemChange: function(event) {
-								let selectedItem = event.newVal;
+	selectRole(itemData) {
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('done'),
+			multiple: true,
+			onSelect: (selectedItem) => {
+				if (selectedItem) {
+					const fm = this.one('#fm');
 
-								if (selectedItem) {
-									let fm = this.one('#fm');
+					selectedItem.forEach((item) => {
+						dom.append(fm, item);
+					});
 
-									selectedItem.forEach(
-										item => {
-											dom.append(fm, item);
-										}
-									);
-
-									submitForm(fm, itemData.editUsersSiteRolesURL);
-								}
-							}.bind(this)
-						},
-						'strings.add': Liferay.Language.get('done'),
-						title: Liferay.Language.get('assign-site-roles'),
-						url: itemData.selectSiteRoleURL
-					}
-				);
-
-				itemSelectorDialog.open();
-			}
-		);
+					submitForm(fm, itemData.editUsersRolesURL);
+				}
+			},
+			selectEventName: this.ns('selectRole'),
+			title: Liferay.Language.get('assign-roles'),
+			url: itemData.selectRoleURL,
+		});
 	}
 
 	selectUsers(itemData) {
-		AUI().use(
-			'liferay-item-selector-dialog',
-			A => {
-				const itemSelectorDialog = new A.LiferayItemSelectorDialog(
-					{
-						eventName: this.ns('selectUsers'),
-						on: {
-							selectedItemChange: function(event) {
-								const selectedItem = event.newVal;
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('done'),
+			multiple: true,
+			onSelect: (selectedItem) => {
+				if (selectedItem) {
+					const addGroupUsersFm = this.one('#addGroupUsersFm');
 
-								if (selectedItem) {
-									let addGroupUsersFm = this.one('#addGroupUsersFm');
+					selectedItem.forEach((item) => {
+						dom.append(addGroupUsersFm, item);
+					});
 
-									selectedItem.forEach(
-										item => {
-											dom.append(addGroupUsersFm, item);
-										}
-									);
-
-									submitForm(addGroupUsersFm);
-								}
-							}.bind(this)
-						},
-						'strings.add': Liferay.Language.get('done'),
-						title: Liferay.Language.get('assign-users-to-this-site'),
-						url: itemData.selectUsersURL
-					}
-				);
-
-				itemSelectorDialog.open();
-			}
-		);
+					submitForm(addGroupUsersFm);
+				}
+			},
+			selectEventName: this.ns('selectUsers'),
+			title: Liferay.Util.sub(
+				Liferay.Language.get('assign-users-to-this-x'),
+				itemData.groupTypeLabel
+			),
+			url: addParams(
+				`p_p_id=${getPortletId(this.namespace)}`,
+				itemData.selectUsersURL
+			),
+		});
 	}
 }
 

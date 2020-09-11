@@ -1,9 +1,10 @@
 @component-name = "portal-collaboration"
 definition {
+
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column";
-	property testray.component.names = "Comment,Documents Management,Mentions";
+	property custom.properties = "default.layout.template.id=1_column${line.separator}jsonws.web.service.paths.excludes=";
+	property testray.component.names = "Mentions";
 	property testray.main.component.name = "Mentions";
 
 	setUp {
@@ -15,28 +16,31 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userScreenName = "usersn"
-		);
+			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+			portlet = "Users and Organizations");
 
-		User.editPasswordCP(
-			password = "password",
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn"
-		);
+		User.assignRegularRoleCP(
+			roleTitle = "Administrator",
+			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations"
-		);
+		User.logoutPG();
 
-		User.assignRegularRoleCP(roleTitle = "Administrator", userScreenName = "usersn");
+		User.loginPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
+
+		User.logoutPG();
+
+		User.loginPG();
 	}
 
 	tearDown {
@@ -52,7 +56,7 @@ definition {
 
 			Page.tearDownCP();
 
-			User.tearDownCP();
+			JSONUser.tearDownNonAdminUsers();
 		}
 	}
 
@@ -60,43 +64,28 @@ definition {
 	test ViewMentionViaDMComment {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+			portlet = "Pages");
 
 		SitePages.addPublicPage(
 			pageName = "Documents and Media Page",
-			sitePageType = "Widget Page"
-		);
-
-		SitePages.configurePage(
-			columnName = "1 Column",
-			pageName = "Documents and Media Page",
-			privacy = "Public Pages",
-			sitePageType = "Widget Page"
-		);
+			sitePageType = "Widget Page");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
 		Portlet.addPG(portletName = "Documents and Media");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Documents and Media"
-		);
-
-		DMDocument.addCP(
+		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "DM Document Title"
-		);
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Guest",
+			mimeType = "text/plain",
+			sourceFileName = "Document_1.txt");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "userea@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
@@ -104,62 +93,44 @@ definition {
 
 		DMDocument.viewPG(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title"
-		);
+			dmDocumentTitle = "DM Document Title");
 
 		Mentions.addMentionViaComments(
 			entryComment = "Comment mentioning",
 			mentionsUserFullName = "Test Test",
-			mentionsUserScreenName = "test"
-		);
+			mentionsUserScreenName = "test");
 
 		Mentions.viewCommentMentionTagLink(
 			mentionsUserFullName = "Test Test",
-			mentionsUserScreenName = "test"
-		);
+			mentionsUserScreenName = "test");
 	}
 
 	@priority = "5"
 	test ViewReplyMentionViaDMComment {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages"
-		);
+			portlet = "Pages");
 
 		SitePages.addPublicPage(
 			pageName = "Documents and Media Page",
-			sitePageType = "Widget Page"
-		);
-
-		SitePages.configurePage(
-			columnName = "1 Column",
-			pageName = "Documents and Media Page",
-			privacy = "Public Pages",
-			sitePageType = "Widget Page"
-		);
+			sitePageType = "Widget Page");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
 		Portlet.addPG(portletName = "Documents and Media");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Documents and Media"
-		);
-
-		DMDocument.addCP(
+		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "DM Document Title"
-		);
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Guest",
+			mimeType = "text/plain",
+			sourceFileName = "Document_1.txt");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "userea@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
@@ -167,23 +138,22 @@ definition {
 
 		DMDocument.viewPG(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title"
-		);
+			dmDocumentTitle = "DM Document Title");
 
 		Mentions.addMentionViaComments(
 			entryComment = "Comment mentioning",
 			mentionsUserFullName = "Test Test",
-			mentionsUserScreenName = "test"
-		);
+			mentionsUserScreenName = "test");
 
 		Mentions.viewCommentMentionTagLink(
 			mentionsUserFullName = "Test Test",
-			mentionsUserScreenName = "test"
-		);
+			mentionsUserScreenName = "test");
 
 		User.logoutPG();
 
-		User.loginUserPG(password = "test", userEmailAddress = "test@liferay.com");
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "test@liferay.com");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
@@ -191,25 +161,24 @@ definition {
 
 		DMDocument.viewPG(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title"
-		);
+			dmDocumentTitle = "DM Document Title");
 
 		AssertClick(
-			locator1 = "Comments#ANY_BUTTON_IN_COMMENT",
-			value1 = "Reply",
 			key_entryComment = "Comment mentioning",
-			key_text = "Reply"
-		);
+			key_text = "Reply",
+			locator1 = "Comments#ANY_BUTTON_IN_COMMENT",
+			value1 = "Reply");
 
 		Mentions.addMentionViaComments(
 			entryComment = "Comment reply mentioning",
 			mentionsUserFullName = "userfn userln",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
+
+		ProductMenuHelper.openProductMenu();
 
 		Mentions.viewCommentMentionTagLink(
 			mentionsUserFullName = "userfn userln",
-			mentionsUserScreenName = "usersn"
-		);
+			mentionsUserScreenName = "usersn");
 	}
+
 }

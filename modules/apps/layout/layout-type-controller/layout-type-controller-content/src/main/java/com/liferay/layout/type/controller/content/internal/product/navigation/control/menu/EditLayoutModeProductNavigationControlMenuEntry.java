@@ -16,7 +16,8 @@ package com.liferay.layout.type.controller.content.internal.product.navigation.c
 
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.type.controller.content.internal.controller.ContentLayoutTypeController;
+import com.liferay.layout.security.permission.resource.LayoutContentModelResourcePermission;
+import com.liferay.layout.util.LayoutCopyHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -25,17 +26,22 @@ import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.product.navigation.control.menu.BaseProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
 
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -60,12 +66,12 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 	implements ProductNavigationControlMenuEntry {
 
 	@Override
-	public String getIcon(HttpServletRequest request) {
+	public String getIcon(HttpServletRequest httpServletRequest) {
 		return "pencil";
 	}
 
 	@Override
-	public String getIconCssClass(HttpServletRequest request) {
+	public String getIconCssClass(HttpServletRequest httpServletRequest) {
 		return "icon-monospaced";
 	}
 
@@ -75,9 +81,10 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 	}
 
 	@Override
-	public String getURL(HttpServletRequest request) {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public String getURL(HttpServletRequest httpServletRequest) {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		try {
 			String redirect = themeDisplay.getURLCurrent();
@@ -93,13 +100,37 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 					themeDisplay);
 			}
 			else {
-				Layout draftLayout = _layoutLocalService.fetchLayout(
-					_portal.getClassNameId(Layout.class), layout.getPlid());
+				Layout draftLayout = layout.fetchDraftLayout();
 
-				if (draftLayout != null) {
-					redirect = _portal.getLayoutFullURL(
-						draftLayout, themeDisplay);
+				if (draftLayout == null) {
+					UnicodeProperties unicodeProperties =
+						layout.getTypeSettingsProperties();
+
+					unicodeProperties.put("published", "true");
+
+					ServiceContext serviceContext =
+						ServiceContextFactory.getInstance(httpServletRequest);
+
+					draftLayout = _layoutLocalService.addLayout(
+						layout.getUserId(), layout.getGroupId(),
+						layout.isPrivateLayout(), layout.getParentLayoutId(),
+						_portal.getClassNameId(Layout.class), layout.getPlid(),
+						layout.getNameMap(), layout.getTitleMap(),
+						layout.getDescriptionMap(), layout.getKeywordsMap(),
+						layout.getRobotsMap(), layout.getType(),
+						unicodeProperties.toString(), true, true,
+						layout.getMasterLayoutPlid(), Collections.emptyMap(),
+						serviceContext);
+
+					draftLayout = _layoutCopyHelper.copyLayout(
+						layout, draftLayout);
+
+					_layoutLocalService.updateStatus(
+						draftLayout.getUserId(), draftLayout.getPlid(),
+						WorkflowConstants.STATUS_APPROVED, serviceContext);
 				}
+
+				redirect = _portal.getLayoutFullURL(draftLayout, themeDisplay);
 			}
 
 			redirect = _http.setParameter(
@@ -107,22 +138,26 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 
 			return _http.setParameter(redirect, "p_l_mode", Constants.EDIT);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return StringPool.BLANK;
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest request) throws PortalException {
-		String mode = ParamUtil.getString(request, "p_l_mode", Constants.VIEW);
+	public boolean isShow(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		String mode = ParamUtil.getString(
+			httpServletRequest, "p_l_mode", Constants.VIEW);
 
 		if (Objects.equals(mode, Constants.EDIT)) {
 			return false;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		LayoutTypePortlet layoutTypePortlet =
 			themeDisplay.getLayoutTypePortlet();
@@ -134,11 +169,7 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 			return false;
 		}
 
-		if (!(layoutTypeController instanceof ContentLayoutTypeController)) {
-			return false;
-		}
-
-		String className = (String)request.getAttribute(
+		String className = (String)httpServletRequest.getAttribute(
 			ContentPageEditorWebKeys.CLASS_NAME);
 
 		if (Objects.equals(
@@ -147,16 +178,46 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 			return false;
 		}
 
-		return LayoutPermissionUtil.contains(
-			themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
-			ActionKeys.UPDATE);
+		Layout layout = themeDisplay.getLayout();
+
+		if (!layout.isTypeContent()) {
+			return false;
+		}
+
+		if (layout.isSystem() && layout.isTypeContent()) {
+			layout = _layoutLocalService.getLayout(layout.getClassPK());
+		}
+
+		if (_layoutPermission.contains(
+				themeDisplay.getPermissionChecker(), layout,
+				ActionKeys.UPDATE) ||
+			_layoutPermission.contains(
+				themeDisplay.getPermissionChecker(), layout,
+				ActionKeys.UPDATE_LAYOUT_CONTENT) ||
+			_modelResourcePermission.contains(
+				themeDisplay.getPermissionChecker(), layout.getPlid(),
+				ActionKeys.UPDATE)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Reference
 	private Http _http;
 
 	@Reference
+	private LayoutCopyHelper _layoutCopyHelper;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutPermission _layoutPermission;
+
+	@Reference
+	private LayoutContentModelResourcePermission _modelResourcePermission;
 
 	@Reference
 	private Portal _portal;

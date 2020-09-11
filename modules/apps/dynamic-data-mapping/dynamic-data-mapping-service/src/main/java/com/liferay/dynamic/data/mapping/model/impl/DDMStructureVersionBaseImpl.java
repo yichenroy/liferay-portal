@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.service.DDMStructureVersionLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureVersionLocalServiceU
  * @see DDMStructureVersion
  * @generated
  */
-@ProviderType
 public abstract class DDMStructureVersionBaseImpl
 	extends DDMStructureVersionModelImpl implements DDMStructureVersion {
 

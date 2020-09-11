@@ -14,8 +14,6 @@
 
 package com.liferay.staging.taglib.servlet.taglib;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringPool;
 import com.liferay.staging.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.taglib.util.IncludeTag;
@@ -26,7 +24,6 @@ import javax.servlet.jsp.PageContext;
 /**
  * @author Péter Borkuti
  */
-@ProviderType
 public class ProcessMessageTaskDetailsTag extends IncludeTag {
 
 	public long getBackgroundTaskId() {
@@ -77,15 +74,15 @@ public class ProcessMessageTaskDetailsTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-staging:process-message-task-details:backgroundTaskId",
 			_backgroundTaskId);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-staging:" +
 				"process-message-task-details:backgroundTaskStatusMessage",
 			_backgroundTaskStatusMessage);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-staging:process-message-task-details:linkClass",
 			_linkClass);
 	}

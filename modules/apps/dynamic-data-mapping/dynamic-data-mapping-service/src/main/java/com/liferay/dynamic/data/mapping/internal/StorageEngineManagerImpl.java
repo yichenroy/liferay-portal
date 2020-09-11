@@ -24,7 +24,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStorageLink;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
-import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureVersionLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapter;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterDeleteRequest;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterGetRequest;
@@ -82,11 +82,9 @@ public class StorageEngineManagerImpl implements StorageEngineManager {
 
 			long primaryKey = ddmStorageAdapterSaveResponse.getPrimaryKey();
 
-			DDMStructure ddmStructure =
-				_ddmStructureLocalService.getDDMStructure(ddmStructureId);
-
 			DDMStructureVersion ddmStructureVersion =
-				ddmStructure.getLatestStructureVersion();
+				_ddmStructureVersionLocalService.getLatestStructureVersion(
+					ddmStructureId);
 
 			_ddmStorageLinkLocalService.addStorageLink(
 				_portal.getClassNameId(DDMContent.class.getName()), primaryKey,
@@ -94,8 +92,8 @@ public class StorageEngineManagerImpl implements StorageEngineManager {
 
 			return primaryKey;
 		}
-		catch (PortalException pe) {
-			throw _translate(pe);
+		catch (PortalException portalException) {
+			throw _translate(portalException);
 		}
 	}
 
@@ -168,8 +166,8 @@ public class StorageEngineManagerImpl implements StorageEngineManager {
 
 			ddmStorageAdapter.save(ddmStorageAdapterSaveRequest);
 		}
-		catch (PortalException pe) {
-			throw _translate(pe);
+		catch (PortalException portalException) {
+			throw _translate(portalException);
 		}
 	}
 
@@ -234,7 +232,7 @@ public class StorageEngineManagerImpl implements StorageEngineManager {
 	private DDMStorageLinkLocalService _ddmStorageLinkLocalService;
 
 	@Reference
-	private DDMStructureLocalService _ddmStructureLocalService;
+	private DDMStructureVersionLocalService _ddmStructureVersionLocalService;
 
 	@Reference
 	private Portal _portal;

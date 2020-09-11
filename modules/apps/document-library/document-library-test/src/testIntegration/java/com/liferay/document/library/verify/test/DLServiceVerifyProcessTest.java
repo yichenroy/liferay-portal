@@ -29,6 +29,7 @@ import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalServi
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLTrashServiceUtil;
+import com.liferay.document.library.test.util.DLTestUtil;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
@@ -42,32 +43,33 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.verify.VerifyProcess;
 import com.liferay.portal.verify.test.util.BaseVerifyProcessTestCase;
-import com.liferay.portlet.documentlibrary.util.test.DLTestUtil;
 
 import java.io.ByteArrayInputStream;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -76,7 +78,6 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -101,10 +102,11 @@ public class DLServiceVerifyProcessTest extends BaseVerifyProcessTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
+		_company = CompanyTestUtil.addCompany();
+
 		_group = GroupTestUtil.addGroup();
 	}
 
-	@Ignore
 	@Test
 	public void testDeleteMismatchCompanyIdDLFileEntryMetadatas()
 		throws Exception {
@@ -123,10 +125,11 @@ public class DLServiceVerifyProcessTest extends BaseVerifyProcessTestCase {
 			DDMStructureLocalServiceUtil.getDDMStructure(
 				ddmStructure.getStructureId());
 
-		modelDDMStructure.setCompanyId(12345);
+		modelDDMStructure.setCompanyId(_company.getCompanyId());
 
 		try {
-			DDMStructureLocalServiceUtil.updateDDMStructure(modelDDMStructure);
+			modelDDMStructure = DDMStructureLocalServiceUtil.updateDDMStructure(
+				modelDDMStructure);
 
 			DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
 
@@ -418,11 +421,10 @@ public class DLServiceVerifyProcessTest extends BaseVerifyProcessTestCase {
 			ddmFormDeserializerDeserializeResponse =
 				_ddmFormDeserializer.deserialize(builder.build());
 
-		com.liferay.dynamic.data.mapping.model.DDMForm ddmForm =
-			ddmFormDeserializerDeserializeResponse.getDDMForm();
-
 		serviceContext.setAttribute(
-			"ddmForm", DDMBeanTranslatorUtil.translate(ddmForm));
+			"ddmForm",
+			DDMBeanTranslatorUtil.translate(
+				ddmFormDeserializerDeserializeResponse.getDDMForm()));
 
 		User user = TestPropsValues.getUser();
 
@@ -469,37 +471,39 @@ public class DLServiceVerifyProcessTest extends BaseVerifyProcessTestCase {
 	protected Map<String, DDMFormValues> getDDMFormValuesMap(
 		String ddmStructureKey, Locale currentLocale) {
 
-		Set<Locale> availableLocales = DDMFormTestUtil.createAvailableLocales(
-			currentLocale);
+		return HashMapBuilder.<String, DDMFormValues>put(
+			ddmStructureKey,
+			() -> {
+				Set<Locale> availableLocales =
+					DDMFormTestUtil.createAvailableLocales(currentLocale);
 
-		DDMForm ddmForm = new DDMForm();
+				DDMForm ddmForm = new DDMForm();
 
-		ddmForm.setAvailableLocales(availableLocales);
-		ddmForm.setDefaultLocale(currentLocale);
+				ddmForm.setAvailableLocales(availableLocales);
+				ddmForm.setDefaultLocale(currentLocale);
 
-		DDMFormField ddmFormField = new DDMFormField("date_an", "ddm-date");
+				DDMFormField ddmFormField = new DDMFormField(
+					"date_an", "ddm-date");
 
-		ddmFormField.setDataType("date");
+				ddmFormField.setDataType("date");
 
-		ddmForm.addDDMFormField(ddmFormField);
+				ddmForm.addDDMFormField(ddmFormField);
 
-		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
+				DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
 
-		ddmFormValues.setAvailableLocales(availableLocales);
-		ddmFormValues.setDefaultLocale(currentLocale);
+				ddmFormValues.setAvailableLocales(availableLocales);
+				ddmFormValues.setDefaultLocale(currentLocale);
 
-		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
+				DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
 
-		ddmFormFieldValue.setName("date_an");
-		ddmFormFieldValue.setValue(new UnlocalizedValue(""));
+				ddmFormFieldValue.setName("date_an");
+				ddmFormFieldValue.setValue(new UnlocalizedValue(""));
 
-		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
+				ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
-		Map<String, DDMFormValues> ddmFormValuesMap = new HashMap<>();
-
-		ddmFormValuesMap.put(ddmStructureKey, ddmFormValues);
-
-		return ddmFormValuesMap;
+				return ddmFormValues;
+			}
+		).build();
 	}
 
 	@Override
@@ -512,6 +516,9 @@ public class DLServiceVerifyProcessTest extends BaseVerifyProcessTestCase {
 		type = VerifyProcess.class
 	)
 	private static VerifyProcess _verifyProcess;
+
+	@DeleteAfterTestRun
+	private Company _company;
 
 	@Inject(filter = "ddm.form.deserializer.type=xsd")
 	private DDMFormDeserializer _ddmFormDeserializer;

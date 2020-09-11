@@ -16,10 +16,10 @@ package com.liferay.asset.publisher.web.internal.portlet;
 
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
-import com.liferay.asset.model.AssetEntryUsage;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
-import com.liferay.asset.publisher.web.internal.util.AssetPublisherWebUtil;
-import com.liferay.asset.service.AssetEntryUsageLocalService;
+import com.liferay.asset.publisher.web.internal.helper.AssetPublisherWebHelper;
+import com.liferay.layout.model.LayoutClassedModelUsage;
+import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -59,10 +59,10 @@ public class AssetPublisherAddPortletProvider
 	}
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request)
+	public PortletURL getPortletURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		PortletURL assetPublisherURL = super.getPortletURL(request);
+		PortletURL assetPublisherURL = super.getPortletURL(httpServletRequest);
 
 		assetPublisherURL.setParameter("mvcPath", "/view_content.jsp");
 
@@ -70,11 +70,12 @@ public class AssetPublisherAddPortletProvider
 	}
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request, Group group)
+	public PortletURL getPortletURL(
+			HttpServletRequest httpServletRequest, Group group)
 		throws PortalException {
 
 		return PortletURLFactoryUtil.create(
-			request, getPortletName(), PortletRequest.RENDER_PHASE);
+			httpServletRequest, getPortletName(), PortletRequest.RENDER_PHASE);
 	}
 
 	@Override
@@ -95,28 +96,30 @@ public class AssetPublisherAddPortletProvider
 		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
 			className, classPK);
 
-		_assetPublisherWebUtil.addSelection(
+		_assetPublisherWebHelper.addSelection(
 			portletPreferences, assetEntry.getEntryId(), -1,
 			assetEntry.getClassName());
 
-		_addAssetEntryUsage(assetEntry, themeDisplay.getLayout(), portletId);
+		_addLayoutClassedModelUsage(
+			assetEntry.getClassNameId(), assetEntry.getClassPK(),
+			themeDisplay.getLayout(), portletId);
 	}
 
-	private void _addAssetEntryUsage(
-		AssetEntry assetEntry, Layout layout, String portletId) {
+	private void _addLayoutClassedModelUsage(
+		long classNameId, long classPK, Layout layout, String portletId) {
 
-		AssetEntryUsage assetEntryUsage =
-			_assetEntryUsageLocalService.fetchAssetEntryUsage(
-				assetEntry.getEntryId(), _portal.getClassNameId(Portlet.class),
-				portletId, layout.getPlid());
+		LayoutClassedModelUsage layoutClassedModelUsage =
+			_layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
+				classNameId, classPK, portletId,
+				_portal.getClassNameId(Portlet.class), layout.getPlid());
 
-		if (assetEntryUsage != null) {
+		if (layoutClassedModelUsage != null) {
 			return;
 		}
 
-		_assetEntryUsageLocalService.addAssetEntryUsage(
-			layout.getGroupId(), assetEntry.getEntryId(),
-			_portal.getClassNameId(Portlet.class), portletId, layout.getPlid(),
+		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
+			layout.getGroupId(), classNameId, classPK, portletId,
+			_portal.getClassNameId(Portlet.class), layout.getPlid(),
 			ServiceContextThreadLocal.getServiceContext());
 	}
 
@@ -124,10 +127,11 @@ public class AssetPublisherAddPortletProvider
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
-	private AssetEntryUsageLocalService _assetEntryUsageLocalService;
+	private AssetPublisherWebHelper _assetPublisherWebHelper;
 
 	@Reference
-	private AssetPublisherWebUtil _assetPublisherWebUtil;
+	private LayoutClassedModelUsageLocalService
+		_layoutClassedModelUsageLocalService;
 
 	@Reference
 	private Portal _portal;

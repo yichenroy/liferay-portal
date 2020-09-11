@@ -14,14 +14,16 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the DDMFormInstanceRecord service. Represents a row in the &quot;DDMFormInstanceRecord&quot; database table, with each column mapped to a property of this class.
@@ -36,7 +38,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface DDMFormInstanceRecordModel
-	extends BaseModel<DDMFormInstanceRecord>, ShardedModel, StagedGroupedModel {
+	extends BaseModel<DDMFormInstanceRecord>, CTModel<DDMFormInstanceRecord>,
+			MVCCModel, ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -49,6 +52,7 @@ public interface DDMFormInstanceRecordModel
 	 *
 	 * @return the primary key of this ddm form instance record
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -56,7 +60,40 @@ public interface DDMFormInstanceRecordModel
 	 *
 	 * @param primaryKey the primary key of this ddm form instance record
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this ddm form instance record.
+	 *
+	 * @return the mvcc version of this ddm form instance record
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this ddm form instance record.
+	 *
+	 * @param mvccVersion the mvcc version of this ddm form instance record
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this ddm form instance record.
+	 *
+	 * @return the ct collection ID of this ddm form instance record
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this ddm form instance record.
+	 *
+	 * @param ctCollectionId the ct collection ID of this ddm form instance record
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this ddm form instance record.

@@ -15,6 +15,7 @@
 package com.liferay.portal.template;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.template.URLTemplateResource;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -55,8 +55,8 @@ public abstract class URLResourceParser implements TemplateResourceParser {
 
 			return new URLTemplateResource(templateId, url);
 		}
-		catch (IOException ioe) {
-			throw new TemplateException(ioe);
+		catch (IOException ioException) {
+			throw new TemplateException(ioException);
 		}
 	}
 

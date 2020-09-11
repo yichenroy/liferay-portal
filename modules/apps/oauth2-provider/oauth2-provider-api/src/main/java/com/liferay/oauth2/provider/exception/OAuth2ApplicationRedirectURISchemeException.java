@@ -14,14 +14,11 @@
 
 package com.liferay.oauth2.provider.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class OAuth2ApplicationRedirectURISchemeException
 	extends PortalException {
 
@@ -33,13 +30,13 @@ public class OAuth2ApplicationRedirectURISchemeException
 	}
 
 	public OAuth2ApplicationRedirectURISchemeException(
-		String msg, Throwable cause) {
+		String msg, Throwable throwable) {
 
-		super(msg, cause);
+		super(msg, throwable);
 	}
 
-	public OAuth2ApplicationRedirectURISchemeException(Throwable cause) {
-		super(cause);
+	public OAuth2ApplicationRedirectURISchemeException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

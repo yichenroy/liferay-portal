@@ -14,8 +14,6 @@
 
 package com.liferay.digital.signature.internal.model.field.builder;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.digital.signature.internal.model.field.TextDSFieldImpl;
 import com.liferay.digital.signature.model.field.DSField;
 import com.liferay.digital.signature.model.field.TextDSField;
@@ -24,7 +22,6 @@ import com.liferay.digital.signature.model.field.builder.TextDSFieldBuilder;
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class TextDSFieldBuilderImpl
 	extends UserEntryDSFieldBuilderImpl<TextDSField>
 	implements TextDSFieldBuilder {

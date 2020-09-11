@@ -56,8 +56,8 @@ public class TLDFormatter {
 		try {
 			new TLDFormatter(baseDirName, plugin);
 		}
-		catch (Exception e) {
-			e.printStackTrace();
+		catch (Exception exception) {
+			exception.printStackTrace();
 		}
 	}
 
@@ -73,9 +73,7 @@ public class TLDFormatter {
 						Path file, BasicFileAttributes basicFileAttributes)
 					throws IOException {
 
-					Path fileNamePath = file.getFileName();
-
-					String fileName = fileNamePath.toString();
+					String fileName = String.valueOf(file.getFileName());
 
 					if (!fileName.endsWith(".tld") ||
 						(!_plugin &&
@@ -87,11 +85,11 @@ public class TLDFormatter {
 					try {
 						_formatTLD(file);
 					}
-					catch (IOException ioe) {
-						throw ioe;
+					catch (IOException ioException) {
+						throw ioException;
 					}
-					catch (Exception e) {
-						throw new IOException(e);
+					catch (Exception exception) {
+						throw new IOException(exception);
 					}
 
 					return FileVisitResult.CONTINUE;

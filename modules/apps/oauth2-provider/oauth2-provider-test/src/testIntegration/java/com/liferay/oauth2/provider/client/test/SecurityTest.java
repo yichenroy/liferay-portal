@@ -14,12 +14,14 @@
 
 package com.liferay.oauth2.provider.client.test;
 
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.oauth2.provider.constants.GrantType;
-import com.liferay.oauth2.provider.test.internal.activator.BaseTestPreparatorBundleActivator;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.net.URI;
 
@@ -28,28 +30,25 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
-
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.BundleActivator;
 
 /**
  * @author Stian Sigvartsen
  */
-@RunAsClient
 @RunWith(Arquillian.class)
 public class SecurityTest extends BaseClientTestCase {
 
-	@Deployment
-	public static Archive<?> getArchive() throws Exception {
-		return BaseClientTestCase.getArchive(
-			SecurityTestPreparatorBundleActivator.class);
-	}
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new LiferayIntegrationTestRule();
 
 	/**
 	 * OAUTH2-99
@@ -58,15 +57,15 @@ public class SecurityTest extends BaseClientTestCase {
 	public void testPreventClickJacking() {
 		Assert.assertEquals(
 			"SAMEORIGIN",
-			getCodeResponse(
-				"test@liferay.com", "test", null,
-				getCodeFunction(
-					webTarget -> webTarget.queryParam(
-						"client_id", "oauthTestApplicationCode"
-					).queryParam(
-						"response_type", "code"
-					)),
-				this::parseXFrameOptionsHeader));
+			parseXFrameOptionsHeader(
+				getCodeResponse(
+					"test@liferay.com", "test", null,
+					getCodeFunction(
+						webTarget -> webTarget.queryParam(
+							"client_id", "oauthTestApplicationCode"
+						).queryParam(
+							"response_type", "code"
+						)))));
 	}
 
 	/**
@@ -77,15 +76,15 @@ public class SecurityTest extends BaseClientTestCase {
 	public void testPreventCSRFUsingMandatoryStateParam() {
 		Assert.assertEquals(
 			"invalid_request",
-			getCodeResponse(
-				"test@liferay.com", "test", null,
-				getCodeFunction(
-					webTarget -> webTarget.queryParam(
-						"client_id", "oauthTestApplicationCode"
-					).queryParam(
-						"response_type", "code"
-					)),
-				this::parseErrorParameter));
+			parseErrorParameter(
+				getCodeResponse(
+					"test@liferay.com", "test", null,
+					getCodeFunction(
+						webTarget -> webTarget.queryParam(
+							"client_id", "oauthTestApplicationCode"
+						).queryParam(
+							"response_type", "code"
+						)))));
 	}
 
 	/**
@@ -93,17 +92,17 @@ public class SecurityTest extends BaseClientTestCase {
 	 */
 	@Test
 	public void testPreventCSRFUsingPKCE() {
-		String authorizationCode = getCodeResponse(
-			"test@liferay.com", "test", null,
-			getCodeFunction(
-				webTarget -> webTarget.queryParam(
-					"client_id", "oauthTestApplicationCodePKCE"
-				).queryParam(
-					"code_challenge", "correctCodeChallenge"
-				).queryParam(
-					"response_type", "code"
-				)),
-			this::parseAuthorizationCodeString);
+		String authorizationCode = parseAuthorizationCodeString(
+			getCodeResponse(
+				"test@liferay.com", "test", null,
+				getCodeFunction(
+					webTarget -> webTarget.queryParam(
+						"client_id", "oauthTestApplicationCodePKCE"
+					).queryParam(
+						"code_challenge", "correctCodeChallenge"
+					).queryParam(
+						"response_type", "code"
+					))));
 
 		Assert.assertNotNull(authorizationCode);
 
@@ -123,17 +122,17 @@ public class SecurityTest extends BaseClientTestCase {
 	public void testPreventCSRFUsingStateParam() {
 		String state = "csrf_token";
 
-		String responseState = getCodeResponse(
-			"test@liferay.com", "test", null,
-			getCodeFunction(
-				webTarget -> webTarget.queryParam(
-					"client_id", "oauthTestApplicationCode"
-				).queryParam(
-					"response_type", "code"
-				).queryParam(
-					"state", state
-				)),
-			this::parseStateString);
+		String responseState = parseStateString(
+			getCodeResponse(
+				"test@liferay.com", "test", null,
+				getCodeFunction(
+					webTarget -> webTarget.queryParam(
+						"client_id", "oauthTestApplicationCode"
+					).queryParam(
+						"response_type", "code"
+					).queryParam(
+						"state", state
+					))));
 
 		Assert.assertEquals(state, responseState);
 	}
@@ -143,34 +142,36 @@ public class SecurityTest extends BaseClientTestCase {
 	 */
 	@Test
 	public void testPreventOpenRedirect() {
+		Response response = getCodeResponse(
+			"test@liferay.com", "test", null,
+			getCodeFunction(
+				webTarget -> webTarget.queryParam(
+					"client_id", "oauthTestApplicationCode"
+				).queryParam(
+					"redirect_uri", "http://invalid:8080"
+				).queryParam(
+					"response_type", "code"
+				)));
+
+		Assert.assertEquals(400, getStatus(response));
 		Assert.assertEquals(
-			"invalid_request",
+			"<html><body>HTTP 400 Bad Request</body></html>",
+			getBodyAsString(response));
+	}
+
+	@Test
+	public void testRedirectUriMustMatch() {
+		String authorizationCode = parseAuthorizationCodeString(
 			getCodeResponse(
 				"test@liferay.com", "test", null,
 				getCodeFunction(
 					webTarget -> webTarget.queryParam(
 						"client_id", "oauthTestApplicationCode"
 					).queryParam(
-						"redirect_uri", "http://invalid:8080"
+						"redirect_uri", "http://redirecturi:8080"
 					).queryParam(
 						"response_type", "code"
-					)),
-				this::parseError));
-	}
-
-	@Test
-	public void testRedirectUriMustMatch() {
-		String authorizationCode = getCodeResponse(
-			"test@liferay.com", "test", null,
-			getCodeFunction(
-				webTarget -> webTarget.queryParam(
-					"client_id", "oauthTestApplicationCode"
-				).queryParam(
-					"redirect_uri", "http://redirecturi:8080"
-				).queryParam(
-					"response_type", "code"
-				)),
-			this::parseAuthorizationCodeString);
+					))));
 
 		Assert.assertNotNull(authorizationCode);
 
@@ -204,6 +205,19 @@ public class SecurityTest extends BaseClientTestCase {
 				Collections.singletonList("http://redirecturi:8080"));
 		}
 
+	}
+
+	protected String getBodyAsString(Response response) {
+		return response.readEntity(String.class);
+	}
+
+	@Override
+	protected BundleActivator getBundleActivator() {
+		return new SecurityTestPreparatorBundleActivator();
+	}
+
+	protected int getStatus(Response response) {
+		return response.getStatus();
 	}
 
 	protected String parseStateString(Response response) {

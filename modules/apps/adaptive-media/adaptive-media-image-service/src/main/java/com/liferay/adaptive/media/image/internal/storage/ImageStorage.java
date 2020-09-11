@@ -42,7 +42,7 @@ public class ImageStorage {
 			getConfigurationEntryPath(configurationUuid));
 	}
 
-	public InputStream getContentStream(
+	public InputStream getContentInputStream(
 		FileVersion fileVersion, String configurationUuid) {
 
 		try {
@@ -53,8 +53,8 @@ public class ImageStorage {
 				fileVersion.getCompanyId(), CompanyConstants.SYSTEM,
 				fileVersionPath);
 		}
-		catch (PortalException pe) {
-			throw new AMRuntimeException.IOException(pe);
+		catch (PortalException portalException) {
+			throw new AMRuntimeException.IOException(portalException);
 		}
 	}
 
@@ -70,8 +70,8 @@ public class ImageStorage {
 				fileVersion.getCompanyId(), CompanyConstants.SYSTEM,
 				fileVersionPath, false, inputStream);
 		}
-		catch (PortalException pe) {
-			throw new AMRuntimeException.IOException(pe);
+		catch (PortalException portalException) {
+			throw new AMRuntimeException.IOException(portalException);
 		}
 	}
 

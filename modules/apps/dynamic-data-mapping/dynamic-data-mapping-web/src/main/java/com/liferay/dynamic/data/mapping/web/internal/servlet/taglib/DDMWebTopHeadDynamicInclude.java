@@ -14,6 +14,8 @@
 
 package com.liferay.dynamic.data.mapping.web.internal.servlet.taglib;
 
+import com.liferay.dynamic.data.mapping.web.internal.portlet.DDMPortlet;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -37,38 +39,22 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = DynamicInclude.class)
 public class DDMWebTopHeadDynamicInclude extends BaseDynamicInclude {
 
-	@Activate
-	public void activate() {
-		_postfix = _portal.getPathProxy();
-
-		if (_postfix.isEmpty()) {
-			_postfix = _servletContext.getContextPath();
-		}
-		else {
-			_postfix = _postfix.concat(_servletContext.getContextPath());
-		}
-	}
-
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		PrintWriter printWriter = response.getWriter();
-
-		String cdnBaseURL = themeDisplay.getCDNBaseURL();
+		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		String staticResourceURL = _portal.getStaticResourceURL(
-			request,
-			cdnBaseURL.concat(
-				_postfix
-			).concat(
-				"/css/main.css"
-			));
+			httpServletRequest,
+			StringBundler.concat(
+				themeDisplay.getCDNBaseURL(), _postfix, "/css/main.css"));
 
 		String content = "<link href=\"".concat(staticResourceURL);
 
@@ -78,7 +64,22 @@ public class DDMWebTopHeadDynamicInclude extends BaseDynamicInclude {
 
 	@Override
 	public void register(DynamicIncludeRegistry dynamicIncludeRegistry) {
-		dynamicIncludeRegistry.register("/html/common/themes/top_head.jsp#pre");
+		dynamicIncludeRegistry.register(
+			DDMPortlet.class.getName() + "#formRendered");
+		dynamicIncludeRegistry.register(
+			"com.liferay.dynamic.data.mapping.taglib#/html/start.jsp#pre");
+	}
+
+	@Activate
+	protected void activate() {
+		_postfix = _portal.getPathProxy();
+
+		if (_postfix.isEmpty()) {
+			_postfix = _servletContext.getContextPath();
+		}
+		else {
+			_postfix = _postfix.concat(_servletContext.getContextPath());
+		}
 	}
 
 	@Reference

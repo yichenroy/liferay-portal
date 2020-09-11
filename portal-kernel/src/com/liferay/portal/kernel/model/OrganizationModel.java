@@ -14,11 +14,12 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the Organization service. Represents a row in the &quot;Organization_&quot; database table, with each column mapped to a property of this class.
@@ -33,8 +34,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface OrganizationModel
-	extends BaseModel<Organization>, MVCCModel, ShardedModel,
-			StagedAuditedModel {
+	extends BaseModel<Organization>, CTModel<Organization>, MVCCModel,
+			ShardedModel, StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -47,6 +48,7 @@ public interface OrganizationModel
 	 *
 	 * @return the primary key of this organization
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -54,6 +56,7 @@ public interface OrganizationModel
 	 *
 	 * @param primaryKey the primary key of this organization
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -71,6 +74,22 @@ public interface OrganizationModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this organization.
+	 *
+	 * @return the ct collection ID of this organization
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this organization.
+	 *
+	 * @param ctCollectionId the ct collection ID of this organization
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this organization.

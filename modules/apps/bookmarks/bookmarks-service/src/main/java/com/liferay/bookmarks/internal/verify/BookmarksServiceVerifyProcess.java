@@ -29,9 +29,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Raymond Augé
- * @author Alexander Chow
- *
+ * @author     Raymond Augé
+ * @author     Alexander Chow
  * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
 @Component(
@@ -63,12 +62,13 @@ public class BookmarksServiceVerifyProcess extends VerifyProcess {
 					_bookmarksFolderLocalService.updateAsset(
 						folder.getUserId(), folder, null, null, null, null);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							StringBundler.concat(
 								"Unable to update asset for folder ",
-								folder.getFolderId(), ": ", e.getMessage()));
+								folder.getFolderId(), ": ",
+								exception.getMessage()));
 					}
 				}
 			}

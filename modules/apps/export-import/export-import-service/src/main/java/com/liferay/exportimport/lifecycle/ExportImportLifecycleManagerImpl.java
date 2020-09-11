@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.lifecycle;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleEvent;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleEventFactory;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
@@ -44,24 +42,8 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  */
 @Component(immediate = true, service = ExportImportLifecycleManager.class)
-@ProviderType
 public class ExportImportLifecycleManagerImpl
 	implements ExportImportLifecycleManager {
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public void fireExportImportLifecycleEvent(
-		int code, int processFlag, Serializable... arguments) {
-
-		ExportImportLifecycleEvent exportImportLifecycleEvent =
-			_exportImportLifecycleEventFactory.create(
-				code, processFlag, arguments);
-
-		fireExportImportLifecycleEvent(exportImportLifecycleEvent);
-	}
 
 	@Override
 	public void fireExportImportLifecycleEvent(

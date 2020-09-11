@@ -14,8 +14,8 @@
 
 package com.liferay.frontend.editor.alloyeditor.web.internal.editor.configuration;
 
-import com.liferay.frontend.editor.api.embed.EditorEmbedProvider;
-import com.liferay.frontend.editor.api.embed.EditorEmbedProviderTypeConstants;
+import com.liferay.frontend.editor.embed.EditorEmbedProvider;
+import com.liferay.frontend.editor.embed.constants.EditorEmbedProviderTypeConstants;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
@@ -79,11 +80,13 @@ public class AlloyEditorEmbedConfigContributor
 		String editorEmbedProviderType,
 		EditorEmbedProvider editorEmbedProvider) {
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("id", editorEmbedProvider.getId());
-		jsonObject.put("tpl", editorEmbedProvider.getTpl());
-		jsonObject.put("type", editorEmbedProviderType);
+		JSONObject jsonObject = JSONUtil.put(
+			"id", editorEmbedProvider.getId()
+		).put(
+			"tpl", editorEmbedProvider.getTpl()
+		).put(
+			"type", editorEmbedProviderType
+		);
 
 		JSONArray urlSchemesJSONArray = JSONFactoryUtil.createJSONArray();
 

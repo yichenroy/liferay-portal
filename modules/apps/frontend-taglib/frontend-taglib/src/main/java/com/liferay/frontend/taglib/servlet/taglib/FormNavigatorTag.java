@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
@@ -112,18 +111,19 @@ public class FormNavigatorTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-frontend:form-navigator:backURL", _getBackURL());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:form-navigator:categoryKeys", _getCategoryKeys());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:form-navigator:fieldSetCssClass",
 			_fieldSetCssClass);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:form-navigator:formModelBean", _formModelBean);
-		request.setAttribute("liferay-frontend:form-navigator:id", _id);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-frontend:form-navigator:id", _id);
+		httpServletRequest.setAttribute(
 			"liferay-frontend:form-navigator:showButtons",
 			String.valueOf(_showButtons));
 	}
@@ -135,16 +135,15 @@ public class FormNavigatorTag extends IncludeTag {
 			backURL = ParamUtil.getString(request, "redirect");
 		}
 
-		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
-
-		LiferayPortletResponse liferayPortletResponse =
-			PortalUtil.getLiferayPortletResponse(portletResponse);
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
 		if (Validator.isNull(backURL)) {
-			backURL = portletURL.toString();
+			PortletResponse portletResponse =
+				(PortletResponse)request.getAttribute(
+					JavaConstants.JAVAX_PORTLET_RESPONSE);
+
+			LiferayPortletResponse liferayPortletResponse =
+				PortalUtil.getLiferayPortletResponse(portletResponse);
+
+			backURL = String.valueOf(liferayPortletResponse.createRenderURL());
 		}
 
 		return backURL;

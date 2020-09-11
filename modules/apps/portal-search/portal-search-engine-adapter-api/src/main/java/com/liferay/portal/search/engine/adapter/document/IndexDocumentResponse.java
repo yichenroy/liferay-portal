@@ -14,12 +14,9 @@
 
 package com.liferay.portal.search.engine.adapter.document;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
 public class IndexDocumentResponse implements DocumentResponse {
 
 	public IndexDocumentResponse(int status, String uid) {

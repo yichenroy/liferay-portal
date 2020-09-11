@@ -14,17 +14,17 @@
 
 package com.liferay.portal.osgi.web.servlet.context.helper.internal;
 
+import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.osgi.web.servlet.JSPServletFactory;
 import com.liferay.portal.osgi.web.servlet.context.helper.ServletContextHelperFactory;
 import com.liferay.portal.osgi.web.servlet.context.helper.ServletContextHelperRegistration;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
-
-import org.apache.felix.utils.log.Logger;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -49,7 +49,6 @@ public class ServletContextHelperFactoryImpl
 			BundleContext bundleContext, Map<String, Object> properties)
 		throws Exception {
 
-		_logger = new Logger(bundleContext);
 		_saxParserFactory.setNamespaceAware(false);
 		_saxParserFactory.setValidating(false);
 		_saxParserFactory.setXIncludeAware(false);
@@ -63,21 +62,27 @@ public class ServletContextHelperFactoryImpl
 			_saxParserFactory.setFeature(_FEATURES_LOAD_EXTERNAL_DTD, false);
 		}
 		catch (ParserConfigurationException | SAXNotRecognizedException |
-			   SAXNotSupportedException e) {
+			   SAXNotSupportedException exception) {
 
-			ReflectionUtil.throwException(e);
+			ReflectionUtil.throwException(exception);
 		}
+
+		_executorService = _portalExecutorManager.getPortalExecutor(
+			ServletContextHelperFactoryImpl.class.getName());
 
 		_serviceRegistration = bundleContext.registerService(
 			ServletContextHelperRegistration.class.getName(),
 			new ServletContextHelperRegistrationServiceFactory(
-				_jspServletFactory, _saxParserFactory, _logger, properties),
+				_jspServletFactory, _saxParserFactory, properties,
+				_executorService),
 			null);
 	}
 
 	@Deactivate
 	protected void deactivate(BundleContext bundleContext) throws Exception {
 		_serviceRegistration.unregister();
+
+		_executorService.shutdownNow();
 	}
 
 	private static final String _FEATURES_DISALLOW_DOCTYPE_DECL =
@@ -92,13 +97,16 @@ public class ServletContextHelperFactoryImpl
 	private static final String _FEATURES_LOAD_EXTERNAL_DTD =
 		"http://apache.org/xml/features/nonvalidating/load-external-dtd";
 
+	private ExecutorService _executorService;
+
 	@Reference
 	private HttpServiceRuntime _httpServiceRuntime;
 
 	@Reference
 	private JSPServletFactory _jspServletFactory;
 
-	private Logger _logger;
+	@Reference
+	private PortalExecutorManager _portalExecutorManager;
 
 	@Reference
 	private SAXParserFactory _saxParserFactory;

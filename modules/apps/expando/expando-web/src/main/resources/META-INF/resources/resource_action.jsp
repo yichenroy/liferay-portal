@@ -17,9 +17,9 @@
 <%@ include file="/init.jsp" %>
 
 <%
-SearchContainer searchContainer = (SearchContainer)request.getAttribute("liferay-ui:search:searchContainer");
+SearchContainer<?> searchContainer = (SearchContainer<?>)request.getAttribute("liferay-ui:search:searchContainer");
 
-String redirect = searchContainer.getIteratorURL().toString();
+String redirect = String.valueOf(searchContainer.getIteratorURL());
 
 ResultRow row = (ResultRow)request.getAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW);
 
@@ -34,7 +34,8 @@ CustomAttributesDisplay customAttributesDisplay = (CustomAttributesDisplay)row.g
 	</portlet:renderURL>
 
 	<liferay-ui:icon
-		iconCssClass="icon-edit"
+		icon="edit"
+		markupView="lexicon"
 		message="edit"
 		url="<%= editURL %>"
 	/>

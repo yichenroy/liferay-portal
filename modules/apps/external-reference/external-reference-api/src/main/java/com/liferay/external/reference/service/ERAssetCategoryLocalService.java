@@ -14,8 +14,6 @@
 
 package com.liferay.external.reference.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -26,6 +24,8 @@ import com.liferay.portal.kernel.transaction.Transactional;
 
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the local service interface for ERAssetCategory. Methods of this
@@ -47,7 +47,7 @@ public interface ERAssetCategoryLocalService extends BaseLocalService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link ERAssetCategoryLocalServiceUtil} to access the er asset category local service. Add custom service methods to <code>com.liferay.external.reference.service.impl.ERAssetCategoryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.external.reference.service.impl.ERAssetCategoryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the er asset category local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ERAssetCategoryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public AssetCategory addOrUpdateCategory(
 			String externalReferenceCode, long userId, long groupId,

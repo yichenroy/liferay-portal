@@ -72,13 +72,9 @@ public class PortletSharedSearchRequestImpl
 
 	@Override
 	public PortletSharedSearchResponse search(RenderRequest renderRequest) {
-		PortletSharedSearchResponse portletSharedSearchResponse =
-			portletSharedTaskExecutor.executeOnlyOnce(
-				() -> doSearch(renderRequest),
-				PortletSharedSearchResponse.class.getSimpleName(),
-				renderRequest);
-
-		return portletSharedSearchResponse;
+		return portletSharedTaskExecutor.executeOnlyOnce(
+			() -> doSearch(renderRequest),
+			PortletSharedSearchResponse.class.getSimpleName(), renderRequest);
 	}
 
 	@Activate
@@ -120,11 +116,9 @@ public class PortletSharedSearchRequestImpl
 		String emptyResultsMessage = null;
 		String cssClass = null;
 
-		SearchContainer<Document> searchContainer = new SearchContainer<>(
+		return new SearchContainer<>(
 			portletRequest, displayTerms, searchTerms, curParam, cur, delta,
 			portletURL, headerNames, emptyResultsMessage, cssClass);
-
-		return searchContainer;
 	}
 
 	protected SearchContext buildSearchContext(ThemeDisplay themeDisplay) {
@@ -282,8 +276,10 @@ public class PortletSharedSearchRequestImpl
 					PortletKeys.PREFS_OWNER_ID_DEFAULT,
 					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid());
 
-		return portletPreferencesList.stream(
-		).map(
+		Stream<com.liferay.portal.kernel.model.PortletPreferences> stream =
+			portletPreferencesList.stream();
+
+		return stream.map(
 			portletPreferences -> portletLocalService.getPortletById(
 				companyId, portletPreferences.getPortletId())
 		).filter(

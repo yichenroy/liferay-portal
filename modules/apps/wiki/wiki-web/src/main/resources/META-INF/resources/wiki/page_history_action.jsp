@@ -46,7 +46,8 @@ else {
 		</portlet:actionURL>
 
 		<liferay-ui:icon
-			iconCssClass="icon-undo"
+			icon="undo"
+			markupView="lexicon"
 			message="revert"
 			url="<%= revertURL %>"
 		/>
@@ -62,16 +63,14 @@ else {
 		</portlet:renderURL>
 
 		<%
-		Map<String, Object> data = new HashMap<String, Object>();
-
-		data.put("uri", compareVersionsURL);
+		String taglibOnClick = liferayPortletResponse.getNamespace() + "openCompareVersionsPopup('" + compareVersionsURL.toString() + "');";
 		%>
 
 		<liferay-ui:icon
 			cssClass="compare-to-link"
-			data="<%= data %>"
 			label="<%= true %>"
 			message="compare-to"
+			onClick="<%= taglibOnClick %>"
 			url="javascript:;"
 		/>
 

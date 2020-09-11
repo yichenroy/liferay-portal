@@ -137,8 +137,11 @@ public class ModifiedFacetBuilderTest {
 
 		JSONObject jsonObject = jsonFactory.createJSONObject();
 
-		jsonObject.put("label", StringUtil.trim(label));
-		jsonObject.put("range", StringUtil.trim(range));
+		jsonObject.put(
+			"label", StringUtil.trim(label)
+		).put(
+			"range", StringUtil.trim(range)
+		);
 
 		jsonArray.put(jsonObject);
 	}
@@ -175,9 +178,9 @@ public class ModifiedFacetBuilderTest {
 
 		FacetConfiguration facetConfiguration = facet.getFacetConfiguration();
 
-		JSONObject data = facetConfiguration.getData();
+		JSONObject dataJSONObject = facetConfiguration.getData();
 
-		JSONArray facetRangesJSONArray = data.getJSONArray("ranges");
+		JSONArray facetRangesJSONArray = dataJSONObject.getJSONArray("ranges");
 
 		Assert.assertEquals(
 			rangesJSONArray.length(), facetRangesJSONArray.length());

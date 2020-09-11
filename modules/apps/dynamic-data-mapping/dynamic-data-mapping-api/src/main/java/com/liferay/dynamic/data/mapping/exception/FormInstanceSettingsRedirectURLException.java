@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class FormInstanceSettingsRedirectURLException extends PortalException {
 
 	public FormInstanceSettingsRedirectURLException() {
@@ -32,13 +29,13 @@ public class FormInstanceSettingsRedirectURLException extends PortalException {
 	}
 
 	public FormInstanceSettingsRedirectURLException(
-		String msg, Throwable cause) {
+		String msg, Throwable throwable) {
 
-		super(msg, cause);
+		super(msg, throwable);
 	}
 
-	public FormInstanceSettingsRedirectURLException(Throwable cause) {
-		super(cause);
+	public FormInstanceSettingsRedirectURLException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

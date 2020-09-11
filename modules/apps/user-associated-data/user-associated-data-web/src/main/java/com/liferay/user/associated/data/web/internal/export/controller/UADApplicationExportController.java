@@ -32,6 +32,9 @@ import com.liferay.user.associated.data.web.internal.registry.UADRegistry;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import java.net.URLEncoder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,12 +55,10 @@ public class UADApplicationExportController {
 				"application", applicationKey,
 				_getApplicationDataCount(applicationKey, userId));
 
-			File file = _exportApplicationData(applicationKey, userId);
-
-			return file;
+			return _exportApplicationData(applicationKey, userId);
 		}
-		catch (Throwable t) {
-			throw t;
+		catch (Throwable throwable) {
+			throw throwable;
 		}
 	}
 
@@ -69,7 +70,7 @@ public class UADApplicationExportController {
 		for (String uadRegistryKey :
 				_getApplicationUADEntityRegistryKeys(applicationKey)) {
 
-			UADExporter uadExporter = _uadRegistry.getUADExporter(
+			UADExporter<?> uadExporter = _uadRegistry.getUADExporter(
 				uadRegistryKey);
 
 			File file = uadExporter.exportAll(userId);
@@ -91,8 +92,8 @@ public class UADApplicationExportController {
 							sendStatusMessage("entity", uadRegistryKey);
 					}
 				}
-				catch (IOException ioe) {
-					throw new PortalException(ioe);
+				catch (IOException ioException) {
+					throw new PortalException(ioException);
 				}
 			}
 		}
@@ -108,10 +109,10 @@ public class UADApplicationExportController {
 		for (String uadRegistryKey :
 				_getApplicationUADEntityRegistryKeys(applicationKey)) {
 
-			UADExporter uadExporter = _uadRegistry.getUADExporter(
+			UADExporter<?> uadExporter = _uadRegistry.getUADExporter(
 				uadRegistryKey);
 
-			totalCount += uadExporter.count(userId);
+			totalCount += uadExporter.getExportDataCount(userId);
 		}
 
 		return totalCount;
@@ -120,7 +121,7 @@ public class UADApplicationExportController {
 	private List<String> _getApplicationUADEntityRegistryKeys(
 		String applicationKey) {
 
-		Stream<UADDisplay> uadDisplayStream =
+		Stream<UADDisplay<?>> uadDisplayStream =
 			_uadRegistry.getApplicationUADDisplayStream(applicationKey);
 
 		return uadDisplayStream.map(
@@ -155,7 +156,16 @@ public class UADApplicationExportController {
 		sb.append(StringPool.UNDERLINE);
 
 		if (user != null) {
-			sb.append(user.getFullName());
+			String userName = null;
+
+			try {
+				userName = URLEncoder.encode(user.getFullName(), "UTF-8");
+			}
+			catch (UnsupportedEncodingException unsupportedEncodingException) {
+				userName = String.valueOf(userId);
+			}
+
+			sb.append(userName);
 		}
 		else {
 			sb.append(userId);

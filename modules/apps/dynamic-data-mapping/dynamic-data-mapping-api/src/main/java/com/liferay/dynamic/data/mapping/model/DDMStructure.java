@@ -14,11 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the DDMStructure service. Represents a row in the &quot;DDMStructure&quot; database table, with each column mapped to a property of this class.
@@ -61,6 +61,8 @@ public interface DDMStructure extends DDMStructureModel, PersistedModel {
 	public DDMForm createFullHierarchyDDMForm()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public DDMStructureLayout fetchDDMStructureLayout();
+
 	public java.util.List<String> getChildrenFieldNames(String fieldName)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
@@ -74,6 +76,8 @@ public interface DDMStructure extends DDMStructureModel, PersistedModel {
 
 	public DDMFormLayout getDDMFormLayout()
 		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public long getDefaultDDMStructureLayoutId();
 
 	public String getFieldDataType(String fieldName)
 		throws com.liferay.portal.kernel.exception.PortalException;

@@ -39,8 +39,10 @@ public class SessionParameters {
 	public static final boolean USE_SESSION_PARAMETERS = GetterUtil.getBoolean(
 		SystemProperties.get(SessionParameters.class.getName()), true);
 
-	public static String get(HttpServletRequest request, String parameter) {
-		return get(request.getSession(), parameter);
+	public static String get(
+		HttpServletRequest httpServletRequest, String parameter) {
+
+		return get(httpServletRequest.getSession(), parameter);
 	}
 
 	public static String get(HttpSession session, String parameter) {
@@ -97,7 +99,7 @@ public class SessionParameters {
 				session.setAttribute(KEY, parameters);
 			}
 		}
-		catch (IllegalStateException ise) {
+		catch (IllegalStateException illegalStateException) {
 			parameters = new HashMap<>();
 		}
 
@@ -118,7 +120,7 @@ public class SessionParameters {
 				portletSession.setAttribute(KEY, parameters);
 			}
 		}
-		catch (IllegalStateException ise) {
+		catch (IllegalStateException illegalStateException) {
 			parameters = new LinkedHashMap<>();
 		}
 

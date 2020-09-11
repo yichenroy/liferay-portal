@@ -91,9 +91,9 @@ public class InstrumentationAgent {
 			for (Method method : methods) {
 				Class<?> clazz = method.getDeclaringClass();
 
-				ClassData classData = projectData.getClassData(clazz.getName());
-
-				_assertMethodCoverage(assertionErrors, classData, method);
+				_assertMethodCoverage(
+					assertionErrors, projectData.getClassData(clazz.getName()),
+					method);
 			}
 
 			if (!assertionErrors.isEmpty()) {
@@ -128,12 +128,11 @@ public class InstrumentationAgent {
 					_originalClassDefinitions = null;
 
 					_instrumentation.redefineClasses(
-						classDefinitions.toArray(
-							new ClassDefinition[classDefinitions.size()]));
+						classDefinitions.toArray(new ClassDefinition[0]));
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					throw new RuntimeException(
-						"Unable to uninstrument classes", e);
+						"Unable to uninstrument classes", exception);
 				}
 			}
 		}
@@ -211,7 +210,7 @@ public class InstrumentationAgent {
 		}
 
 		_instrumentation.retransformClasses(
-			modifiableClasses.toArray(new Class<?>[modifiableClasses.size()]));
+			modifiableClasses.toArray(new Class<?>[0]));
 
 		_dynamicallyInstrumented = true;
 		_originalClassDefinitions = null;
@@ -412,8 +411,8 @@ public class InstrumentationAgent {
 		try {
 			_lockFile.createNewFile();
 		}
-		catch (IOException ioe) {
-			throw new ExceptionInInitializerError(ioe);
+		catch (IOException ioException) {
+			throw new ExceptionInInitializerError(ioException);
 		}
 	}
 
@@ -425,7 +424,7 @@ public class InstrumentationAgent {
 
 				return new ClassDefinition(clazz, _bytes);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				return null;
 			}
 		}

@@ -1,34 +1,21 @@
-Liferay.provide(
-	window,
-	'${namespace}showVersionDetailsDialog',
-	function(saveURL) {
-		Liferay.Portlet.DocumentLibrary.Checkin.showDialog(
-			'${namespace}versionDetails',
-			'${dialogTitle}',
-			{
-				label: '${dialogSaveButtonLabel}',
-				callback: function(event) {
-					var portletURL = saveURL;
+window.${namespace}showVersionDetailsDialog = function (saveURL) {
+	Liferay.componentReady(
+		'${namespace}DocumentLibraryCheckinModal'
+	).then(function(documentLibraryCheckinModal) {
+		documentLibraryCheckinModal.open(function(versionIncrease, changeLog) {
+			var portletURL = saveURL;
 
-					var versionIncreaseElement = document.querySelector("input[name='${namespace}versionDetailsVersionIncrease']:checked");
+			if (versionIncrease) {
+				portletURL += '&${namespace}versionIncrease=' + encodeURIComponent(versionIncrease);
+			}
 
-					if (versionIncreaseElement) {
-						portletURL += '&${namespace}versionIncrease=' + encodeURIComponent(versionIncreaseElement.value);
-					}
+			if (changeLog) {
+				portletURL += '&${namespace}changeLog=' + encodeURIComponent(changeLog);
+			}
 
-					var changeLogElement = document.getElementById('${namespace}versionDetailsChangeLog');
+			portletURL += '&${namespace}updateVersionDetails=true'
 
-					if (changeLogElement) {
-						portletURL += '&${namespace}changeLog=' + encodeURIComponent(changeLogElement.value);
-					}
-
-					portletURL += '&${namespace}updateVersionDetails=true'
-
-					window.location.href = portletURL;
-				}
-			},
-			'${dialogCancelButtonLabel}'
-		);
-	},
-	['document-library-checkin', 'liferay-portlet-url']
-);
+			window.location.href = portletURL;
+		});
+	})
+};

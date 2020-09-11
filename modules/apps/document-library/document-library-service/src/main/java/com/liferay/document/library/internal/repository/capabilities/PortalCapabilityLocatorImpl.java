@@ -15,14 +15,18 @@
 package com.liferay.document.library.internal.repository.capabilities;
 
 import com.liferay.document.library.kernel.service.DLAppHelperLocalService;
+import com.liferay.document.library.kernel.service.DLFolderService;
+import com.liferay.document.library.security.io.InputStreamSanitizer;
 import com.liferay.document.library.service.DLFileVersionPreviewLocalService;
 import com.liferay.document.library.sync.service.DLSyncEventLocalService;
 import com.liferay.portal.kernel.cache.CacheRegistryItem;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.repository.DocumentRepository;
 import com.liferay.portal.kernel.repository.capabilities.BulkOperationCapability;
 import com.liferay.portal.kernel.repository.capabilities.CommentCapability;
 import com.liferay.portal.kernel.repository.capabilities.ConfigurationCapability;
 import com.liferay.portal.kernel.repository.capabilities.DynamicCapability;
+import com.liferay.portal.kernel.repository.capabilities.FileEntryTypeCapability;
 import com.liferay.portal.kernel.repository.capabilities.PortalCapabilityLocator;
 import com.liferay.portal.kernel.repository.capabilities.ProcessorCapability;
 import com.liferay.portal.kernel.repository.capabilities.RelatedModelCapability;
@@ -97,6 +101,11 @@ public class PortalCapabilityLocatorImpl
 	}
 
 	@Override
+	public FileEntryTypeCapability getFileEntryTypeCapability() {
+		return new LiferayFileEntryTypeCapability(_dlFolderService);
+	}
+
+	@Override
 	public ProcessorCapability getProcessorCapability(
 		DocumentRepository documentRepository,
 		ProcessorCapability.ResourceGenerationStrategy
@@ -145,7 +154,7 @@ public class PortalCapabilityLocatorImpl
 
 		return new LiferaySyncCapability(
 			GroupServiceAdapter.create(documentRepository),
-			_dlSyncEventLocalService);
+			_dlSyncEventLocalService, _messageBus);
 	}
 
 	@Override
@@ -205,10 +214,10 @@ public class PortalCapabilityLocatorImpl
 
 		_alwaysGeneratingProcessorCapability = new LiferayProcessorCapability(
 			ProcessorCapability.ResourceGenerationStrategy.ALWAYS_GENERATE,
-			_dlFileVersionPreviewLocalService);
+			_dlFileVersionPreviewLocalService, _inputStreamSanitizer);
 		_reusingProcessorCapability = new LiferayProcessorCapability(
 			ProcessorCapability.ResourceGenerationStrategy.REUSE,
-			_dlFileVersionPreviewLocalService);
+			_dlFileVersionPreviewLocalService, _inputStreamSanitizer);
 	}
 
 	@Deactivate
@@ -238,10 +247,20 @@ public class PortalCapabilityLocatorImpl
 	private DLFileVersionPreviewLocalService _dlFileVersionPreviewLocalService;
 
 	@Reference
+	private DLFolderService _dlFolderService;
+
+	@Reference
 	private DLSyncEventLocalService _dlSyncEventLocalService;
+
+	@Reference
+	private InputStreamSanitizer _inputStreamSanitizer;
 
 	private final Map<DocumentRepository, LiferayDynamicCapability>
 		_liferayDynamicCapabilities = new ConcurrentHashMap<>();
+
+	@Reference
+	private MessageBus _messageBus;
+
 	private final RepositoryEntryConverter _repositoryEntryConverter =
 		new RepositoryEntryConverter();
 	private ProcessorCapability _reusingProcessorCapability;

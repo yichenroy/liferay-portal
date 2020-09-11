@@ -25,15 +25,16 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 	category = "assets", scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
 @Meta.OCD(
-	description = "opennlp-auto-tag-provider-configuration-description",
+	description = "opennlp-auto-tag-configuration-description",
 	id = "com.liferay.asset.auto.tagger.opennlp.internal.configuration.OpenNLPDocumentAssetAutoTaggerCompanyConfiguration",
 	localization = "content/Language",
-	name = "opennlp-auto-tag-provider-configuration-name"
+	name = "opennlp-auto-tag-configuration-name"
 )
 public interface OpenNLPDocumentAssetAutoTaggerCompanyConfiguration {
 
 	/**
 	 * Sets the confidence threshold for the returned tags.
+	 *
 	 * @review
 	 */
 	@Meta.AD(
@@ -43,10 +44,12 @@ public interface OpenNLPDocumentAssetAutoTaggerCompanyConfiguration {
 	public float confidenceThreshold();
 
 	/**
-	 * Enables auto tagging of documents using a pre-trained opennlp model.
+	 * Sets the class names to enable auto tagging of documents using a
+	 * pre-trained opennlp model.
+	 *
 	 * @review
 	 */
-	@Meta.AD(deflt = "false", name = "enabled", required = false)
-	public boolean enabled();
+	@Meta.AD(deflt = "", name = "enabled-class-names", required = false)
+	public String[] enabledClassNames();
 
 }

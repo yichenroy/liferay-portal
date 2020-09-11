@@ -14,6 +14,8 @@
 
 package com.liferay.sharing.service.impl;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,8 +29,6 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.sharing.exception.DuplicateSharingEntryException;
 import com.liferay.sharing.exception.InvalidSharingEntryActionException;
 import com.liferay.sharing.exception.InvalidSharingEntryExpirationDateException;
@@ -41,6 +41,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the local service for accessing, adding, checking, deleting, and
@@ -59,6 +62,10 @@ import java.util.stream.Stream;
  *
  * @author Sergio González
  */
+@Component(
+	property = "model.class.name=com.liferay.sharing.model.SharingEntry",
+	service = AopService.class
+)
 public class SharingEntryLocalServiceImpl
 	extends SharingEntryLocalServiceBaseImpl {
 
@@ -100,8 +107,8 @@ public class SharingEntryLocalServiceImpl
 		}
 
 		return sharingEntryLocalService.updateSharingEntry(
-			sharingEntry.getSharingEntryId(), sharingEntryActions, shareable,
-			expirationDate, serviceContext);
+			userId, sharingEntry.getSharingEntryId(), sharingEntryActions,
+			shareable, expirationDate, serviceContext);
 	}
 
 	/**
@@ -139,15 +146,16 @@ public class SharingEntryLocalServiceImpl
 
 		_validateExpirationDate(expirationDate);
 
-		if (sharingEntryPersistence.fetchByTU_C_C(
-				toUserId, classNameId, classPK) != null) {
+		SharingEntry existingSharingEntry =
+			sharingEntryPersistence.fetchByTU_C_C(
+				toUserId, classNameId, classPK);
 
+		if (existingSharingEntry != null) {
 			throw new DuplicateSharingEntryException(
 				StringBundler.concat(
-					"A sharing entry already exists for user ",
-					String.valueOf(toUserId), " with classNameId ",
-					String.valueOf(classNameId), " and classPK ",
-					String.valueOf(classPK)));
+					"A sharing entry already exists for user ", toUserId,
+					" with classNameId ", classNameId, " and classPK ",
+					classPK));
 		}
 
 		long sharingEntryId = counterLocalService.increment();
@@ -246,9 +254,7 @@ public class SharingEntryLocalServiceImpl
 	public SharingEntry deleteSharingEntry(long sharingEntryId)
 		throws PortalException {
 
-		SharingEntry sharingEntry = getSharingEntry(sharingEntryId);
-
-		return deleteSharingEntry(sharingEntry);
+		return deleteSharingEntry(getSharingEntry(sharingEntryId));
 	}
 
 	/**
@@ -292,14 +298,13 @@ public class SharingEntryLocalServiceImpl
 			try {
 				indexer.reindex(className, classPK);
 			}
-			catch (SearchException se) {
+			catch (SearchException searchException) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						StringBundler.concat(
 							"Unable to index sharing entry for class name ",
-							className, " and primary key ",
-							String.valueOf(classPK)),
-						se);
+							className, " and primary key ", classPK),
+						searchException);
 				}
 			}
 		}
@@ -323,14 +328,14 @@ public class SharingEntryLocalServiceImpl
 	}
 
 	/**
-	 * Returns the sharing entry for the resource shared with the user or null
-	 * if there's none. The class name ID and class primary key identify the
-	 * resource's type and instance, respectively.
+	 * Returns the sharing entry for the resource shared with the user or
+	 * <code>null</code> if there's none. The class name ID and class primary
+	 * key identify the resource's type and instance, respectively.
 	 *
 	 * @param  toUserId the user's ID
 	 * @param  classNameId the resource's class name ID
 	 * @param  classPK the class primary key of the resource
-	 * @return the sharing entry or null if none
+	 * @return the sharing entry or <code>null</code> if none
 	 * @review
 	 */
 	@Override
@@ -363,8 +368,8 @@ public class SharingEntryLocalServiceImpl
 	}
 
 	/**
-	 * Returns the number of sharing entries for the type of resource shared
-	 * by the user. The class name ID identifies the resource type.
+	 * Returns the number of sharing entries for the type of resource shared by
+	 * the user. The class name ID identifies the resource type.
 	 *
 	 * @param  fromUserId the user's ID
 	 * @param  classNameId the class name ID of the resources
@@ -612,13 +617,21 @@ public class SharingEntryLocalServiceImpl
 		long toUserId, long classNameId, long classPK,
 		SharingEntryAction sharingEntryAction) {
 
-		SharingEntry sharingEntry = sharingEntryPersistence.fetchByTU_C_C(
-			toUserId, classNameId, classPK);
+		List<SharingEntry> sharingEntries = sharingEntryPersistence.findByTU_C(
+			toUserId, classNameId);
 
-		if ((sharingEntry != null) &&
-			sharingEntry.hasSharingPermission(sharingEntryAction)) {
+		if (sharingEntries.isEmpty()) {
+			return false;
+		}
 
-			return true;
+		for (SharingEntry sharingEntry : sharingEntries) {
+			if (classPK == sharingEntry.getClassPK()) {
+				if (sharingEntry.hasSharingPermission(sharingEntryAction)) {
+					return true;
+				}
+
+				return false;
+			}
 		}
 
 		return false;
@@ -627,6 +640,40 @@ public class SharingEntryLocalServiceImpl
 	/**
 	 * Updates the sharing entry in the database.
 	 *
+	 * @param      sharingEntryId the primary key of the sharing entry
+	 * @param      sharingEntryActions the sharing entry actions
+	 * @param      shareable whether the user the resource is shared with can
+	 *             also share it
+	 * @param      expirationDate the date when the sharing entry expires
+	 * @param      serviceContext the service context
+	 * @return     the sharing entry
+	 * @throws     PortalException if the sharing entry does not exist, if the
+	 *             sharing entry actions are invalid (e.g., empty, don't contain
+	 *             {@code SharingEntryAction#VIEW}, or contain a {@code null}
+	 *             value), or if the expiration date is a past value
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.sharing.service.SharingEntryLocalService#updateSharingEntry(
+	 *             long, long, Collection, boolean, Date, ServiceContext)}
+	 * @review
+	 */
+	@Deprecated
+	@Override
+	public SharingEntry updateSharingEntry(
+			long sharingEntryId,
+			Collection<SharingEntryAction> sharingEntryActions,
+			boolean shareable, Date expirationDate,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return updateSharingEntry(
+			serviceContext.getUserId(), sharingEntryId, sharingEntryActions,
+			shareable, expirationDate, serviceContext);
+	}
+
+	/**
+	 * Updates the sharing entry in the database.
+	 *
+	 * @param  userId the primary key of the user updating the sharing entry
 	 * @param  sharingEntryId the primary key of the sharing entry
 	 * @param  sharingEntryActions the sharing entry actions
 	 * @param  shareable whether the user the resource is shared with can also
@@ -638,10 +685,11 @@ public class SharingEntryLocalServiceImpl
 	 *         sharing entry actions are invalid (e.g., empty, don't contain
 	 *         {@code SharingEntryAction#VIEW}, or contain a {@code null}
 	 *         value), or if the expiration date is a past value
+	 * @review
 	 */
 	@Override
 	public SharingEntry updateSharingEntry(
-			long sharingEntryId,
+			long userId, long sharingEntryId,
 			Collection<SharingEntryAction> sharingEntryActions,
 			boolean shareable, Date expirationDate,
 			ServiceContext serviceContext)
@@ -654,6 +702,7 @@ public class SharingEntryLocalServiceImpl
 
 		_validateExpirationDate(expirationDate);
 
+		sharingEntry.setUserId(userId);
 		sharingEntry.setShareable(shareable);
 		sharingEntry.setExpirationDate(expirationDate);
 
@@ -716,16 +765,16 @@ public class SharingEntryLocalServiceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		SharingEntryLocalServiceImpl.class);
 
-	@ServiceReference(type = GroupLocalService.class)
+	@Reference
 	private GroupLocalService _groupLocalService;
 
-	@ServiceReference(type = IndexerRegistry.class)
+	@Reference
 	private IndexerRegistry _indexerRegistry;
 
-	@ServiceReference(type = Portal.class)
+	@Reference
 	private Portal _portal;
 
-	@ServiceReference(type = UserLocalService.class)
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

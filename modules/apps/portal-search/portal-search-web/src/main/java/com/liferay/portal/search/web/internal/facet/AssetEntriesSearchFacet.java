@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
@@ -65,9 +66,10 @@ public class AssetEntriesSearchFacet extends BaseJSPSearchFacet {
 			configurationJSONObject = JSONFactoryUtil.createJSONObject(
 				configuration);
 		}
-		catch (JSONException jsone) {
+		catch (JSONException jsonException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to parse configuration", jsone.getCause());
+				_log.warn(
+					"Unable to parse configuration", jsonException.getCause());
 			}
 
 			return null;
@@ -122,9 +124,7 @@ public class AssetEntriesSearchFacet extends BaseJSPSearchFacet {
 
 		facetConfiguration.setClassName(getFacetClassName());
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("frequencyThreshold", 1);
+		JSONObject jsonObject = JSONUtil.put("frequencyThreshold", 1);
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
@@ -164,12 +164,11 @@ public class AssetEntriesSearchFacet extends BaseJSPSearchFacet {
 
 	@Override
 	public JSONObject getJSONData(ActionRequest actionRequest) {
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
 		int frequencyThreshold = ParamUtil.getInteger(
 			actionRequest, getClassName() + "frequencyThreshold", 1);
 
-		jsonObject.put("frequencyThreshold", frequencyThreshold);
+		JSONObject jsonObject = JSONUtil.put(
+			"frequencyThreshold", frequencyThreshold);
 
 		String[] assetTypes = StringUtil.split(
 			ParamUtil.getString(actionRequest, getClassName() + "assetTypes"));

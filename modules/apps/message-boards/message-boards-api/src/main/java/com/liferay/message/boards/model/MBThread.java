@@ -14,11 +14,11 @@
 
 package com.liferay.message.boards.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the MBThread service. Represents a row in the &quot;MBThread&quot; database table, with each column mapped to a property of this class.
@@ -67,7 +67,11 @@ public interface MBThread extends MBThreadModel, PersistedModel {
 
 	public com.liferay.portal.kernel.lock.Lock getLock();
 
+	public int getMessageCount();
+
 	public long[] getParticipantUserIds();
+
+	public long getViewCount();
 
 	public boolean hasLock(long userId);
 

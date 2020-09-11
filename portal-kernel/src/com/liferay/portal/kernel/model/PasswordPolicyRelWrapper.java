@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
@@ -30,10 +28,9 @@ import java.util.Map;
  * @see PasswordPolicyRel
  * @generated
  */
-@ProviderType
 public class PasswordPolicyRelWrapper
 	extends BaseModelWrapper<PasswordPolicyRel>
-	implements PasswordPolicyRel, ModelWrapper<PasswordPolicyRel> {
+	implements ModelWrapper<PasswordPolicyRel>, PasswordPolicyRel {
 
 	public PasswordPolicyRelWrapper(PasswordPolicyRel passwordPolicyRel) {
 		super(passwordPolicyRel);

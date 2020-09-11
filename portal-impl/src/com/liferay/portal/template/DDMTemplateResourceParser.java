@@ -18,6 +18,7 @@ import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMTemplate;
 import com.liferay.dynamic.data.mapping.kernel.DDMTemplateManagerUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,7 +31,6 @@ import com.liferay.portal.kernel.template.TemplateException;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 /**
  * @author Tina Tian
@@ -46,7 +46,6 @@ import com.liferay.portal.kernel.util.StringBundler;
 public class DDMTemplateResourceParser implements TemplateResourceParser {
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public TemplateResource getTemplateResource(String templateId)
 		throws TemplateException {
 
@@ -54,15 +53,7 @@ public class DDMTemplateResourceParser implements TemplateResourceParser {
 			TemplateConstants.TEMPLATE_SEPARATOR + StringPool.SLASH);
 
 		if (pos == -1) {
-
-			// Backwards compatibility
-
-			pos = templateId.indexOf(
-				TemplateConstants.JOURNAL_SEPARATOR + StringPool.SLASH);
-
-			if (pos == -1) {
-				return null;
-			}
+			return null;
 		}
 
 		try {
@@ -83,9 +74,8 @@ public class DDMTemplateResourceParser implements TemplateResourceParser {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					StringBundler.concat(
-						"Loading {companyId=", String.valueOf(companyId),
-						", groupId=", String.valueOf(groupId), ", classNameId=",
-						String.valueOf(classNameId), ", ddmTemplateKey=",
+						"Loading {companyId=", companyId, ", groupId=", groupId,
+						", classNameId=", classNameId, ", ddmTemplateKey=",
 						ddmTemplateKey, "}"));
 			}
 
@@ -120,18 +110,15 @@ public class DDMTemplateResourceParser implements TemplateResourceParser {
 			return new DDMTemplateResource(
 				ddmTemplate.getTemplateKey(), ddmTemplate);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new TemplateException(
-				"Unable to find template " + templateId, e);
+				"Unable to find template " + templateId, exception);
 		}
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public boolean isTemplateResourceValid(String templateId, String langType) {
-		if (templateId.contains(TemplateConstants.JOURNAL_SEPARATOR) ||
-			templateId.contains(TemplateConstants.TEMPLATE_SEPARATOR)) {
-
+		if (templateId.contains(TemplateConstants.TEMPLATE_SEPARATOR)) {
 			return true;
 		}
 

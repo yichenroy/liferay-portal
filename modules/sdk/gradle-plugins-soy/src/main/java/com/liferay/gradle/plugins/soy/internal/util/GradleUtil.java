@@ -26,8 +26,10 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
- * @author Andrea Di Giorgi
+ * @author     Andrea Di Giorgi
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
+@Deprecated
 public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 
 	public static <T> T withClasspath(
@@ -50,7 +52,7 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 		Collections.addAll(urls, contextURLClassLoader.getURLs());
 
 		try (URLClassLoader urlClassLoader = new URLClassLoader(
-				urls.toArray(new URL[urls.size()]), null)) {
+				urls.toArray(new URL[0]), null)) {
 
 			currentThread.setContextClassLoader(urlClassLoader);
 

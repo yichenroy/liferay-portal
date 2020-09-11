@@ -18,6 +18,7 @@ import com.liferay.mail.kernel.model.Filter;
 import com.liferay.mail.kernel.util.Hook;
 import com.liferay.petra.process.LoggingOutputProcessor;
 import com.liferay.petra.process.ProcessUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.log.Log;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsUtil;
 
@@ -50,8 +50,7 @@ public class SendmailHook implements Hook {
 				String home = PropsUtil.get(PropsKeys.MAIL_HOOK_SENDMAIL_HOME);
 
 				File file = new File(
-					StringBundler.concat(
-						home, "/", String.valueOf(userId), "/.forward"));
+					StringBundler.concat(home, "/", userId, "/.forward"));
 
 				if (!emailAddresses.isEmpty()) {
 					StringBundler sb = new StringBundler(
@@ -69,8 +68,8 @@ public class SendmailHook implements Hook {
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -104,8 +103,8 @@ public class SendmailHook implements Hook {
 
 			future.get();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		updatePassword(companyId, userId, password);
@@ -152,8 +151,8 @@ public class SendmailHook implements Hook {
 
 			future.get();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -164,8 +163,7 @@ public class SendmailHook implements Hook {
 		String home = PropsUtil.get(PropsKeys.MAIL_HOOK_SENDMAIL_HOME);
 
 		File file = new File(
-			StringBundler.concat(
-				home, "/", String.valueOf(userId), "/.procmailrc"));
+			StringBundler.concat(home, "/", userId, "/.procmailrc"));
 
 		if (ListUtil.isEmpty(blocked)) {
 			file.delete();
@@ -173,7 +171,7 @@ public class SendmailHook implements Hook {
 			return;
 		}
 
-		StringBundler sb = new StringBundler(blocked.size() * 9 + 3);
+		StringBundler sb = new StringBundler((blocked.size() * 9) + 3);
 
 		sb.append("ORGMAIL /var/spool/mail/$LOGNAME\n");
 		sb.append("MAILDIR $HOME/\n");
@@ -194,8 +192,8 @@ public class SendmailHook implements Hook {
 		try {
 			FileUtil.write(file, sb.toString());
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -249,8 +247,8 @@ public class SendmailHook implements Hook {
 
 			future.get();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -291,8 +289,8 @@ public class SendmailHook implements Hook {
 
 			future.get();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 

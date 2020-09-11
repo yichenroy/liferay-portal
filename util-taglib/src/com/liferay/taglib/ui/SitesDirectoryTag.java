@@ -19,8 +19,10 @@ import com.liferay.taglib.util.IncludeTag;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Sergio González
+ * @author     Sergio González
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class SitesDirectoryTag extends IncludeTag {
 
 	public static final String SITES_CHILDREN = "children";
@@ -61,10 +63,10 @@ public class SitesDirectoryTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-ui:sites-directory:displayStyle", _displayStyle);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:sites-directory:sites", String.valueOf(_sites));
 	}
 

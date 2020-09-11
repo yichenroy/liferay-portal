@@ -14,10 +14,10 @@
 
 package com.liferay.portal.search.query;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Map;
 import java.util.Set;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -29,6 +29,11 @@ public interface MultiMatchQuery extends Query {
 
 	public Float getCutOffFrequency();
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getFieldsBoosts()}
+	 */
+	@Deprecated
 	public Set<String> getFields();
 
 	public Map<String, Float> getFieldsBoosts();
@@ -57,6 +62,11 @@ public interface MultiMatchQuery extends Query {
 
 	public boolean isFieldBoostsEmpty();
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #isFieldBoostsEmpty()}
+	 */
+	@Deprecated
 	public boolean isFieldsEmpty();
 
 	public Boolean isLenient();

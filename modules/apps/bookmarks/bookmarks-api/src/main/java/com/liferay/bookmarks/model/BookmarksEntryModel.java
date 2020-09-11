@@ -14,17 +14,18 @@
 
 package com.liferay.bookmarks.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.model.WorkflowedModel;
 
 import java.util.Date;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the BookmarksEntry service. Represents a row in the &quot;BookmarksEntry&quot; database table, with each column mapped to a property of this class.
@@ -39,8 +40,8 @@ import java.util.Date;
  */
 @ProviderType
 public interface BookmarksEntryModel
-	extends BaseModel<BookmarksEntry>, ShardedModel, StagedGroupedModel,
-			TrashedModel, WorkflowedModel {
+	extends BaseModel<BookmarksEntry>, MVCCModel, ShardedModel,
+			StagedGroupedModel, TrashedModel, WorkflowedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -61,6 +62,22 @@ public interface BookmarksEntryModel
 	 * @param primaryKey the primary key of this bookmarks entry
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this bookmarks entry.
+	 *
+	 * @return the mvcc version of this bookmarks entry
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this bookmarks entry.
+	 *
+	 * @param mvccVersion the mvcc version of this bookmarks entry
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the uuid of this bookmarks entry.
@@ -279,20 +296,6 @@ public interface BookmarksEntryModel
 	 * @param description the description of this bookmarks entry
 	 */
 	public void setDescription(String description);
-
-	/**
-	 * Returns the visits of this bookmarks entry.
-	 *
-	 * @return the visits of this bookmarks entry
-	 */
-	public int getVisits();
-
-	/**
-	 * Sets the visits of this bookmarks entry.
-	 *
-	 * @param visits the visits of this bookmarks entry
-	 */
-	public void setVisits(int visits);
 
 	/**
 	 * Returns the priority of this bookmarks entry.

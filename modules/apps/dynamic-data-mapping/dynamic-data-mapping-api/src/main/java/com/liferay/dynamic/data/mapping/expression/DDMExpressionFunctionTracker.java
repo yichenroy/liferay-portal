@@ -14,10 +14,10 @@
 
 package com.liferay.dynamic.data.mapping.expression;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.util.Map;
 import java.util.Set;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Leonardo Barros
@@ -25,9 +25,20 @@ import java.util.Set;
 @ProviderType
 public interface DDMExpressionFunctionTracker {
 
+	public Map<String, DDMExpressionFunctionFactory>
+		getDDMExpressionFunctionFactories(Set<String> functionNames);
+
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public Map<String, DDMExpressionFunction> getDDMExpressionFunctions(
 		Set<String> functionNames);
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public void ungetDDMExpressionFunctions(
 		Map<String, DDMExpressionFunction> ddmExpressionFunctionsMap);
 

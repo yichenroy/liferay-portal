@@ -14,15 +14,12 @@
 
 package com.liferay.asset.kernel.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class AssetLinkFinderUtil {
 
 	public static java.util.List<com.liferay.asset.kernel.model.AssetLink>

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.security.service.access.policy.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -34,21 +32,20 @@ import java.util.Date;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class SAPEntryCacheModel
 	implements CacheModel<SAPEntry>, Externalizable {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof SAPEntryCacheModel)) {
+		if (!(object instanceof SAPEntryCacheModel)) {
 			return false;
 		}
 
-		SAPEntryCacheModel sapEntryCacheModel = (SAPEntryCacheModel)obj;
+		SAPEntryCacheModel sapEntryCacheModel = (SAPEntryCacheModel)object;
 
 		if (sapEntryId == sapEntryCacheModel.sapEntryId) {
 			return true;

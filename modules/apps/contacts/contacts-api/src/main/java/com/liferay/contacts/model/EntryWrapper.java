@@ -14,8 +14,6 @@
 
 package com.liferay.contacts.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see Entry
  * @generated
  */
-@ProviderType
 public class EntryWrapper
 	extends BaseModelWrapper<Entry> implements Entry, ModelWrapper<Entry> {
 

@@ -1,14 +1,29 @@
-import debounce from 'metal-debounce';
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
 import {closest, getClosestAssetElement} from '../utils/assets';
-import {onReady} from '../utils/events.js';
+import {DEBOUNCE} from '../utils/constants';
+import {debounce} from '../utils/debounce';
+import {clickEvent, onReady} from '../utils/events';
 import {ScrollTracker} from '../utils/scroll';
 
 const applicationId = 'Custom';
 
 /**
  * Returns analytics payload with Custom Asset information.
- * @param {object} custom The custom asset DOM element
- * @return {object} The payload with custom information
+ * @param {Object} custom The custom asset DOM element
+ * @returns {Object} The payload with custom information
  */
 function getCustomAssetPayload({dataset}) {
 	const {
@@ -26,8 +41,8 @@ function getCustomAssetPayload({dataset}) {
 
 /**
  * Wether a Custom Asset is trackable or not.
- * @param {object} element The Custom DOM element
- * @return {boolean} True if the element is trackable.
+ * @param {Object} element The Custom DOM element
+ * @returns {boolean} True if the element is trackable.
  */
 function isTrackableCustomAsset(element) {
 	return element && 'analyticsAssetId' in element.dataset;
@@ -35,7 +50,7 @@ function isTrackableCustomAsset(element) {
 
 /**
  * Sends information when user clicks on a Custom Asset.
- * @param {object} analytics The Analytics client instance
+ * @param {Object} analytics The Analytics client instance
  */
 function trackCustomAssetDownloaded(analytics) {
 	const onClick = ({target}) => {
@@ -62,15 +77,15 @@ function trackCustomAssetDownloaded(analytics) {
 
 /**
  * Sends information about Custom Asset scroll actions.
- * @param {object} analytics The Analytics client instance
+ * @param {Object} analytics The Analytics client instance
  */
 function trackCustomAssetScroll(analytics, customAssetElements) {
 	const scrollSessionId = new Date().toISOString();
 	const scrollTracker = new ScrollTracker();
 
 	const onScroll = debounce(() => {
-		customAssetElements.forEach(element => {
-			scrollTracker.onDepthReached(depth => {
+		customAssetElements.forEach((element) => {
+			scrollTracker.onDepthReached((depth) => {
 				analytics.send('assetDepthReached', applicationId, {
 					...getCustomAssetPayload(element),
 					depth,
@@ -78,7 +93,7 @@ function trackCustomAssetScroll(analytics, customAssetElements) {
 				});
 			}, element);
 		});
-	}, 1500);
+	}, DEBOUNCE);
 
 	document.addEventListener('scroll', onScroll);
 
@@ -90,10 +105,10 @@ function trackCustomAssetScroll(analytics, customAssetElements) {
 /**
  * Adds an event listener for a Custom Asset submission and sends information when that
  * event happens.
- * @param {object} analytics The Analytics client instance
+ * @param {Object} analytics The Analytics client instance
  */
 function trackCustomAssetSubmitted(analytics) {
-	const onSubmit = event => {
+	const onSubmit = (event) => {
 		const {target} = event;
 		const customAssetElement = getClosestAssetElement(target, 'custom');
 
@@ -119,7 +134,7 @@ function trackCustomAssetSubmitted(analytics) {
 
 /**
  * Sends information when user scrolls on a Custom asset.
- * @param {object} analytics The Analytics client instance
+ * @param {Object} analytics The Analytics client instance
  */
 function trackCustomAssetViewed(analytics) {
 	const customAssetElements = [];
@@ -130,8 +145,8 @@ function trackCustomAssetViewed(analytics) {
 					'[data-analytics-asset-type="custom"]'
 				)
 			)
-			.filter(element => isTrackableCustomAsset(element))
-			.forEach(element => {
+			.filter((element) => isTrackableCustomAsset(element))
+			.forEach((element) => {
 				const formEnabled =
 					element.getElementsByTagName('form').length > 0;
 				const payload = {
@@ -158,42 +173,22 @@ function trackCustomAssetViewed(analytics) {
 
 /**
  * Sends information when user clicks on a Custom Asset.
- * @param {object} analytics The Analytics client instance
+ * @param {Object} analytics The Analytics client instance
  */
 function trackCustomAssetClick(analytics) {
-	const onClick = ({target}) => {
-		const customAssetElement = getClosestAssetElement(target, 'custom');
-
-		if (!isTrackableCustomAsset(customAssetElement)) {
-			return;
-		}
-
-		const tagName = target.tagName.toLowerCase();
-
-		const payload = {
-			...getCustomAssetPayload(customAssetElement),
-			tagName,
-		};
-
-		if (tagName === 'a') {
-			payload.href = target.href;
-			payload.text = target.innerText;
-		}
-		else if (tagName === 'img') {
-			payload.src = target.src;
-		}
-
-		analytics.send('assetClicked', applicationId, payload);
-	};
-
-	document.addEventListener('click', onClick);
-
-	return () => document.removeEventListener('click', onClick);
+	return clickEvent({
+		analytics,
+		applicationId,
+		eventType: 'assetClicked',
+		getPayload: getCustomAssetPayload,
+		isTrackable: isTrackableCustomAsset,
+		type: 'custom',
+	});
 }
 
 /**
  * Plugin function that registers listeners for Custom Asset events
- * @param {object} analytics The Analytics client
+ * @param {Object} analytics The Analytics client
  */
 function custom(analytics) {
 	const stopTrackingClicked = trackCustomAssetClick(analytics);

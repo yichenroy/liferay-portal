@@ -112,7 +112,7 @@ String entryUuid = String.valueOf(amImageConfigurationEntry.getUUID());
 
 	int percentage = AMImageEntryLocalServiceUtil.getPercentage(themeDisplay.getCompanyId(), entryUuid);
 
-	String cssClass = (!amImageConfigurationEntry.isEnabled() || percentage == 100 || !optimizeImagesEnabled) ? "disabled" : StringPool.BLANK;
+	String cssClass = (!amImageConfigurationEntry.isEnabled() || (percentage == 100) || !optimizeImagesEnabled) ? "disabled" : StringPool.BLANK;
 	%>
 
 	<liferay-ui:icon
@@ -144,15 +144,3 @@ String entryUuid = String.valueOf(amImageConfigurationEntry.getUUID());
 		</c:otherwise>
 	</c:choose>
 </liferay-ui:icon-menu>
-
-<aui:script require="adaptive-media-web@3.0.0/adaptive_media/js/AdaptiveMediaOptionsHandler.es as AdaptiveMediaOptionsHandler">
-	var component = Liferay.component(
-		'<portlet:namespace />OptionsHandler<%= entryUuid %>',
-		new AdaptiveMediaOptionsHandler.default(
-			{
-				namespace: '<portlet:namespace />',
-				uuid: '<%= entryUuid %>'
-			}
-		)
-	);
-</aui:script>

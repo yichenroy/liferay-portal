@@ -65,9 +65,8 @@ public class PublishLayoutsMVCActionCommand extends BaseMVCActionCommand {
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
 		if (Validator.isNull(cmd)) {
-			String portletId = _portal.getPortletId(actionRequest);
-
-			SessionMessages.add(actionRequest, portletId);
+			SessionMessages.add(
+				actionRequest, _portal.getPortletId(actionRequest));
 
 			return;
 		}
@@ -121,42 +120,45 @@ public class PublishLayoutsMVCActionCommand extends BaseMVCActionCommand {
 
 			sendRedirect(actionRequest, actionResponse, redirect);
 		}
-		catch (Exception e) {
-			if (e instanceof PrincipalException) {
-				SessionErrors.add(actionRequest, e.getClass());
+		catch (Exception exception) {
+			if (exception instanceof PrincipalException) {
+				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter(
 					"mvcPath", "/error/error.jsp");
 			}
-			else if (e instanceof AuthException ||
-					 e instanceof DuplicateLockException ||
-					 e instanceof LayoutPrototypeException ||
-					 e instanceof RemoteAuthException ||
-					 e instanceof RemoteExportException ||
-					 e instanceof RemoteOptionsException ||
-					 e instanceof SchedulerException ||
-					 e instanceof SystemException) {
+			else if (exception instanceof AuthException ||
+					 exception instanceof DuplicateLockException ||
+					 exception instanceof LayoutPrototypeException ||
+					 exception instanceof RemoteAuthException ||
+					 exception instanceof RemoteExportException ||
+					 exception instanceof RemoteOptionsException ||
+					 exception instanceof SchedulerException ||
+					 exception instanceof SystemException) {
 
-				if (e instanceof RemoteAuthException) {
-					SessionErrors.add(actionRequest, AuthException.class, e);
+				if (exception instanceof RemoteAuthException) {
+					SessionErrors.add(
+						actionRequest, AuthException.class, exception);
 
 					sendRedirect(actionRequest, actionResponse, redirect);
 				}
 				else {
-					SessionErrors.add(actionRequest, e.getClass(), e);
+					SessionErrors.add(
+						actionRequest, exception.getClass(), exception);
 				}
 			}
-			else if (e instanceof IllegalArgumentException) {
-				SessionErrors.add(actionRequest, e.getClass(), e);
+			else if (exception instanceof IllegalArgumentException) {
+				SessionErrors.add(
+					actionRequest, exception.getClass(), exception);
 			}
 			else {
-				throw e;
+				throw exception;
 			}
 		}
 	}
 
 	protected void setLayoutIdMap(ActionRequest actionRequest) {
-		HttpServletRequest portletRequest = _portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			actionRequest);
 
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
@@ -166,7 +168,7 @@ public class PublishLayoutsMVCActionCommand extends BaseMVCActionCommand {
 		String treeId = ParamUtil.getString(actionRequest, "treeId");
 
 		String openNodes = SessionTreeJSClicks.getOpenNodes(
-			portletRequest, treeId + "SelectedNode");
+			httpServletRequest, treeId + "SelectedNode");
 
 		String selectedLayoutsJSON = _exportImportHelper.getSelectedLayoutsJSON(
 			groupId, privateLayout, openNodes);

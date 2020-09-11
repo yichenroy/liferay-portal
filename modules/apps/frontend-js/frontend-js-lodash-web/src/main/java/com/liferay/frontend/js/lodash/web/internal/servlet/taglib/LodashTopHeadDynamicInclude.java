@@ -14,7 +14,7 @@
 
 package com.liferay.frontend.js.lodash.web.internal.servlet.taglib;
 
-import com.liferay.frontend.js.lodash.web.configuration.JSLodashConfiguration;
+import com.liferay.frontend.js.lodash.web.internal.configuration.JSLodashConfiguration;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
@@ -40,26 +40,26 @@ import org.osgi.service.component.annotations.Reference;
  * @author Julien Castelain
  */
 @Component(
-	configurationPid = "com.liferay.frontend.js.lodash.web.configuration.JSLodashConfiguration",
+	configurationPid = "com.liferay.frontend.js.lodash.web.internal.configuration.JSLodashConfiguration",
 	immediate = true, service = DynamicInclude.class
 )
 public class LodashTopHeadDynamicInclude extends BaseDynamicInclude {
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
 		if (!_jsLodashConfiguration.enableLodash()) {
 			return;
 		}
 
-		PrintWriter printWriter = response.getWriter();
+		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		AbsolutePortalURLBuilder absolutePortalURLBuilder =
 			_absolutePortalURLBuilderFactory.getAbsolutePortalURLBuilder(
-				request);
+				httpServletRequest);
 
 		for (String fileName : _FILE_NAMES) {
 			printWriter.print("<script data-senna-track=\"permanent\" src=\"");

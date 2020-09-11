@@ -14,14 +14,11 @@
 
 package com.liferay.message.boards.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class MailingListOutEmailAddressException extends PortalException {
 
 	public MailingListOutEmailAddressException() {
@@ -31,12 +28,14 @@ public class MailingListOutEmailAddressException extends PortalException {
 		super(msg);
 	}
 
-	public MailingListOutEmailAddressException(String msg, Throwable cause) {
-		super(msg, cause);
+	public MailingListOutEmailAddressException(
+		String msg, Throwable throwable) {
+
+		super(msg, throwable);
 	}
 
-	public MailingListOutEmailAddressException(Throwable cause) {
-		super(cause);
+	public MailingListOutEmailAddressException(Throwable throwable) {
+		super(throwable);
 	}
 
 }

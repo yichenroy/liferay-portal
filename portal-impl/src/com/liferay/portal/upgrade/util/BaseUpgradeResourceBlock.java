@@ -14,13 +14,13 @@
 
 package com.liferay.portal.upgrade.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.lang.reflect.Field;
 
@@ -78,7 +78,7 @@ public abstract class BaseUpgradeResourceBlock extends UpgradeProcess {
 		ps.addBatch();
 	}
 
-	private void _removeResourceBlocks(String className) throws SQLException {
+	private void _removeResourceBlocks(String className) throws Exception {
 		try (PreparedStatement ps = connection.prepareStatement(
 				"delete from ResourceTypePermission where name = ?")) {
 
@@ -121,7 +121,7 @@ public abstract class BaseUpgradeResourceBlock extends UpgradeProcess {
 	}
 
 	private void _upgradeCompanyScopePermissions(String className)
-		throws SQLException {
+		throws Exception {
 
 		StringBundler sb = new StringBundler(8);
 
@@ -161,7 +161,7 @@ public abstract class BaseUpgradeResourceBlock extends UpgradeProcess {
 	}
 
 	private void _upgradeGroupScopePermissions(String className)
-		throws SQLException {
+		throws Exception {
 
 		try (PreparedStatement selectPS = connection.prepareStatement(
 				SQLTransformer.transform(
@@ -194,7 +194,7 @@ public abstract class BaseUpgradeResourceBlock extends UpgradeProcess {
 	}
 
 	private void _upgradeGroupTemplateScopePermissions(String className)
-		throws SQLException {
+		throws Exception {
 
 		StringBundler sb = new StringBundler(8);
 

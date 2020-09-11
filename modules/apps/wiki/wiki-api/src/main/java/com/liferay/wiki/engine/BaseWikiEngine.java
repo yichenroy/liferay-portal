@@ -14,12 +14,12 @@
 
 package com.liferay.wiki.engine;
 
+import com.liferay.petra.io.unsync.UnsyncStringWriter;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.taglib.servlet.PipingServletResponse;
@@ -100,13 +100,13 @@ public abstract class BaseWikiEngine implements WikiEngine {
 			return StringPool.BLANK;
 		}
 
-		HttpServletResponse response =
+		HttpServletResponse httpServletResponse =
 			(HttpServletResponse)pageContext.getResponse();
 
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
 		PipingServletResponse pipingServletResponse = new PipingServletResponse(
-			response, unsyncStringWriter);
+			httpServletResponse, unsyncStringWriter);
 
 		ServletContext servletContext = getHelpPageServletContext();
 
@@ -121,10 +121,10 @@ public abstract class BaseWikiEngine implements WikiEngine {
 		return sb.toString();
 	}
 
-	public String getHelpPageTitle(HttpServletRequest request) {
+	public String getHelpPageTitle(HttpServletRequest httpServletRequest) {
 		return LanguageUtil.format(
-			request, "x-syntax-help", getFormatLabel(request.getLocale()),
-			false);
+			httpServletRequest, "x-syntax-help",
+			getFormatLabel(httpServletRequest.getLocale()), false);
 	}
 
 	public abstract String getHelpURL();

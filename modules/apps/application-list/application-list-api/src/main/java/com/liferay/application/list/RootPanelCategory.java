@@ -36,7 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 public class RootPanelCategory implements PanelCategory {
 
 	public static PanelCategory getInstance() {
-		return _instance;
+		return _panelCategory;
 	}
 
 	@Override
@@ -59,22 +59,24 @@ public class RootPanelCategory implements PanelCategory {
 
 	@Override
 	public boolean include(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
 		return false;
 	}
 
 	@Override
 	public boolean includeHeader(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
 		return false;
 	}
 
 	@Override
 	public boolean isActive(
-		HttpServletRequest request, PanelCategoryHelper panelCategoryHelper,
-		Group group) {
+		HttpServletRequest httpServletRequest,
+		PanelCategoryHelper panelCategoryHelper, Group group) {
 
 		return false;
 	}
@@ -94,6 +96,6 @@ public class RootPanelCategory implements PanelCategory {
 
 	private static final String _ROOT_PANEL_CATEGORY_KEY = "root";
 
-	private static final PanelCategory _instance = new RootPanelCategory();
+	private static final PanelCategory _panelCategory = new RootPanelCategory();
 
 }

@@ -119,9 +119,9 @@ public abstract class BaseTopHitsAggregationTestCase
 
 		SearchHits searchHits = topHitsAggregationResult.getSearchHits();
 
-		List<SearchHit> searchHitList = searchHits.getSearchHits();
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
 
-		SearchHit searchHit = searchHitList.get(0);
+		SearchHit searchHit = searchHitsList.get(0);
 
 		Document document = searchHit.getDocument();
 
@@ -129,10 +129,10 @@ public abstract class BaseTopHitsAggregationTestCase
 			Assert.assertEquals(priority, document.getInteger(Field.PRIORITY));
 		}
 		else {
-			Map<String, Object> sourceMap = searchHit.getSourcesMap();
+			Map<String, Object> sourcesMap = searchHit.getSourcesMap();
 
 			Assert.assertEquals(
-				priority.toString(), sourceMap.get(Field.PRIORITY));
+				priority.toString(), sourcesMap.get(Field.PRIORITY));
 		}
 	}
 

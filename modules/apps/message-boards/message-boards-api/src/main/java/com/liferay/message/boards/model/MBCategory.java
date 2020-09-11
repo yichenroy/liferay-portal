@@ -14,11 +14,11 @@
 
 package com.liferay.message.boards.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the MBCategory service. Represents a row in the &quot;MBCategory&quot; database table, with each column mapped to a property of this class.
@@ -62,8 +62,12 @@ public interface MBCategory extends MBCategoryModel, PersistedModel {
 	public java.util.List<MBCategory> getAncestors()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public int getMessageCount();
+
 	public MBCategory getParentCategory()
 		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public int getThreadCount();
 
 	public boolean isRoot();
 

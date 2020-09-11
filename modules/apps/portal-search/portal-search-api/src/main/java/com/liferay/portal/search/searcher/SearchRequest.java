@@ -14,17 +14,19 @@
 
 package com.liferay.portal.search.searcher;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.search.aggregation.Aggregation;
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregation;
 import com.liferay.portal.search.filter.ComplexQueryPart;
+import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.query.Query;
+import com.liferay.portal.search.rescore.Rescore;
 import com.liferay.portal.search.sort.Sort;
 import com.liferay.portal.search.stats.StatsRequest;
 
 import java.util.List;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Holds the parameters used when performing a search. Build the search request
@@ -39,15 +41,40 @@ public interface SearchRequest {
 
 	public List<ComplexQueryPart> getComplexQueryParts();
 
+	public String getConnectionId();
+
 	public List<String> getEntryClassNames();
+
+	public List<String> getExcludeContributors();
 
 	public String getFederatedSearchKey();
 
 	public List<SearchRequest> getFederatedSearchRequests();
 
+	public Boolean getFetchSource();
+
+	public String[] getFetchSourceExcludes();
+
+	public String[] getFetchSourceIncludes();
+
+	public Integer getFrom();
+
+	/**
+	 * Provides the top hits aggregations used for grouping results by the
+	 * specified fields.
+	 *
+	 * @return the GroupByRequests that are enabled for the search.
+	 * @review
+	 */
+	public List<GroupByRequest> getGroupByRequests();
+
+	public List<String> getIncludeContributors();
+
 	public List<String> getIndexes();
 
 	public List<Class<?>> getModelIndexerClasses();
+
+	public String getPaginationStartParameterName();
 
 	public Map<String, PipelineAggregation> getPipelineAggregationsMap();
 
@@ -58,11 +85,19 @@ public interface SearchRequest {
 	public String getQueryString();
 
 	/**
-	 * Provides a secondary query to reorder the top documents returned.
-	 *
-	 * @return the rescore query
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getRescores()}
 	 */
+	@Deprecated
 	public Query getRescoreQuery();
+
+	/**
+	 * Provides secondary queries to reorder the top documents returned.
+	 *
+	 * @return the rescore queries
+	 */
+	public List<Rescore> getRescores();
+
+	public Integer getSize();
 
 	public List<Sort> getSorts();
 

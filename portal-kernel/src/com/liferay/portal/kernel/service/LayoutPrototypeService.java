@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -29,6 +27,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for LayoutPrototype. Methods of this
@@ -51,7 +51,7 @@ public interface LayoutPrototypeService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link LayoutPrototypeServiceUtil} to access the layout prototype remote service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutPrototypeServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutPrototypeServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the layout prototype remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link LayoutPrototypeServiceUtil} if injection and service tracking are not available.
 	 */
 	public LayoutPrototype addLayoutPrototype(
 			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
@@ -79,7 +79,7 @@ public interface LayoutPrototypeService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<LayoutPrototype> search(
 			long companyId, Boolean active,
-			OrderByComparator<LayoutPrototype> obc)
+			OrderByComparator<LayoutPrototype> orderByComparator)
 		throws PortalException;
 
 	public LayoutPrototype updateLayoutPrototype(

@@ -15,12 +15,12 @@
 package com.liferay.portal.kernel.servlet.filters.invoker;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -36,21 +36,6 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class FilterMapping {
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #FilterMapping(String, Filter, FilterConfig, List<String>,
-	 *             Set<Dispatcher>)}
-	 */
-	@Deprecated
-	public FilterMapping(
-		String filterName, Filter filter, FilterConfig filterConfig,
-		List<String> urlPatterns, List<String> dispatchers) {
-
-		this(
-			filterName, filter, filterConfig, urlPatterns,
-			_toDispatchers(dispatchers));
-	}
-
 	public FilterMapping(
 		String filterName, Filter filter, FilterConfig filterConfig,
 		List<String> urlPatterns, Set<Dispatcher> dispatchers) {
@@ -58,7 +43,7 @@ public class FilterMapping {
 		_filterName = filterName;
 		_filter = filter;
 
-		_urlPatterns = urlPatterns.toArray(new String[urlPatterns.size()]);
+		_urlPatterns = urlPatterns.toArray(new String[0]);
 
 		String urlRegexPattern = filterConfig.getInitParameter(
 			"url-regex-pattern");
@@ -96,7 +81,8 @@ public class FilterMapping {
 	}
 
 	public boolean isMatch(
-		HttpServletRequest request, Dispatcher dispatcher, String uri) {
+		HttpServletRequest httpServletRequest, Dispatcher dispatcher,
+		String uri) {
 
 		if (!_dispatchers.contains(dispatcher) || (uri == null)) {
 			return false;
@@ -124,7 +110,9 @@ public class FilterMapping {
 			}
 		}
 
-		if (matchURLPattern && isMatchURLRegexPattern(request, uri)) {
+		if (matchURLPattern &&
+			isMatchURLRegexPattern(httpServletRequest, uri)) {
+
 			return true;
 		}
 
@@ -132,18 +120,14 @@ public class FilterMapping {
 	}
 
 	public boolean isMatchURLRegexPattern(
-		HttpServletRequest request, String uri) {
+		HttpServletRequest httpServletRequest, String uri) {
 
 		String url = uri;
 
-		String queryString = request.getQueryString();
+		String queryString = httpServletRequest.getQueryString();
 
 		if (Validator.isNotNull(queryString)) {
-			url = url.concat(
-				StringPool.QUESTION
-			).concat(
-				queryString
-			);
+			url = StringBundler.concat(url, StringPool.QUESTION, queryString);
 		}
 
 		boolean matchURLRegexPattern = true;
@@ -202,16 +186,6 @@ public class FilterMapping {
 		}
 
 		return false;
-	}
-
-	private static Set<Dispatcher> _toDispatchers(List<String> dispatchers) {
-		Set<Dispatcher> dispatcherSet = new HashSet<>();
-
-		for (String dispatcher : dispatchers) {
-			dispatcherSet.add(Dispatcher.valueOf(dispatcher));
-		}
-
-		return dispatcherSet;
 	}
 
 	private FilterMapping(

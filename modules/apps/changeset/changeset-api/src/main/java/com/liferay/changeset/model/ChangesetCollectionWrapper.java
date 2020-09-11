@@ -14,8 +14,6 @@
 
 package com.liferay.changeset.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see ChangesetCollection
  * @generated
  */
-@ProviderType
 public class ChangesetCollectionWrapper
 	extends BaseModelWrapper<ChangesetCollection>
 	implements ChangesetCollection, ModelWrapper<ChangesetCollection> {

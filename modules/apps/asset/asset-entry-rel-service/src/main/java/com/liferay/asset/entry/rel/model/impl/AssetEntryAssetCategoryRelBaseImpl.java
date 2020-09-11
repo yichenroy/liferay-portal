@@ -14,8 +14,6 @@
 
 package com.liferay.asset.entry.rel.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRel;
 import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServic
  * @see AssetEntryAssetCategoryRel
  * @generated
  */
-@ProviderType
 public abstract class AssetEntryAssetCategoryRelBaseImpl
 	extends AssetEntryAssetCategoryRelModelImpl
 	implements AssetEntryAssetCategoryRel {

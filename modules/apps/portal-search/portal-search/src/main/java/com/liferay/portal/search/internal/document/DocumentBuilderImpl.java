@@ -18,7 +18,6 @@ import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.geolocation.GeoLocationPoint;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -32,6 +31,25 @@ public class DocumentBuilderImpl implements DocumentBuilder {
 	}
 
 	@Override
+	public DocumentBuilder setBoolean(String name, Boolean value) {
+		if (value == Boolean.TRUE) {
+			setFieldValue(name, value);
+		}
+		else {
+			unsetValue(name);
+		}
+
+		return this;
+	}
+
+	@Override
+	public DocumentBuilder setBooleans(String name, Boolean... values) {
+		setFieldValues(name, values);
+
+		return this;
+	}
+
+	@Override
 	public DocumentBuilder setDate(String name, String value) {
 		setFieldValue(name, value);
 
@@ -40,7 +58,7 @@ public class DocumentBuilderImpl implements DocumentBuilder {
 
 	@Override
 	public DocumentBuilder setDates(String name, String... values) {
-		setFieldValue(name, values);
+		setFieldValues(name, values);
 
 		return this;
 	}
@@ -155,11 +173,11 @@ public class DocumentBuilderImpl implements DocumentBuilder {
 	}
 
 	protected void setFieldValue(String name, Object value) {
-		_documentImpl.setFieldValues(name, Arrays.asList(value));
+		_documentImpl.setFieldValue(name, value);
 	}
 
 	protected void setFieldValues(String name, Object[] values) {
-		_documentImpl.setFieldValues(name, Arrays.asList(values));
+		_documentImpl.setFieldValues(name, values);
 	}
 
 	private final DocumentImpl _documentImpl = new DocumentImpl();

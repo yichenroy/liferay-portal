@@ -14,9 +14,9 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.bean.AutoEscape;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The base model interface for the Company service. Represents a row in the &quot;Company&quot; database table, with each column mapped to a property of this class.
@@ -110,21 +110,6 @@ public interface CompanyModel extends BaseModel<Company>, MVCCModel {
 	 * @param webId the web ID of this company
 	 */
 	public void setWebId(String webId);
-
-	/**
-	 * Returns the key of this company.
-	 *
-	 * @return the key of this company
-	 */
-	@AutoEscape
-	public String getKey();
-
-	/**
-	 * Sets the key of this company.
-	 *
-	 * @param key the key of this company
-	 */
-	public void setKey(String key);
 
 	/**
 	 * Returns the mx of this company.

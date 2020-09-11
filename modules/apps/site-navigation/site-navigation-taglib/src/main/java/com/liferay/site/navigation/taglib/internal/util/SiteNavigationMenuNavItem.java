@@ -14,6 +14,7 @@
 
 package com.liferay.site.navigation.taglib.internal.util;
 
+import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.theme.NavItem;
@@ -22,7 +23,11 @@ import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
 
+import java.io.Serializable;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -32,16 +37,16 @@ import javax.servlet.http.HttpServletRequest;
 public class SiteNavigationMenuNavItem extends NavItem {
 
 	public SiteNavigationMenuNavItem(
-		HttpServletRequest request, ThemeDisplay themeDisplay,
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
 		SiteNavigationMenuItem siteNavigationMenuItem) {
 
-		super(request, themeDisplay, themeDisplay.getLayout(), null);
+		super(httpServletRequest, themeDisplay, themeDisplay.getLayout(), null);
 
 		SiteNavigationMenuItemType siteNavigationMenuItemType =
 			ServletContextUtil.getSiteNavigationMenuItemType(
 				siteNavigationMenuItem.getType());
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_themeDisplay = themeDisplay;
 		_siteNavigationMenuItem = siteNavigationMenuItem;
 		_siteNavigationMenuItemType = siteNavigationMenuItemType;
@@ -62,8 +67,28 @@ public class SiteNavigationMenuNavItem extends NavItem {
 	@Override
 	public List<NavItem> getChildren() {
 		return NavItemUtil.getChildNavItems(
-			_request, _siteNavigationMenuItem.getSiteNavigationMenuId(),
+			_httpServletRequest,
+			_siteNavigationMenuItem.getSiteNavigationMenuId(),
 			_siteNavigationMenuItem.getSiteNavigationMenuItemId());
+	}
+
+	@Override
+	public Map<String, Serializable> getExpandoAttributes() {
+		Map<String, Serializable> expandoAttributes =
+			super.getExpandoAttributes();
+
+		if (expandoAttributes == null) {
+			expandoAttributes = Collections.emptyMap();
+		}
+
+		ExpandoBridge expandoBridge =
+			_siteNavigationMenuItem.getExpandoBridge();
+
+		if (expandoBridge != null) {
+			expandoAttributes.putAll(expandoBridge.getAttributes());
+		}
+
+		return expandoAttributes;
 	}
 
 	@Override
@@ -79,19 +104,19 @@ public class SiteNavigationMenuNavItem extends NavItem {
 	@Override
 	public String getRegularURL() throws Exception {
 		return _siteNavigationMenuItemType.getRegularURL(
-			_request, _siteNavigationMenuItem);
+			_httpServletRequest, _siteNavigationMenuItem);
 	}
 
 	@Override
 	public String getResetLayoutURL() throws Exception {
 		return _siteNavigationMenuItemType.getResetLayoutURL(
-			_request, _siteNavigationMenuItem);
+			_httpServletRequest, _siteNavigationMenuItem);
 	}
 
 	@Override
 	public String getResetMaxStateURL() throws Exception {
 		return _siteNavigationMenuItemType.getResetMaxStateURL(
-			_request, _siteNavigationMenuItem);
+			_httpServletRequest, _siteNavigationMenuItem);
 	}
 
 	@Override
@@ -141,7 +166,7 @@ public class SiteNavigationMenuNavItem extends NavItem {
 			_themeDisplay.getLayout());
 	}
 
-	private final HttpServletRequest _request;
+	private final HttpServletRequest _httpServletRequest;
 	private final SiteNavigationMenuItem _siteNavigationMenuItem;
 	private final SiteNavigationMenuItemType _siteNavigationMenuItemType;
 	private final ThemeDisplay _themeDisplay;

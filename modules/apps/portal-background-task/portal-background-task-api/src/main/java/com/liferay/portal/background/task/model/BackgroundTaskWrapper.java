@@ -14,8 +14,6 @@
 
 package com.liferay.portal.background.task.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -34,7 +32,6 @@ import java.util.Map;
  * @see BackgroundTask
  * @generated
  */
-@ProviderType
 public class BackgroundTaskWrapper
 	extends BaseModelWrapper<BackgroundTask>
 	implements BackgroundTask, ModelWrapper<BackgroundTask> {

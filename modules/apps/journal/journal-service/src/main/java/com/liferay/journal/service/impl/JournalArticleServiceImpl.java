@@ -14,23 +14,25 @@
 
 package com.liferay.journal.service.impl;
 
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureService;
+import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
+import com.liferay.journal.service.JournalFolderService;
 import com.liferay.journal.service.base.JournalArticleServiceBaseImpl;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionHelper;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -48,6 +50,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * Provides the remote service for accessing, adding, deleting, and updating web
  * content articles. Its methods include permission checks.
@@ -57,6 +62,13 @@ import java.util.Map;
  * @author Levente Hudák
  * @see    JournalArticleLocalServiceImpl
  */
+@Component(
+	property = {
+		"json.web.service.context.name=journal",
+		"json.web.service.context.path=JournalArticle"
+	},
+	service = AopService.class
+)
 public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 
 	/**
@@ -69,7 +81,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  classPK the primary key of the DDM structure, if the primary key
 	 *         of the DDMStructure class is given as the
@@ -157,7 +169,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			String articleURL, ServiceContext serviceContext)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, folderId, ActionKeys.ADD_ARTICLE);
 
@@ -184,7 +196,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  classPK the primary key of the DDM structure, if the primary key
 	 *         of the DDMStructure class is given as the
@@ -270,7 +282,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, folderId, ActionKeys.ADD_ARTICLE);
 
@@ -297,7 +309,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  classPK the primary key of the DDM structure, if the primary key
 	 *         of the DDMStructure class is given as the
@@ -375,7 +387,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			String articleURL, ServiceContext serviceContext)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, folderId, ActionKeys.ADD_ARTICLE);
 
@@ -424,13 +436,37 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, folderId, ActionKeys.ADD_ARTICLE);
 
 		return journalArticleLocalService.addArticle(
 			getUserId(), groupId, folderId, titleMap, descriptionMap, content,
 			ddmStructureKey, ddmTemplateKey, serviceContext);
+	}
+
+	@Override
+	public JournalArticle addArticleDefaultValues(
+			long groupId, long classNameId, long classPK,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String content, String ddmStructureKey, String ddmTemplateKey,
+			String layoutUuid, boolean indexable, boolean smallImage,
+			String smallImageURL, File smallImageFile,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		DDMStructure ddmStructure = _ddmStructureService.getStructure(
+			groupId, classNameLocalService.getClassNameId(JournalArticle.class),
+			ddmStructureKey, true);
+
+		_ddmStructureModelResourcePermission.contains(
+			getPermissionChecker(), ddmStructure, ActionKeys.UPDATE);
+
+		return journalArticleLocalService.addArticleDefaultValues(
+			getUserId(), groupId, classNameId, classPK, titleMap,
+			descriptionMap, content, ddmStructureKey, ddmTemplateKey,
+			layoutUuid, indexable, smallImage, smallImageURL, smallImageFile,
+			serviceContext);
 	}
 
 	/**
@@ -454,7 +490,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 
 		JournalArticle article = getArticle(groupId, oldArticleId);
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, article.getFolderId(), ActionKeys.ADD_ARTICLE);
 
@@ -520,6 +556,22 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 
 		journalArticleLocalService.deleteArticle(
 			groupId, articleId, serviceContext);
+	}
+
+	@Override
+	public void deleteArticleDefaultValues(
+			long groupId, String articleId, String ddmStructureKey)
+		throws PortalException {
+
+		DDMStructure ddmStructure = _ddmStructureService.getStructure(
+			groupId, classNameLocalService.getClassNameId(JournalArticle.class),
+			ddmStructureKey, true);
+
+		_ddmStructureModelResourcePermission.contains(
+			getPermissionChecker(), ddmStructure, ActionKeys.UPDATE);
+
+		journalArticleLocalService.deleteArticleDefaultValues(
+			groupId, articleId, ddmStructureKey);
 	}
 
 	/**
@@ -680,7 +732,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  className the DDMStructure class name if the web content article
 	 *         is related to a DDM structure, the primary key of the class name
 	 *         associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  classPK the primary key of the DDM structure, if the DDMStructure
 	 *         class name is given as the <code>className</code> parameter, the
@@ -757,38 +809,6 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	}
 
 	/**
-	 * Returns the web content from the web content article matching the group,
-	 * article ID, and version.
-	 *
-	 * @param      groupId the primary key of the web content article's group
-	 * @param      articleId the primary key of the web content article
-	 * @param      version the web content article's version
-	 * @param      languageId the primary key of the language translation to get
-	 * @param      themeDisplay the theme display
-	 * @return     the matching web content
-	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getArticleContent(long, String, double, String,
-	 *             PortletRequestModel, ThemeDisplay)}
-	 */
-	@Deprecated
-	@Override
-	public String getArticleContent(
-			long groupId, String articleId, double version, String languageId,
-			ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		JournalArticle article = journalArticlePersistence.findByG_A_V(
-			groupId, articleId, version);
-
-		_journalArticleModelResourcePermission.check(
-			getPermissionChecker(), article, ActionKeys.VIEW);
-
-		return journalArticleLocalService.getArticleContent(
-			groupId, articleId, version, null, languageId, themeDisplay);
-	}
-
-	/**
 	 * Returns the latest web content from the web content article matching the
 	 * group and article ID.
 	 *
@@ -817,91 +837,6 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			portletRequestModel, themeDisplay);
 	}
 
-	/**
-	 * Returns the latest web content from the web content article matching the
-	 * group and article ID.
-	 *
-	 * @param      groupId the primary key of the web content article's group
-	 * @param      articleId the primary key of the web content article
-	 * @param      languageId the primary key of the language translation to get
-	 * @param      themeDisplay the theme display
-	 * @return     the matching web content
-	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getArticleContent(long, String, String, PortletRequestModel,
-	 *             ThemeDisplay)}
-	 */
-	@Deprecated
-	@Override
-	public String getArticleContent(
-			long groupId, String articleId, String languageId,
-			ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		JournalArticle article = journalArticleLocalService.getArticle(
-			groupId, articleId);
-
-		_journalArticleModelResourcePermission.check(
-			getPermissionChecker(), article, ActionKeys.VIEW);
-
-		return journalArticleLocalService.getArticleContent(
-			groupId, articleId, null, languageId, themeDisplay);
-	}
-
-	/**
-	 * Returns all the web content articles matching the group and folder.
-	 *
-	 * @param      groupId the primary key of the web content article's group
-	 * @param      folderId the primary key of the web content article folder
-	 * @return     the matching web content articles
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #getArticles(long
-	 *             groupId, long folderId, Locale locale)}
-	 */
-	@Deprecated
-	@Override
-	public List<JournalArticle> getArticles(long groupId, long folderId) {
-		Locale locale = LocaleUtil.getMostRelevantLocale();
-
-		return getArticles(groupId, folderId, locale);
-	}
-
-	/**
-	 * Returns an ordered range of all the web content articles matching the
-	 * group and folder.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end -
-	 * start</code> instances. <code>start</code> and <code>end</code> are not
-	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
-	 * refers to the first result in the set. Setting both <code>start</code>
-	 * and <code>end</code> to {@link
-	 * com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full
-	 * result set.
-	 * </p>
-	 *
-	 * @param      groupId the primary key of the web content article's group
-	 * @param      folderId the primary key of the web content article folder
-	 * @param      start the lower bound of the range of web content articles to
-	 *             return
-	 * @param      end the upper bound of the range of web content articles to
-	 *             return (not inclusive)
-	 * @param      obc the comparator to order the web content articles
-	 * @return     the matching web content articles
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #getArticles(long
-	 *             groupId, long folderId, Locale locale, int start, int end,
-	 *             OrderByComparator obc)}
-	 */
-	@Deprecated
-	@Override
-	public List<JournalArticle> getArticles(
-		long groupId, long folderId, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
-
-		Locale locale = LocaleUtil.getMostRelevantLocale();
-
-		return getArticles(groupId, folderId, locale, start, end, obc);
-	}
-
 	@Override
 	public List<JournalArticle> getArticles(
 		long groupId, long folderId, Locale locale) {
@@ -920,14 +855,14 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	@Override
 	public List<JournalArticle> getArticles(
 		long groupId, long folderId, Locale locale, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		List<Long> folderIds = new ArrayList<>();
 
 		folderIds.add(folderId);
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
-			WorkflowConstants.STATUS_ANY, start, end, obc);
+			WorkflowConstants.STATUS_ANY, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByG_F_L(
 			groupId, folderIds, locale, queryDefinition);
@@ -953,17 +888,18 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
 	@Override
 	public List<JournalArticle> getArticlesByArticleId(
 		long groupId, String articleId, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return journalArticlePersistence.filterFindByG_A(
-			groupId, articleId, start, end, obc);
+			groupId, articleId, start, end, orderByComparator);
 	}
 
 	/**
@@ -979,6 +915,51 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		long groupId, String layoutUuid) {
 
 		return journalArticlePersistence.filterFindByG_L(groupId, layoutUuid);
+	}
+
+	/**
+	 * Returns all the web content articles that the user has permission to view
+	 * matching the group and layout UUID.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end -
+	 * start</code> instances. <code>start</code> and <code>end</code> are not
+	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
+	 * refers to the first result in the set. Setting both <code>start</code>
+	 * and <code>end</code> to {@link
+	 * com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full
+	 * result set.
+	 * </p>
+	 *
+	 * @param  groupId the primary key of the web content article's group
+	 * @param  layoutUuid the unique string identifying the web content
+	 *         article's display page
+	 * @param  start the lower bound of the range of web content articles to
+	 *         return
+	 * @param  end the upper bound of the range of web content articles to
+	 *         return (not inclusive)
+	 * @return the range of matching web content articles
+	 */
+	@Override
+	public List<JournalArticle> getArticlesByLayoutUuid(
+		long groupId, String layoutUuid, int start, int end) {
+
+		return journalArticlePersistence.filterFindByG_L(
+			groupId, layoutUuid, start, end);
+	}
+
+	/**
+	 * Returns the number of web content articles that the user has permission
+	 * to view matching the group and layout UUID.
+	 *
+	 * @param  groupId the primary key of the web content article's group
+	 * @param  layoutUuid the unique string identifying the web content
+	 *         article's display page
+	 * @return the matching web content articles
+	 */
+	@Override
+	public int getArticlesByLayoutUuidCount(long groupId, String layoutUuid) {
+		return journalArticlePersistence.filterCountByG_L(groupId, layoutUuid);
 	}
 
 	/**
@@ -999,7 +980,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  ddmStructureKey the primary key of the web content article's DDM
 	 *         structure
@@ -1010,17 +991,19 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
 	@Override
 	public List<JournalArticle> getArticlesByStructureId(
 		long groupId, long classNameId, String ddmStructureKey, int status,
-		int start, int end, OrderByComparator<JournalArticle> obc) {
+		int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
-			status, start, end, obc);
+			status, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByG_C_S_L(
 			groupId, classNameId, ddmStructureKey,
@@ -1045,7 +1028,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  ddmStructureKey the primary key of the web content article's DDM
 	 *         structure
@@ -1056,17 +1039,19 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
 	@Override
 	public List<JournalArticle> getArticlesByStructureId(
 		long groupId, long classNameId, String ddmStructureKey, Locale locale,
-		int status, int start, int end, OrderByComparator<JournalArticle> obc) {
+		int status, int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
-			status, start, end, obc);
+			status, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByG_C_S_L(
 			groupId, classNameId, ddmStructureKey, locale, queryDefinition);
@@ -1096,20 +1081,21 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
 	@Override
 	public List<JournalArticle> getArticlesByStructureId(
 		long groupId, String ddmStructureKey, int status, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
-			status, start, end, obc);
+			status, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByG_C_S_L(
-			groupId, JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+			groupId, JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			ddmStructureKey, LocaleUtil.getMostRelevantLocale(),
 			queryDefinition);
 	}
@@ -1135,18 +1121,19 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
 	@Override
 	public List<JournalArticle> getArticlesByStructureId(
 		long groupId, String ddmStructureKey, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getArticlesByStructureId(
 			groupId, ddmStructureKey, WorkflowConstants.STATUS_ANY, start, end,
-			obc);
+			orderByComparator);
 	}
 
 	/**
@@ -1174,20 +1161,22 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
 	@Override
 	public List<JournalArticle> getArticlesByStructureId(
 		long groupId, String ddmStructureKey, Locale locale, int status,
-		int start, int end, OrderByComparator<JournalArticle> obc) {
+		int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
-			status, start, end, obc);
+			status, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByG_C_S_L(
-			groupId, JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+			groupId, JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			ddmStructureKey, locale, queryDefinition);
 	}
 
@@ -1249,7 +1238,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  ddmStructureKey the primary key of the web content article's DDM
 	 *         structure
@@ -1301,7 +1290,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		long groupId, String ddmStructureKey, int status) {
 
 		return getArticlesCountByStructureId(
-			groupId, JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+			groupId, JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			ddmStructureKey, status);
 	}
 
@@ -1343,8 +1332,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	@Override
 	public int getFoldersAndArticlesCount(long groupId, List<Long> folderIds) {
 		return journalArticlePersistence.filterCountByG_F(
-			groupId,
-			ArrayUtil.toArray(folderIds.toArray(new Long[folderIds.size()])));
+			groupId, ArrayUtil.toArray(folderIds.toArray(new Long[0])));
 	}
 
 	/**
@@ -1379,7 +1367,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		List<Long> folderIds = new ArrayList<>();
 
 		if (rootFolderId != JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			folderIds = journalFolderService.getFolderIds(
+			folderIds = _journalFolderService.getFolderIds(
 				groupId, rootFolderId);
 		}
 
@@ -1387,7 +1375,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			status, userId, includeOwner, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByG_F_C_L(
-			groupId, folderIds, JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+			groupId, folderIds, JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			LocaleUtil.getMostRelevantLocale(), queryDefinition);
 	}
 
@@ -1424,7 +1412,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		List<Long> folderIds = new ArrayList<>();
 
 		if (rootFolderId != JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			folderIds = journalFolderService.getFolderIds(
+			folderIds = _journalFolderService.getFolderIds(
 				groupId, rootFolderId);
 		}
 
@@ -1432,7 +1420,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			status, userId, includeOwner, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByG_F_C_L(
-			groupId, folderIds, JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+			groupId, folderIds, JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			locale, queryDefinition);
 	}
 
@@ -1585,7 +1573,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		List<Long> folderIds = new ArrayList<>();
 
 		if (rootFolderId != JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			folderIds = journalFolderService.getFolderIds(
+			folderIds = _journalFolderService.getFolderIds(
 				groupId, rootFolderId);
 		}
 
@@ -1593,7 +1581,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			status, userId, includeOwner);
 
 		return journalArticleFinder.filterCountByG_F_C(
-			groupId, folderIds, JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+			groupId, folderIds, JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			queryDefinition);
 	}
 
@@ -1649,7 +1637,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  groupId the primary key of the web content article's group
 	 * @param  className the DDMStructure class name if the web content article
 	 *         is related to a DDM structure, the class name associated with the
-	 *         article, or JournalArticleConstants.CLASSNAME_ID_DEFAULT in the
+	 *         article, or JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the
 	 *         journal-api module otherwise
 	 * @param  classPK the primary key of the DDM structure, if the DDMStructure
 	 *         class name is given as the <code>className</code> parameter, the
@@ -1675,10 +1663,10 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	@Override
 	public List<JournalArticle> getLatestArticles(
 		long groupId, int status, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
-			status, start, end, obc);
+			status, start, end, orderByComparator);
 
 		Locale locale = LocaleUtil.getMostRelevantLocale();
 
@@ -1692,6 +1680,13 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			groupId, status, new QueryDefinition<>(status));
 	}
 
+	/**
+	 * Returns all the web content articles that the user has permission to view
+	 * matching the group.
+	 *
+	 * @param  groupId the primary key of the web content article's group
+	 * @return The matching web content articles
+	 */
 	@Override
 	public List<JournalArticle> getLayoutArticles(long groupId) {
 		return journalArticlePersistence.filterFindByG_NotL(
@@ -1699,23 +1694,45 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	}
 
 	/**
-	 * Moves all versions of the web content article matching the group and
-	 * article ID to the folder.
+	 * Returns all the web content articles that the user has permission to view
+	 * matching the group.
 	 *
-	 * @param      groupId the primary key of the web content article's group
-	 * @param      articleId the primary key of the web content article
-	 * @param      newFolderId the primary key of the web content article's new
-	 *             folder
-	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #moveArticle(long, String, long, ServiceContext)}
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end -
+	 * start</code> instances. <code>start</code> and <code>end</code> are not
+	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
+	 * refers to the first result in the set. Setting both <code>start</code>
+	 * and <code>end</code> to {@link
+	 * com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full
+	 * result set.
+	 * </p>
+	 *
+	 * @param  groupId the primary key of the web content article's group
+	 * @param  start the lower bound of the range of web content articles to
+	 *         return
+	 * @param  end the upper bound of the range of web content articles to
+	 *         return (not inclusive)
+	 * @return the range of matching web content articles
 	 */
-	@Deprecated
 	@Override
-	public void moveArticle(long groupId, String articleId, long newFolderId)
-		throws PortalException {
+	public List<JournalArticle> getLayoutArticles(
+		long groupId, int start, int end) {
 
-		moveArticle(groupId, articleId, newFolderId, null);
+		return journalArticlePersistence.filterFindByG_NotL(
+			groupId, new String[] {null, StringPool.BLANK}, start, end);
+	}
+
+	/**
+	 * Returns the number of web content articles that the user has permission
+	 * to view matching the group.
+	 *
+	 * @param  groupId the primary key of the web content article's group
+	 * @return the number of matching web content articles
+	 */
+	@Override
+	public int getLayoutArticlesCount(long groupId) {
+		return journalArticlePersistence.filterCountByG_NotL(
+			groupId, new String[] {null, StringPool.BLANK});
 	}
 
 	/**
@@ -1742,7 +1759,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, newFolderId, ActionKeys.ADD_ARTICLE);
 
@@ -1994,7 +2011,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  keywords the keywords (space separated), which may occur in the
 	 *         web content article ID, title, description, or content
@@ -2023,7 +2040,8 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
@@ -2033,12 +2051,12 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		String keywords, Double version, String ddmStructureKey,
 		String ddmTemplateKey, Date displayDateGT, Date displayDateLT,
 		int status, Date reviewDate, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return journalArticleFinder.filterFindByKeywords(
 			companyId, groupId, folderIds, classNameId, keywords, version,
 			ddmStructureKey, ddmTemplateKey, displayDateGT, displayDateLT,
-			status, reviewDate, start, end, obc);
+			status, reviewDate, start, end, orderByComparator);
 	}
 
 	/**
@@ -2064,7 +2082,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  articleId the article ID keywords (space separated, optionally
 	 *         <code>null</code>)
@@ -2099,7 +2117,8 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
@@ -2110,10 +2129,10 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		String content, String ddmStructureKey, String ddmTemplateKey,
 		Date displayDateGT, Date displayDateLT, int status, Date reviewDate,
 		boolean andOperator, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
-			status, start, end, obc);
+			status, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByC_G_F_C_A_V_T_D_C_S_T_D_R(
 			companyId, groupId, folderIds, classNameId, articleId, version,
@@ -2145,7 +2164,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  articleId the article ID keywords (space separated, optionally
 	 *         <code>null</code>)
@@ -2182,7 +2201,8 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 *         return
 	 * @param  end the upper bound of the range of web content articles to
 	 *         return (not inclusive)
-	 * @param  obc the comparator to order the web content articles
+	 * @param  orderByComparator the comparator to order the web content
+	 *         articles
 	 * @return the range of matching web content articles ordered by the
 	 *         comparator
 	 */
@@ -2193,10 +2213,10 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		String content, String[] ddmStructureKeys, String[] ddmTemplateKeys,
 		Date displayDateGT, Date displayDateLT, int status, Date reviewDate,
 		boolean andOperator, int start, int end,
-		OrderByComparator<JournalArticle> obc) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
-			status, start, end, obc);
+			status, start, end, orderByComparator);
 
 		return journalArticleFinder.filterFindByC_G_F_C_A_V_T_D_C_S_T_D_R(
 			companyId, groupId, folderIds, classNameId, articleId, version,
@@ -2218,7 +2238,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  keywords the keywords (space separated), which may occur in the
 	 *         web content article ID, title, description, or content
@@ -2271,7 +2291,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  articleId the article ID keywords (space separated, optionally
 	 *         <code>null</code>)
@@ -2332,7 +2352,7 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 	 * @param  classNameId the primary key of the DDMStructure class if the web
 	 *         content article is related to a DDM structure, the primary key of
 	 *         the class name associated with the article, or
-	 *         JournalArticleConstants.CLASSNAME_ID_DEFAULT in the journal-api
+	 *         JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
 	 *         module otherwise
 	 * @param  articleId the article ID keywords (space separated, optionally
 	 *         <code>null</code>)
@@ -2779,6 +2799,28 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			serviceContext);
 	}
 
+	@Override
+	public JournalArticle updateArticleDefaultValues(
+			long groupId, String articleId, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			boolean indexable, boolean smallImage, String smallImageURL,
+			File smallImageFile, ServiceContext serviceContext)
+		throws PortalException {
+
+		DDMStructure ddmStructure = _ddmStructureService.getStructure(
+			groupId, classNameLocalService.getClassNameId(JournalArticle.class),
+			ddmStructureKey, true);
+
+		_ddmStructureModelResourcePermission.contains(
+			getPermissionChecker(), ddmStructure, ActionKeys.UPDATE);
+
+		return journalArticleLocalService.updateArticleDefaultValues(
+			getUserId(), groupId, articleId, titleMap, descriptionMap, content,
+			ddmStructureKey, ddmTemplateKey, layoutUuid, indexable, smallImage,
+			smallImageURL, smallImageFile, serviceContext);
+	}
+
 	/**
 	 * Updates the translation of the web content article.
 	 *
@@ -2878,20 +2920,33 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 			new HashMap<String, Serializable>());
 	}
 
-	private static volatile ModelResourcePermission<JournalArticle>
-		_journalArticleModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				JournalArticleServiceImpl.class,
-				"_journalArticleModelResourcePermission", JournalArticle.class);
-	private static volatile ModelResourcePermission<JournalFolder>
-		_journalFolderModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				JournalArticleServiceImpl.class,
-				"_journalFolderModelResourcePermission", JournalFolder.class);
-	private static volatile PortletResourcePermission
-		_portletResourcePermission =
-			PortletResourcePermissionFactory.getInstance(
-				JournalArticleServiceImpl.class, "_portletResourcePermission",
-				JournalConstants.RESOURCE_NAME);
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMStructure)"
+	)
+	private ModelResourcePermission<DDMStructure>
+		_ddmStructureModelResourcePermission;
+
+	@Reference
+	private DDMStructureService _ddmStructureService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.journal.model.JournalArticle)"
+	)
+	private ModelResourcePermission<JournalArticle>
+		_journalArticleModelResourcePermission;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.journal.model.JournalFolder)"
+	)
+	private ModelResourcePermission<JournalFolder>
+		_journalFolderModelResourcePermission;
+
+	@Reference
+	private JournalFolderService _journalFolderService;
+
+	@Reference(
+		target = "(resource.name=" + JournalConstants.RESOURCE_NAME + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

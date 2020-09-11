@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -32,7 +30,6 @@ import java.util.Map;
  * @see DDLRecordSetVersion
  * @generated
  */
-@ProviderType
 public class DDLRecordSetVersionWrapper
 	extends BaseModelWrapper<DDLRecordSetVersion>
 	implements DDLRecordSetVersion, ModelWrapper<DDLRecordSetVersion> {

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.workflow.kaleo.model.KaleoTimerInstanceToken;
 import com.liferay.portal.workflow.kaleo.service.KaleoTimerInstanceTokenLocalServiceUtil;
 
@@ -31,7 +29,6 @@ import com.liferay.portal.workflow.kaleo.service.KaleoTimerInstanceTokenLocalSer
  * @see KaleoTimerInstanceToken
  * @generated
  */
-@ProviderType
 public abstract class KaleoTimerInstanceTokenBaseImpl
 	extends KaleoTimerInstanceTokenModelImpl
 	implements KaleoTimerInstanceToken {

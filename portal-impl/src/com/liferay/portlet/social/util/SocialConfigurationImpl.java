@@ -14,12 +14,12 @@
 
 package com.liferay.portlet.social.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ProxyFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
@@ -129,8 +129,7 @@ public class SocialConfigurationImpl implements SocialConfiguration {
 	public String[] getActivityModelNames() {
 		Set<String> activityModelNames = _activityDefinitions.keySet();
 
-		return activityModelNames.toArray(
-			new String[activityModelNames.size()]);
+		return activityModelNames.toArray(new String[0]);
 	}
 
 	@Override

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.web.internal.portlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -33,7 +34,6 @@ import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.xml.Element;
 
@@ -57,13 +57,14 @@ public class PortalOpenSearchImpl extends BaseOpenSearchImpl {
 
 	@Override
 	public String search(
-			HttpServletRequest request, long groupId, long userId,
+			HttpServletRequest httpServletRequest, long groupId, long userId,
 			String keywords, int startPage, int itemsPerPage, String format)
 		throws SearchException {
 
 		try {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			int start = (startPage * itemsPerPage) - itemsPerPage;
 			int end = startPage * itemsPerPage;
@@ -123,7 +124,7 @@ public class PortalOpenSearchImpl extends BaseOpenSearchImpl {
 				String title = StringPool.BLANK;
 
 				PortletURL portletURL = getPortletURL(
-					request, portletId, resultScopeGroupId);
+					httpServletRequest, portletId, resultScopeGroupId);
 
 				String url = portletURL.toString();
 
@@ -165,8 +166,8 @@ public class PortalOpenSearchImpl extends BaseOpenSearchImpl {
 
 			return doc.asXML();
 		}
-		catch (Exception e) {
-			throw new SearchException(e);
+		catch (Exception exception) {
+			throw new SearchException(exception);
 		}
 	}
 

@@ -10,7 +10,7 @@
 <tbody>
 <tr>
 	<td>EDITOR</td>
-	<td>//div[contains(@class,'cke_editable_inline') and contains(@id,'_${key_editor}')]</td>
+	<td>//div[contains(@class,'cke_editable_inline') and contains(@id,'_${key_editor}')] | //div[contains(@class,'form-group')]//textarea[contains(@id,'_${key_editor}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -57,7 +57,7 @@
 <!--TEXT_FORMATTING-->
 <tr>
 	<td>TEXT_FORMATTING_STYLE</td>
-	<td>//button[contains(@class,'ae-toolbar-element')]//span[contains(@class,'ae-container-dropdown')]</td>
+	<td>//button[contains(@class,'ae-toolbar-element')]//span[contains(@class,'selected-item')]</td>
 	<td></td>
 </tr>
 <tr>

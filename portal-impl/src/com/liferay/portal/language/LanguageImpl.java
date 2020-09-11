@@ -15,6 +15,7 @@
 package com.liferay.portal.language;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
@@ -38,6 +39,7 @@ import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.FastDateFormatConstants;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -47,7 +49,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -147,7 +148,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * index based substitution.
 	 * </p>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  pattern the key to look up in the current locale's resource file.
 	 *         The key follows the standard Java resource specification.
 	 * @param  argument the single argument to be substituted into the pattern
@@ -157,9 +159,12 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String format(
-		HttpServletRequest request, String pattern, LanguageWrapper argument) {
+		HttpServletRequest httpServletRequest, String pattern,
+		LanguageWrapper argument) {
 
-		return format(request, pattern, new LanguageWrapper[] {argument}, true);
+		return format(
+			httpServletRequest, pattern, new LanguageWrapper[] {argument},
+			true);
 	}
 
 	/**
@@ -179,7 +184,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * index based substitution.
 	 * </p>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  pattern the key to look up in the current locale's resource file.
 	 *         The key follows the standard Java resource specification.
 	 * @param  argument the single argument to be substituted into the pattern
@@ -190,11 +196,11 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String format(
-		HttpServletRequest request, String pattern, LanguageWrapper argument,
-		boolean translateArguments) {
+		HttpServletRequest httpServletRequest, String pattern,
+		LanguageWrapper argument, boolean translateArguments) {
 
 		return format(
-			request, pattern, new LanguageWrapper[] {argument},
+			httpServletRequest, pattern, new LanguageWrapper[] {argument},
 			translateArguments);
 	}
 
@@ -215,7 +221,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * standard Java {@link ResourceBundle} notion of index based substitution.
 	 * </p>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  pattern the key to look up in the current locale's resource file.
 	 *         The key follows the standard Java resource specification.
 	 * @param  arguments the arguments to be substituted into the pattern and
@@ -225,10 +232,10 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String format(
-		HttpServletRequest request, String pattern,
+		HttpServletRequest httpServletRequest, String pattern,
 		LanguageWrapper[] arguments) {
 
-		return format(request, pattern, arguments, true);
+		return format(httpServletRequest, pattern, arguments, true);
 	}
 
 	/**
@@ -248,7 +255,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * standard Java {@link ResourceBundle} notion of index based substitution.
 	 * </p>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  pattern the key to look up in the current locale's resource file.
 	 *         The key follows the standard Java resource specification.
 	 * @param  arguments the arguments to be substituted into the pattern
@@ -258,8 +266,8 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String format(
-		HttpServletRequest request, String pattern, LanguageWrapper[] arguments,
-		boolean translateArguments) {
+		HttpServletRequest httpServletRequest, String pattern,
+		LanguageWrapper[] arguments, boolean translateArguments) {
 
 		if (PropsValues.TRANSLATIONS_DISABLED) {
 			return pattern;
@@ -268,35 +276,35 @@ public class LanguageImpl implements Language, Serializable {
 		String value = null;
 
 		try {
-			pattern = get(request, pattern);
+			pattern = get(httpServletRequest, pattern);
 
 			if (ArrayUtil.isNotEmpty(arguments)) {
 				Object[] formattedArguments = new Object[arguments.length];
 
 				for (int i = 0; i < arguments.length; i++) {
 					if (translateArguments) {
-						formattedArguments[i] =
-							arguments[i].getBefore() +
-								get(request, arguments[i].getText()) +
-									arguments[i].getAfter();
+						formattedArguments[i] = StringBundler.concat(
+							arguments[i].getBefore(),
+							get(httpServletRequest, arguments[i].getText()),
+							arguments[i].getAfter());
 					}
 					else {
-						formattedArguments[i] =
-							arguments[i].getBefore() + arguments[i].getText() +
-								arguments[i].getAfter();
+						formattedArguments[i] = StringBundler.concat(
+							arguments[i].getBefore(), arguments[i].getText(),
+							arguments[i].getAfter());
 					}
 				}
 
 				value = _decorateMessageFormat(
-					request, pattern, formattedArguments);
+					httpServletRequest, pattern, formattedArguments);
 			}
 			else {
 				value = pattern;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -320,7 +328,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * index based substitution.
 	 * </p>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  pattern the key to look up in the current locale's resource file.
 	 *         The key follows the standard Java resource specification.
 	 * @param  argument the single argument to be substituted into the pattern
@@ -330,9 +339,11 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String format(
-		HttpServletRequest request, String pattern, Object argument) {
+		HttpServletRequest httpServletRequest, String pattern,
+		Object argument) {
 
-		return format(request, pattern, new Object[] {argument}, true);
+		return format(
+			httpServletRequest, pattern, new Object[] {argument}, true);
 	}
 
 	/**
@@ -352,7 +363,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * index based substitution.
 	 * </p>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  pattern the key to look up in the current locale's resource file.
 	 *         The key follows the standard Java resource specification.
 	 * @param  argument the single argument to be substituted into the pattern
@@ -363,11 +375,12 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String format(
-		HttpServletRequest request, String pattern, Object argument,
+		HttpServletRequest httpServletRequest, String pattern, Object argument,
 		boolean translateArguments) {
 
 		return format(
-			request, pattern, new Object[] {argument}, translateArguments);
+			httpServletRequest, pattern, new Object[] {argument},
+			translateArguments);
 	}
 
 	/**
@@ -387,7 +400,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * standard Java {@link ResourceBundle} notion of index based substitution.
 	 * </p>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  pattern the key to look up in the current locale's resource file.
 	 *         The key follows the standard Java resource specification.
 	 * @param  arguments the arguments to be substituted into the pattern and
@@ -397,9 +411,10 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String format(
-		HttpServletRequest request, String pattern, Object[] arguments) {
+		HttpServletRequest httpServletRequest, String pattern,
+		Object[] arguments) {
 
-		return format(request, pattern, arguments, true);
+		return format(httpServletRequest, pattern, arguments, true);
 	}
 
 	/**
@@ -419,7 +434,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * standard Java {@link ResourceBundle} notion of index based substitution.
 	 * </p>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  pattern the key to look up in the current locale's resource file.
 	 *         The key follows the standard Java resource specification.
 	 * @param  arguments the arguments to be substituted into the pattern
@@ -429,8 +445,8 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String format(
-		HttpServletRequest request, String pattern, Object[] arguments,
-		boolean translateArguments) {
+		HttpServletRequest httpServletRequest, String pattern,
+		Object[] arguments, boolean translateArguments) {
 
 		if (PropsValues.TRANSLATIONS_DISABLED) {
 			return pattern;
@@ -439,24 +455,26 @@ public class LanguageImpl implements Language, Serializable {
 		String value = null;
 
 		try {
-			pattern = get(request, pattern);
+			pattern = get(httpServletRequest, pattern);
 
 			if (ArrayUtil.isNotEmpty(arguments)) {
 				for (int i = 0; i < arguments.length; i++) {
 					if (translateArguments) {
-						arguments[i] = get(request, arguments[i].toString());
+						arguments[i] = get(
+							httpServletRequest, arguments[i].toString());
 					}
 				}
 
-				value = _decorateMessageFormat(request, pattern, arguments);
+				value = _decorateMessageFormat(
+					httpServletRequest, pattern, arguments);
 			}
 			else {
 				value = pattern;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -633,9 +651,9 @@ public class LanguageImpl implements Language, Serializable {
 				value = pattern;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -773,9 +791,9 @@ public class LanguageImpl implements Language, Serializable {
 				value = pattern;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -783,11 +801,54 @@ public class LanguageImpl implements Language, Serializable {
 	}
 
 	/**
+	 * Returns the translated and formatted storage size
+	 *
+	 * @param  size the storage size
+	 * @param  locale the locale to translate to
+	 * @return the translated storage size
+	 */
+	@Override
+	public String formatStorageSize(double size, Locale locale) {
+		NumberFormat numberFormat = NumberFormat.getInstance(locale);
+
+		numberFormat.setMaximumFractionDigits(0);
+
+		numberFormat.setMinimumFractionDigits(0);
+
+		String suffix = "storage.size.suffix.b";
+
+		if (size >= _STORAGE_SIZE_DENOMINATOR) {
+			suffix = "storage.size.suffix.kb";
+
+			size /= _STORAGE_SIZE_DENOMINATOR;
+		}
+
+		if (size >= _STORAGE_SIZE_DENOMINATOR) {
+			suffix = "storage.size.suffix.mb";
+
+			size /= _STORAGE_SIZE_DENOMINATOR;
+
+			numberFormat.setMaximumFractionDigits(1);
+		}
+
+		if (size >= _STORAGE_SIZE_DENOMINATOR) {
+			suffix = "storage.size.suffix.gb";
+
+			size /= _STORAGE_SIZE_DENOMINATOR;
+		}
+
+		suffix = get(locale, suffix);
+
+		return StringBundler.concat(
+			numberFormat.format(size), StringPool.SPACE, suffix);
+	}
+
+	/**
 	 * Returns the key's translation from the portlet configuration, or from the
 	 * portal's resource bundle if the portlet configuration is unavailable.
 	 *
-	 * @param  request the request used to determine the key's context and
-	 *         locale
+	 * @param  httpServletRequest the request used to determine the key's
+	 *         context and locale
 	 * @param  resourceBundle the requested key's resource bundle
 	 * @param  key the translation key
 	 * @return the key's translation, or the key if the translation is
@@ -795,15 +856,16 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String get(
-		HttpServletRequest request, ResourceBundle resourceBundle, String key) {
+		HttpServletRequest httpServletRequest, ResourceBundle resourceBundle,
+		String key) {
 
-		return get(request, resourceBundle, key, key);
+		return get(httpServletRequest, resourceBundle, key, key);
 	}
 
 	@Override
 	public String get(
-		HttpServletRequest request, ResourceBundle resourceBundle, String key,
-		String defaultValue) {
+		HttpServletRequest httpServletRequest, ResourceBundle resourceBundle,
+		String key, String defaultValue) {
 
 		String value = _get(resourceBundle, key);
 
@@ -811,20 +873,20 @@ public class LanguageImpl implements Language, Serializable {
 			return value;
 		}
 
-		return get(request, key, defaultValue);
+		return get(httpServletRequest, key, defaultValue);
 	}
 
 	@Override
-	public String get(HttpServletRequest request, String key) {
-		return get(request, key, key);
+	public String get(HttpServletRequest httpServletRequest, String key) {
+		return get(httpServletRequest, key, key);
 	}
 
 	/**
 	 * Returns the key's translation from the portlet configuration, or from the
 	 * portal's resource bundle if the portlet configuration is unavailable.
 	 *
-	 * @param  request the request used to determine the key's context and
-	 *         locale
+	 * @param  httpServletRequest the request used to determine the key's
+	 *         context and locale
 	 * @param  key the translation key
 	 * @param  defaultValue the value to return if there is no matching
 	 *         translation
@@ -833,16 +895,18 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String get(
-		HttpServletRequest request, String key, String defaultValue) {
+		HttpServletRequest httpServletRequest, String key,
+		String defaultValue) {
 
-		if ((request == null) || (key == null)) {
+		if ((httpServletRequest == null) || (key == null)) {
 			return defaultValue;
 		}
 
-		PortletConfig portletConfig = (PortletConfig)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+		PortletConfig portletConfig =
+			(PortletConfig)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_CONFIG);
 
-		Locale locale = _getLocale(request);
+		Locale locale = _getLocale(httpServletRequest);
 
 		if (portletConfig == null) {
 			return get(locale, key, defaultValue);
@@ -892,20 +956,18 @@ public class LanguageImpl implements Language, Serializable {
 		String value = LanguageResources.getMessage(locale, key);
 
 		if (value != null) {
-			return LanguageResources.fixValue(value);
+			return value;
 		}
 
-		if (value == null) {
-			if ((key.length() > 0) &&
-				(key.charAt(key.length() - 1) == CharPool.CLOSE_BRACKET)) {
+		if ((key.length() > 0) &&
+			(key.charAt(key.length() - 1) == CharPool.CLOSE_BRACKET)) {
 
-				int pos = key.lastIndexOf(CharPool.OPEN_BRACKET);
+			int pos = key.lastIndexOf(CharPool.OPEN_BRACKET);
 
-				if (pos != -1) {
-					key = key.substring(0, pos);
+			if (pos != -1) {
+				key = key.substring(0, pos);
 
-					return get(locale, key, defaultValue);
-				}
+				return get(locale, key, defaultValue);
 			}
 		}
 
@@ -977,7 +1039,7 @@ public class LanguageImpl implements Language, Serializable {
 				return companyLocalesBag.getAvailableLocales();
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		Map<String, Locale> groupLanguageIdLocalesMap =
@@ -987,10 +1049,8 @@ public class LanguageImpl implements Language, Serializable {
 	}
 
 	@Override
-	public String getBCP47LanguageId(HttpServletRequest request) {
-		Locale locale = PortalUtil.getLocale(request);
-
-		return getBCP47LanguageId(locale);
+	public String getBCP47LanguageId(HttpServletRequest httpServletRequest) {
+		return getBCP47LanguageId(PortalUtil.getLocale(httpServletRequest));
 	}
 
 	@Override
@@ -1000,9 +1060,7 @@ public class LanguageImpl implements Language, Serializable {
 
 	@Override
 	public String getBCP47LanguageId(PortletRequest portletRequest) {
-		Locale locale = PortalUtil.getLocale(portletRequest);
-
-		return getBCP47LanguageId(locale);
+		return getBCP47LanguageId(PortalUtil.getLocale(portletRequest));
 	}
 
 	@Override
@@ -1017,12 +1075,13 @@ public class LanguageImpl implements Language, Serializable {
 	 * is returned as a language code (e.g. <code>en</code>) or a specific
 	 * variant (e.g. <code>en_GB</code>).
 	 *
-	 * @param  request the request used to determine the language ID
+	 * @param  httpServletRequest the request used to determine the language ID
 	 * @return the language ID that the request is served with
 	 */
 	@Override
-	public String getLanguageId(HttpServletRequest request) {
-		String languageId = ParamUtil.getString(request, "languageId");
+	public String getLanguageId(HttpServletRequest httpServletRequest) {
+		String languageId = ParamUtil.getString(
+			httpServletRequest, "languageId");
 
 		if (Validator.isNotNull(languageId)) {
 			CompanyLocalesBag companyLocalesBag = _getCompanyLocalesBag();
@@ -1034,9 +1093,8 @@ public class LanguageImpl implements Language, Serializable {
 			}
 		}
 
-		Locale locale = PortalUtil.getLocale(request, null, false);
-
-		return getLanguageId(locale);
+		return getLanguageId(
+			PortalUtil.getLocale(httpServletRequest, null, false));
 	}
 
 	/**
@@ -1063,18 +1121,14 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String getLanguageId(PortletRequest portletRequest) {
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			portletRequest);
-
-		return getLanguageId(request);
+		return getLanguageId(PortalUtil.getHttpServletRequest(portletRequest));
 	}
 
 	/**
-	 * Returns the last time in milliseconds when there was any change in the
-	 * languages list company or group
+	 * Returns the last time (in milliseconds) there was a change in the
+	 * language's list, company, or group.
 	 *
 	 * @return the last moodified time in milliseconds
-	 * @review
 	 */
 	@Override
 	public long getLastModified() {
@@ -1088,7 +1142,7 @@ public class LanguageImpl implements Language, Serializable {
 				return getLocale(languageCode);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn("Unable to check if group inherits locales");
 			}
@@ -1150,16 +1204,17 @@ public class LanguageImpl implements Language, Serializable {
 	 * </li>
 	 * </ul>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  milliseconds the time interval in milliseconds to describe
 	 * @return an exact localized description of the time interval in the
 	 *         largest unit possible
 	 */
 	@Override
 	public String getTimeDescription(
-		HttpServletRequest request, long milliseconds) {
+		HttpServletRequest httpServletRequest, long milliseconds) {
 
-		return getTimeDescription(request, milliseconds, false);
+		return getTimeDescription(httpServletRequest, milliseconds, false);
 	}
 
 	/**
@@ -1200,7 +1255,8 @@ public class LanguageImpl implements Language, Serializable {
 	 * </li>
 	 * </ul>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  milliseconds the time interval in milliseconds to describe
 	 * @param  approximate whether the time description is approximate
 	 * @return a localized description of the time interval in the largest unit
@@ -1208,7 +1264,8 @@ public class LanguageImpl implements Language, Serializable {
 	 */
 	@Override
 	public String getTimeDescription(
-		HttpServletRequest request, long milliseconds, boolean approximate) {
+		HttpServletRequest httpServletRequest, long milliseconds,
+		boolean approximate) {
 
 		String description = Time.getDescription(milliseconds, approximate);
 
@@ -1223,11 +1280,11 @@ public class LanguageImpl implements Language, Serializable {
 				unit += "[time]";
 			}
 
-			value = format(request, "x-" + unit, parts[0]);
+			value = format(httpServletRequest, "x-" + unit, parts[0]);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -1258,16 +1315,17 @@ public class LanguageImpl implements Language, Serializable {
 	 * </li>
 	 * </ul>
 	 *
-	 * @param  request the request used to determine the current locale
+	 * @param  httpServletRequest the request used to determine the current
+	 *         locale
 	 * @param  milliseconds the time interval in milliseconds to describe
 	 * @return an exact localized description of the time interval in the
 	 *         largest unit possible
 	 */
 	@Override
 	public String getTimeDescription(
-		HttpServletRequest request, Long milliseconds) {
+		HttpServletRequest httpServletRequest, Long milliseconds) {
 
-		return getTimeDescription(request, milliseconds.longValue());
+		return getTimeDescription(httpServletRequest, milliseconds.longValue());
 	}
 
 	/**
@@ -1367,9 +1425,9 @@ public class LanguageImpl implements Language, Serializable {
 
 			value = format(locale, "x-" + unit, parts[0]);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -1488,7 +1546,7 @@ public class LanguageImpl implements Language, Serializable {
 				return isAvailableLocale(languageId);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		Map<String, Locale> groupLanguageIdLocalesMap =
@@ -1542,7 +1600,7 @@ public class LanguageImpl implements Language, Serializable {
 			group = group.getLiveGroup();
 		}
 
-		if (!group.isSite() || group.isCompany()) {
+		if ((!group.isSite() && !group.isDepot()) || group.isCompany()) {
 			return true;
 		}
 
@@ -1562,18 +1620,6 @@ public class LanguageImpl implements Language, Serializable {
 		String language2 = locale2.getLanguage();
 
 		return language1.equals(language2);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #process(
-	 *            Supplier, Locale, String)}
-	 */
-	@Deprecated
-	@Override
-	public String process(
-		ResourceBundle resourceBundle, Locale locale, String content) {
-
-		return process(() -> resourceBundle, locale, content);
 	}
 
 	@Override
@@ -1635,15 +1681,15 @@ public class LanguageImpl implements Language, Serializable {
 
 	@Override
 	public void updateCookie(
-		HttpServletRequest request, HttpServletResponse response,
-		Locale locale) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, Locale locale) {
 
 		String languageId = LocaleUtil.toLanguageId(locale);
 
 		Cookie languageIdCookie = new Cookie(
 			CookieKeys.GUEST_LANGUAGE_ID, languageId);
 
-		String domain = CookieKeys.getDomain(request);
+		String domain = CookieKeys.getDomain(httpServletRequest);
 
 		if (Validator.isNotNull(domain)) {
 			languageIdCookie.setDomain(domain);
@@ -1652,13 +1698,12 @@ public class LanguageImpl implements Language, Serializable {
 		languageIdCookie.setMaxAge(CookieKeys.MAX_AGE);
 		languageIdCookie.setPath(StringPool.SLASH);
 
-		CookieKeys.addCookie(request, response, languageIdCookie);
+		CookieKeys.addCookie(
+			httpServletRequest, httpServletResponse, languageIdCookie);
 	}
 
 	private static CompanyLocalesBag _getCompanyLocalesBag() {
-		Long companyId = CompanyThreadLocal.getCompanyId();
-
-		return _getCompanyLocalesBag(companyId);
+		return _getCompanyLocalesBag(CompanyThreadLocal.getCompanyId());
 	}
 
 	private static CompanyLocalesBag _getCompanyLocalesBag(long companyId) {
@@ -1690,25 +1735,26 @@ public class LanguageImpl implements Language, Serializable {
 
 			defaultLocale = PortalUtil.getSiteDefaultLocale(group);
 
-			UnicodeProperties typeSettingsProperties =
+			UnicodeProperties typeSettingsUnicodeProperties =
 				group.getTypeSettingsProperties();
 
-			String groupLanguageIds = typeSettingsProperties.getProperty(
+			String groupLanguageIds = typeSettingsUnicodeProperties.getProperty(
 				PropsKeys.LOCALES);
 
 			if (groupLanguageIds != null) {
 				languageIds = StringUtil.split(groupLanguageIds);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
-		HashMap<String, Locale> groupLanguageCodeLocalesMap = new HashMap<>();
 		HashMap<String, Locale> groupLanguageIdLocalesMap =
 			new LinkedHashMap<>();
 
-		groupLanguageCodeLocalesMap.put(
-			defaultLocale.getLanguage(), defaultLocale);
+		HashMap<String, Locale> groupLanguageCodeLocalesMap =
+			HashMapBuilder.put(
+				defaultLocale.getLanguage(), defaultLocale
+			).build();
 
 		for (String languageId : languageIds) {
 			Locale locale = LocaleUtil.fromLanguageId(languageId, false);
@@ -1739,10 +1785,10 @@ public class LanguageImpl implements Language, Serializable {
 	}
 
 	private String _decorateMessageFormat(
-		HttpServletRequest request, String pattern,
+		HttpServletRequest httpServletRequest, String pattern,
 		Object[] formattedArguments) {
 
-		Locale locale = _getLocale(request);
+		Locale locale = _getLocale(httpServletRequest);
 
 		return _decorateMessageFormat(locale, pattern, formattedArguments);
 	}
@@ -1793,7 +1839,7 @@ public class LanguageImpl implements Language, Serializable {
 		String value = ResourceBundleUtil.getString(resourceBundle, key);
 
 		if (value != null) {
-			return LanguageResources.fixValue(value);
+			return value;
 		}
 
 		if ((key.length() > 0) &&
@@ -1818,7 +1864,7 @@ public class LanguageImpl implements Language, Serializable {
 		Format numberFormat = null;
 		int pos = 0;
 		StringBuilder sb = new StringBuilder(
-			16 * arguments.length + pattern.length());
+			(16 * arguments.length) + pattern.length());
 
 		int start = pattern.indexOf(CharPool.OPEN_CURLY_BRACE);
 
@@ -1901,17 +1947,18 @@ public class LanguageImpl implements Language, Serializable {
 		return groupLanguageIdLocalesMap;
 	}
 
-	private Locale _getLocale(HttpServletRequest request) {
+	private Locale _getLocale(HttpServletRequest httpServletRequest) {
 		Locale locale = null;
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay != null) {
 			locale = themeDisplay.getLocale();
 		}
 		else {
-			locale = request.getLocale();
+			locale = httpServletRequest.getLocale();
 
 			if (!isAvailableLocale(locale)) {
 				locale = LocaleUtil.getDefault();
@@ -1939,6 +1986,8 @@ public class LanguageImpl implements Language, Serializable {
 	private static final String _GROUP_LOCALES_PORTAL_CACHE_NAME =
 		LanguageImpl.class.getName() + "._groupLocalesPortalCache";
 
+	private static final double _STORAGE_SIZE_DENOMINATOR = 1024.0;
+
 	private static final Log _log = LogFactoryUtil.getLog(LanguageImpl.class);
 
 	private static final Map<Long, CompanyLocalesBag> _companyLocalesBags =
@@ -1947,7 +1996,9 @@ public class LanguageImpl implements Language, Serializable {
 	private static PortalCache<Long, Serializable> _groupLocalesPortalCache;
 	private static volatile long _lastModified = System.currentTimeMillis();
 	private static final Pattern _pattern = Pattern.compile(
-		"Liferay\\.Language\\.get\\([\"']([^)]+)[\"']\\)");
+		"Liferay\\s*\\.\\s*Language\\s*\\.\\s*get\\s*" +
+			"\\(\\s*[\"']([^)]+)[\"']\\s*\\)",
+		Pattern.MULTILINE);
 
 	private static final Synchronizer<Long, Serializable> _removeSynchronizer =
 		new Synchronizer<Long, Serializable>() {
@@ -2002,12 +2053,12 @@ public class LanguageImpl implements Language, Serializable {
 						companyId, PropsKeys.LOCALES, StringPool.COMMA,
 						PropsValues.LOCALES_ENABLED);
 				}
-				catch (SystemException se) {
+				catch (SystemException systemException) {
 
 					// LPS-52675
 
 					if (_log.isDebugEnabled()) {
-						_log.debug(se, se);
+						_log.debug(systemException, systemException);
 					}
 
 					languageIds = PropsValues.LOCALES_ENABLED;

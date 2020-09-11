@@ -14,8 +14,6 @@
 
 package com.liferay.marketplace.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -31,9 +29,8 @@ import java.util.Map;
  * @see Module
  * @generated
  */
-@ProviderType
 public class ModuleWrapper
-	extends BaseModelWrapper<Module> implements Module, ModelWrapper<Module> {
+	extends BaseModelWrapper<Module> implements ModelWrapper<Module>, Module {
 
 	public ModuleWrapper(Module module) {
 		super(module);

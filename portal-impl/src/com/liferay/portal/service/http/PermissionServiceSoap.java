@@ -14,8 +14,6 @@
 
 package com.liferay.portal.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.PermissionServiceUtil;
@@ -48,9 +46,10 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see PermissionServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
+@Deprecated
 public class PermissionServiceSoap {
 
 	/**
@@ -66,10 +65,10 @@ public class PermissionServiceSoap {
 		try {
 			PermissionServiceUtil.checkPermission(groupId, name, primKey);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
@@ -87,10 +86,10 @@ public class PermissionServiceSoap {
 		try {
 			PermissionServiceUtil.checkPermission(groupId, name, primKey);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
