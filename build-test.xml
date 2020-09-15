@@ -6552,23 +6552,14 @@ virtualHostname="localhost"
 	</target>
 
 	<target name="deploy-commerce-license-li">
-		<local name="start.date" />
-
-		<beanshell>
-			<![CDATA[
-				long startDate = new Date().getTime();
-				project.setProperty("start.date", Long.toString(startDate));
-			]]>
-		</beanshell>
-
 		<if>
 			<and>
-				<isset property="commerce.license.owner" />
+				<isset property="test.commerce.license.url" />
 				<isset property="osb.api.token" />
 			</and>
 			<then>
 				<exec executable="curl" outputproperty="commerce.license">
-					<arg value="https://customer-uat.liferay.com/api/jsonws/osb-portlet.licensekey/generate-commerce-license-key?owner=${commerce.license.owner}&amp;startDate=${start.date}&amp;licenseLifetime=2592000000" />
+					<arg value="${test.commerce.license.url}" />
 					<arg value="-H" />
 					<arg value="OSB_API_Token:${osb.api.token}" />
 				</exec>
