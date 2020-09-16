@@ -11256,6 +11256,7 @@ cluster.link.bind.addr["cluster-link-udp"]=127.0.0.1</echo>
 											dir="${liferay.home}/data"
 										>
 											<exclude name="hypersonic/lportal.lobs" />
+											<exclude name="**/license/*" />
 										</fileset>
 									</delete>
 
