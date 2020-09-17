@@ -6499,6 +6499,7 @@ go</echo>
 										<exclude if:true="${keep.hypersonicdb}" name="hypersonic/lportal.lobs" />
 										<exclude if:true="${keep.hypersonicdb}" name="hypersonic/lportal.properties" />
 										<exclude if:true="${keep.hypersonicdb}" name="hypersonic/lportal.script" />
+										<exclude if:true="${keep.license.files}" name="**/license/*" />
 									</fileset>
 								</delete>
 							</then>
@@ -11082,6 +11083,7 @@ cluster.link.bind.addr["cluster-link-udp"]=127.0.0.1</echo>
 			<then>
 				<antcall target="delete-liferay-home">
 					<param name="keep.hypersonicdb" value="true" />
+					<param name="keep.license.files" value="true" />
 				</antcall>
 
 				<get-database-property property.name="database.docker.image" />
