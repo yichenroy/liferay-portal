@@ -6492,6 +6492,18 @@ go</echo>
 								<equals arg1="${keep.cached.app.server.data}" arg2="true" />
 							</not>
 							<then>
+								<echo>before deleting data</echo>
+
+								<if>
+									<available file="${liferay.home}/data/license/LiferayCommerce_enterprise.li" />
+									<then>
+										<echo>${liferay.home}/data/license/LiferayCommerce_enterprise.li exists</echo>
+									</then>
+									<else>
+										<echo>${liferay.home}/data/license/LiferayCommerce_enterprise.li does NOT exist</echo>
+									</else>
+								</if>
+
 								<delete failonerror="false" includeemptydirs="true">
 									<fileset
 										dir="${test.app.server.liferay.home}/data"
@@ -6502,6 +6514,18 @@ go</echo>
 										<exclude if:true="${keep.license.files}" name="**/license/*" />
 									</fileset>
 								</delete>
+
+								<echo>after deleting data</echo>
+
+								<if>
+									<available file="${liferay.home}/data/license/LiferayCommerce_enterprise.li" />
+									<then>
+										<echo>${liferay.home}/data/license/LiferayCommerce_enterprise.li exists</echo>
+									</then>
+									<else>
+										<echo>${liferay.home}/data/license/LiferayCommerce_enterprise.li does NOT exist</echo>
+									</else>
+								</if>
 							</then>
 						</if>
 
