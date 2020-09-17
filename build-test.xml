@@ -2722,7 +2722,7 @@ tell application "Safari" to quit
 
 			<antcall target="deploy-license-xml" />
 
-			<antcall target="deploy-commerce-license-li" />
+			<antcall target="deploy-commerce-license-xml" />
 
 			<if>
 				<matches pattern="https?://" string="${test.build.plugins.war.zip.url}" />
@@ -6551,33 +6551,18 @@ virtualHostname="localhost"
 		</if>
 	</target>
 
-	<target name="deploy-commerce-license-li">
+	<target name="deploy-commerce-license-xml">
 		<if>
-			<and>
-				<isset property="test.commerce.license.url" />
-				<isset property="osb.api.token" />
-			</and>
+			<matches pattern="https?://" string="${test.commerce.license.url}" />
 			<then>
-				<exec executable="curl" outputproperty="commerce.license">
-					<arg value="${test.commerce.license.url}" />
-					<arg value="-H" />
-					<arg value="OSB_API_Token:${osb.api.token}" />
-				</exec>
+				<mkdir dir="${liferay.home}/deploy" />
+
+				<mirrors-get
+					dest="${liferay.home}/deploy/commerce-license.xml"
+					src="${test.commerce.license.url}"
+				/>
 			</then>
-			<else>
-				<fail message="Commerce license credentials were not set." />
-			</else>
 		</if>
-
-		<propertyregex
-			input="${commerce.license}"
-			override="true"
-			property="commerce.license"
-			regexp="&quot;(.*?)&quot;"
-			select="\1"
-		/>
-
-		<echo file="${liferay.home}/data/license/LiferayCommerce_enterprise.li">${commerce.license}</echo>
 	</target>
 
 	<target name="deploy-dependency-jars">
