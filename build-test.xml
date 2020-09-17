@@ -6558,7 +6558,7 @@ virtualHostname="localhost"
 				<mkdir dir="${liferay.home}/deploy" />
 
 				<mirrors-get
-					dest="${liferay.home}/deploy/commerce-license.xml"
+					dest="${liferay.home}/deploy/portal-commerce-license.xml"
 					src="${test.commerce.license.url}"
 				/>
 			</then>
