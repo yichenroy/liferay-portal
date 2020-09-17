@@ -794,7 +794,7 @@ mariadb.executable=${mariadb.executable}]]></echo>
 				<then>
 					<antcall target="deploy-license-xml" />
 
-					<antcall target="deploy-commerce-license-li" />
+					<antcall target="deploy-commerce-license-xml" />
 				</then>
 			</if>
 
