@@ -2722,6 +2722,8 @@ tell application "Safari" to quit
 
 			<antcall target="deploy-license-xml" />
 
+			<antcall target="deploy-commerce-license-li" />
+
 			<if>
 				<matches pattern="https?://" string="${test.build.plugins.war.zip.url}" />
 				<then>
@@ -6490,6 +6492,18 @@ go</echo>
 								<equals arg1="${keep.cached.app.server.data}" arg2="true" />
 							</not>
 							<then>
+								<echo>before deleting data</echo>
+
+								<if>
+									<available file="${liferay.home}/data/license/LiferayCommerce_enterprise.li" />
+									<then>
+										<echo>${liferay.home}/data/license/LiferayCommerce_enterprise.li exists</echo>
+									</then>
+									<else>
+										<echo>${liferay.home}/data/license/LiferayCommerce_enterprise.li does NOT exist</echo>
+									</else>
+								</if>
+
 								<delete failonerror="false" includeemptydirs="true">
 									<fileset
 										dir="${test.app.server.liferay.home}/data"
@@ -6497,8 +6511,21 @@ go</echo>
 										<exclude if:true="${keep.hypersonicdb}" name="hypersonic/lportal.lobs" />
 										<exclude if:true="${keep.hypersonicdb}" name="hypersonic/lportal.properties" />
 										<exclude if:true="${keep.hypersonicdb}" name="hypersonic/lportal.script" />
+										<exclude if:true="${keep.license.files}" name="**/license/*" />
 									</fileset>
 								</delete>
+
+								<echo>after deleting data</echo>
+
+								<if>
+									<available file="${liferay.home}/data/license/LiferayCommerce_enterprise.li" />
+									<then>
+										<echo>${liferay.home}/data/license/LiferayCommerce_enterprise.li exists</echo>
+									</then>
+									<else>
+										<echo>${liferay.home}/data/license/LiferayCommerce_enterprise.li does NOT exist</echo>
+									</else>
+								</if>
 							</then>
 						</if>
 
@@ -6547,6 +6574,35 @@ virtualHostname="localhost"
 				<print-file file.name="${app.server.parent.dir}/osgi/modules/com.liferay.analytics.demo.data.creator.configuration.AnalyticsDemoDataCreatorConfiguration.config" />
 			</then>
 		</if>
+	</target>
+
+	<target name="deploy-commerce-license-li">
+		<if>
+			<and>
+				<isset property="test.commerce.license.url" />
+				<isset property="osb.api.token" />
+			</and>
+			<then>
+				<exec executable="curl" outputproperty="commerce.license">
+					<arg value="${test.commerce.license.url}" />
+					<arg value="-H" />
+					<arg value="OSB_API_Token:${osb.api.token}" />
+				</exec>
+			</then>
+			<else>
+				<fail message="Commerce license credentials were not set." />
+			</else>
+		</if>
+
+		<propertyregex
+			input="${commerce.license}"
+			override="true"
+			property="commerce.license"
+			regexp="&quot;(.*?)&quot;"
+			select="\1"
+		/>
+
+		<echo file="${liferay.home}/data/license/LiferayCommerce_enterprise.li">${commerce.license}</echo>
 	</target>
 
 	<target name="deploy-dependency-jars">
@@ -11051,6 +11107,7 @@ cluster.link.bind.addr["cluster-link-udp"]=127.0.0.1</echo>
 			<then>
 				<antcall target="delete-liferay-home">
 					<param name="keep.hypersonicdb" value="true" />
+					<param name="keep.license.files" value="true" />
 				</antcall>
 
 				<get-database-property property.name="database.docker.image" />
@@ -11225,6 +11282,7 @@ cluster.link.bind.addr["cluster-link-udp"]=127.0.0.1</echo>
 											dir="${liferay.home}/data"
 										>
 											<exclude name="hypersonic/lportal.lobs" />
+											<exclude name="**/license/*" />
 										</fileset>
 									</delete>
 
