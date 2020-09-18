@@ -2866,6 +2866,12 @@ log.sanitizer.enabled=false</echo>
 
 							<antcall inheritAll="false" target="start-app-server-preserve-liferay-home" />
 
+							<echo>^^^^ going to deploy commerce test util before testIntegration ^^^^</echo>
+
+							<deploy-release-commerce-dependency-modules />
+
+							<echo>^^^^ after deploying commerce test util^^^^</echo>
+
 							<gradle-execute dir="modules" refreshdependencies="@{refreshdependencies}" task="testIntegration">
 								<arg value="--continue" />
 								<arg value="-Dbuild.exclude.ant.plugin=true" />
