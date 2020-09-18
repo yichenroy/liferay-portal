@@ -558,6 +558,12 @@ mariadb.executable=${mariadb.executable}]]></echo>
 									continue;
 								}
 
+								if (testUtilModule.contains("/commerce")) {
+									System.out.println("Ignoring " + testUtilModule.replace(projectDir + "/", ""));
+
+									continue;
+								}
+
 								testUtilModule = testUtilModule.replace(projectDir + "/", "");
 
 								testUtilModules.add(testUtilModule);
