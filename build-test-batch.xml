@@ -456,6 +456,152 @@ mariadb.executable=${mariadb.executable}]]></echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="deploy-release-commerce-dependency-modules">
+		<sequential>
+			<beanshell>
+				<![CDATA[
+					import org.apache.commons.io.FileUtils;
+
+					import org.apache.commons.lang.StringUtils;
+
+					String projectDir = project.getProperty("project.dir");
+
+					public List findFiles(File baseDir, String regex) {
+						List files = new ArrayList();
+
+						for (File file : baseDir.listFiles()) {
+							String filePath = file.toString();
+
+							if (file.isDirectory()) {
+								files.addAll(findFiles(file, regex));
+							}
+							else if (filePath.matches(regex)) {
+								files.add(file);
+							}
+						}
+
+						return files;
+					}
+
+					public List getModulesFromModuleGroups(String[] moduleGroups) {
+						List modules = new ArrayList();
+
+						for (String moduleGroup : moduleGroups) {
+							String moduleGroupPath = projectDir + "/" + moduleGroup;
+
+							File appBndFile = new File(moduleGroupPath, "app.bnd");
+
+							if (!appBndFile.exists()) {
+								modules.add(moduleGroup);
+
+								continue;
+							}
+
+							List moduleBuildGradleFiles = findFiles(new File(moduleGroupPath), moduleGroupPath + "/.+/build.gradle");
+
+							for (File moduleBuildGradleFile : moduleBuildGradleFiles) {
+								String module = moduleBuildGradleFile.getParent();
+
+								module = module.replace(projectDir + "/", "");
+
+								if (module.endsWith("-test")) {
+									System.out.println("Ignoring " + module);
+
+									continue;
+								}
+
+								modules.add(module);
+							}
+						}
+
+						return modules;
+					}
+
+					public List getTestUtilModules() {
+						List appBndFiles = findFiles(new File(projectDir, "modules/apps"), ".+/app.bnd");
+
+						File dxpAppsDir = new File(projectDir, "modules/dxp/apps");
+
+						if (dxpAppsDir.exists()) {
+							appBndFiles.addAll(findFiles(dxpAppsDir, ".+/app.bnd"));
+						}
+
+						File privateAppsDir = new File(projectDir, "modules/private/apps");
+
+						if (privateAppsDir.exists()) {
+							appBndFiles.addAll(findFiles(privateAppsDir, ".+/app.bnd"));
+						}
+
+						List releasedAppDirs = new ArrayList();
+
+						for (File appBndFile : appBndFiles) {
+							String fileContent = FileUtils.readFileToString(appBndFile);
+
+							if (fileContent.contains("Liferay-Releng-Bundle: true")) {
+								releasedAppDirs.add(appBndFile.getParentFile());
+							}
+						}
+
+						List testUtilModules = new ArrayList();
+
+						for (File releasedAppDir : releasedAppDirs) {
+							List testUtilModuleBuildGradleFiles = findFiles(releasedAppDir, ".+test-util/build.gradle");
+
+							for (File testUtilModuleBuildGradleFile : testUtilModuleBuildGradleFiles) {
+								String testUtilModule = testUtilModuleBuildGradleFile.getParent();
+
+								File skipTestIntegrationCheckFile = new File(testUtilModule, ".lfrbuild-ci-skip-test-integration-check");
+
+								if (skipTestIntegrationCheckFile.exists()) {
+									System.out.println("Ignoring " + testUtilModule.replace(projectDir + "/", ""));
+
+									continue;
+								}
+
+								if (!testUtilModule.contains("/commerce")) {
+									System.out.println("Ignoring " + testUtilModule.replace(projectDir + "/", ""));
+
+									continue;
+								}
+
+								testUtilModule = testUtilModule.replace(projectDir + "/", "");
+
+								testUtilModules.add(testUtilModule);
+							}
+						}
+
+						return testUtilModules;
+					}
+
+					Set releaseDependentModules = new TreeSet();
+
+					releaseDependentModules.addAll(getTestUtilModules());
+
+					String deprecatedModuleGroups = project.getProperty("test.batch.deprecated.module.groups");
+
+					if (deprecatedModuleGroups != null) {
+						releaseDependentModules.addAll(getModulesFromModuleGroups(deprecatedModuleGroups.split(",")));
+					}
+
+					project.setProperty("release.dependency.modules", StringUtils.join(releaseDependentModules, ','));
+				]]>
+			</beanshell>
+
+			<for list="${release.dependency.modules}" param="release.dependency.module">
+				<sequential>
+					<if>
+						<available file="@{release.dependency.module}" />
+						<then>
+							<echo>$$$$$$ Deploying @{release.dependency.module}</echo>
+
+							<gradle-execute dir="@{release.dependency.module}" forcedcacheenabled="false" task="deploy" />
+						</then>
+					</if>
+				</sequential>
+			</for>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="deploy-release-dependency-modules">
 		<sequential>
 			<beanshell>
