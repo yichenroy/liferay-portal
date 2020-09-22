@@ -2779,6 +2779,8 @@ log.sanitizer.enabled=false</echo>
 
 							<antcall inheritAll="false" target="start-app-server-preserve-liferay-home" />
 
+							<deploy-release-dependency-modules-post-startup />
+
 							<gradle-execute dir="modules" refreshdependencies="@{refreshdependencies}" task="testIntegration">
 								<arg value="--continue" />
 								<arg value="-Dbuild.exclude.ant.plugin=true" />
