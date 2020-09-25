@@ -368,6 +368,31 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 		</sequential>
 	</macrodef>
 
+	<macrodef name="get-commerce-license-product-name">
+		<sequential>
+			<var name="commerce.license.product.name" unset="true" />
+
+			<if>
+				<isset property="test.commerce.license.url" />
+				<then>
+					<mirrors-get
+						dest="portal-commerce-license.xml"
+						src="${test.commerce.license.url}"
+					/>
+
+					<xmlproperty file="portal-commerce-license.xml" prefix="commerce" />
+
+					<property name="commerce.license.product.name" value="${commerce.license.product-name}" />
+
+					<delete file="portal-commerce-license.xml" />
+				</then>
+				<else>
+					<fail message="Unable to get commerce license product name because property 'test.commerce.license.url' is not set." />
+				</else>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="get-database-property">
 		<attribute name="property.name" />
 
@@ -810,6 +835,31 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 
 			<delete dir="${tstamp.value}-dir" />
 			<delete file="${tstamp.value}.zip" />
+		</sequential>
+	</macrodef>
+
+	<macrodef name="get-portal-license-product-name">
+		<sequential>
+			<var name="portal.license.product.name" unset="true" />
+
+			<if>
+				<isset property="test.license.xml.url" />
+				<then>
+					<mirrors-get
+						dest="portal-license.xml"
+						src="${test.license.xml.url}"
+					/>
+
+					<xmlproperty file="portal-license.xml" prefix="portal" />
+
+					<property name="portal.license.product.name" value="${portal.license.product-name}" />
+
+					<delete file="portal-license.xml" />
+				</then>
+				<else>
+					<fail message="Unable to get portal license product name because property 'test.license.xml.url' is not set." />
+				</else>
+			</if>
 		</sequential>
 	</macrodef>
 
