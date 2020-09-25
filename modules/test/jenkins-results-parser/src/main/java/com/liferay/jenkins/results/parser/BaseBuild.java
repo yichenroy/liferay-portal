@@ -3310,22 +3310,26 @@ public abstract class BaseBuild implements Build {
 
 		badBuildNumbers.add(getBuildNumber());
 
-		setBuildNumber(-1);
+		setBuildNumber(true, -1);
 
 		downstreamBuilds.clear();
 	}
 
 	protected void setBuildNumber(int buildNumber) {
+		setBuildNumber(false, buildNumber);
+	}
+
+	protected void setBuildNumber(boolean quiet, int buildNumber) {
 		if (_buildNumber != buildNumber) {
 			_buildNumber = buildNumber;
 
 			consoleReadCursor = 0;
 
 			if (_buildNumber == -1) {
-				setStatus("starting");
+				setStatus(quiet, "starting");
 			}
 			else {
-				setStatus("running");
+				setStatus(quiet, "running");
 			}
 		}
 	}
@@ -3467,6 +3471,10 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected void setStatus(String status) {
+		setStatus(false, status);
+	}
+
+	protected void setStatus(boolean quiet, String status) {
 		if (_isDifferent(status, _status)) {
 			_status = status;
 
@@ -3478,7 +3486,7 @@ public abstract class BaseBuild implements Build {
 				_previousStatus,
 				statusModifiedTime - previousStatusModifiedTime);
 
-			if (isParentBuildRoot()) {
+			if (isParentBuildRoot() && !quiet) {
 				System.out.println(getBuildMessage());
 			}
 		}
