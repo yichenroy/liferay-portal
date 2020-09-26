@@ -5477,6 +5477,11 @@ war.path=${app.server.portal.dir}/</echo>
 
 			<echo>${app.server.waiting.url} has loaded</echo>
 
+			<echo>#######################################</echo>
+			<echo>build.profile    : ${build.profile}</echo>
+			<echo>env.CI_TEST_SUITE: ${env.CI_TEST_SUITE}</echo>
+			<echo>#######################################</echo>
+
 			<if>
 				<and>
 					<equals arg1="${build.profile}" arg2="dxp" />
