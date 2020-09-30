@@ -1121,8 +1121,8 @@ This target has been renamed to "snapshot-bundle". Please call "snapshot-bundle"
 							input="${github.git.ls.remote}"
 							override="true"
 							property="github.git.hash"
-							regexp="([0-9a-f]+).*"
-							replace="\1"
+							regexp="([0-9a-f]{7,40}).*"
+							select="\1"
 						/>
 
 						<exec executable="git" outputproperty="github.dev.git.ls.remote">
@@ -1135,8 +1135,8 @@ This target has been renamed to "snapshot-bundle". Please call "snapshot-bundle"
 							input="${github.dev.git.ls.remote}"
 							override="true"
 							property="github.dev.git.hash"
-							regexp="([0-9a-f]+).*"
-							replace="\1"
+							regexp="([0-9a-f]{7,40}).*"
+							select="\1"
 						/>
 
 						<condition else="git@github.com:liferay/liferay-portal-ee.git" property="profile.dxp.repository.url" value="git@github-dev.liferay.com:liferay/liferay-portal-ee.git">
