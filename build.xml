@@ -1105,9 +1105,7 @@ This target has been renamed to "snapshot-bundle". Please call "snapshot-bundle"
 		</condition>
 
 		<if>
-			<and>
-				<isset property="env.JENKINS_HOME" />
-			</and>
+			<isset property="env.JENKINS_HOME" />
 			<then>
 				<retry retrycount="5" retrydelay="3000">
 					<sequential>
