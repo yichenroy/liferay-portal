@@ -1105,18 +1105,48 @@ This target has been renamed to "snapshot-bundle". Please call "snapshot-bundle"
 		</condition>
 
 		<if>
-			<and>
-				<isset property="env.JENKINS_HOME" />
-			</and>
+			<isset property="env.JENKINS_HOME" />
 			<then>
 				<retry retrycount="5" retrydelay="3000">
 					<sequential>
 						<delete failonerror="false" file="${user.home}/.ssh/known_hosts" />
 
+						<exec executable="git" outputproperty="github.git.ls.remote">
+							<arg value="ls-remote" />
+							<arg value="git@github.com:liferay/liferay-portal-ee.git" />
+							<arg value="${profile.dxp.branch.name}" />
+						</exec>
+
+						<propertyregex
+							input="${github.git.ls.remote}"
+							override="true"
+							property="github.git.hash"
+							regexp="([0-9a-f]{7,40}).*"
+							select="\1"
+						/>
+
+						<exec executable="git" outputproperty="github.dev.git.ls.remote">
+							<arg value="ls-remote" />
+							<arg value="git@github-dev.liferay.com:liferay/liferay-portal-ee.git" />
+							<arg value="${profile.dxp.branch.name}" />
+						</exec>
+
+						<propertyregex
+							input="${github.dev.git.ls.remote}"
+							override="true"
+							property="github.dev.git.hash"
+							regexp="([0-9a-f]{7,40}).*"
+							select="\1"
+						/>
+
+						<condition else="git@github.com:liferay/liferay-portal-ee.git" property="profile.dxp.repository.url" value="git@github-dev.liferay.com:liferay/liferay-portal-ee.git">
+							<equals arg1="${github.git.hash}" arg2="${github.dev.git.hash}" />
+						</condition>
+
 						<gradle-execute setupbinariescache="false" task="checkoutDXPScript">
 							<arg value="--build-file=${project.dir}/modules/profile-dxp.gradle" />
 							<arg value="-Dprofile.dxp.branch.name=${profile.dxp.branch.name}" />
-							<arg value="-Dprofile.dxp.repository.url=git@github-dev.liferay.com:liferay/liferay-portal-ee.git" />
+							<arg value="-Dprofile.dxp.repository.url=${profile.dxp.repository.url}" />
 						</gradle-execute>
 					</sequential>
 				</retry>
