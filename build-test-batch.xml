@@ -3985,6 +3985,10 @@ log.sanitizer.enabled=false</echo>
 	</target>
 
 	<target name="functional-bundle-tomcat-mysql57-jdk8">
+		<echo>#######################################################</echo>
+		<echo>test.commerce.license.url: ${test.commerce.license.url}</echo>
+		<echo>#######################################################</echo>
+
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-functional-test
