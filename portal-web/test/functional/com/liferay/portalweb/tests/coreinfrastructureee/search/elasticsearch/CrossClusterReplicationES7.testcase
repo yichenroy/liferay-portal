@@ -33,6 +33,7 @@ definition {
 
 	@priority = "4"
 	test AssertReplicationAfterReindex {
+		property portal.suite.search.engine = "roy";
 		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "CrossClusterReplicationES7#AssertReplicationAfterReindex";
 
