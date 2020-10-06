@@ -15,7 +15,6 @@
 package com.liferay.commerce.shipment.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -23,7 +22,6 @@ import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.exception.CommerceOrderShippingAddressException;
-import com.liferay.commerce.exception.CommerceOrderStatusException;
 import com.liferay.commerce.exception.CommerceShipmentInactiveWarehouseException;
 import com.liferay.commerce.exception.CommerceShipmentItemQuantityException;
 import com.liferay.commerce.exception.NoSuchOrderException;
@@ -59,6 +57,9 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -104,6 +105,11 @@ public class CommerceShipmentTest {
 		_company = CompanyTestUtil.addCompany();
 
 		_user = UserTestUtil.addUser(_company);
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_user));
+
+		PrincipalThreadLocal.setName(_user.getUserId());
 
 		_group = GroupTestUtil.addGroup(
 			_company.getCompanyId(), _user.getUserId(), 0);
@@ -594,49 +600,6 @@ public class CommerceShipmentTest {
 
 		Assert.assertEquals(
 			false, _commerceShippingHelper.isShippable(commerceOrder));
-	}
-
-	@Test
-	public void testCreateShippingForCancelledOrder() throws Exception {
-		frutillaRule.scenario(
-			"Attach a shipment to an order with order status CANCELLED "
-		).given(
-			"An order is created"
-		).and(
-			"The order status is updated to CANCELLED"
-		).when(
-			"I attach the shipment to the order"
-		).then(
-			"An exception shall be raised"
-		);
-
-		try {
-			BigDecimal value = BigDecimal.valueOf(RandomTestUtil.nextDouble());
-
-			CommerceOrder commerceOrder =
-				CommerceTestUtil.createCommerceOrderForShipping(
-					_user.getUserId(), _commerceChannel.getGroupId(),
-					_commerceCurrency.getCommerceCurrencyId(), value);
-
-			_commerceOrders.add(commerceOrder);
-
-			commerceOrder.setOrderStatus(
-				CommerceOrderConstants.ORDER_STATUS_CANCELLED);
-
-			_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
-
-			CommerceShipmentTestUtil.createEmptyOrderShipment(
-				commerceOrder.getGroupId(), commerceOrder.getCommerceOrderId());
-
-			_commerceOrderEngine.checkoutCommerceOrder(
-				commerceOrder, _user.getUserId());
-		}
-		catch (PortalException portalException) {
-			Throwable throwable = portalException.getCause();
-
-			Assert.assertSame(
-				CommerceOrderStatusException.class, throwable.getClass());
-		}
 	}
 
 	@Test
