@@ -25,6 +25,8 @@ checkoutDXPScript {
 	dependsOn removeDXPScript
 
 	doLast {
+		System.out.println("######## gitRepositoryURL: " + gitRepositoryURL + " ###################");
+
 		if (System.getenv("JENKINS_HOME") && !upstreamStableSuite) {
 			logger.lifecycle "git clone --branch={} --depth=100 --no-checkout --single-branch {} {}", gitBranchName, "git@github-dev.liferay.com:liferay/liferay-portal-ee.git", gitRepositoryDir.name
 
