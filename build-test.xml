@@ -5482,7 +5482,11 @@ war.path=${app.server.portal.dir}/</echo>
 			<if>
 				<and>
 					<equals arg1="${build.profile}" arg2="dxp" />
-					<equals arg1="${env.CI_TEST_SUITE}" arg2="portal-release" />
+					<or>
+						<equals arg1="${env.CI_TEST_SUITE}" arg2="portal-fixpack-release" />
+						<equals arg1="${env.CI_TEST_SUITE}" arg2="portal-hotfix-release" />
+						<equals arg1="${env.CI_TEST_SUITE}" arg2="portal-release" />
+					</or>
 				</and>
 				<then>
 					<get-commerce-license-product-name />
