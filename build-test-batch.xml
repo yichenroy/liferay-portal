@@ -6842,12 +6842,18 @@ information. Make sure to commit in all build services results.
 
 				<echo>Running com.liferay.source.formatter.jar ${Bundle-Version}.</echo>
 
+				<local name="excludes" />
+
+				<condition else="modules/dxp/apps/lcs/**" property="excludes" value="modules/dxp/**">
+					<equals arg1="${liferay.releng.public}" arg2="true" />
+				</condition>
+
 				<ant dir="portal-impl" target="format-source-all">
 					<property name="show.documentation" value="false" />
 					<property name="source.auto.fix" value="false" />
 					<property name="source.fail.on.auto.fix" value="true" />
 					<property name="source.fail.on.has.warning" value="true" />
-					<property if:true="${liferay.releng.public}" name="source.formatter.excludes" value="modules/private/**" />
+					<property name="source.formatter.excludes" value="${excludes}" />
 					<property name="source.print.errors" value="false" />
 					<property name="source.use.properties" value="false" />
 				</ant>
