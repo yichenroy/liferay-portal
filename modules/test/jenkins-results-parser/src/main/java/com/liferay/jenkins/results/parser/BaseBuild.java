@@ -3306,9 +3306,9 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected void reset() {
-		setResult(null);
-
 		badBuildNumbers.add(getBuildNumber());
+
+		setResult(null);
 
 		setBuildNumber(-1);
 
