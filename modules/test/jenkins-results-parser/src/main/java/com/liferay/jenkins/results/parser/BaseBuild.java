@@ -3457,16 +3457,20 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected void setResult(String result) {
+		setResult(false, result);
+	}
+
+	protected void setResult(boolean quiet, String result) {
 		_result = result;
 
 		if ((_result == null) ||
 			(getDownstreamBuildCount("completed") < getDownstreamBuildCount(
 				null))) {
 
-			setStatus("running");
+			setStatus(quiet, "running");
 		}
 		else {
-			setStatus("completed");
+			setStatus(quiet, "completed");
 		}
 	}
 
