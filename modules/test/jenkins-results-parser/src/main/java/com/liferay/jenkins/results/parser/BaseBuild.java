@@ -3478,7 +3478,9 @@ public abstract class BaseBuild implements Build {
 				_previousStatus,
 				statusModifiedTime - previousStatusModifiedTime);
 
-			if (isParentBuildRoot()) {
+			if (isParentBuildRoot() &&
+				!badBuildNumbers.contains(_buildNumber)) {
+
 				System.out.println(getBuildMessage());
 			}
 		}
