@@ -3336,6 +3336,8 @@ public abstract class BaseBuild implements Build {
 
 	protected void setBuildNumber(int buildNumber) {
 		if (_buildNumber != buildNumber) {
+			int previousBuildNumber = _buildNumber;
+
 			_buildNumber = buildNumber;
 
 			consoleReadCursor = 0;
@@ -3343,7 +3345,7 @@ public abstract class BaseBuild implements Build {
 			if (_buildNumber == -1) {
 				setStatus("starting");
 			}
-			else {
+			else if (!badBuildNumbers.contains(previousBuildNumber)) {
 				setStatus("running");
 			}
 		}
