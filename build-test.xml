@@ -3183,6 +3183,8 @@ ${tomcat-gc-log}
 					try {
 						Job job = JobFactory.newJob(project.getProperty("top.level.job.name"));
 
+						System.out.println("#### Job created.. ####");
+
 						BatchTestClassGroup.BuildProfile buildProfile = BatchTestClassGroup.BuildProfile.PORTAL;
 
 						String testPortalBuildProfile = project.getProperty("build.profile");
@@ -3190,6 +3192,8 @@ ${tomcat-gc-log}
 						if ((testPortalBuildProfile != null) && testPortalBuildProfile.equals("dxp")) {
 							buildProfile = BatchTestClassGroup.BuildProfile.DXP;
 						}
+
+						System.out.println("### Before batchTestClassGroup is created ###");
 
 						BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), buildProfile, job);
 
