@@ -3168,6 +3168,9 @@ ${tomcat-gc-log}
 				<isset property="env.TOP_LEVEL_JOB_NAME" />
 			</condition>
 
+			<echo>#### test.batch.name: ${test.batch.name} ####</echo>
+			<echo>#### top.level.job.name: ${top.level.job.name} ####</echo>
+
 			<beanshell>
 				<![CDATA[
 					import com.liferay.jenkins.results.parser.Job;
@@ -3190,13 +3193,19 @@ ${tomcat-gc-log}
 
 						BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), buildProfile, job);
 
+						System.out.println("#### batchTestClassGroup created... ####");
+
 						if (batchTestClassGroup instanceof JUnitBatchTestClassGroup ||
 							batchTestClassGroup instanceof NPMTestBatchTestClassGroup) {
+
+							System.out.println("##### Writing the test csv report file.... ####");
 
 							batchTestClassGroup.writeTestCSVReportFile();
 						}
 					}
 					catch (Exception e) {
+						System.out.println("#### EXCEPTION THROWN..####");
+
 						e.printStackTrace();
 
 						throw e;
