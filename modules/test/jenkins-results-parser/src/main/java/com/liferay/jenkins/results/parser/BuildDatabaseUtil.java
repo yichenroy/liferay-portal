@@ -177,7 +177,7 @@ public class BuildDatabaseUtil {
 				if ((distNodes != null) && (distPath != null)) {
 					_downloadBuildDatabaseFile(baseDir, distNodes, distPath);
 				}
-				else if (build instanceof TopLevelBuild) {
+				else {
 					_downloadBuildDatabaseFile(baseDir, build);
 				}
 			}
