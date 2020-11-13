@@ -388,6 +388,12 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 			for (TestClassGroup.TestClass.TestClassMethod testClassMethod :
 					parentJunitBatchTestClass.getTestClassMethods()) {
 
+				if (classIgnored) {
+					addTestClassMethod(classIgnored, testClassMethod.getName());
+
+					continue;
+				}
+
 				addTestClassMethod(testClassMethod);
 			}
 		}
