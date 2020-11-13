@@ -55,8 +55,6 @@ public class BuildDatabaseUtil {
 					buildNumber;
 
 			_downloadBuildDatabaseFile(baseDir, masterName, filePath);
-
-			return;
 		}
 
 		try {
@@ -65,12 +63,18 @@ public class BuildDatabaseUtil {
 					"/builds/" + buildNumber + "/" +
 						BuildDatabase.FILE_NAME_BUILD_DATABASE;
 
+			System.out.println("### Downloading build-database.json from " + buildDatabaseURL);
+
 			JenkinsResultsParserUtil.write(
 				baseDir + "/" + BuildDatabase.FILE_NAME_BUILD_DATABASE,
 				JenkinsResultsParserUtil.toString(buildDatabaseURL));
+
+			System.out.println("### The build-database.json written to " + baseDir + "/" + BuildDatabase.FILE_NAME_BUILD_DATABASE);
 		}
 		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
+			ioException.printStackTrace();
+
+			System.out.println("#### Don't actually fail... ####");
 		}
 	}
 
