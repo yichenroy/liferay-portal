@@ -12,7 +12,13 @@ dependencies {
 
 repositories {
 	if (!Boolean.getBoolean("maven.local.ignore")) {
-		mavenLocal()
+		mavenLocal() {
+			metadataSources {
+				mavenPom()
+
+				artifact()
+			}
+		}
 
 		File tmpMavenRepositoryDir = null
 
