@@ -139,17 +139,34 @@ public class NotificationUtil {
 		String body, String channelName, String subject) {
 
 		sendSlackNotification(
-			body, channelName, ":liferay-ci:", subject, "Liferay CI");
+			body, channelName, ":liferay-ci:", subject, "Liferay CI", false);
+	}
+
+	public static void sendSlackNotification(
+		String body, String channelName, String subject,
+		Boolean sendBodyAsThreadReply) {
+
+		sendSlackNotification(
+			body, channelName, ":liferay-ci:", subject, "Liferay CI",
+			sendBodyAsThreadReply);
 	}
 
 	public static void sendSlackNotification(
 		String body, String channelName, String iconEmoji, String subject,
 		String username) {
 
+		sendSlackNotification(
+			body, channelName, iconEmoji, subject, username, false);
+	}
+
+	public static void sendSlackNotification(
+		String body, String channelName, String iconEmoji, String subject,
+		String username, Boolean sendBodyAsThreadReply) {
+
 		String text = body;
 
-		if (subject == null) {
-			subject = "";
+		if (sendBodyAsThreadReply) {
+			text = subject;
 		}
 		else {
 			subject = subject.trim();
@@ -174,9 +191,19 @@ public class NotificationUtil {
 			Properties properties = JenkinsResultsParserUtil.getBuildProperties(
 				true);
 
-			JenkinsResultsParserUtil.toString(
-				properties.getProperty("slack.webhook.url"),
-				jsonObject.toString());
+			JSONObject responseJSONObject = new JSONObject(
+				JenkinsResultsParserUtil.toString(
+					properties.getProperty("slack.webhook.url"),
+					jsonObject.toString()));
+
+			if (sendBodyAsThreadReply) {
+				jsonObject.put("text", body.replaceAll("\n", "\n> "));
+				jsonObject.put("thread_ts", responseJSONObject.get("ts"));
+
+				JenkinsResultsParserUtil.toString(
+					properties.getProperty("slack.webhook.url"),
+					jsonObject.toString());
+			}
 		}
 		catch (IOException ioException) {
 			ioException.printStackTrace();
