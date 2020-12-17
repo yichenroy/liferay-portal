@@ -12,13 +12,7 @@
  * details.
  */
 
-package com.liferay.jenkins.results.parser;
-
-import com.liferay.jenkins.results.parser.spira.SearchQuery;
-import com.liferay.jenkins.results.parser.spira.SpiraProject;
-import com.liferay.jenkins.results.parser.spira.SpiraRelease;
-import com.liferay.jenkins.results.parser.spira.SpiraReleaseBuild;
-import com.liferay.jenkins.results.parser.spira.SpiraTestCaseRun;
+package com.liferay.jenkins.results.parser.spira;
 
 import java.io.IOException;
 
@@ -27,6 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.NotificationUtil;
 
 /**
  * @author Yi-Chen Tsai
