@@ -14,6 +14,9 @@
 
 package com.liferay.jenkins.results.parser.spira;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.NotificationUtil;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -21,9 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
-import com.liferay.jenkins.results.parser.NotificationUtil;
 
 /**
  * @author Yi-Chen Tsai
@@ -46,7 +46,8 @@ public class SpiraTestCaseResultsUtil {
 	private static String _getLatestUpstreamComparisonMessage(
 		String branchName, String testSuite) {
 
-		StringBuilder sb1 = new StringBuilder();
+		StringBuilder upstreamComparisonMessageStringBuilder =
+			new StringBuilder();
 
 		String comparisonUpstreamSuites = JenkinsResultsParserUtil.getProperty(
 			_buildProperties,
@@ -81,25 +82,28 @@ public class SpiraTestCaseResultsUtil {
 
 			boolean inconsistent = false;
 
-			StringBuilder sb2 = new StringBuilder();
+			StringBuilder spiraTestCaseRunMessageStringBuilder =
+				new StringBuilder();
 
 			SpiraTestCaseRun spiraTestCaseRun = entry.getValue();
 
-			sb2.append(spiraTestCaseRun.getName());
+			spiraTestCaseRunMessageStringBuilder.append(
+				spiraTestCaseRun.getName());
 
-			sb2.append("\n");
-			sb2.append(testSuite);
-			sb2.append("\n<");
-			sb2.append(spiraTestCaseRun.getURL());
-			sb2.append("|");
+			spiraTestCaseRunMessageStringBuilder.append("\n");
+			spiraTestCaseRunMessageStringBuilder.append(testSuite);
+			spiraTestCaseRunMessageStringBuilder.append("\n<");
+			spiraTestCaseRunMessageStringBuilder.append(
+				spiraTestCaseRun.getURL());
+			spiraTestCaseRunMessageStringBuilder.append("|");
 
 			int executionStatusId = (int)spiraTestCaseRun.getProperty(
 				"ExecutionStatusId");
 
-			sb2.append(
+			spiraTestCaseRunMessageStringBuilder.append(
 				SpiraTestCaseRun.Status.getStatusName(executionStatusId));
 
-			sb2.append(">\n");
+			spiraTestCaseRunMessageStringBuilder.append(">\n");
 
 			int testCaseID = entry.getKey();
 
@@ -110,23 +114,26 @@ public class SpiraTestCaseResultsUtil {
 					comparisonEntry.getValue();
 
 				if (!comparisonSpiraTestCaseRuns.containsKey(testCaseID)) {
-					sb2.append(comparisonEntry.getKey());
-					sb2.append("\nN/A\n");
+					spiraTestCaseRunMessageStringBuilder.append(
+						comparisonEntry.getKey());
+					spiraTestCaseRunMessageStringBuilder.append("\nN/A\n");
 
 					inconsistent = true;
 
 					continue;
 				}
 
-				sb2.append(comparisonEntry.getKey());
-				sb2.append("\n<");
+				spiraTestCaseRunMessageStringBuilder.append(
+					comparisonEntry.getKey());
+				spiraTestCaseRunMessageStringBuilder.append("\n<");
 
 				SpiraTestCaseRun comparisonSpiraTestCaseRun =
 					comparisonSpiraTestCaseRuns.get(testCaseID);
 
-				sb2.append(comparisonSpiraTestCaseRun.getURL());
+				spiraTestCaseRunMessageStringBuilder.append(
+					comparisonSpiraTestCaseRun.getURL());
 
-				sb2.append("|");
+				spiraTestCaseRunMessageStringBuilder.append("|");
 
 				int comparisonExecutionStatusId =
 					(int)comparisonSpiraTestCaseRun.getProperty(
@@ -136,34 +143,39 @@ public class SpiraTestCaseResultsUtil {
 					inconsistent = true;
 				}
 
-				sb2.append(
+				spiraTestCaseRunMessageStringBuilder.append(
 					SpiraTestCaseRun.Status.getStatusName(
 						comparisonExecutionStatusId));
-				sb2.append(">\n");
+				spiraTestCaseRunMessageStringBuilder.append(">\n");
 			}
 
 			if (inconsistent) {
-				sb1.append(sb2.toString());
-				sb1.append("\n");
+				upstreamComparisonMessageStringBuilder.append(
+					spiraTestCaseRunMessageStringBuilder.toString());
+				upstreamComparisonMessageStringBuilder.append("\n");
 			}
 		}
 
-		if (sb1.length() == 0) {
-			sb1.append("There are no inconsistent test results in the latest ");
-			sb1.append(branchName);
-			sb1.append(" upstream test run for the test suite '");
-			sb1.append(testSuite);
-			sb1.append("' compared to the following upstream test suite(s):\n");
+		if (upstreamComparisonMessageStringBuilder.length() == 0) {
+			upstreamComparisonMessageStringBuilder.append(
+				"There are no inconsistent test results in the latest ");
+			upstreamComparisonMessageStringBuilder.append(branchName);
+			upstreamComparisonMessageStringBuilder.append(
+				" upstream test run for the test suite '");
+			upstreamComparisonMessageStringBuilder.append(testSuite);
+			upstreamComparisonMessageStringBuilder.append(
+				"' compared to the following upstream test suite(s):\n");
 
 			for (String comparisonUpstreamSuite :
 					comparisonUpstreamSuites.split(",")) {
 
-				sb1.append(comparisonUpstreamSuite);
-				sb1.append("\n");
+				upstreamComparisonMessageStringBuilder.append(
+					comparisonUpstreamSuite);
+				upstreamComparisonMessageStringBuilder.append("\n");
 			}
 		}
 
-		return sb1.toString();
+		return upstreamComparisonMessageStringBuilder.toString();
 	}
 
 	private static List<SpiraTestCaseRun> _getLatestUpstreamSpiraTestCaseRuns(
