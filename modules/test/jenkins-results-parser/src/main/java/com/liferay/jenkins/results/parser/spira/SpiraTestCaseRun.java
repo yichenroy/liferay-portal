@@ -41,7 +41,7 @@ import org.json.JSONObject;
  */
 public class SpiraTestCaseRun extends BaseSpiraArtifact {
 
-	public static final int numberOfRowsDefault = 1000;
+	public static final int NUMBER_OF_ROWS_MAX_DEFAULT = 1000;
 
 	public static void clearCachedSpiraTestCaseRuns() {
 		clearCachedSpiraArtifacts(SpiraTestCaseRun.class);

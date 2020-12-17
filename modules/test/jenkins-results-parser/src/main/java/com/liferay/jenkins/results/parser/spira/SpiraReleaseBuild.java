@@ -119,7 +119,8 @@ public class SpiraReleaseBuild extends BaseSpiraArtifact {
 	}
 
 	public List<SpiraTestCaseRun> getSpiraTestCaseRuns() {
-		return getSpiraTestCaseRuns(SpiraTestCaseRun.numberOfRowsDefault);
+		return getSpiraTestCaseRuns(
+			SpiraTestCaseRun.NUMBER_OF_ROWS_MAX_DEFAULT);
 	}
 
 	public List<SpiraTestCaseRun> getSpiraTestCaseRuns(int numTestCaseRuns) {
