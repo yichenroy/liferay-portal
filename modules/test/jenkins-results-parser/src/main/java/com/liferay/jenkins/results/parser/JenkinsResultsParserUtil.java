@@ -109,8 +109,8 @@ public class JenkinsResultsParserUtil {
 	public static final String URL_CACHE = initCacheURL();
 
 	public static final String[] URLS_BUILD_PROPERTIES_DEFAULT = {
-		URL_CACHE + "/liferay-jenkins-ee/build.properties",
-		URL_CACHE + "/liferay-jenkins-ee/commands/build.properties",
+		"file:///opt/dev/projects/github/liferay-jenkins-ee/build.properties",
+		"file:///opt/dev/projects/github/liferay-jenkins-ee/commands/build.properties",
 		URL_CACHE + "/liferay-portal/build.properties",
 		URL_CACHE + "/liferay-portal/ci.properties",
 		URL_CACHE + "/liferay-portal/test.properties"
