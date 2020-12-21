@@ -371,7 +371,7 @@ public class SendInconsistentTestReportSlackNotificationControllerBuildRunner
 	}
 
 	private static final Pattern _testSuiteBranchNameDescriptionPattern =
-		Pattern.compile("(<testSuite>[^\\(]*)\\((<branchName>[^\\)]*)\\)");
+		Pattern.compile("(?<testSuite>[^\\(]*)\\((?<branchName>[^\\)]*)\\)");
 
 	private List<Pair<String, String>> _selectedTestSuiteBranchNamePairs;
 
