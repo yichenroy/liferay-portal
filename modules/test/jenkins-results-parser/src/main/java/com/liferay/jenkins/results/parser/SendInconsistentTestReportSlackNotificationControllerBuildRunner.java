@@ -212,11 +212,18 @@ public class SendInconsistentTestReportSlackNotificationControllerBuildRunner
 			Matcher matcher = _testSuiteBranchNameDescriptionPattern.matcher(
 				buildTestSuiteBranchNamePairDescription);
 
+			System.out.println("Checking description: " + buildTestSuiteBranchNamePairDescription);
+
 			if (matcher.matches()) {
+				System.out.println(buildDescription + " matches!");
+
 				buildTestSuiteBranchNamePairs.add(
 					new ImmutablePair<>(
 						matcher.group("testSuite"),
 						matcher.group("branchName")));
+			}
+			else {
+				System.out.println(buildDescription + " doesn't match");
 			}
 		}
 
