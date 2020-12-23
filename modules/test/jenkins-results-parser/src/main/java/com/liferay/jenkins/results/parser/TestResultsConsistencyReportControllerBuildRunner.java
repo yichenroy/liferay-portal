@@ -338,14 +338,14 @@ public class TestResultsConsistencyReportControllerBuildRunner
 		try {
 			List<String> testSuiteNames =
 				JenkinsResultsParserUtil.getBuildPropertyAsList(
-					true, "inconsistent.test.report.slack.notification.suites");
+					true, "test.results.consistency.report.suites");
 
 			for (String testSuiteName : testSuiteNames) {
 				List<String> branchNames =
 					JenkinsResultsParserUtil.getBuildPropertyAsList(
 						true,
-						"inconsistent.test.report.slack.notification.branches" +
-							"[" + testSuiteName + "]");
+						"test.results.consistency.report.branches[" +
+							testSuiteName + "]");
 
 				for (String branchName : branchNames) {
 					testSuiteBranchNamePairs.add(
