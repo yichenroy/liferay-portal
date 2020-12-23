@@ -150,10 +150,7 @@ public class JobFactory {
 			return _jobs.get(jobKey);
 		}
 
-		if (jobName.equals(
-				"send-inconsistent-test-report-slack-notification-" +
-					"controller")) {
-
+		if (jobName.equals("test-results-consistency-report-controller")) {
 			_jobs.put(jobKey, new SimpleJob(jobName, buildProfile));
 
 			return _jobs.get(jobKey);

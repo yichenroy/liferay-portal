@@ -32,7 +32,7 @@ import org.apache.commons.lang3.tuple.Pair;
 /**
  * @author Yi-Chen Tsai
  */
-public class SendInconsistentTestReportSlackNotificationControllerBuildRunner
+public class TestResultsConsistencyReportControllerBuildRunner
 	<S extends BaseBuildData>
 		extends BaseBuildRunner<S, Workspace> {
 
@@ -47,9 +47,7 @@ public class SendInconsistentTestReportSlackNotificationControllerBuildRunner
 	public void tearDown() {
 	}
 
-	protected SendInconsistentTestReportSlackNotificationControllerBuildRunner(
-		S buildData) {
-
+	protected TestResultsConsistencyReportControllerBuildRunner(S buildData) {
 		super(buildData);
 	}
 
@@ -73,8 +71,7 @@ public class SendInconsistentTestReportSlackNotificationControllerBuildRunner
 				1);
 
 		return JenkinsResultsParserUtil.combine(
-			mostAvailableMasterURL,
-			"/job/send-inconsistent-test-report-slack-notification");
+			mostAvailableMasterURL, "/job/test-results-consistency-report");
 	}
 
 	@Override

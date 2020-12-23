@@ -39,12 +39,9 @@ public class BuildRunnerFactory {
 				(PortalBatchBuildData)buildData);
 		}
 
-		if (jobName.startsWith(
-				"send-inconsistent-test-report-slack-notification")) {
-
-			buildRunner =
-				new SendInconsistentTestReportSlackNotificationControllerBuildRunner(
-					(BaseBuildData)buildData);
+		if (jobName.startsWith("test-results-consistency-report")) {
+			buildRunner = new TestResultsConsistencyReportControllerBuildRunner(
+				(BaseBuildData)buildData);
 		}
 
 		if (jobName.startsWith("test-portal-testsuite-upstream-controller(")) {
