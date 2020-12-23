@@ -39,11 +39,6 @@ public class BuildRunnerFactory {
 				(PortalBatchBuildData)buildData);
 		}
 
-		if (jobName.startsWith("test-results-consistency-report")) {
-			buildRunner = new TestResultsConsistencyReportControllerBuildRunner(
-				(BaseBuildData)buildData);
-		}
-
 		if (jobName.startsWith("test-portal-testsuite-upstream-controller(")) {
 			Matcher matcher = _jobNamePattern.matcher(jobName);
 
@@ -56,6 +51,11 @@ public class BuildRunnerFactory {
 				buildRunner = new PortalTestSuiteUpstreamControllerBuildRunner(
 					(PortalTestSuiteUpstreamControllerBuildData)buildData);
 			}
+		}
+
+		if (jobName.startsWith("test-results-consistency-report-controller")) {
+			buildRunner = new TestResultsConsistencyReportControllerBuildRunner(
+				(BaseBuildData)buildData);
 		}
 
 		if (buildRunner == null) {

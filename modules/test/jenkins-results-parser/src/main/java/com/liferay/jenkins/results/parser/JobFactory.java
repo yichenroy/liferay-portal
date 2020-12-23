@@ -150,12 +150,6 @@ public class JobFactory {
 			return _jobs.get(jobKey);
 		}
 
-		if (jobName.equals("test-results-consistency-report-controller")) {
-			_jobs.put(jobKey, new SimpleJob(jobName, buildProfile));
-
-			return _jobs.get(jobKey);
-		}
-
 		if (jobName.startsWith("test-plugins-acceptance-pullrequest(")) {
 			PluginsGitRepositoryJob pluginsGitRepositoryJob =
 				new PluginsGitRepositoryJob(jobName, buildProfile);
@@ -235,6 +229,12 @@ public class JobFactory {
 
 		if (jobName.startsWith("test-portal-upstream(")) {
 			_jobs.put(jobKey, new PortalUpstreamJob(jobName, buildProfile));
+
+			return _jobs.get(jobKey);
+		}
+
+		if (jobName.equals("test-results-consistency-report-controller")) {
+			_jobs.put(jobKey, new SimpleJob(jobName, buildProfile));
 
 			return _jobs.get(jobKey);
 		}
