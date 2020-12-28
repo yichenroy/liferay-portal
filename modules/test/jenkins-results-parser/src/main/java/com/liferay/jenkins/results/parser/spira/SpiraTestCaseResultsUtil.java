@@ -77,6 +77,8 @@ public class SpiraTestCaseResultsUtil {
 			_getSpiraTestCaseRunMapFromList(
 				_getLatestUpstreamSpiraTestCaseRuns(branchName, testSuite));
 
+		int inconsistentTestCount = 0;
+
 		for (Map.Entry<Integer, SpiraTestCaseRun> entry :
 				spiraTestCaseRuns.entrySet()) {
 
@@ -153,10 +155,12 @@ public class SpiraTestCaseResultsUtil {
 				upstreamComparisonMessageStringBuilder.append(
 					spiraTestCaseRunMessageStringBuilder.toString());
 				upstreamComparisonMessageStringBuilder.append("\n");
+
+				inconsistentTestCount++;
 			}
 		}
 
-		if (upstreamComparisonMessageStringBuilder.length() == 0) {
+		if (inconsistentTestCount == 0) {
 			upstreamComparisonMessageStringBuilder.append(
 				"There are no inconsistent test results in the latest ");
 			upstreamComparisonMessageStringBuilder.append(branchName);
@@ -173,9 +177,14 @@ public class SpiraTestCaseResultsUtil {
 					comparisonUpstreamSuite);
 				upstreamComparisonMessageStringBuilder.append("\n");
 			}
+
+			return upstreamComparisonMessageStringBuilder.toString();
 		}
 
-		return upstreamComparisonMessageStringBuilder.toString();
+		return JenkinsResultsParserUtil.combine(
+			"There are ", String.valueOf(inconsistentTestCount),
+			" tests with inconsistent test results.\n",
+			upstreamComparisonMessageStringBuilder.toString());
 	}
 
 	private static List<SpiraTestCaseRun> _getLatestUpstreamSpiraTestCaseRuns(
