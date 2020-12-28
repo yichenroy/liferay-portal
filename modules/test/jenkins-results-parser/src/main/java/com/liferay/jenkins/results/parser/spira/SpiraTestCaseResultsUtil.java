@@ -116,13 +116,9 @@ public class SpiraTestCaseResultsUtil {
 					comparisonEntry.getValue();
 
 				if (!comparisonSpiraTestCaseRuns.containsKey(testCaseID)) {
-					spiraTestCaseRunMessageStringBuilder.append(
-						comparisonEntry.getKey());
-					spiraTestCaseRunMessageStringBuilder.append("\nN/A\n");
+					inconsistent = false;
 
-					inconsistent = true;
-
-					continue;
+					break;
 				}
 
 				spiraTestCaseRunMessageStringBuilder.append(
