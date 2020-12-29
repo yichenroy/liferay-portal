@@ -10606,6 +10606,31 @@ log.sanitizer.enabled=false</echo>
 		</if>
 	</target>
 
+	<target name="prepare-release-bundle">
+		<ant dir="${release.tool.dir}" inheritAll="false" target="dist" useNativeBasedir="true">
+			<property name="override.decrement.module.bnd.versions" value="true" />
+			<property name="project.release.dir.native" value="${release.tool.dir}" />
+		</ant>
+
+		<copy
+			overwrite="true"
+			tofile="${project.dir}/liferay-portal-bundle-tomcat.tar.gz"
+		>
+			<fileset
+				dir="dist/"
+				includes="liferay-dxp-tomcat-*.tar.gz"
+			/>
+		</copy>
+
+		<untar
+			compression="gzip"
+			dest="./bundles"
+			src="liferay-portal-bundle-tomcat.tar.gz"
+		>
+			<cutdirsmapper dirs="1" />
+		</untar>
+	</target>
+
 	<target name="prepare-test-build">
 		<record-git-commit-portal />
 
