@@ -84,4 +84,21 @@ public interface Job {
 
 	}
 
+	public static enum DistType {
+
+		CI("ci"), RELEASE("release");
+
+		@Override
+		public String toString() {
+			return _string;
+		}
+
+		private DistType(String string) {
+			_string = string;
+		}
+
+		private final String _string;
+
+	}
+
 }
