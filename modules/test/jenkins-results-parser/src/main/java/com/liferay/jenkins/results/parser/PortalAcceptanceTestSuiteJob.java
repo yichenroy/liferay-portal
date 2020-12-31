@@ -67,6 +67,29 @@ public abstract class PortalAcceptanceTestSuiteJob
 	}
 
 	@Override
+	public DistType getDistType() {
+		String distType = JenkinsResultsParserUtil.getProperty(
+			getJobProperties(), "dist.type[" + _testSuiteName + "]");
+
+		if ((distType == null) && _testSuiteName.equals("default")) {
+			distType = JenkinsResultsParserUtil.getProperty(
+				getJobProperties(), "dist.type");
+		}
+
+		if (distType == null) {
+			return DistType.CI;
+		}
+
+		for (DistType distTypeValue : DistType.values()) {
+			if (distType.equals(distTypeValue.toString())) {
+				return distTypeValue;
+			}
+		}
+
+		return DistType.CI;
+	}
+
+	@Override
 	public Set<String> getDistTypes() {
 		Properties jobProperties = getJobProperties();
 

@@ -37,6 +37,8 @@ public interface Job {
 
 	public BuildProfile getBuildProfile();
 
+	public DistType getDistType();
+
 	public Set<String> getDistTypes();
 
 	public Set<String> getDistTypesExcludingTomcat();
