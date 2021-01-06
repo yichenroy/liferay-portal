@@ -10618,7 +10618,7 @@ log.sanitizer.enabled=false</echo>
 		>
 			<fileset
 				dir="dist/"
-				includes="liferay-dxp-tomcat-*.tar.gz"
+				includes="liferay-*-tomcat-*.tar.gz"
 			/>
 		</copy>
 
