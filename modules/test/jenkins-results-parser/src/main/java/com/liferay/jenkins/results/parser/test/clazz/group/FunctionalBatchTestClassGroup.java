@@ -69,6 +69,10 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	public String getTestBatchRunPropertyQuery() {
+		return getTestBatchRunPropertyQuery(getTestBaseDir());
+	}
+
+	public String getTestBatchRunPropertyQuery(File testBaseDir) {
 		return _testBatchRunPropertyQuery;
 	}
 
@@ -165,7 +169,9 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 			return;
 		}
 
-		for (List<String> poshiTestClassGroup : _getPoshiTestClassGroups()) {
+		for (List<String> poshiTestClassGroup :
+				_getPoshiTestClassGroups(getTestBaseDir())) {
+
 			if (poshiTestClassGroup.isEmpty()) {
 				continue;
 			}
@@ -243,32 +249,34 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		return Lists.newArrayList(functionalRequiredModuleDirs);
 	}
 
-	private List<List<String>> _getPoshiTestClassGroups() {
-		String query = getTestBatchRunPropertyQuery();
+	private List<List<String>> _getPoshiTestClassGroups(File testBaseDir) {
+		String query = getTestBatchRunPropertyQuery(testBaseDir);
 
-		if (query == null) {
+		if (JenkinsResultsParserUtil.isNullOrEmpty(query)) {
 			return new ArrayList<>();
 		}
 
-		synchronized (_portalTestClassJob) {
+		synchronized (portalTestClassJob) {
 			PortalGitWorkingDirectory portalGitWorkingDirectory =
-				_portalTestClassJob.getPortalGitWorkingDirectory();
+				portalTestClassJob.getPortalGitWorkingDirectory();
 
-			File portalDir = portalGitWorkingDirectory.getWorkingDirectory();
+			File portalWorkingDirectory =
+				portalGitWorkingDirectory.getWorkingDirectory();
 
 			Map<String, String> parameters = new HashMap<>();
 
-			File testBaseDir = getTestBaseDir();
+			String testBaseDirPath = null;
 
-			if (testBaseDir != null) {
-				parameters.put(
-					"test.base.dir.name",
-					JenkinsResultsParserUtil.getCanonicalPath(testBaseDir));
+			if ((testBaseDir != null) && testBaseDir.exists()) {
+				testBaseDirPath = JenkinsResultsParserUtil.getCanonicalPath(
+					testBaseDir);
+
+				parameters.put("test.base.dir.name", testBaseDirPath);
 			}
 
 			try {
 				AntUtil.callTarget(
-					portalDir, "build-test.xml",
+					portalWorkingDirectory, "build-test.xml",
 					"prepare-poshi-runner-properties", parameters);
 			}
 			catch (AntException antException) {
@@ -277,22 +285,22 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 			Properties properties = JenkinsResultsParserUtil.getProperties(
 				new File(
-					portalDir, "portal-web/test/test-portal-web.properties"),
+					portalWorkingDirectory,
+					"portal-web/test/test-portal-web.properties"),
 				new File(
-					portalDir,
-					"portal-web/test/test-portal-web-ext.properties"));
+					portalWorkingDirectory,
+					"portal-web/test/test-portal-web-ext.properties"),
+				new File(testBaseDir, "test.properties"));
 
 			properties.setProperty("ignore.errors.util.classes", "true");
 
-			for (String propertyName : properties.stringPropertyNames()) {
-				String propertyValue = properties.getProperty(propertyName);
-
-				if (propertyValue == null) {
-					continue;
-				}
-
-				PropsUtil.set(propertyName, propertyValue);
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(testBaseDirPath)) {
+				properties.setProperty("test.base.dir.name", testBaseDirPath);
 			}
+
+			PropsUtil.clear();
+
+			PropsUtil.setProperties(properties);
 
 			try {
 				PoshiContext.clear();
