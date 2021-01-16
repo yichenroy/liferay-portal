@@ -146,6 +146,18 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		setSegmentTestClassGroups();
 	}
 
+	protected String getDefaultTestBatchRunPropertyQuery(String testSuiteName) {
+		String propertyQuery = System.getenv("TEST_BATCH_RUN_PROPERTY_QUERY");
+
+		if ((propertyQuery != null) && !propertyQuery.isEmpty()) {
+			return propertyQuery;
+		}
+
+		return JenkinsResultsParserUtil.getProperty(
+			jobProperties, "test.batch.run.property.query", batchName,
+			testSuiteName, getJobName());
+	}
+
 	@Override
 	protected void setAxisTestClassGroups() {
 		if (!axisTestClassGroups.isEmpty()) {
@@ -184,12 +196,6 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 		return getFirstPropertyValue(
 			"test.batch.run.property.global.query", batchName, testSuiteName);
-	}
-
-	private String _getDefaultTestBatchRunPropertyQuery(String testSuiteName) {
-		return JenkinsResultsParserUtil.getProperty(
-			jobProperties, "test.batch.run.property.query", batchName,
-			testSuiteName, getJobName());
 	}
 
 	private List<File> _getFunctionalRequiredModuleDirs(List<File> moduleDirs) {
@@ -303,7 +309,7 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 	private void _setTestBatchRunPropertyQuery() {
 		if (!testRelevantChanges) {
 			_testBatchRunPropertyQuery =
-				_getDefaultTestBatchRunPropertyQuery(testSuiteName);
+				getDefaultTestBatchRunPropertyQuery(testSuiteName);
 
 			return;
 		}
@@ -391,12 +397,12 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 		if (sb.length() == 0) {
 			sb.append("(");
-			sb.append(_getDefaultTestBatchRunPropertyQuery(testSuiteName));
+			sb.append(getDefaultTestBatchRunPropertyQuery(testSuiteName));
 			sb.append(")");
 		}
 
 		String stableTestBatchRunPropertyQuery =
-			_getDefaultTestBatchRunPropertyQuery(NAME_STABLE_TEST_SUITE);
+			getDefaultTestBatchRunPropertyQuery(NAME_STABLE_TEST_SUITE);
 
 		if ((stableTestBatchRunPropertyQuery != null) &&
 			includeStableTestSuite && isStableTestSuiteBatch()) {

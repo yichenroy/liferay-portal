@@ -16,22 +16,13 @@ package com.liferay.jenkins.results.parser.test.clazz.group;
 
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
 
+import java.io.File;
+
 /**
  * @author Michael Hashimoto
  */
 public class AppReleaseFunctionalBatchTestClassGroup
 	extends FunctionalBatchTestClassGroup {
-
-	@Override
-	public String getTestBatchRunPropertyQuery() {
-		String propertyQuery = System.getenv("TEST_BATCH_RUN_PROPERTY_QUERY");
-
-		if ((propertyQuery != null) && !propertyQuery.isEmpty()) {
-			return propertyQuery;
-		}
-
-		return super.getTestBatchRunPropertyQuery();
-	}
 
 	protected AppReleaseFunctionalBatchTestClassGroup(
 		String batchName, PortalTestClassJob portalTestClassJob) {

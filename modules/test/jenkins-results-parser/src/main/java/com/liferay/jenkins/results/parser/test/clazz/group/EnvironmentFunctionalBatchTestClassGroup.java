@@ -18,6 +18,11 @@ import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.PortalEnvironmentJob;
 import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 
+import java.io.File;
+
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @author Michael Hashimoto
  */
@@ -45,8 +50,14 @@ public class EnvironmentFunctionalBatchTestClassGroup
 				"portal-web/test/functional"));
 	}
 
+	protected EnvironmentFunctionalBatchTestClassGroup(
+		String batchName, PortalEnvironmentJob portalEnvironmentJob) {
+
+		super(batchName, portalEnvironmentJob);
+	}
+
 	@Override
-	public String getTestBatchRunPropertyQuery() {
+	protected String getDefaultTestBatchRunPropertyQuery(String testSuiteName) {
 		String propertyQuery = System.getenv("TEST_BATCH_RUN_PROPERTY_QUERY");
 
 		if ((propertyQuery != null) && !propertyQuery.isEmpty()) {
@@ -59,12 +70,6 @@ public class EnvironmentFunctionalBatchTestClassGroup
 			portalTestClassJob.getJobProperties(),
 			"test.batch.run.property.query",
 			jobName.replaceAll("([^\\(]+)\\([^\\)]+\\)", "$1"));
-	}
-
-	protected EnvironmentFunctionalBatchTestClassGroup(
-		String batchName, PortalEnvironmentJob portalEnvironmentJob) {
-
-		super(batchName, portalEnvironmentJob);
 	}
 
 }
