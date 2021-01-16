@@ -48,16 +48,6 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		return axisTestClassGroups.size();
 	}
 
-	public File getTestBaseDir() {
-		List<File> testBaseDirs = getTestBaseDirs();
-
-		if ((testBaseDirs == null) || testBaseDirs.isEmpty()) {
-			return null;
-		}
-
-		return testBaseDirs.get(0);
-	}
-
 	public List<File> getTestBaseDirs() {
 		PortalGitWorkingDirectory portalGitWorkingDirectory =
 			getPortalGitWorkingDirectory();
@@ -146,8 +136,6 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 		super(batchName, portalTestClassJob);
 
-		_portalTestClassJob = portalTestClassJob;
-
 		_setTestBatchRunPropertyQueries();
 
 		setAxisTestClassGroups();
@@ -216,8 +204,9 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 	private String _getDefaultTestBatchRunPropertyGlobalQuery(
 		String testSuiteName) {
 
-		return getFirstPropertyValue(
-			"test.batch.run.property.global.query", batchName, testSuiteName);
+		return JenkinsResultsParserUtil.getProperty(
+			jobProperties, "test.batch.run.property.global.query", batchName,
+			testSuiteName, getJobName());
 	}
 
 	private List<File> _getFunctionalRequiredModuleDirs(List<File> moduleDirs) {
@@ -472,9 +461,7 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 	private static final Pattern _poshiTestCasePattern = Pattern.compile(
 		"(?<namespace>[^\\.]+)\\.(?<className>[^\\#]+)\\#(?<methodName>.*)");
 
-	private final PortalTestClassJob _portalTestClassJob;
 	private final Map<File, String> _testBatchRunPropertyQueries =
 		new HashMap<>();
-	private String _testBatchRunPropertyQuery;
 
 }
