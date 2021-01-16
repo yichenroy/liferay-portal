@@ -33,6 +33,12 @@ public class TestClassGroupFactory {
 	public static AxisTestClassGroup newAxisTestClassGroup(
 		BatchTestClassGroup batchTestClassGroup) {
 
+		return newAxisTestClassGroup(batchTestClassGroup, null);
+	}
+
+	public static AxisTestClassGroup newAxisTestClassGroup(
+		BatchTestClassGroup batchTestClassGroup, File testBaseDir) {
+
 		if (batchTestClassGroup instanceof CucumberBatchTestClassGroup) {
 			return new CucumberAxisTestClassGroup(
 				(CucumberBatchTestClassGroup)batchTestClassGroup);
@@ -40,7 +46,8 @@ public class TestClassGroupFactory {
 
 		if (batchTestClassGroup instanceof FunctionalBatchTestClassGroup) {
 			return new FunctionalAxisTestClassGroup(
-				(FunctionalBatchTestClassGroup)batchTestClassGroup);
+				(FunctionalBatchTestClassGroup)batchTestClassGroup,
+				testBaseDir);
 		}
 
 		if (batchTestClassGroup instanceof JUnitBatchTestClassGroup) {

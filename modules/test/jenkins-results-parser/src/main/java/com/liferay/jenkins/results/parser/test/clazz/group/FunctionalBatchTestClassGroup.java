@@ -122,6 +122,16 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		setSegmentTestClassGroups();
 	}
 
+	protected File getTestBaseDir() {
+		String testBaseDirName = getTestBaseDirName();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testBaseDirName)) {
+			return null;
+		}
+
+		return new File(testBaseDirName);
+	}
+
 	protected String getTestBaseDirName() {
 		Job job = getJob();
 
@@ -173,7 +183,8 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 			}
 
 			AxisTestClassGroup axisTestClassGroup =
-				TestClassGroupFactory.newAxisTestClassGroup(this);
+				TestClassGroupFactory.newAxisTestClassGroup(
+					this, getTestBaseDir());
 
 			for (String testClassMethodName : poshiTestClassGroup) {
 				Matcher matcher = _poshiTestCasePattern.matcher(
