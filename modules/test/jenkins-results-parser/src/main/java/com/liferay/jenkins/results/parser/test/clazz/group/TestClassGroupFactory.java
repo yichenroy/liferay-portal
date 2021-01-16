@@ -79,14 +79,7 @@ public class TestClassGroupFactory {
 		else if (job instanceof PortalTestClassJob) {
 			PortalTestClassJob portalTestClassJob = (PortalTestClassJob)job;
 
-			if (job instanceof PluginsExtraAppsJob ||
-				job instanceof PortalAppReleaseJob) {
-
-				batchTestClassGroup =
-					new AppReleaseFunctionalBatchTestClassGroup(
-						batchName, portalTestClassJob);
-			}
-			else if (batchName.contains("cucumber-")) {
+			if (batchName.contains("cucumber-")) {
 				batchTestClassGroup = new CucumberBatchTestClassGroup(
 					batchName, portalTestClassJob);
 			}
