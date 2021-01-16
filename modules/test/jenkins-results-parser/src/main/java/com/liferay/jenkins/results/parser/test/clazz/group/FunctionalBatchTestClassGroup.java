@@ -69,11 +69,17 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	public String getTestBatchRunPropertyQuery() {
-		return getTestBatchRunPropertyQuery(getTestBaseDir());
+		List<File> testBaseDirs = getTestBaseDirs();
+
+		if (testBaseDirs.isEmpty()) {
+			return null;
+		}
+
+		return getTestBatchRunPropertyQuery(testBaseDirs.get(0));
 	}
 
 	public String getTestBatchRunPropertyQuery(File testBaseDir) {
-		return _testBatchRunPropertyQuery;
+		return _testBatchRunPropertyQueries.get(testBaseDir);
 	}
 
 	@Override
@@ -142,7 +148,7 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 		_portalTestClassJob = portalTestClassJob;
 
-		_setTestBatchRunPropertyQuery();
+		_setTestBatchRunPropertyQueries();
 
 		setAxisTestClassGroups();
 
@@ -315,12 +321,10 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		}
 	}
 
-	private void _setTestBatchRunPropertyQuery() {
+	private String _getTestBatchRunPropertyQuery(File testBaseDir) {
 		if (!testRelevantChanges) {
-			_testBatchRunPropertyQuery = getDefaultTestBatchRunPropertyQuery(
-				getTestBaseDir(), testSuiteName);
-
-			return;
+			return getDefaultTestBatchRunPropertyQuery(
+				testBaseDir, testSuiteName);
 		}
 
 		Set<File> modifiedDirsList = new HashSet<>();
@@ -409,14 +413,14 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 			sb.append(
 				getDefaultTestBatchRunPropertyQuery(
-					getTestBaseDir(), testSuiteName));
+					testBaseDir, testSuiteName));
 
 			sb.append(")");
 		}
 
 		String stableTestBatchRunPropertyQuery =
 			getDefaultTestBatchRunPropertyQuery(
-				getTestBaseDir(), NAME_STABLE_TEST_SUITE);
+				testBaseDir, NAME_STABLE_TEST_SUITE);
 
 		if ((stableTestBatchRunPropertyQuery != null) &&
 			includeStableTestSuite && isStableTestSuiteBatch()) {
@@ -426,15 +430,33 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 			sb.append(")");
 		}
 
-		_testBatchRunPropertyQuery = sb.toString();
+		String testBatchRunPropertyQuery = sb.toString();
 
 		String defaultGlobalQuery = _getDefaultTestBatchRunPropertyGlobalQuery(
 			testSuiteName);
 
 		if ((defaultGlobalQuery != null) && !defaultGlobalQuery.isEmpty()) {
-			_testBatchRunPropertyQuery = JenkinsResultsParserUtil.combine(
-				"(", defaultGlobalQuery, ") AND (", _testBatchRunPropertyQuery,
+			testBatchRunPropertyQuery = JenkinsResultsParserUtil.combine(
+				"(", defaultGlobalQuery, ") AND (", testBatchRunPropertyQuery,
 				")");
+		}
+
+		return testBatchRunPropertyQuery;
+	}
+
+	private void _setTestBatchRunPropertyQueries() {
+		for (File testBaseDir : getTestBaseDirs()) {
+			String testBatchRunPropertyQuery = _getTestBatchRunPropertyQuery(
+				testBaseDir);
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(
+					testBatchRunPropertyQuery)) {
+
+				continue;
+			}
+
+			_testBatchRunPropertyQueries.put(
+				testBaseDir, testBatchRunPropertyQuery);
 		}
 	}
 
@@ -442,6 +464,8 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		"(?<namespace>[^\\.]+)\\.(?<className>[^\\#]+)\\#(?<methodName>.*)");
 
 	private final PortalTestClassJob _portalTestClassJob;
+	private final Map<File, String> _testBatchRunPropertyQueries =
+		new HashMap<>();
 	private String _testBatchRunPropertyQuery;
 
 }
