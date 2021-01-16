@@ -54,32 +54,6 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	@Override
-	public String getTestCasePropertiesContent() {
-		StringBuilder sb = new StringBuilder();
-
-		List<String> segmentIndexes = new ArrayList<>();
-
-		for (int segmentIndex = 0; segmentIndex < getSegmentCount();
-			 segmentIndex++) {
-
-			SegmentTestClassGroup segmentTestClassGroup =
-				getSegmentTestClassGroup(segmentIndex);
-
-			sb.append(segmentTestClassGroup.getTestCasePropertiesContent());
-
-			sb.append("\n");
-
-			segmentIndexes.add(String.valueOf(segmentIndex));
-		}
-
-		sb.append("RUN_TEST_CASE_METHOD_GROUPS=");
-		sb.append(JenkinsResultsParserUtil.join(" ", segmentIndexes));
-		sb.append("\n");
-
-		return sb.toString();
-	}
-
-	@Override
 	public List<TestClass> getTestClasses() {
 		List<TestClass> testClasses = new ArrayList<>();
 
