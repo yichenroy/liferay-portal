@@ -19,8 +19,6 @@ import com.google.common.collect.Lists;
 import com.liferay.jenkins.results.parser.AntException;
 import com.liferay.jenkins.results.parser.AntUtil;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
-import com.liferay.jenkins.results.parser.Job;
-import com.liferay.jenkins.results.parser.PluginsGitRepositoryJob;
 import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
 import com.liferay.poshi.core.PoshiContext;
@@ -30,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -146,7 +145,9 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		setSegmentTestClassGroups();
 	}
 
-	protected String getDefaultTestBatchRunPropertyQuery(String testSuiteName) {
+	protected String getDefaultTestBatchRunPropertyQuery(
+		File testBaseDir, String testSuiteName) {
+
 		String propertyQuery = System.getenv("TEST_BATCH_RUN_PROPERTY_QUERY");
 
 		if ((propertyQuery != null) && !propertyQuery.isEmpty()) {
@@ -308,8 +309,8 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 	private void _setTestBatchRunPropertyQuery() {
 		if (!testRelevantChanges) {
-			_testBatchRunPropertyQuery =
-				getDefaultTestBatchRunPropertyQuery(testSuiteName);
+			_testBatchRunPropertyQuery = getDefaultTestBatchRunPropertyQuery(
+				getTestBaseDir(), testSuiteName);
 
 			return;
 		}
@@ -397,12 +398,17 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 		if (sb.length() == 0) {
 			sb.append("(");
-			sb.append(getDefaultTestBatchRunPropertyQuery(testSuiteName));
+
+			sb.append(
+				getDefaultTestBatchRunPropertyQuery(
+					getTestBaseDir(), testSuiteName));
+
 			sb.append(")");
 		}
 
 		String stableTestBatchRunPropertyQuery =
-			getDefaultTestBatchRunPropertyQuery(NAME_STABLE_TEST_SUITE);
+			getDefaultTestBatchRunPropertyQuery(
+				getTestBaseDir(), NAME_STABLE_TEST_SUITE);
 
 		if ((stableTestBatchRunPropertyQuery != null) &&
 			includeStableTestSuite && isStableTestSuiteBatch()) {
@@ -418,10 +424,9 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 			testSuiteName);
 
 		if ((defaultGlobalQuery != null) && !defaultGlobalQuery.isEmpty()) {
-			_testBatchRunPropertyQuery =
-				JenkinsResultsParserUtil.combine(
-					"(", defaultGlobalQuery, ") AND (",
-						_testBatchRunPropertyQuery, ")");
+			_testBatchRunPropertyQuery = JenkinsResultsParserUtil.combine(
+				"(", defaultGlobalQuery, ") AND (", _testBatchRunPropertyQuery,
+				")");
 		}
 	}
 

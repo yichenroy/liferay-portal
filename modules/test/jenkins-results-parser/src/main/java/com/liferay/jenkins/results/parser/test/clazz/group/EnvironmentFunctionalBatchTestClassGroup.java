@@ -57,7 +57,9 @@ public class EnvironmentFunctionalBatchTestClassGroup
 	}
 
 	@Override
-	protected String getDefaultTestBatchRunPropertyQuery(String testSuiteName) {
+	protected String getDefaultTestBatchRunPropertyQuery(
+		File testBaseDir, String testSuiteName) {
+
 		String propertyQuery = System.getenv("TEST_BATCH_RUN_PROPERTY_QUERY");
 
 		if ((propertyQuery != null) && !propertyQuery.isEmpty()) {

@@ -16,11 +16,11 @@ package com.liferay.jenkins.results.parser.test.clazz.group;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
-import com.liferay.jenkins.results.parser.PluginsExtraAppsJob;
 import com.liferay.jenkins.results.parser.PortalAWSJob;
-import com.liferay.jenkins.results.parser.PortalAppReleaseJob;
 import com.liferay.jenkins.results.parser.PortalEnvironmentJob;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
+
+import java.io.File;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +85,6 @@ public class TestClassGroupFactory {
 			}
 			else if (batchName.startsWith("functional-") ||
 					 batchName.startsWith("modules-functional-") ||
-					 batchName.startsWith("plugins-functional-") ||
 					 batchName.startsWith("subrepository-functional-")) {
 
 				batchTestClassGroup = new FunctionalBatchTestClassGroup(
@@ -116,6 +115,10 @@ public class TestClassGroupFactory {
 			}
 			else if (batchName.startsWith("plugins-compile-")) {
 				batchTestClassGroup = new PluginsBatchTestClassGroup(
+					batchName, portalTestClassJob);
+			}
+			else if (batchName.startsWith("plugins-functional-")) {
+				batchTestClassGroup = new PluginsFunctionalBatchTestClassGroup(
 					batchName, portalTestClassJob);
 			}
 			else if (batchName.startsWith("plugins-gulp-")) {
