@@ -175,32 +175,41 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 			return;
 		}
 
-		for (List<String> poshiTestClassGroup :
-				_getPoshiTestClassGroups(getTestBaseDir())) {
+		for (File testBaseDir : getTestBaseDirs()) {
+			String query = getTestBatchRunPropertyQuery(testBaseDir);
 
-			if (poshiTestClassGroup.isEmpty()) {
+			if (query == null) {
 				continue;
 			}
 
-			AxisTestClassGroup axisTestClassGroup =
-				TestClassGroupFactory.newAxisTestClassGroup(
-					this, getTestBaseDir());
+			List<List<String>> poshiTestClassGroups = _getPoshiTestClassGroups(
+				testBaseDir);
 
-			for (String testClassMethodName : poshiTestClassGroup) {
-				Matcher matcher = _poshiTestCasePattern.matcher(
-					testClassMethodName);
-
-				if (!matcher.find()) {
-					throw new RuntimeException(
-						"Invalid test class method name " +
-							testClassMethodName);
+			for (List<String> poshiTestClassGroup : poshiTestClassGroups) {
+				if (poshiTestClassGroup.isEmpty()) {
+					continue;
 				}
 
-				axisTestClassGroup.addTestClass(
-					FunctionalTestClass.getInstance(testClassMethodName));
-			}
+				AxisTestClassGroup axisTestClassGroup =
+					TestClassGroupFactory.newAxisTestClassGroup(
+						this, testBaseDir);
 
-			axisTestClassGroups.add(axisTestClassGroup);
+				for (String testClassMethodName : poshiTestClassGroup) {
+					Matcher matcher = _poshiTestCasePattern.matcher(
+						testClassMethodName);
+
+					if (!matcher.find()) {
+						throw new RuntimeException(
+							"Invalid test class method name " +
+								testClassMethodName);
+					}
+
+					axisTestClassGroup.addTestClass(
+						FunctionalTestClass.getInstance(testClassMethodName));
+				}
+
+				axisTestClassGroups.add(axisTestClassGroup);
+			}
 		}
 	}
 
