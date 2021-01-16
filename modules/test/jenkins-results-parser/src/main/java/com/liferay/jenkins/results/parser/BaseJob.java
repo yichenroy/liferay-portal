@@ -173,14 +173,14 @@ public abstract class BaseJob implements Job {
 				FunctionalBatchTestClassGroup functionalBatchTestClassGroup =
 					(FunctionalBatchTestClassGroup)batchTestClassGroup;
 
-				String relevantTestBatchRunPropertyQuery =
+				String testBatchRunPropertyQuery =
 					functionalBatchTestClassGroup.
-						getRelevantTestBatchRunPropertyQuery();
+						getTestBatchRunPropertyQuery();
 
-				if (relevantTestBatchRunPropertyQuery != null) {
+				if (testBatchRunPropertyQuery != null) {
 					batchProperties.setProperty(
 						"test.batch.run.property.query",
-						relevantTestBatchRunPropertyQuery);
+						testBatchRunPropertyQuery);
 				}
 			}
 			else {

@@ -49,8 +49,8 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		return axisTestClassGroups.size();
 	}
 
-	public String getRelevantTestBatchRunPropertyQuery() {
-		return _relevantTestBatchRunPropertyQuery;
+	public String getTestBatchRunPropertyQuery() {
+		return _testBatchRunPropertyQuery;
 	}
 
 	@Override
@@ -115,7 +115,7 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 		_portalTestClassJob = portalTestClassJob;
 
-		_setRelevantTestBatchRunPropertyQuery();
+		_setTestBatchRunPropertyQuery();
 
 		setAxisTestClassGroups();
 
@@ -251,7 +251,7 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	private List<List<String>> _getPoshiTestClassGroups() {
-		String query = getRelevantTestBatchRunPropertyQuery();
+		String query = getTestBatchRunPropertyQuery();
 
 		if (query == null) {
 			return new ArrayList<>();
@@ -312,9 +312,9 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		}
 	}
 
-	private void _setRelevantTestBatchRunPropertyQuery() {
+	private void _setTestBatchRunPropertyQuery() {
 		if (!testRelevantChanges) {
-			_relevantTestBatchRunPropertyQuery =
+			_testBatchRunPropertyQuery =
 				_getDefaultTestBatchRunPropertyQuery(testSuiteName);
 
 			return;
@@ -418,16 +418,16 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 			sb.append(")");
 		}
 
-		_relevantTestBatchRunPropertyQuery = sb.toString();
+		_testBatchRunPropertyQuery = sb.toString();
 
 		String defaultGlobalQuery = _getDefaultTestBatchRunPropertyGlobalQuery(
 			testSuiteName);
 
 		if ((defaultGlobalQuery != null) && !defaultGlobalQuery.isEmpty()) {
-			_relevantTestBatchRunPropertyQuery =
+			_testBatchRunPropertyQuery =
 				JenkinsResultsParserUtil.combine(
 					"(", defaultGlobalQuery, ") AND (",
-					_relevantTestBatchRunPropertyQuery, ")");
+						_testBatchRunPropertyQuery, ")");
 		}
 	}
 
@@ -435,6 +435,6 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		"(?<namespace>[^\\.]+)\\.(?<className>[^\\#]+)\\#(?<methodName>.*)");
 
 	private final PortalTestClassJob _portalTestClassJob;
-	private String _relevantTestBatchRunPropertyQuery;
+	private String _testBatchRunPropertyQuery;
 
 }
