@@ -17,6 +17,7 @@ package com.liferay.jenkins.results.parser;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -56,7 +57,7 @@ public abstract class PluginsGitRepositoryJob
 		return gitWorkingDirectory;
 	}
 
-	public abstract File getPluginTestBaseDir();
+	public abstract List<File> getPluginsTestBaseDirs();
 
 	@Override
 	public PortalGitWorkingDirectory getPortalGitWorkingDirectory() {

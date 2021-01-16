@@ -16,6 +16,8 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.File;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -29,14 +31,8 @@ public abstract class PluginsTestSuiteJob
 	}
 
 	@Override
-	public File getPluginTestBaseDir() {
-		GitWorkingDirectory pluginsGitWorkingDirectory =
-			getGitWorkingDirectory();
-
-		return new File(
-			pluginsGitWorkingDirectory.getWorkingDirectory(),
-			JenkinsResultsParserUtil.combine(
-				"portlets/", getPluginName(), "/test/functional"));
+	public List<File> getPluginsTestBaseDirs() {
+		return Arrays.asList(_getPluginTestBaseDir());
 	}
 
 	@Override
@@ -53,7 +49,7 @@ public abstract class PluginsTestSuiteJob
 		_pluginName = pluginName;
 
 		jobPropertiesFiles.add(
-			new File(getPluginTestBaseDir(), "test.properties"));
+			new File(_getPluginTestBaseDir(), "test.properties"));
 	}
 
 	@Override
@@ -62,6 +58,16 @@ public abstract class PluginsTestSuiteJob
 			JenkinsResultsParserUtil.getProperty(
 				getJobProperties(), "test.batch.names", getJobName(),
 				getTestSuiteName()));
+	}
+
+	private File _getPluginTestBaseDir() {
+		GitWorkingDirectory pluginsGitWorkingDirectory =
+			getGitWorkingDirectory();
+
+		return new File(
+			pluginsGitWorkingDirectory.getWorkingDirectory(),
+			JenkinsResultsParserUtil.combine(
+				"portlets/", getPluginName(), "/test/functional"));
 	}
 
 	private final String _pluginName;

@@ -35,6 +35,17 @@ public class EnvironmentFunctionalBatchTestClassGroup
 	}
 
 	@Override
+	public List<File> getTestBaseDirs() {
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			getPortalGitWorkingDirectory();
+
+		return Arrays.asList(
+			new File(
+				portalGitWorkingDirectory.getWorkingDirectory(),
+				"portal-web/test/functional"));
+	}
+
+	@Override
 	public String getTestBatchRunPropertyQuery() {
 		String propertyQuery = System.getenv("TEST_BATCH_RUN_PROPERTY_QUERY");
 

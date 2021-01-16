@@ -16,6 +16,7 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,8 +25,8 @@ import java.util.List;
 public class PluginsAcceptancePullRequestJob extends PluginsGitRepositoryJob {
 
 	@Override
-	public File getPluginTestBaseDir() {
-		return _testBaseDir;
+	public List<File> getPluginsTestBaseDirs() {
+		return _pluginsTestBaseDirs;
 	}
 
 	protected PluginsAcceptancePullRequestJob(
@@ -33,21 +34,23 @@ public class PluginsAcceptancePullRequestJob extends PluginsGitRepositoryJob {
 
 		super(jobName, buildProfile, branchName);
 
-		_testBaseDir = _getPluginTestBaseDir();
+		_pluginsTestBaseDirs = _getPluginsTestBaseDirs();
 
-		if (_testBaseDir != null) {
-			File testBaseDirPropertiesFile = new File(
-				_testBaseDir, "test.properties");
+		for (File pluginsTestBaseDir : _pluginsTestBaseDirs) {
+			File testPropertiesFile = new File(
+				pluginsTestBaseDir, "test.properties");
 
-			if (testBaseDirPropertiesFile.exists()) {
-				jobPropertiesFiles.add(testBaseDirPropertiesFile);
+			if (testPropertiesFile.exists()) {
+				jobPropertiesFiles.add(testPropertiesFile);
 			}
 		}
 
 		readJobProperties();
 	}
 
-	private File _getPluginTestBaseDir() {
+	private List<File> _getPluginsTestBaseDirs() {
+		List<File> pluginsTestBaseDirs = new ArrayList<>();
+
 		PluginsGitWorkingDirectory pluginsGitWorkingDirectory =
 			portalGitWorkingDirectory.getPluginsGitWorkingDirectory();
 
@@ -61,16 +64,18 @@ public class PluginsAcceptancePullRequestJob extends PluginsGitRepositoryJob {
 				File testBaseDir = new File(parentDir, "test/functional");
 
 				if (testBaseDir.exists()) {
-					return testBaseDir;
+					pluginsTestBaseDirs.add(testBaseDir);
+
+					break;
 				}
 
 				parentDir = parentDir.getParentFile();
 			}
 		}
 
-		return null;
+		return pluginsTestBaseDirs;
 	}
 
-	private final File _testBaseDir;
+	private final List<File> _pluginsTestBaseDirs;
 
 }

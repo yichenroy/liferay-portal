@@ -49,6 +49,26 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		return axisTestClassGroups.size();
 	}
 
+	public File getTestBaseDir() {
+		List<File> testBaseDirs = getTestBaseDirs();
+
+		if ((testBaseDirs == null) || testBaseDirs.isEmpty()) {
+			return null;
+		}
+
+		return testBaseDirs.get(0);
+	}
+
+	public List<File> getTestBaseDirs() {
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			getPortalGitWorkingDirectory();
+
+		return Arrays.asList(
+			new File(
+				portalGitWorkingDirectory.getWorkingDirectory(),
+				"portal-web/test/functional"));
+	}
+
 	public String getTestBatchRunPropertyQuery() {
 		return _testBatchRunPropertyQuery;
 	}
@@ -124,55 +144,6 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 		setAxisTestClassGroups();
 
 		setSegmentTestClassGroups();
-	}
-
-	protected File getTestBaseDir() {
-		String testBaseDirName = getTestBaseDirName();
-
-		if (JenkinsResultsParserUtil.isNullOrEmpty(testBaseDirName)) {
-			return null;
-		}
-
-		return new File(testBaseDirName);
-	}
-
-	protected String getTestBaseDirName() {
-		Job job = getJob();
-
-		if (job instanceof PluginsGitRepositoryJob) {
-			PluginsGitRepositoryJob pluginsGitRepositoryJob =
-				(PluginsGitRepositoryJob)job;
-
-			File pluginTestBaseDir =
-				pluginsGitRepositoryJob.getPluginTestBaseDir();
-
-			if ((pluginTestBaseDir != null) && pluginTestBaseDir.exists()) {
-				return JenkinsResultsParserUtil.getCanonicalPath(
-					pluginTestBaseDir);
-			}
-		}
-
-		String testBaseDirName = System.getenv("test.base.dir.name");
-
-		if (JenkinsResultsParserUtil.isNullOrEmpty(testBaseDirName)) {
-			testBaseDirName = System.getenv("env.TEST_BASE_DIR_NAME");
-		}
-
-		if (JenkinsResultsParserUtil.isNullOrEmpty(testBaseDirName)) {
-			testBaseDirName = System.getenv("TEST_BASE_DIR_NAME");
-		}
-
-		if (JenkinsResultsParserUtil.isNullOrEmpty(testBaseDirName)) {
-			return null;
-		}
-
-		File testBaseDir = new File(testBaseDirName);
-
-		if (!testBaseDir.exists() || !testBaseDir.isDirectory()) {
-			return null;
-		}
-
-		return JenkinsResultsParserUtil.getCanonicalPath(testBaseDir);
 	}
 
 	@Override
@@ -280,10 +251,12 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 
 			Map<String, String> parameters = new HashMap<>();
 
-			String testBaseDirName = getTestBaseDirName();
+			File testBaseDir = getTestBaseDir();
 
-			if (testBaseDirName != null) {
-				parameters.put("test.base.dir.name", testBaseDirName);
+			if (testBaseDir != null) {
+				parameters.put(
+					"test.base.dir.name",
+					JenkinsResultsParserUtil.getCanonicalPath(testBaseDir));
 			}
 
 			try {
