@@ -14,6 +14,7 @@
 
 package com.liferay.poshi.core.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.Collections;
@@ -28,6 +29,8 @@ public class PropsUtil {
 
 	public static void clear() {
 		_propsUtil._props.clear();
+
+		setProperties(_getClassProperties());
 	}
 
 	public static String get(String key) {
@@ -54,30 +57,43 @@ public class PropsUtil {
 		}
 	}
 
-	private PropsUtil() {
-		try {
-			String[] propertiesFileNames = {
-				"poshi.properties", "poshi-ext.properties"
-			};
+	private static Properties _getClassProperties() {
+		Properties classProperties = new Properties();
 
-			for (String propertiesFileName : propertiesFileNames) {
-				Class<?> clazz = getClass();
+		String[] propertiesFileNames = {
+			"poshi.properties", "poshi-ext.properties"
+		};
 
-				ClassLoader classLoader = clazz.getClassLoader();
+		for (String propertiesFileName : propertiesFileNames) {
+			Class<?> clazz = PropsUtil.class;
 
-				InputStream inputStream = classLoader.getResourceAsStream(
-					propertiesFileName);
+			ClassLoader classLoader = clazz.getClassLoader();
 
-				if (inputStream != null) {
-					_props.load(inputStream);
+			InputStream inputStream = classLoader.getResourceAsStream(
+				propertiesFileName);
+
+			if (inputStream != null) {
+				try {
+					classProperties.load(inputStream);
+				}
+				catch (IOException ioException) {
+					ioException.printStackTrace();
 				}
 			}
+		}
 
-			_printProperties(false);
+		return classProperties;
+	}
+
+	private PropsUtil() {
+		Properties properties = _getClassProperties();
+
+		for (String propertyName : properties.stringPropertyNames()) {
+			_props.setProperty(
+				propertyName, properties.getProperty(propertyName));
 		}
-		catch (Exception exception) {
-			exception.printStackTrace();
-		}
+
+		_printProperties(false);
 	}
 
 	private String _get(String key) {
