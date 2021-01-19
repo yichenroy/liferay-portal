@@ -120,10 +120,23 @@ public class FunctionalBatchTestClassGroup extends BatchTestClassGroup {
 					"Invalid test class method name " + testClassMethodName);
 			}
 
-			return new File(
-				PoshiContext.getFilePathFromFileName(
-					matcher.group("className") + ".testcase",
-					matcher.group("namespace")));
+			String className = matcher.group("className");
+			String namespace = matcher.group("namespace");
+
+			File testClassFile = null;
+
+			try {
+				testClassFile = new File(
+					PoshiContext.getFilePathFromFileName(
+						className + ".testcase", namespace));
+			}
+			catch (Exception exception) {
+				testClassFile = new File(
+					PoshiContext.getFilePathFromFileName(
+						className + ".prose", namespace));
+			}
+
+			return testClassFile;
 		}
 
 		private final Properties _poshiProperties;
