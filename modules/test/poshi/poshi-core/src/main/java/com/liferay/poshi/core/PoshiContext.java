@@ -360,15 +360,14 @@ public class PoshiContext {
 			properties.putAll(
 				_namespacedClassCommandNamePropertiesMap.get(classCommandName));
 
-			if (Validator.isNotNull(
-					PropsValues.TEST_BATCH_GROUP_IGNORE_REGEX)) {
+			String testBatchGroupIgnoreRegex = PropsUtil.get(
+				"test.batch.group.ignore.regex");
 
+			if (Validator.isNotNull(testBatchGroupIgnoreRegex)) {
 				Set<String> propertyNames = properties.stringPropertyNames();
 
 				for (String propertyName : propertyNames) {
-					if (propertyName.matches(
-							PropsValues.TEST_BATCH_GROUP_IGNORE_REGEX)) {
-
+					if (propertyName.matches(testBatchGroupIgnoreRegex)) {
 						properties.remove(propertyName);
 					}
 				}
