@@ -25,6 +25,61 @@ import java.util.Map;
  */
 public class JobFactory {
 
+	public static Job newJob(Build build) {
+		TopLevelBuild topLevelBuild = build.getTopLevelBuild();
+
+		String topLevelJobName = topLevelBuild.getJobName();
+
+		Map<String, String> buildParameters = topLevelBuild.getParameters();
+
+		String testSuiteName;
+
+		if (topLevelJobName.equals("test-plugins-release") ||
+			topLevelJobName.equals("test-plugins-upstream")) {
+
+			testSuiteName = buildParameters.get("TEST_PLUGIN_NAME");
+		}
+		else {
+			testSuiteName = topLevelBuild.getTestSuiteName();
+		}
+
+		String branchName = topLevelBuild.getBranchName();
+
+		String repositoryName = null;
+
+		if (topLevelJobName.contains("subrepository")) {
+			repositoryName = topLevelBuild.getBaseGitRepositoryName();
+		}
+
+		String buildProfile;
+
+		if (topLevelJobName.contains("aws") ||
+			topLevelJobName.contains("environment")) {
+
+			if (!branchName.startsWith("ee-")) {
+				buildProfile = "dxp";
+			}
+			else {
+				buildProfile = "portal";
+			}
+		}
+		else {
+			buildProfile = buildParameters.get("TEST_PORTAL_BUILD_PROFILE");
+
+			if ((buildProfile == null) || !buildProfile.equals("dxp")) {
+				buildProfile = "portal";
+			}
+
+			if (branchName.startsWith("ee-")) {
+				buildProfile = "portal";
+			}
+		}
+
+		return _newJob(
+			topLevelJobName, testSuiteName, branchName, repositoryName,
+			Job.BuildProfile.valueOf(buildProfile.toUpperCase()));
+	}
+
 	public static Job newJob(BuildData buildData) {
 		String upstreamBranchName = null;
 
