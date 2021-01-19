@@ -39,6 +39,12 @@ public class JobFactory {
 
 			testSuiteName = buildParameters.get("TEST_PLUGIN_NAME");
 		}
+		else if (topLevelJobName.equals("test-qa-websites-functional-daily") ||
+				 topLevelJobName.equals(
+					 "test-qa-websites-functional-environment")) {
+
+			testSuiteName = buildParameters.get("PROJECT_NAMES");
+		}
 		else {
 			testSuiteName = topLevelBuild.getTestSuiteName();
 		}
@@ -361,6 +367,17 @@ public class JobFactory {
 
 		if (jobName.startsWith("test-portal-upstream(")) {
 			_jobs.put(jobKey, new PortalUpstreamJob(jobName, buildProfile));
+
+			return _jobs.get(jobKey);
+		}
+
+		if (jobName.equals("test-qa-websites-functional-daily") ||
+			jobName.equals("test-qa-websites-functional-environment")) {
+
+			_jobs.put(
+				jobKey,
+				new QAWebsitesGitRepositoryJob(
+					jobName, buildProfile, testSuiteName, branchName));
 
 			return _jobs.get(jobKey);
 		}
