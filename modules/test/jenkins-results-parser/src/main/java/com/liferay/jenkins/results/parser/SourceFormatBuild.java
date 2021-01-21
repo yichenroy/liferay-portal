@@ -49,6 +49,11 @@ public class SourceFormatBuild
 	}
 
 	@Override
+	public Job.BuildProfile getBuildProfile() {
+		return Job.BuildProfile.DXP;
+	}
+
+	@Override
 	public BranchInformation getPortalBaseBranchInformation() {
 		return null;
 	}
