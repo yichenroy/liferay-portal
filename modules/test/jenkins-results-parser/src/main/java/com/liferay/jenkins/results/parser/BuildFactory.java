@@ -151,6 +151,11 @@ public class BuildFactory {
 				url, (TopLevelBuild)parentBuild);
 		}
 
+		if (jobName.equals("test-portal-hotfix-release")) {
+			return new PortalHotfixReleasePortalTopLevelBuild(
+				url, (TopLevelBuild)parentBuild);
+		}
+
 		if (jobName.equals("test-portal-release")) {
 			return new PortalReleasePortalTopLevelBuild(
 				url, (TopLevelBuild)parentBuild);
