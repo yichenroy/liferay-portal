@@ -29,6 +29,14 @@ public class PullRequestPluginsTopLevelBuild extends PluginsTopLevelBuild {
 	}
 
 	@Override
+	public String getBranchName() {
+		String jobName = getJobName();
+
+		return jobName.substring(
+			jobName.indexOf("(") + 1, jobName.indexOf(")"));
+	}
+
+	@Override
 	public String getPluginName() {
 		for (Build downstreamBuild : getDownstreamBuilds(null)) {
 			String jobVariant = downstreamBuild.getParameterValue(
