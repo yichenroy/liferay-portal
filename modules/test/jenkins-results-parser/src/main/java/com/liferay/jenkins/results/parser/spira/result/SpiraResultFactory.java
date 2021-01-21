@@ -78,6 +78,13 @@ public class SpiraResultFactory {
 				testClass);
 		}
 
+		String batchName = axisTestClassGroup.getBatchName();
+
+		if (batchName.startsWith("source-format-")) {
+			return new SFBatchAxisSpiraTestResult(
+				spiraBuildResult, axisTestClassGroup);
+		}
+
 		return new BatchAxisSpiraTestResult(
 			spiraBuildResult, axisTestClassGroup);
 	}
