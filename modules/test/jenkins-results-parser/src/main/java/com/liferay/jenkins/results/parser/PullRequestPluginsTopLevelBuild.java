@@ -58,6 +58,17 @@ public class PullRequestPluginsTopLevelBuild extends PluginsTopLevelBuild {
 		return null;
 	}
 
+	@Override
+	public String getTestSuiteName() {
+		String ciTestSuite = getParameterValue("CI_TEST_SUITE");
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(ciTestSuite)) {
+			ciTestSuite = "default";
+		}
+
+		return ciTestSuite;
+	}
+
 	private static final Pattern _pattern = Pattern.compile(
 		"[^/]*functional[^/]*/(?<pluginName>[^/]+)/\\d+");
 
