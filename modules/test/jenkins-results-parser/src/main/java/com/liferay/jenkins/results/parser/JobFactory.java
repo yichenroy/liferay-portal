@@ -205,7 +205,9 @@ public class JobFactory {
 			return pluginsUpstreamJob;
 		}
 
-		if (jobName.startsWith("test-portal-acceptance-pullrequest(")) {
+		if (jobName.startsWith("test-portal-acceptance-pullrequest(") ||
+			jobName.equals("test-portal-source-format")) {
+
 			PortalAcceptancePullRequestJob portalAcceptancePullRequestJob =
 				new PortalAcceptancePullRequestJob(
 					jobName, buildProfile, testSuiteName);
