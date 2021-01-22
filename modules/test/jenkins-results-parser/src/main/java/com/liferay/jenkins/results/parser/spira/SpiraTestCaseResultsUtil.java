@@ -20,6 +20,7 @@ import com.liferay.jenkins.results.parser.NotificationUtil;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,16 +83,18 @@ public class SpiraTestCaseResultsUtil {
 		for (Map.Entry<Integer, SpiraTestCaseRun> entry :
 				spiraTestCaseRuns.entrySet()) {
 
-			boolean testFailedAtLeastOnce = false;
+			SpiraTestCaseRun spiraTestCaseRun = entry.getValue();
+
+			String testCaseName = spiraTestCaseRun.getName();
+
+			if (_excludeTestNames.contains(testCaseName)) {
+				continue;
+			}
 
 			StringBuilder spiraTestCaseRunMessageStringBuilder =
 				new StringBuilder();
 
-			SpiraTestCaseRun spiraTestCaseRun = entry.getValue();
-
-			spiraTestCaseRunMessageStringBuilder.append(
-				spiraTestCaseRun.getName());
-
+			spiraTestCaseRunMessageStringBuilder.append(testCaseName);
 			spiraTestCaseRunMessageStringBuilder.append("\n");
 			spiraTestCaseRunMessageStringBuilder.append(testSuite);
 			spiraTestCaseRunMessageStringBuilder.append("\n<");
@@ -101,6 +104,8 @@ public class SpiraTestCaseResultsUtil {
 
 			int executionStatusId = (int)spiraTestCaseRun.getProperty(
 				"ExecutionStatusId");
+
+			boolean testFailedAtLeastOnce = false;
 
 			if (executionStatusId == SpiraTestCaseRun.Status.FAILED.getID()) {
 				testFailedAtLeastOnce = true;
@@ -236,6 +241,8 @@ public class SpiraTestCaseResultsUtil {
 	}
 
 	private static final Properties _buildProperties;
+	private static final List<String> _excludeTestNames = Arrays.asList(
+		"top-level-job");
 
 	static {
 		try {
