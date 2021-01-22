@@ -37,7 +37,7 @@ public class SpiraTestCaseResultsUtil {
 			branchName, testSuite);
 
 		String subject = JenkinsResultsParserUtil.combine(
-			"Inconsistent Upstream Test Suite Test Report (", branchName,
+			"Upstream Test Suite Test Failure Report (", branchName,
 			") - ", testSuite);
 
 		NotificationUtil.sendSlackNotification(message, channel, subject);
@@ -82,7 +82,7 @@ public class SpiraTestCaseResultsUtil {
 		for (Map.Entry<Integer, SpiraTestCaseRun> entry :
 				spiraTestCaseRuns.entrySet()) {
 
-			boolean inconsistent = false;
+			boolean testFailedAtLeastOnce = false;
 
 			StringBuilder spiraTestCaseRunMessageStringBuilder =
 				new StringBuilder();
@@ -102,6 +102,10 @@ public class SpiraTestCaseResultsUtil {
 			int executionStatusId = (int)spiraTestCaseRun.getProperty(
 				"ExecutionStatusId");
 
+			if (executionStatusId == SpiraTestCaseRun.Status.FAILED.getID()) {
+				testFailedAtLeastOnce = true;
+			}
+
 			spiraTestCaseRunMessageStringBuilder.append(
 				SpiraTestCaseRun.Status.getStatusName(executionStatusId));
 
@@ -116,7 +120,7 @@ public class SpiraTestCaseResultsUtil {
 					comparisonEntry.getValue();
 
 				if (!comparisonSpiraTestCaseRuns.containsKey(testCaseID)) {
-					inconsistent = false;
+					testFailedAtLeastOnce = false;
 
 					break;
 				}
@@ -137,8 +141,10 @@ public class SpiraTestCaseResultsUtil {
 					(int)comparisonSpiraTestCaseRun.getProperty(
 						"ExecutionStatusId");
 
-				if (comparisonExecutionStatusId != executionStatusId) {
-					inconsistent = true;
+				if (comparisonExecutionStatusId ==
+						SpiraTestCaseRun.Status.FAILED.getID()) {
+
+					testFailedAtLeastOnce = true;
 				}
 
 				spiraTestCaseRunMessageStringBuilder.append(
@@ -147,7 +153,7 @@ public class SpiraTestCaseResultsUtil {
 				spiraTestCaseRunMessageStringBuilder.append(">\n");
 			}
 
-			if (inconsistent) {
+			if (testFailedAtLeastOnce) {
 				upstreamComparisonMessageStringBuilder.append(
 					spiraTestCaseRunMessageStringBuilder.toString());
 				upstreamComparisonMessageStringBuilder.append("\n");
@@ -158,7 +164,7 @@ public class SpiraTestCaseResultsUtil {
 
 		if (inconsistentTestCount == 0) {
 			upstreamComparisonMessageStringBuilder.append(
-				"There are no inconsistent test results in the latest ");
+				"There are no failed tests to be reported in the latest ");
 			upstreamComparisonMessageStringBuilder.append(branchName);
 			upstreamComparisonMessageStringBuilder.append(
 				" upstream test run for the test suite '");
@@ -179,7 +185,7 @@ public class SpiraTestCaseResultsUtil {
 
 		return JenkinsResultsParserUtil.combine(
 			"There are ", String.valueOf(inconsistentTestCount),
-			" tests with inconsistent test results.\n",
+			" failed tests.\n",
 			upstreamComparisonMessageStringBuilder.toString());
 	}
 
