@@ -37,8 +37,8 @@ public class SpiraTestCaseResultsUtil {
 			branchName, testSuite);
 
 		String subject = JenkinsResultsParserUtil.combine(
-			"Upstream Test Suite Test Failure Report (", branchName,
-			") - ", testSuite);
+			"Upstream Test Suite Test Failure Report (", branchName, ") - ",
+			testSuite);
 
 		NotificationUtil.sendSlackNotification(message, channel, subject);
 	}
@@ -73,7 +73,7 @@ public class SpiraTestCaseResultsUtil {
 						branchName, comparisonUpstreamSuite)));
 		}
 
-		int inconsistentTestCount = 0;
+		int failedTestCount = 0;
 
 		Map<Integer, SpiraTestCaseRun> spiraTestCaseRuns =
 			_getSpiraTestCaseRunMapFromList(
@@ -158,11 +158,11 @@ public class SpiraTestCaseResultsUtil {
 					spiraTestCaseRunMessageStringBuilder.toString());
 				upstreamComparisonMessageStringBuilder.append("\n");
 
-				inconsistentTestCount++;
+				failedTestCount++;
 			}
 		}
 
-		if (inconsistentTestCount == 0) {
+		if (failedTestCount == 0) {
 			upstreamComparisonMessageStringBuilder.append(
 				"There are no failed tests to be reported in the latest ");
 			upstreamComparisonMessageStringBuilder.append(branchName);
@@ -184,8 +184,7 @@ public class SpiraTestCaseResultsUtil {
 		}
 
 		return JenkinsResultsParserUtil.combine(
-			"There are ", String.valueOf(inconsistentTestCount),
-			" failed tests.\n",
+			"There are ", String.valueOf(failedTestCount), " failed tests.\n",
 			upstreamComparisonMessageStringBuilder.toString());
 	}
 
