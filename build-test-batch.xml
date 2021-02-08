@@ -3637,6 +3637,9 @@ log.sanitizer.enabled=false</echo>
 	</target>
 
 	<target name="dist-jdk7">
+		<echo>####axis.variable: ${axis.variable} ####</echo>
+		<echo>####dist.type: ${dist.type} ####</echo>
+
 		<parallel threadCount="1" timeout="7200000">
 			<prepare-test-build-dist
 				app.server.type="${axis.variable}"
