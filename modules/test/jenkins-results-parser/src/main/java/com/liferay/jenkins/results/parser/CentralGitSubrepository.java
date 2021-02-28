@@ -255,17 +255,17 @@ public class CentralGitSubrepository {
 			return false;
 		}
 
-		String mergePullRequestURL = _getMergePullRequestURL();
-
-		if (mergePullRequestURL != null) {
-			System.out.println(
-				JenkinsResultsParserUtil.combine(
-					"SKIPPED: ", _gitSubrepositoryName,
-					" contains an open merge pull request ",
-					mergePullRequestURL));
-
-			return false;
-		}
+//		String mergePullRequestURL = _getMergePullRequestURL();
+//
+//		if (mergePullRequestURL != null) {
+//			System.out.println(
+//				JenkinsResultsParserUtil.combine(
+//					"SKIPPED: ", _gitSubrepositoryName,
+//					" contains an open merge pull request ",
+//					mergePullRequestURL));
+//
+//			return false;
+//		}
 
 		return true;
 	}
