@@ -12,29 +12,27 @@
  * details.
  */
 
-package com.liferay.portal.upgrade.v7_2_x;
+package com.liferay.asset.internal.upgrade.v1_0_0;
+
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.StringUtil;
 
 /**
- * @author Cristina González
+ * @author Eudaldo Alonso
  */
-public class UpgradeModules
-	extends com.liferay.portal.upgrade.v7_0_0.UpgradeModules {
+public class AssetEntryUsageUpgradeProcess extends UpgradeProcess {
 
 	@Override
-	public String[] getBundleSymbolicNames() {
-		return _BUNDLE_SYMBOLIC_NAMES;
+	protected void doUpgrade() throws Exception {
+		_upgradeSchema();
 	}
 
-	@Override
-	public String[][] getConvertedLegacyModules() {
-		return _CONVERTED_LEGACY_MODULES;
+	private void _upgradeSchema() throws Exception {
+		String template = StringUtil.read(
+			AssetEntryUsageUpgradeProcess.class.getResourceAsStream(
+				"dependencies/update.sql"));
+
+		runSQLTemplateString(template, false);
 	}
-
-	private static final String[] _BUNDLE_SYMBOLIC_NAMES = {
-		"com.liferay.asset.service",
-		"com.liferay.document.library.repository.cmis.impl"
-	};
-
-	private static final String[][] _CONVERTED_LEGACY_MODULES = {};
 
 }
