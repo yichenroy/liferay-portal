@@ -5851,8 +5851,6 @@ war.path=${app.server.portal.dir}/</echo>
 
 	<macrodef name="wait-for-license-activation">
 		<sequential>
-			<get-poshi-method-name />
-
 			<get-commerce-license-product-name />
 
 			<get-dxp-license-product-name />
