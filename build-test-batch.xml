@@ -889,8 +889,6 @@ mariadb.executable=${mariadb.executable}]]></echo>
 
 			<antcall inheritAll="false" target="setup-libs" />
 
-			<antcall inheritAll="false" target="setup-sdk" />
-
 			<antcall inheritAll="false" target="setup-yarn" />
 
 			<if>
@@ -1124,8 +1122,6 @@ app.server.type=@{app.server.type}]]></echo>
 
 		<sequential>
 			<antcall inheritAll="false" target="setup-libs" />
-
-			<antcall inheritAll="false" target="setup-sdk" />
 
 			<antcall inheritAll="false" target="setup-yarn" />
 
