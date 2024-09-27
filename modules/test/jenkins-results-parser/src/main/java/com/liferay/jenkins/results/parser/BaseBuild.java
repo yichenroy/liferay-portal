@@ -3486,7 +3486,7 @@ public abstract class BaseBuild implements Build {
 
 			consoleReadCursor = 0;
 
-			if (_buildNumber == -1) {
+			if (buildNumber == -1) {
 				setStatus("starting");
 			}
 			else if (!badBuildNumbers.contains(previousBuildNumber)) {
