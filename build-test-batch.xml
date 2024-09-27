@@ -3450,6 +3450,14 @@ log.sanitizer.enabled=false</echo>
 		</sequential>
 	</macrodef>
 
+	<target name="a-test">
+		<var name="env.TOP_LEVEL_BUILD_NUMBER" unset="true" />
+
+		<echo>Please set the property ${env.TOP_LEVEL_BUILD_NUMBER}</echo>
+
+		<fail message="fail on purpose." />
+	</target>
+
 	<target name="analytics-cloud-cucumber-tomcat90-mysql57-jdk8">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 

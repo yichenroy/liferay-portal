@@ -3949,7 +3949,7 @@ public class JenkinsResultsParserUtil {
 			}
 		}
 
-		return "http://mirrors-no-cache.lax.liferay.com/github.com/liferay";
+		return "file:///opt/dev/projects/github/";
 	}
 
 	protected static final String URL_DEPENDENCIES_FILE;
